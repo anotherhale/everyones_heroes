@@ -12,12 +12,10 @@ import 'package:everyonesheroes/features/life_journey/domain/value_objects/journ
 final class Journey extends AggregateRoot<JourneyId> {
   Journey({
     required JourneyId id,
-    required JourneyVision vision,
-    JourneyChapter currentChapter = JourneyChapter.awakening,
+    required this._vision,
+    this._currentChapter = JourneyChapter.awakening,
     List<QuestId>? activeQuestIds,
-  }) : _vision = vision,
-       _currentChapter = currentChapter,
-       _activeQuestIds = activeQuestIds ?? [],
+  }) : _activeQuestIds = activeQuestIds ?? [],
        super(id);
 
   final JourneyVision _vision;

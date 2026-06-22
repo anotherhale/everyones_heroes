@@ -4,6 +4,5 @@ final class DemoRunner {
   Future<void> run() async {
     await AppCompositionRoot.initialize();
 
-    print('Everyone\'s Heroes Bootstrapped Successfully');
   }
 }

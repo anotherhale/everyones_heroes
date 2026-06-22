@@ -8,9 +8,10 @@ import 'package:everyonesheroes/core/ids/reflection_id.dart';
 
 import 'package:everyonesheroes/core/shared_kernel/aggregate_root.dart';
 import 'package:everyonesheroes/features/life_journey/domain/entities/reflection/reflection_response.dart';
-import 'package:everyonesheroes/features/life_journey/domain/events/behavioral_signals_observed.dart';
+import 'package:everyonesheroes/features/life_journey/domain/events/behavioral_evidence_detected.dart';
 
 import 'package:everyonesheroes/features/life_journey/domain/events/insights_generated.dart';
+import 'package:everyonesheroes/features/life_journey/domain/events/narrative_themes_added.dart';
 import 'package:everyonesheroes/features/life_journey/domain/events/reflection_submitted.dart';
 import 'package:everyonesheroes/features/life_journey/domain/value_objects/behavioral_evidence.dart';
 
@@ -19,21 +20,16 @@ import 'package:everyonesheroes/features/life_journey/domain/value_objects/insig
 final class Reflection extends AggregateRoot<ReflectionId> {
   Reflection({
     required ReflectionId id,
-    required JourneyId journeyId,
-    required DateTime createdAt,
-    QuestId? questId,
-    MissionId? missionId,
+    required this._journeyId,
+    required this._createdAt,
+    this._questId,
+    this._missionId,
     List<ReflectionResponse>? responses,
     List<Insight>? insights,
     List<BehavioralEvidence>? behavioralEvidence,
     List<NarrativeThemeId>? narrativeThemes,
-    DateTime? submittedAt,
-  }) : _journeyId = journeyId,
-       _questId = questId,
-       _missionId = missionId,
-       _createdAt = createdAt,
-       _submittedAt = submittedAt,
-       _responses = responses ?? [],
+    this._submittedAt,
+  }) : _responses = responses ?? [],
        _insights = insights ?? [],
        _behavioralEvidence = behavioralEvidence ?? [],
        _narrativeThemes = narrativeThemes ?? [],
@@ -151,7 +147,7 @@ final class Reflection extends AggregateRoot<ReflectionId> {
     );
   }
 
-  void addbehavioralEvidence(Iterable<BehavioralEvidence> evidence) {
+  void addBehavioralEvidence(Iterable<BehavioralEvidence> evidence) {
     _ensureSubmitted();
 
     final items = evidence.toList(growable: false);
@@ -171,15 +167,30 @@ final class Reflection extends AggregateRoot<ReflectionId> {
     );
   }
 
-  void addNarrativeThemes(Iterable<NarrativeThemeId> themes) {
-    _ensureSubmitted();
+void addNarrativeThemes(Iterable<NarrativeThemeId> themes) {
+  _ensureSubmitted();
 
-    for (final themeId in themes) {
-      if (!_narrativeThemes.contains(themeId)) {
-        _narrativeThemes.add(themeId);
-      }
+  final addedThemes = <NarrativeThemeId>[];
+
+  for (final themeId in themes) {
+    if (!_narrativeThemes.contains(themeId)) {
+      _narrativeThemes.add(themeId);
+      addedThemes.add(themeId);
     }
   }
+
+  if (addedThemes.isEmpty) {
+    return;
+  }
+
+  raise(
+    NarrativeThemesAdded(
+      aggregateId: id.value,
+      reflectionId: id,
+      narrativeThemeIds: addedThemes,
+    ),
+  );
+}
 
   void _ensureSubmitted() {
     if (!isSubmitted) {

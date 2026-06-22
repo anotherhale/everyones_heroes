@@ -5,6 +5,7 @@ import 'package:everyonesheroes/core/eventing/event_handler.dart';
 final class InMemoryEventDispatcher implements EventDispatcher {
   final Map<Type, List<EventHandler>> _handlers = {};
 
+  @override
   void register<T extends DomainEvent>(EventHandler<T> handler) {
     _handlers.putIfAbsent(T, () => []);
 

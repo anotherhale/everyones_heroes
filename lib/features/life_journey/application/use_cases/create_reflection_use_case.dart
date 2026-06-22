@@ -10,8 +10,8 @@ import 'create_reflection_request.dart';
 
 final class CreateReflectionUseCase {
   const CreateReflectionUseCase({
-    required ReflectionRepository reflectionRepository,
-  }) : _reflectionRepository = reflectionRepository;
+    required this._reflectionRepository,
+  });
 
   final ReflectionRepository _reflectionRepository;
 

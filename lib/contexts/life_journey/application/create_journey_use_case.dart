@@ -10,10 +10,9 @@ import 'package:everyonesheroes/features/life_journey/domain/repositories/journe
 final class CreateJourneyUseCase
     implements UseCase<CreateJourneyRequest, Journey> {
   const CreateJourneyUseCase({
-    required JourneyRepository journeyRepository,
-    required EventBus eventBus,
-  }) : _journeyRepository = journeyRepository,
-       _eventBus = eventBus;
+    required this._journeyRepository,
+    required this._eventBus,
+  });
 
   final JourneyRepository _journeyRepository;
   final EventBus _eventBus;

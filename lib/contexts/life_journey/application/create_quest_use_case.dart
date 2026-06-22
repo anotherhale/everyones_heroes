@@ -13,12 +13,10 @@ import 'package:everyonesheroes/features/life_journey/domain/repositories/quest_
 
 final class CreateQuestUseCase {
   const CreateQuestUseCase({
-    required JourneyRepository journeyRepository,
-    required QuestRepository questRepository,
-    required EventBus eventBus,
-  }) : _journeyRepository = journeyRepository,
-       _questRepository = questRepository,
-       _eventBus = eventBus;
+    required this._journeyRepository,
+    required this._questRepository,
+    required this._eventBus,
+  });
 
   final JourneyRepository _journeyRepository;
 

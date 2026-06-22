@@ -10,10 +10,9 @@ final class InMemoryEventBus implements EventBus {
   final EventDispatcher _dispatcher;
 
   const InMemoryEventBus({
-    required EventStore eventStore,
-    required EventDispatcher dispatcher,
-  }) : _eventStore = eventStore,
-       _dispatcher = dispatcher;
+    required this._eventStore,
+    required this._dispatcher,
+  });
 
   @override
   Future<void> publish(DomainEvent event) async {

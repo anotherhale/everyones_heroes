@@ -9,13 +9,12 @@ final class Influence extends Entity<InfluenceId> {
   Influence({
     required InfluenceId id,
     required String canonicalName,
-    required InfluenceCategory category,
+    required this._category,
     required Iterable<NarrativeThemeId> narrativeThemeIds,
     Iterable<String>? aliases,
     String? description,
     String? imageReference,
   }) : _canonicalName = canonicalName.trim(),
-       _category = category,
        _description = description?.trim(),
        _imageReference = imageReference?.trim(),
        _aliases =

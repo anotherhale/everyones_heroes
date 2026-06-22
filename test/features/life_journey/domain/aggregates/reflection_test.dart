@@ -7,7 +7,7 @@ import 'package:everyonesheroes/features/life_journey/domain/aggregates/reflecti
 import 'package:everyonesheroes/features/life_journey/domain/entities/reflection/journal_response.dart';
 
 import 'package:everyonesheroes/features/life_journey/domain/enums/behavioral_signal_type.dart';
-import 'package:everyonesheroes/features/life_journey/domain/events/behavioral_signals_observed.dart';
+import 'package:everyonesheroes/features/life_journey/domain/events/behavioral_evidence_detected.dart';
 
 import 'package:everyonesheroes/features/life_journey/domain/events/insights_generated.dart';
 import 'package:everyonesheroes/features/life_journey/domain/events/reflection_submitted.dart';
@@ -129,7 +129,7 @@ void main() {
 
     test('cannot add behavioral evidence before submission', () {
       expect(
-        () => reflection.addbehavioralEvidence([
+        () => reflection.addBehavioralEvidence([
           BehavioralEvidence(
             signalType: BehavioralSignalType.resilience,
             evidence: 'Did not quit',
@@ -145,7 +145,7 @@ void main() {
 
       reflection.submit();
 
-      reflection.addbehavioralEvidence([
+      reflection.addBehavioralEvidence([
         BehavioralEvidence(
           signalType: BehavioralSignalType.resilience,
           evidence: 'Did not quit',
@@ -163,7 +163,7 @@ void main() {
 
       reflection.clearDomainEvents();
 
-      reflection.addbehavioralEvidence([
+      reflection.addBehavioralEvidence([
         BehavioralEvidence(
           signalType: BehavioralSignalType.resilience,
           evidence: 'Did not quit',

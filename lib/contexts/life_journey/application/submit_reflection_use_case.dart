@@ -12,12 +12,9 @@ import 'submit_reflection_request.dart';
 
 final class SubmitReflectionUseCase {
   const SubmitReflectionUseCase({
-    required ReflectionRepository
-    reflectionRepository,
-    required EventBus eventBus,
-  }) : _reflectionRepository =
-           reflectionRepository,
-       _eventBus = eventBus;
+    required this._reflectionRepository,
+    required this._eventBus,
+  });
 
   final ReflectionRepository
       _reflectionRepository;

@@ -9,13 +9,10 @@ import '../value_objects/mission_title.dart';
 final class Mission extends Entity<MissionId> {
   Mission({
     required MissionId id,
-    required MissionTitle title,
-    MissionStatus status = MissionStatus.pending,
-    DateTime? completedAt,
-  })  : _title = title,
-        _status = status,
-        _completedAt = completedAt,
-        super(id);
+    required this._title,
+    this._status = MissionStatus.pending,
+    this._completedAt,
+  })  : super(id);
 
   final MissionTitle _title;
 

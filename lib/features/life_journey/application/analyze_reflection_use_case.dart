@@ -16,22 +16,18 @@ import 'analyze_reflection_request.dart';
 
 final class AnalyzeReflectionUseCase {
   const AnalyzeReflectionUseCase({
-    required ReflectionRepository reflectionRepository,
-    required InsightExtractionService insightExtractionService,
-    required BehavioralEvidenceAnalyzer BehavioralEvidenceAnalyzer,
-    required NarrativeThemeResolver narrativeThemeResolver,
-    required EventBus eventBus,
-  }) : _reflectionRepository = reflectionRepository,
-       _insightExtractionService = insightExtractionService,
-       _BehavioralEvidenceAnalyzer = BehavioralEvidenceAnalyzer,
-       _narrativeThemeResolver = narrativeThemeResolver,
-       _eventBus = eventBus;
+    required this._reflectionRepository,
+    required this._insightExtractionService,
+    required this._behavioralEvidenceAnalyzer,
+    required this._narrativeThemeResolver,
+    required this._eventBus,
+  });
 
   final ReflectionRepository _reflectionRepository;
 
   final InsightExtractionService _insightExtractionService;
 
-  final BehavioralEvidenceAnalyzer _BehavioralEvidenceAnalyzer;
+  final BehavioralEvidenceAnalyzer _behavioralEvidenceAnalyzer;
 
   final NarrativeThemeResolver _narrativeThemeResolver;
 
@@ -56,9 +52,9 @@ final class AnalyzeReflectionUseCase {
 
       reflection.addInsights(insights);
 
-      final evidence = await _BehavioralEvidenceAnalyzer.analyze(reflection);
+      final evidence = await _behavioralEvidenceAnalyzer.analyze(reflection);
 
-      reflection.addbehavioralEvidence(evidence);
+      reflection.addBehavioralEvidence(evidence);
 
       final themes = await _narrativeThemeResolver.resolveThemes(reflection);
 

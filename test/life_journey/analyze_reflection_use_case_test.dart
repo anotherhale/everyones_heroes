@@ -1,4 +1,4 @@
-import 'package:everyonesheroes/features/life_journey/domain/events/behavioral_signals_observed.dart';
+import 'package:everyonesheroes/features/life_journey/domain/events/behavioral_evidence_detected.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:everyonesheroes/core/eventing/in_memory_event_bus.dart';
@@ -42,7 +42,7 @@ void main() {
       useCase = AnalyzeReflectionUseCase(
         reflectionRepository: reflectionRepository,
         insightExtractionService: const FakeInsightExtractionService(),
-        BehavioralEvidenceAnalyzer: const FakeBehavioralEvidenceAnalyzer(),
+        behavioralEvidenceAnalyzer: const FakeBehavioralEvidenceAnalyzer(),
         narrativeThemeResolver: const FakeNarrativeThemeResolver(),
         eventBus: InMemoryEventBus(
           eventStore: eventStore,

@@ -18,14 +18,11 @@ import 'package:everyonesheroes/features/life_journey/domain/value_objects/quest
 final class Quest extends AggregateRoot<QuestId> {
   Quest({
     required QuestId id,
-    required JourneyId journeyId,
-    required QuestTitle title,
+    required this._journeyId,
+    required this._title,
     List<Mission>? missions,
-    QuestStatus status = QuestStatus.active,
-  }) : _journeyId = journeyId,
-       _title = title,
-       _missions = missions ?? [],
-       _status = status,
+    this._status = QuestStatus.active,
+  }) : _missions = missions ?? [],
        super(id);
 
   final JourneyId _journeyId;
