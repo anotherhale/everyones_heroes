@@ -441,5 +441,11 @@ Scores
 Conclusions
 
 Store observations.
-Derive interpretations.
+Derive patterns.
 Generate guidance.
+
+Evidence
+    ↓
+Patterns
+    ↓
+Guidance

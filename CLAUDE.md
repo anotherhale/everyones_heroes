@@ -79,6 +79,26 @@ Rules:
 
 ---
 
+# Core Modeling Principles
+
+Prefer:
+
+Evidence
+    ↓
+Patterns
+    ↓
+Guidance
+
+Over:
+
+Evidence
+    ↓
+Guidance
+
+Store observations.
+Derive interpretations.
+Generate recommendations.
+
 # Current Bounded Contexts
 
 ## Identity
