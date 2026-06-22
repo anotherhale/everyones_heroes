@@ -1,0 +1,15 @@
+enum InfluenceCategory {
+  athlete,
+  team,
+  movie,
+  book,
+  song,
+  artist,
+  character,
+  historicalFigure,
+  militaryHero,
+  entrepreneur,
+  mentor,
+  creator,
+  coach,
+}

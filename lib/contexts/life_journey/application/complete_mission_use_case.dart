@@ -1,0 +1,43 @@
+import 'package:everyonesheroes/contexts/life_journey/application/complete_mission_request.dart';
+import 'package:everyonesheroes/core/eventing/event_bus.dart';
+import 'package:everyonesheroes/core/results/failure.dart';
+import 'package:everyonesheroes/core/results/result.dart';
+import 'package:everyonesheroes/core/results/success.dart';
+import 'package:everyonesheroes/features/life_journey/domain/aggregates/quest.dart';
+import 'package:everyonesheroes/features/life_journey/domain/repositories/quest_repository.dart';
+
+final class CompleteMissionUseCase {
+  const CompleteMissionUseCase({
+    required QuestRepository questRepository,
+    required EventBus eventBus,
+  }) : _questRepository = questRepository,
+       _eventBus = eventBus;
+
+  final QuestRepository _questRepository;
+
+  final EventBus _eventBus;
+
+  Future<Result<Quest>> execute(CompleteMissionRequest request) async {
+    try {
+      final quest = await _questRepository.findById(request.questId);
+
+      if (quest == null) {
+        return Failure('Quest not found: ${request.questId.value}');
+      }
+
+      quest.completeMission(request.missionId);
+
+      await _questRepository.save(quest);
+
+      for (final event in quest.domainEvents) {
+        await _eventBus.publish(event);
+      }
+
+      quest.clearDomainEvents();
+
+      return Success(quest);
+    } catch (e) {
+      return Failure('Failed to complete mission: $e');
+    }
+  }
+}
