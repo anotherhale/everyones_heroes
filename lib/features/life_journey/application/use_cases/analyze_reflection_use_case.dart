@@ -4,9 +4,9 @@ import 'package:everyonesheroes/core/results/failure.dart';
 import 'package:everyonesheroes/core/results/result.dart';
 import 'package:everyonesheroes/core/results/success.dart';
 
-import 'package:everyonesheroes/features/life_journey/infrastructure/services/behavioral_evidencel_analyzer.dart';
-import 'package:everyonesheroes/features/life_journey/infrastructure/services/insight_extraction_service.dart';
-import 'package:everyonesheroes/features/life_journey/infrastructure/services/narrative_theme_resolver.dart';
+import 'package:everyonesheroes/features/life_journey/domain/services/behavioral_evidencel_analyzer.dart';
+import 'package:everyonesheroes/features/life_journey/domain/services/insight_extraction_service.dart';
+import 'package:everyonesheroes/features/life_journey/domain/services/narrative_theme_resolver.dart';
 
 import 'package:everyonesheroes/features/life_journey/domain/aggregates/reflection.dart';
 
