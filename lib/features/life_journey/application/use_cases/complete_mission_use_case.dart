@@ -1,4 +1,4 @@
-import 'package:everyonesheroes/contexts/life_journey/application/complete_mission_request.dart';
+import 'package:everyonesheroes/features/life_journey/application/requests/complete_mission_request.dart';
 import 'package:everyonesheroes/core/eventing/event_bus.dart';
 import 'package:everyonesheroes/core/results/failure.dart';
 import 'package:everyonesheroes/core/results/result.dart';

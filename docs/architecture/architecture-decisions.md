@@ -178,7 +178,9 @@ Toward:
 
 * BehavioralEvidence
 * BehavioralEvidenceDetected
-* BehavioralSignal (future pattern layer)
+* Evidence Source
+
+BehavioralSignal entity removed.
 
 Rationale:
 

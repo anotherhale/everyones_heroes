@@ -12,8 +12,8 @@ import 'package:everyonesheroes/core/ids/quest_id.dart';
 import 'package:everyonesheroes/core/results/failure.dart';
 import 'package:everyonesheroes/core/results/success.dart';
 
-import 'package:everyonesheroes/contexts/life_journey/application/complete_mission_request.dart';
-import 'package:everyonesheroes/contexts/life_journey/application/complete_mission_use_case.dart';
+import 'package:everyonesheroes/features/life_journey/application/requests/complete_mission_request.dart';
+import 'package:everyonesheroes/features/life_journey/application/use_cases/complete_mission_use_case.dart';
 
 import 'package:everyonesheroes/features/life_journey/domain/aggregates/quest.dart';
 

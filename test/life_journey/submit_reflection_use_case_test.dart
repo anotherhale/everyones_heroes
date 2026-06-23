@@ -1,5 +1,5 @@
-import 'package:everyonesheroes/contexts/life_journey/application/submit_reflection_request.dart';
-import 'package:everyonesheroes/contexts/life_journey/application/submit_reflection_use_case.dart';
+import 'package:everyonesheroes/features/life_journey/application/requests/submit_reflection_request.dart';
+import 'package:everyonesheroes/features/life_journey/application/use_cases/submit_reflection_use_case.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:everyonesheroes/core/eventing/in_memory_event_bus.dart';
@@ -21,269 +21,142 @@ import 'package:everyonesheroes/features/life_journey/domain/events/reflection_s
 import 'package:everyonesheroes/features/life_journey/infrastructure/repositories/in_memory_reflection_repository.dart';
 
 void main() {
-  group(
-    'SubmitReflectionUseCase',
-    () {
-      late InMemoryReflectionRepository
-          reflectionRepository;
+  group('SubmitReflectionUseCase', () {
+    late InMemoryReflectionRepository reflectionRepository;
 
-      late InMemoryEventStore eventStore;
+    late InMemoryEventStore eventStore;
 
-      late InMemoryEventDispatcher
-          dispatcher;
+    late InMemoryEventDispatcher dispatcher;
 
-      late InMemoryEventBus eventBus;
+    late InMemoryEventBus eventBus;
 
-      late SubmitReflectionUseCase
-          useCase;
+    late SubmitReflectionUseCase useCase;
 
-      setUp(() {
-        reflectionRepository =
-            InMemoryReflectionRepository();
+    setUp(() {
+      reflectionRepository = InMemoryReflectionRepository();
 
-        eventStore =
-            InMemoryEventStore();
+      eventStore = InMemoryEventStore();
 
-        dispatcher =
-            InMemoryEventDispatcher();
+      dispatcher = InMemoryEventDispatcher();
 
-        eventBus = InMemoryEventBus(
-          eventStore: eventStore,
-          dispatcher: dispatcher,
-        );
-
-        useCase =
-            SubmitReflectionUseCase(
-          reflectionRepository:
-              reflectionRepository,
-          eventBus: eventBus,
-        );
-      });
-
-      test(
-        'submits reflection',
-        () async {
-          final reflection =
-              Reflection.create(
-            id: ReflectionId.generate(),
-            journeyId:
-                JourneyId.generate(),
-          );
-
-          reflection.addResponse(
-            const JournalResponse(
-              text:
-                  'Today I learned persistence.',
-            ),
-          );
-
-          await reflectionRepository
-              .save(reflection);
-
-          final result =
-              await useCase.execute(
-            SubmitReflectionRequest(
-              reflectionId:
-                  reflection.id,
-            ),
-          );
-
-          expect(
-            result,
-            isA<
-                Success<
-                    Reflection>>(),
-          );
-
-          final saved =
-              await reflectionRepository
-                  .findById(
-            reflection.id,
-          );
-
-          expect(
-            saved,
-            isNotNull,
-          );
-
-          expect(
-            saved!.isSubmitted,
-            isTrue,
-          );
-
-          expect(
-            saved.submittedAt,
-            isNotNull,
-          );
-        },
+      eventBus = InMemoryEventBus(
+        eventStore: eventStore,
+        dispatcher: dispatcher,
       );
 
-      test(
-        'returns failure when reflection does not exist',
-        () async {
-          final result =
-              await useCase.execute(
-            SubmitReflectionRequest(
-              reflectionId:
-                  ReflectionId.generate(),
-            ),
-          );
+      useCase = SubmitReflectionUseCase(
+        reflectionRepository: reflectionRepository,
+        eventBus: eventBus,
+      );
+    });
 
-          expect(
-            result,
-            isA<
-                Failure<
-                    Reflection>>(),
-          );
-        },
+    test('submits reflection', () async {
+      final reflection = Reflection.create(
+        id: ReflectionId.generate(),
+        journeyId: JourneyId.generate(),
       );
 
-      test(
-        'publishes ReflectionSubmitted event',
-        () async {
-          final reflection =
-              Reflection.create(
-            id: ReflectionId.generate(),
-            journeyId:
-                JourneyId.generate(),
-          );
-
-          reflection.addResponse(
-            const JournalResponse(
-              text:
-                  'Reflection content',
-            ),
-          );
-
-          await reflectionRepository
-              .save(reflection);
-
-          await useCase.execute(
-            SubmitReflectionRequest(
-              reflectionId:
-                  reflection.id,
-            ),
-          );
-
-          final events =
-              await eventStore
-                  .allEvents();
-
-          expect(
-            events.length,
-            1,
-          );
-
-          expect(
-            events.first.event,
-            isA<
-                ReflectionSubmitted>(),
-          );
-        },
+      reflection.addResponse(
+        const JournalResponse(text: 'Today I learned persistence.'),
       );
 
-      test(
-        'fails when reflection has no responses',
-        () async {
-          final reflection =
-              Reflection.create(
-            id: ReflectionId.generate(),
-            journeyId:
-                JourneyId.generate(),
-          );
+      await reflectionRepository.save(reflection);
 
-          await reflectionRepository
-              .save(reflection);
-
-          final result =
-              await useCase.execute(
-            SubmitReflectionRequest(
-              reflectionId:
-                  reflection.id,
-            ),
-          );
-
-          expect(
-            result,
-            isA<
-                Failure<
-                    Reflection>>(),
-          );
-        },
+      final result = await useCase.execute(
+        SubmitReflectionRequest(reflectionId: reflection.id),
       );
 
-      test(
-        'clears domain events after publish',
-        () async {
-          final reflection =
-              Reflection.create(
-            id: ReflectionId.generate(),
-            journeyId:
-                JourneyId.generate(),
-          );
+      expect(result, isA<Success<Reflection>>());
 
-          reflection.addResponse(
-            const JournalResponse(
-              text: 'Test',
-            ),
-          );
+      final saved = await reflectionRepository.findById(reflection.id);
 
-          await reflectionRepository
-              .save(reflection);
+      expect(saved, isNotNull);
 
-          await useCase.execute(
-            SubmitReflectionRequest(
-              reflectionId:
-                  reflection.id,
-            ),
-          );
+      expect(saved!.isSubmitted, isTrue);
 
-          expect(
-            reflection.domainEvents,
-            isEmpty,
-          );
-        },
+      expect(saved.submittedAt, isNotNull);
+    });
+
+    test('returns failure when reflection does not exist', () async {
+      final result = await useCase.execute(
+        SubmitReflectionRequest(reflectionId: ReflectionId.generate()),
       );
 
-      test(
-        'cannot submit already submitted reflection',
-        () async {
-          final reflection =
-              Reflection.create(
-            id: ReflectionId.generate(),
-            journeyId:
-                JourneyId.generate(),
-          );
+      expect(result, isA<Failure<Reflection>>());
+    });
 
-          reflection.addResponse(
-            const JournalResponse(
-              text: 'Test',
-            ),
-          );
-
-          reflection.submit();
-
-          reflection.clearDomainEvents();
-
-          await reflectionRepository
-              .save(reflection);
-
-          final result =
-              await useCase.execute(
-            SubmitReflectionRequest(
-              reflectionId:
-                  reflection.id,
-            ),
-          );
-
-          expect(
-            result,
-            isA<
-                Failure<
-                    Reflection>>(),
-          );
-        },
+    test('publishes ReflectionSubmitted event', () async {
+      final reflection = Reflection.create(
+        id: ReflectionId.generate(),
+        journeyId: JourneyId.generate(),
       );
-    },
-  );
+
+      reflection.addResponse(const JournalResponse(text: 'Reflection content'));
+
+      await reflectionRepository.save(reflection);
+
+      await useCase.execute(
+        SubmitReflectionRequest(reflectionId: reflection.id),
+      );
+
+      final events = await eventStore.allEvents();
+
+      expect(events.length, 1);
+
+      expect(events.first.event, isA<ReflectionSubmitted>());
+    });
+
+    test('fails when reflection has no responses', () async {
+      final reflection = Reflection.create(
+        id: ReflectionId.generate(),
+        journeyId: JourneyId.generate(),
+      );
+
+      await reflectionRepository.save(reflection);
+
+      final result = await useCase.execute(
+        SubmitReflectionRequest(reflectionId: reflection.id),
+      );
+
+      expect(result, isA<Failure<Reflection>>());
+    });
+
+    test('clears domain events after publish', () async {
+      final reflection = Reflection.create(
+        id: ReflectionId.generate(),
+        journeyId: JourneyId.generate(),
+      );
+
+      reflection.addResponse(const JournalResponse(text: 'Test'));
+
+      await reflectionRepository.save(reflection);
+
+      await useCase.execute(
+        SubmitReflectionRequest(reflectionId: reflection.id),
+      );
+
+      expect(reflection.domainEvents, isEmpty);
+    });
+
+    test('cannot submit already submitted reflection', () async {
+      final reflection = Reflection.create(
+        id: ReflectionId.generate(),
+        journeyId: JourneyId.generate(),
+      );
+
+      reflection.addResponse(const JournalResponse(text: 'Test'));
+
+      reflection.submit();
+
+      reflection.clearDomainEvents();
+
+      await reflectionRepository.save(reflection);
+
+      final result = await useCase.execute(
+        SubmitReflectionRequest(reflectionId: reflection.id),
+      );
+
+      expect(result, isA<Failure<Reflection>>());
+    });
+  });
 }

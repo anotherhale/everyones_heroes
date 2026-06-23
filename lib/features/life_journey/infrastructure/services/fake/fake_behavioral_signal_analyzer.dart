@@ -3,7 +3,7 @@ import 'package:everyonesheroes/features/life_journey/infrastructure/services/be
 
 import 'package:everyonesheroes/features/life_journey/domain/aggregates/reflection.dart';
 
-import 'package:everyonesheroes/features/life_journey/domain/enums/behavioral_signal_type.dart';
+import 'package:everyonesheroes/features/life_journey/domain/enums/behavioral_evidence_type.dart';
 
 import 'package:everyonesheroes/features/life_journey/domain/value_objects/behavioral_evidence.dart';
 

@@ -12,7 +12,7 @@ import 'package:everyonesheroes/features/life_journey/domain/aggregates/reflecti
 
 import 'package:everyonesheroes/features/life_journey/domain/repositories/reflection_repository.dart';
 
-import 'analyze_reflection_request.dart';
+import '../requests/analyze_reflection_request.dart';
 
 final class AnalyzeReflectionUseCase {
   const AnalyzeReflectionUseCase({

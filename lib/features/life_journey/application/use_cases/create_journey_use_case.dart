@@ -1,5 +1,5 @@
-import 'package:everyonesheroes/contexts/life_journey/application/create_journey_request.dart';
-import 'package:everyonesheroes/contexts/life_journey/application/use_case.dart';
+import 'package:everyonesheroes/features/life_journey/application/requests/create_journey_request.dart';
+import 'package:everyonesheroes/features/life_journey/application/use_cases/use_case.dart';
 import 'package:everyonesheroes/core/eventing/event_bus.dart';
 import 'package:everyonesheroes/core/results/result.dart';
 import 'package:everyonesheroes/core/results/success.dart';

@@ -6,7 +6,7 @@ import 'package:everyonesheroes/features/life_journey/domain/aggregates/reflecti
 
 import 'package:everyonesheroes/features/life_journey/domain/entities/reflection/journal_response.dart';
 
-import 'package:everyonesheroes/features/life_journey/domain/enums/behavioral_signal_type.dart';
+import 'package:everyonesheroes/features/life_journey/domain/enums/behavioral_evidence_type.dart';
 import 'package:everyonesheroes/features/life_journey/domain/events/behavioral_evidence_detected.dart';
 
 import 'package:everyonesheroes/features/life_journey/domain/events/insights_generated.dart';

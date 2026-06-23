@@ -1,4 +1,4 @@
-import 'package:everyonesheroes/features/life_journey/application/use_cases/create_reflection_request.dart';
+import 'package:everyonesheroes/features/life_journey/application/requests/create_reflection_request.dart';
 import 'package:everyonesheroes/features/life_journey/application/use_cases/create_reflection_use_case.dart';
 import 'package:everyonesheroes/features/life_journey/domain/repositories/reflection_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -22,9 +22,7 @@ void main() {
     setUp(() {
       repository = InMemoryReflectionRepository();
 
-      useCase = CreateReflectionUseCase(
-        reflectionRepository: repository,
-      );
+      useCase = CreateReflectionUseCase(reflectionRepository: repository);
     });
 
     test('creates reflection', () async {
@@ -35,15 +33,11 @@ void main() {
         ),
       );
 
-      expect(
-        result,
-        isA<Success<Reflection>>(),
-      );
+      expect(result, isA<Success<Reflection>>());
     });
 
     test('saves reflection', () async {
-      final reflectionId =
-          ReflectionId.generate();
+      final reflectionId = ReflectionId.generate();
 
       final result = await useCase.execute(
         CreateReflectionRequest(
@@ -57,20 +51,13 @@ void main() {
         onFailure: (_) => null,
       );
 
-      final stored =
-          await repository.findById(
-        reflection!.id,
-      );
+      final stored = await repository.findById(reflection!.id);
 
-      expect(
-        stored,
-        same(reflection),
-      );
+      expect(stored, same(reflection));
     });
 
     test('returns created reflection', () async {
-      final reflectionId =
-          ReflectionId.generate();
+      final reflectionId = ReflectionId.generate();
 
       final result = await useCase.execute(
         CreateReflectionRequest(
@@ -80,62 +67,40 @@ void main() {
       );
 
       expect(
-        result.fold(
-          onSuccess: (value) => value.id,
-          onFailure: (_) => null,
-        ),
+        result.fold(onSuccess: (value) => value.id, onFailure: (_) => null),
         reflectionId,
       );
     });
 
     test('returns failure on exception', () async {
-      final badUseCase =
-          CreateReflectionUseCase(
-        reflectionRepository:
-            _ThrowingReflectionRepository(),
+      final badUseCase = CreateReflectionUseCase(
+        reflectionRepository: _ThrowingReflectionRepository(),
       );
 
-      final result =
-          await badUseCase.execute(
+      final result = await badUseCase.execute(
         CreateReflectionRequest(
-          reflectionId:
-              ReflectionId.generate(),
-          journeyId:
-              JourneyId.generate(),
+          reflectionId: ReflectionId.generate(),
+          journeyId: JourneyId.generate(),
         ),
       );
 
-      expect(
-        result,
-        isA<Failure<Reflection>>(),
-      );
+      expect(result, isA<Failure<Reflection>>());
     });
   });
 }
 
-final class _ThrowingReflectionRepository
-    implements ReflectionRepository {
+final class _ThrowingReflectionRepository implements ReflectionRepository {
   @override
-  Future<void> delete(
-    ReflectionId id,
-  ) async {}
+  Future<void> delete(ReflectionId id) async {}
 
   @override
-  Future<bool> exists(
-    ReflectionId id,
-  ) async =>
-      false;
+  Future<bool> exists(ReflectionId id) async => false;
 
   @override
-  Future<Reflection?> findById(
-    ReflectionId id,
-  ) async =>
-      null;
+  Future<Reflection?> findById(ReflectionId id) async => null;
 
   @override
-  Future<void> save(
-    Reflection reflection,
-  ) async {
+  Future<void> save(Reflection reflection) async {
     throw Exception('boom');
   }
 }

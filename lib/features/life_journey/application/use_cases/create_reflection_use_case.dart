@@ -6,18 +6,14 @@ import 'package:everyonesheroes/features/life_journey/domain/aggregates/reflecti
 
 import 'package:everyonesheroes/features/life_journey/domain/repositories/reflection_repository.dart';
 
-import 'create_reflection_request.dart';
+import '../requests/create_reflection_request.dart';
 
 final class CreateReflectionUseCase {
-  const CreateReflectionUseCase({
-    required this._reflectionRepository,
-  });
+  const CreateReflectionUseCase({required this._reflectionRepository});
 
   final ReflectionRepository _reflectionRepository;
 
-  Future<Result<Reflection>> execute(
-    CreateReflectionRequest request,
-  ) async {
+  Future<Result<Reflection>> execute(CreateReflectionRequest request) async {
     try {
       final reflection = Reflection.create(
         id: request.reflectionId,
@@ -26,15 +22,11 @@ final class CreateReflectionUseCase {
         missionId: request.missionId,
       );
 
-      await _reflectionRepository.save(
-        reflection,
-      );
+      await _reflectionRepository.save(reflection);
 
       return Success(reflection);
     } catch (e) {
-      return Failure(
-        'Failed to create reflection: $e',
-      );
+      return Failure('Failed to create reflection: $e');
     }
   }
 }

@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:everyonesheroes/core/ids/reflection_id.dart';
-import 'package:everyonesheroes/features/life_journey/domain/enums/behavioral_signal_type.dart';
+import 'package:everyonesheroes/features/life_journey/domain/enums/behavioral_evidence_type.dart';
 import 'package:everyonesheroes/features/life_journey/domain/value_objects/behavioral_evidence.dart';
 import 'package:everyonesheroes/features/life_journey/domain/value_objects/evidence_source.dart';
 

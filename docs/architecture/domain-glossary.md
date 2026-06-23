@@ -180,21 +180,58 @@ Behavioral Evidence is observational.
 
 Behavioral Evidence is not inherently positive or negative.
 
-Examples:
+BehavioralEvidence
+├── BehavioralEvidenceType
+├── EvidenceSource
+│   ├── ReflectionEvidenceSource
+│   └── MissionEvidenceSource
+└── Strength
+
+BehavioralEvidenceType:
+
+### Positive Behaviors
 
 * Discipline
-* Courage
+* Confidence
+* Resilience
 * Consistency
+* Courage
+* Leadership
+* Service
+* Responsibility
+* Self-Awareness
+* Purpose
+* Connection
 * Vulnerability
+
+### Growth Opportunities
+
 * Avoidance
 * Fear
 * Procrastination
+* Indecision
+* Self-Sabotage
+* Perfectionism
+* Impulsivity
+* Defensiveness
+* Blame
+* Dishonesty
+* Entitlement
 
 Behavioral Evidence is the foundation for future pattern detection.
 
+# Evidence Source
+The origin of Behavioral Evidence.
+
+Examples:
+- Reflection
+- Mission
+Pattern
+A recurring trend derived from Behavioral Evidence.
+
 ---
 
-# Behavioral Signal Type
+# Behavioral Signal Type (deprecated)
 
 A classification describing the type of behavior represented by Behavioral Evidence.
 
@@ -210,7 +247,7 @@ Examples:
 
 Current Status:
 
-BehavioralSignalType currently exists in code.
+BehavioralSignalType currently removed from code.
 
 Future naming may evolve as the behavioral model matures.
 

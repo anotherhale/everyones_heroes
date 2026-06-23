@@ -227,6 +227,7 @@ Capture and analyze personal reflection.
 
 Reflection is one of the most important aggregates in the platform.
 
+
 ---
 
 ### Responsibilities
@@ -274,6 +275,11 @@ ReflectionResponse
 Insight
 
 BehavioralEvidence
+├── BehavioralEvidenceType
+├── EvidenceSource
+│   ├── ReflectionEvidenceSource
+│   └── MissionEvidenceSource
+└── Strength
 
 NarrativeThemeId
 

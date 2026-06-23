@@ -11,8 +11,8 @@ import 'package:everyonesheroes/core/ids/reflection_id.dart';
 import 'package:everyonesheroes/core/results/failure.dart';
 import 'package:everyonesheroes/core/results/success.dart';
 
-import 'package:everyonesheroes/features/life_journey/application/analyze_reflection_request.dart';
-import 'package:everyonesheroes/features/life_journey/application/analyze_reflection_use_case.dart';
+import 'package:everyonesheroes/features/life_journey/application/requests/analyze_reflection_request.dart';
+import 'package:everyonesheroes/features/life_journey/application/use_cases/analyze_reflection_use_case.dart';
 
 import 'package:everyonesheroes/features/life_journey/domain/aggregates/reflection.dart';
 
