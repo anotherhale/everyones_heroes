@@ -473,7 +473,7 @@ Covered:
 
 Known gaps:
 
-⚠ Event Pipeline Integration
+⚠ Event Pipeline Integration (ReflectionSubmitted → AnalyzeReflection not auto-triggered)
 
 ⚠ DiscoveryProfile Aggregate
 
@@ -488,6 +488,8 @@ Known gaps:
 ⚠ ReflectionRepository Journey Queries
 
 ⚠ Clock-Based Aggregate Testing
+
+⚠ BehavioralSignalGenerated orphan — test file growth_signal_generated_test.dart covers a deprecated concept
 
 These gaps are expected during M1 development.
 

@@ -8,131 +8,6 @@ Drift items should eventually be resolved and removed.
 
 ---
 
-# DRIFT-001 NarrativeThemesAdded Event Missing
-
-Status: Open
-
-Priority: Medium
-
-Affected Context:
-
-Life Journey
-
-Expected:
-
-Reflection should publish a domain event whenever Narrative Themes are added.
-
-Current:
-
-Reflection.addNarrativeThemes()
-
-updates aggregate state but does not publish an event.
-
-Current Flow:
-
-Reflection
-↓
-addNarrativeThemes()
-↓
-State Updated
-
-Expected Flow:
-
-Reflection
-↓
-addNarrativeThemes()
-↓
-NarrativeThemesAdded
-↓
-State Updated
-
-Impact:
-
-* Missing audit trail
-* Missing event-driven integration point
-* Inconsistent behavior compared to:
-
-  * InsightsGenerated
-  * BehavioralEvidenceDetected
-
-Resolution:
-
-Create:
-
-* NarrativeThemesAdded event
-
-Update:
-
-* Reflection.addNarrativeThemes()
-
-to publish the event.
-
-Done When:
-
-NarrativeThemesAdded is raised whenever themes are added to a Reflection.
-
----
-
-# DRIFT-002 behavioral_signals_observed.dart Filename Mismatch
-
-Status: Open
-
-Priority: Low
-
-Affected Context:
-
-Life Journey
-
-Expected:
-
-File names should reflect contained concepts.
-
-Current:
-
-File:
-
-behavioral_signals_observed.dart
-
-Contains:
-
-BehavioralEvidenceDetected
-
-Historical Context:
-
-The architecture evolved from:
-
-GrowthSignal
-↓
-BehavioralSignal
-↓
-BehavioralEvidence
-
-The filename was not updated during the migration.
-
-Impact:
-
-* Naming confusion
-* Harder navigation
-* Misleading architectural terminology
-
-Resolution:
-
-Rename:
-
-behavioral_signals_observed.dart
-
-to:
-
-behavioral_evidence_detected.dart
-
-Update imports accordingly.
-
-Done When:
-
-File names align with event names and current domain language.
-
----
-
 # DRIFT-003 Domain Service Ports Located Under Infrastructure
 
 Status: Open
@@ -428,6 +303,105 @@ Production code contains only production adapters.
 
 ---
 
+# DRIFT-008 BehavioralSignalGenerated Event Is Orphaned
+
+Status: Open
+
+Priority: Medium
+
+Affected Context:
+
+Life Journey
+
+Expected:
+
+Per AD-005, GrowthSignal-era artifacts should be deprecated.
+
+No aggregate should reference BehavioralSignalGenerated.
+
+Current:
+
+`behavioral_signal_generated.dart` defines `BehavioralSignalGenerated`.
+
+No aggregate in lib/ raises this event.
+
+`behavioral_signal.dart` defines a `BehavioralSignal` entity that is imported by nothing in lib/.
+
+`BehavioralSignalType` enum is still referenced by `BehavioralEvidence`, creating naming confusion.
+
+The test file `growth_signal_generated_test.dart` has a name that references the deprecated GrowthSignal concept.
+
+Impact:
+
+* Dead code increases cognitive overhead
+* Naming creates confusion with the current BehavioralEvidence model
+* Signals that the migration from GrowthSignal → BehavioralEvidence is incomplete
+
+Resolution:
+
+Remove:
+
+* `behavioral_signal_generated.dart`
+* `behavioral_signal.dart`
+* `growth_signal_generated_test.dart`
+
+Rename:
+
+* `BehavioralSignalType` → `BehavioralEvidenceType` or `EvidenceType`
+
+Update:
+
+* `BehavioralEvidence` to reference the renamed type
+
+Done When:
+
+All GrowthSignal and BehavioralSignal artifacts are removed from production code.
+
+---
+
+# DRIFT-009 behavioral_evidencel_analyzer.dart Filename Typo
+
+Status: Open
+
+Priority: Low
+
+Affected Context:
+
+Life Journey
+
+Expected:
+
+`behavioral_evidence_analyzer.dart`
+
+Current:
+
+`behavioral_evidencel_analyzer.dart`
+
+The filename has a stray 'l' between 'evidence' and '_analyzer'.
+
+Impact:
+
+* Confusing navigation
+* Inconsistent naming
+
+Resolution:
+
+Rename:
+
+`behavioral_evidencel_analyzer.dart`
+
+to:
+
+`behavioral_evidence_analyzer.dart`
+
+Update imports accordingly.
+
+Done When:
+
+Filename matches the class it contains.
+
+---
+
 # Summary
 
 High Priority
@@ -438,13 +412,13 @@ High Priority
 
 Medium Priority
 
-* DRIFT-001 NarrativeThemesAdded Event Missing
 * DRIFT-006 Service Locator Usage
 * DRIFT-007 Fake Adapters In Production Code
+* DRIFT-008 BehavioralSignalGenerated Event Is Orphaned
 
 Low Priority
 
-* DRIFT-002 behavioral_signals_observed.dart Filename Mismatch
+* DRIFT-009 behavioral_evidencel_analyzer.dart Filename Typo
 
 ---
 

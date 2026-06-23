@@ -286,6 +286,8 @@ NarrativeThemeId
 * BehavioralEvidenceDetected
 * NarrativeThemesAdded
 
+All four events are implemented.
+
 ---
 
 ### Repository

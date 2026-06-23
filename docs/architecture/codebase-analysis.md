@@ -56,12 +56,11 @@ Codebase Analysis: Everyone's Heroes
 ├────────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
 │ InsightsGenerated          │ domain/events/insights_generated.dart          │ Reflection │ ✅                                                                            │
 ├────────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
-│ BehavioralEvidenceDetected │ domain/events/behavioral_signals_observed.dart │ Reflection │ ⚠️ Implemented but filename is wrong (behavioral_signals_observed)            │
+│ BehavioralEvidenceDetected │ domain/events/behavioral_evidence_detected.dart │ Reflection │ ✅ Implemented; filename corrected (was behavioral_signals_observed — DRIFT-002 resolved) │
 ├────────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
-│ BehavioralSignalGenerated  │ domain/events/behavioral_signal_generated.dart │ Journey    │ ⚠️ Orphaned — raised by no aggregate; should be deprecated per AD-005         │
+│ BehavioralSignalGenerated  │ domain/events/behavioral_signal_generated.dart │ Journey    │ ⚠️ Orphaned — raised by no aggregate; deprecated per AD-005 (see DRIFT-008)  │
 ├────────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
-│ NarrativeThemesAdded       │ —                                              │ —          │ ❌ Missing — addNarrativeThemes() on Reflection silently adds themes without  │
-│                            │                                          any event                                                             │
+│ NarrativeThemesAdded       │ domain/events/narrative_themes_added.dart      │ Reflection │ ✅ Implemented — addNarrativeThemes() publishes the event (DRIFT-001 resolved) │
 └────────────────────────────┴────────────────────────────────────────────────┴────────────┴───────────────────────────────────────────────────────────────────────────────┘
 
 ---
@@ -120,74 +119,56 @@ lib/features/life_journey/infrastructure/services/. Note: these interfacrastruct
 ---
 7. Architectural Drift from CLAUDE.md
 
-Critical:
+Last updated: 2026-06-22
 
-1. Dual use case location — refactor incomplete. Five use cases remain in lib/contexts/life_journey/application/ while two newer ones landed in
-lib/features/life_journey/application/. Both paths are active and testedmigration source; it was never cleaned up.
-2. LifeJourney aggregate root is absent. CLAUDE.md defines the hierarchy as LifeJourney → Journey → Quest → Mission. Only LifeJourneyId exists — the aggregate root that is
-supposed to sit above Journey was never implemented.
-3. Domain service ports live in infrastructure/, not domain/. InsightExtractionService, BehavioralEvidenceAnalyzer, and NarrativeThemeResolver are defined in
-lib/features/life_journey/infrastructure/services/. They are ports (outgthe domain) and should live inlib/features/life_journey/domain/services/.
-4. Event pipeline is completely empty. EventPipelineRegistration.registes event-driven cross-context communication, but no event handlers arewired — ReflectionSubmitted, BehavioralEvidenceDetected, and MissionCompleted have no subscribers.
-5. GrowthSignal-era artifacts remain in test/. test/features/life_journe_generated_test.dart tests BehavioralSignalGenerated (renamed but thefile kept its old name). test/features/life_journey/domain/fixtures/growth_signal_fixture.dart is an empty stub. AD-005 says not to introduce new growth signal usages; the
-test file title is misleading.
+Resolved since initial analysis:
 
-Moderate:
+✅ DRIFT-001: addNarrativeThemes() now publishes NarrativeThemesAdded.
+✅ DRIFT-002: behavioral_signals_observed.dart renamed to behavioral_evidence_detected.dart.
 
-6. BehavioralSignal entity is orphaned. behavioral_signal.dart defines a a BehavioralSignalType. It is imported by nothing in lib/ and appearsonly in its own test. The BehavioralSignalType enum itself is still used by BehavioralEvidence, creating naming confusion (evidence references a type named after the
-deprecated signal concept).
-7. addNarrativeThemes() raises no domain event. addInsights() raises InsightsGenerated and addbehavioralEvidence() raises BehavioralEvidenceDetected, but addNarrativeThemes()
- silently mutates state without publishing. This breaks the audit trail.
-8. behavioral_signals_observed.dart contains BehavioralEvidenceDetected. The filename is a leftover from a rename that was not completed.
-9. UseCase<> interface applied inconsistently. Only CreateJourneyUseCase use cases are bare classes.
-10. Reflection.create() calls DateTime.now() directly. The shared kernel has Clock, SystemClock, and FixedClock abstractions. The aggregate bypasses them, making the creation
- timestamp untestable.
-11. Fake service adapters are in lib/, not test/. FakeBehavioralEvidenceAnalyzer, FakeInsightExtractionService, and FakeNarrativeThemeResolver are shipped in production code
-under lib/features/.../infrastructure/services/fake/.
-12. DependencyRegistration uses mutable static state (service locator). This is not true dependency injection, is shared across test runs, and would require careful reset
-between tests. Inconsistent with the hexagonal architecture goal.
+Critical (open):
+
+1. Dual use case location — refactor incomplete (DRIFT-004). Five use cases remain in lib/contexts/life_journey/application/ while two newer ones landed in lib/features/life_journey/application/. Both paths are active and tested. The contexts/ path is the old migration source; it was never cleaned up.
+2. LifeJourney aggregate root is absent. Only LifeJourneyId exists — the aggregate root above Journey was never implemented.
+3. Domain service ports live in infrastructure/, not domain/ (DRIFT-003). InsightExtractionService, BehavioralEvidenceAnalyzer, and NarrativeThemeResolver are defined in lib/features/life_journey/infrastructure/services/. They are ports and should live in lib/features/life_journey/domain/services/.
+4. Event pipeline is completely empty. EventPipelineRegistration registers no handlers — ReflectionSubmitted, BehavioralEvidenceDetected, and MissionCompleted have no subscribers.
+5. GrowthSignal-era artifacts remain (DRIFT-008). behavioral_signal_generated.dart defines BehavioralSignalGenerated; no aggregate raises it. behavioral_signal.dart entity is imported by nothing in lib/. growth_signal_generated_test.dart and growth_signal_fixture.dart are misleadingly named artifacts of the deprecated model.
+
+Moderate (open):
+
+6. BehavioralSignal entity is orphaned (DRIFT-008). behavioral_signal.dart is imported by nothing. BehavioralSignalType enum is still used by BehavioralEvidence, creating naming confusion (evidence references a type named after the deprecated signal concept).
+7. UseCase<> interface applied inconsistently. Only CreateJourneyUseCase implements it; all other use cases are bare classes.
+8. Reflection.create() calls DateTime.now() directly. The shared kernel has Clock, SystemClock, and FixedClock abstractions. The aggregate bypasses them, making the creation timestamp non-deterministic in tests (TD-007).
+9. Fake service adapters are in lib/, not test/ (DRIFT-007). FakeBehavioralEvidenceAnalyzer, FakeInsightExtractionService, and FakeNarrativeThemeResolver are shipped in production code under lib/features/.../infrastructure/services/fake/.
+10. DependencyRegistration uses mutable static state (DRIFT-006). This is a service locator pattern, not true dependency injection.
+11. behavioral_evidencel_analyzer.dart has a filename typo (DRIFT-009). The 'l' between 'evidence' and '_analyzer' is incorrect.
 
 ---
 8. Missing Tests
 
-┌──────────────────────────────────────────────────────────────┬────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│                         Missing Test                         │              Why it Matters                                           │
-├──────────────────────────────────────────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────┤
-│ Reflection.addNarrativeThemes() does not raise an event      │ Silent  gap                                                           │
-├──────────────────────────────────────────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────┤
-│ CreateQuestUseCase persists journey with attached quest      │ The usest() and saves both aggregates; only quest-side save is tested │
-├──────────────────────────────────────────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────┤
-│ ReflectionRepository.findByJourneyId                         │ Method  be needed by UI                                               │
-├──────────────────────────────────────────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────┤
-│ DiscoveryProfile aggregate                                   │ File is                                                               │
-├──────────────────────────────────────────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────┤
-│ NarrativeThemeRepository contract                            │ Interfas                                                              │
-├──────────────────────────────────────────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────┤
-│ InfluenceRepository contract                                 │ No inte                                                               │
-├──────────────────────────────────────────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────┤
-│ EventPipelineRegistration wiring                             │ Currentvents trigger handlers                                         │
-├──────────────────────────────────────────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────┤
-│ Clock injection into Reflection.create()                     │ DateTimaking submission time non-deterministic in tests               │
-├──────────────────────────────────────────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────┤
-│ growth_signal_fixture.dart                                   │ Empty s                                                               │
-├──────────────────────────────────────────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────┤
-│ Integration: ReflectionSubmitted → AnalyzeReflection trigger │ End-to-o integration test across the event boundary                   │
-└──────────────────────────────────────────────────────────────┴────────────────────────────────────────────────────────────────────────────────────────────────────┘
+Current test count: 386 passing (as of 2026-06-22)
+
+Still missing:
+
+- CreateQuestUseCase: does not verify journey persistence (only quest-side save is tested)
+- ReflectionRepository.findByJourneyId: no port or test exists
+- DiscoveryProfile aggregate: file is 0 bytes; no tests
+- NarrativeThemeRepository contract: interface is 0 bytes; no tests
+- InfluenceRepository contract: interface missing entirely
+- EventPipelineRegistration wiring: no handlers are registered; no integration tests
+- Clock injection into Reflection.create(): DateTime.now() called directly; timestamp non-deterministic
+- growth_signal_fixture.dart: empty stub; should be removed or replaced
+- Integration: ReflectionSubmitted → AnalyzeReflection trigger (end-to-end event boundary)
+- BehavioralSignalGenerated orphan: test file growth_signal_generated_test.dart covers a deprecated concept
 
 ---
 9. Potential Architectural Issues
 
-1. Non-atomic save + publish. All use cases save the aggregate first, thIf any eventBus.publish() call throws, the state is committed butdownstream handlers never run. The domain can become inconsistent with no recovery path.
-2. BehavioralEvidence couples to BehavioralSignalType. The value object ls still references BehavioralSignalType — the enum from the deprecatedmodel. As the system grows this will become a naming liability. Consider renaming to BehavioralTraitType or EvidenceType.
-3. BehavioralSignal entity + BehavioralSignalGenerated event are dead coested, but no aggregate ever raises BehavioralSignalGenerated andBehavioralSignal is attached to nothing. They are either being retained for future pattern detection (undocumented intent) or are leftover artifacts — either way, the intent
-should be documented or the code removed.
-4. Discovery context has no aggregate boundary enforcement. Influence is an Entity but not behind an aggregate root (DiscoveryProfile is empty). Anything can mutate Influence
- directly. The invariant that "Influence must have at least one Narrativtity itself, but without a repository or aggregate root there is nopersistence boundary.
-5. No findByJourneyId on ReflectionRepository. The natural query of "sho journey" has no port defined. When the UI layer consumes the domain this will require an interface change, a migration of in-memory storage, and likely test additions — all deferred technical debt.
-6. InMemoryJourneyRepository and InMemoryQuestRepository are not final. is final class. The inconsistency allows unintended subclassing of thein-memory stores, which can produce silent test-isolation problems.
-7. Service locator (DependencyRegistration) with static mutable state. Sr, _eventBus are reset only when null. If tests initialize these in oneorder and don't reset, state bleeds between test suites. This is not flagged by any test currently.
-8. AnalyzeReflectionUseCase has an uppercase private field (_BehavioralEtion is lowerCamelCase for all identifiers. The constructor parameter isalso BehavioralEvidenceAnalyzer (capital B), which shadows the type name. This will cause a linting error with prefer_final_fields and is a readability hazard.
-
-✻ Baked for 5m 5s
-
-※ recap: Analyzed the Everyone's Heroes codebase for architectural drift and incomplete refactoring. The analysis is complete and ready to review. Next step is to decide which drift items to address first, likely consolidating use cases from contexts/ into features/. (disable recaps in /config)
+1. Non-atomic save + publish. All use cases save the aggregate first, then publish events. If eventBus.publish() throws, state is committed but downstream handlers never run. The domain can become inconsistent with no recovery path.
+2. BehavioralEvidence couples to BehavioralSignalType. The value object still references BehavioralSignalType — the enum from the deprecated model. As the system grows this will become a naming liability. Consider renaming to BehavioralTraitType or EvidenceType.
+3. BehavioralSignalGenerated event and BehavioralSignal entity are dead code. No aggregate ever raises BehavioralSignalGenerated and BehavioralSignal is attached to nothing. These are leftover artifacts from the GrowthSignal → BehavioralEvidence migration (see DRIFT-008).
+4. Discovery context has no aggregate boundary enforcement. Influence is an Entity but not behind an aggregate root (DiscoveryProfile is 0 bytes). Anything can mutate Influence directly. There is no persistence boundary (see DRIFT-005).
+5. No findByJourneyId on ReflectionRepository. The natural query of "show reflections for a journey" has no port defined. When the UI layer consumes the domain this will require an interface change, a migration of in-memory storage, and likely test additions (TD-008).
+6. InMemoryJourneyRepository and InMemoryQuestRepository are not final. InMemoryReflectionRepository is final. The inconsistency allows unintended subclassing.
+7. Service locator (DependencyRegistration) with static mutable state. State bleeds between test suites if not reset. This is not flagged by any test currently (DRIFT-006).
+8. AnalyzeReflectionUseCase has an uppercase private field (_BehavioralEvidenceAnalyzer). Dart convention is lowerCamelCase for all identifiers. The constructor parameter also shadows the type name.

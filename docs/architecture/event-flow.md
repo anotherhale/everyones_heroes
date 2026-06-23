@@ -149,12 +149,6 @@ AnalyzeReflectionUseCase
 InsightsGenerated
 ↓
 BehavioralEvidenceDetected
-
-Optional:
-
-BehavioralEvidenceDetected
-↓
-Narrative Theme Resolution
 ↓
 NarrativeThemesAdded
 
@@ -162,9 +156,11 @@ Current Status:
 
 The event infrastructure exists.
 
-Automatic orchestration is not yet wired.
+AnalyzeReflectionUseCase orchestrates all three stages in sequence.
 
-Analysis currently occurs through direct use case execution.
+Automatic event-driven orchestration (ReflectionSubmitted → AnalyzeReflectionUseCase) is not yet wired.
+
+Analysis currently requires direct use case invocation.
 
 ---
 
@@ -230,16 +226,13 @@ Raised when Behavioral Evidence is added to a Reflection.
 
 ---
 
-## Planned Events
-
 NarrativeThemesAdded
 
 Raised when Narrative Themes are attached to a Reflection.
 
-Current Status:
-Not yet implemented.
-
 ---
+
+## Planned Events
 
 PatternDetected
 
@@ -383,7 +376,7 @@ Publishes:
 * ReflectionSubmitted
 * InsightsGenerated
 * BehavioralEvidenceDetected
-* NarrativeThemesAdded (future)
+* NarrativeThemesAdded
 
 ---
 
