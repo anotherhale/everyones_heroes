@@ -1,4 +1,4 @@
-enum BehavioralSignalType {
+enum BehavioralEvidenceType {
   confidence,
   resilience,
   discipline,

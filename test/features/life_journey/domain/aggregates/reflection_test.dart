@@ -13,6 +13,7 @@ import 'package:everyonesheroes/features/life_journey/domain/events/insights_gen
 import 'package:everyonesheroes/features/life_journey/domain/events/reflection_submitted.dart';
 
 import 'package:everyonesheroes/features/life_journey/domain/value_objects/behavioral_evidence.dart';
+import 'package:everyonesheroes/features/life_journey/domain/value_objects/evidence_source.dart';
 import 'package:everyonesheroes/features/life_journey/domain/value_objects/insight.dart';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -131,8 +132,8 @@ void main() {
       expect(
         () => reflection.addBehavioralEvidence([
           BehavioralEvidence(
-            signalType: BehavioralSignalType.resilience,
-            evidence: 'Did not quit',
+            evidenceType: BehavioralEvidenceType.resilience,
+            source: ReflectionEvidenceSource(reflectionId: reflection.id),
             strength: 0.9,
           ),
         ]),
@@ -147,8 +148,8 @@ void main() {
 
       reflection.addBehavioralEvidence([
         BehavioralEvidence(
-          signalType: BehavioralSignalType.resilience,
-          evidence: 'Did not quit',
+          evidenceType: BehavioralEvidenceType.resilience,
+          source: ReflectionEvidenceSource(reflectionId: reflection.id),
           strength: 0.9,
         ),
       ]);
@@ -165,8 +166,8 @@ void main() {
 
       reflection.addBehavioralEvidence([
         BehavioralEvidence(
-          signalType: BehavioralSignalType.resilience,
-          evidence: 'Did not quit',
+          evidenceType: BehavioralEvidenceType.resilience,
+          source: ReflectionEvidenceSource(reflectionId: reflection.id),
           strength: 0.9,
         ),
       ]);
