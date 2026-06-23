@@ -1,4 +1,4 @@
-import 'package:everyonesheroes/features/life_journey/infrastructure/services/fake/fake_behavioral_evidence_analyzer.dart';
+import '../../../../fakes/life_journey/fake_behavioral_evidence_analyzer.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:everyonesheroes/core/ids/journey_id.dart';

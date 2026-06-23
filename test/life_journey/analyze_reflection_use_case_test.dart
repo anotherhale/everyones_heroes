@@ -22,9 +22,9 @@ import 'package:everyonesheroes/features/life_journey/domain/events/insights_gen
 
 import 'package:everyonesheroes/features/life_journey/infrastructure/repositories/in_memory_reflection_repository.dart';
 
-import 'package:everyonesheroes/features/life_journey/infrastructure/services/fake/fake_behavioral_evidence_analyzer.dart';
-import 'package:everyonesheroes/features/life_journey/infrastructure/services/fake/fake_insight_extraction_service.dart';
-import 'package:everyonesheroes/features/life_journey/infrastructure/services/fake/fake_narrative_theme_resolver.dart';
+import '../fakes/life_journey/fake_behavioral_evidence_analyzer.dart';
+import '../fakes/life_journey/fake_insight_extraction_service.dart';
+import '../fakes/life_journey/fake_narrative_theme_resolver.dart';
 
 void main() {
   group('AnalyzeReflectionUseCase', () {
