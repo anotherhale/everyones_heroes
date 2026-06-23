@@ -16,6 +16,7 @@ final class NarrativeTheme extends Entity<NarrativeThemeId> {
     }
   }
 
+  @override
   final NarrativeThemeId id;
 
   final String _name;
