@@ -1,5 +1,5 @@
 import 'package:everyonesheroes/features/life_journey/domain/value_objects/evidence_source.dart';
-import 'package:everyonesheroes/features/life_journey/infrastructure/services/behavioral_evidencel_analyzer.dart';
+import 'package:everyonesheroes/features/life_journey/domain/services/behavioral_evidence_analyzer.dart';
 
 import 'package:everyonesheroes/features/life_journey/domain/aggregates/reflection.dart';
 
