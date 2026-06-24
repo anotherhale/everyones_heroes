@@ -3,7 +3,7 @@ import 'package:everyonesheroes/core/eventing/event_dispatcher.dart';
 import 'package:everyonesheroes/core/eventing/event_handler.dart';
 
 final class InMemoryEventDispatcher implements EventDispatcher {
-  final Map<Type, List<EventHandler>> _handlers = {};
+  final Map<Type, List<EventHandler<DomainEvent>>> _handlers = {};
 
   @override
   void register<T extends DomainEvent>(EventHandler<T> handler) {
