@@ -39,7 +39,7 @@ void main() {
 
     test('adds response', () {
       reflection.addResponse(
-        const JournalResponse(text: 'Today I learned something.'),
+        const JournalResponse(response: 'Today I learned something.'),
       );
 
       expect(reflection.responses.length, 1);
@@ -47,8 +47,8 @@ void main() {
 
     test('adds multiple responses', () {
       reflection.addResponses([
-        const JournalResponse(text: 'First'),
-        const JournalResponse(text: 'Second'),
+        const JournalResponse(response: 'First'),
+        const JournalResponse(response: 'Second'),
       ]);
 
       expect(reflection.responses.length, 2);
@@ -59,7 +59,7 @@ void main() {
     });
 
     test('submits reflection', () {
-      reflection.addResponse(const JournalResponse(text: 'Reflection'));
+      reflection.addResponse(const JournalResponse(response: 'Reflection'));
 
       reflection.submit();
 
@@ -69,7 +69,7 @@ void main() {
     });
 
     test('cannot submit twice', () {
-      reflection.addResponse(const JournalResponse(text: 'Reflection'));
+      reflection.addResponse(const JournalResponse(response: 'Reflection'));
 
       reflection.submit();
 
@@ -77,7 +77,7 @@ void main() {
     });
 
     test('raises ReflectionSubmitted event', () {
-      reflection.addResponse(const JournalResponse(text: 'Reflection'));
+      reflection.addResponse(const JournalResponse(response: 'Reflection'));
 
       reflection.submit();
 
@@ -87,12 +87,13 @@ void main() {
     });
 
     test('cannot add response after submission', () {
-      reflection.addResponse(const JournalResponse(text: 'Reflection'));
+      reflection.addResponse(const JournalResponse(response: 'Reflection'));
 
       reflection.submit();
 
       expect(
-        () => reflection.addResponse(const JournalResponse(text: 'Another')),
+        () =>
+            reflection.addResponse(const JournalResponse(response: 'Another')),
         throwsStateError,
       );
     });
@@ -107,7 +108,7 @@ void main() {
     });
 
     test('adds insights after submission', () {
-      reflection.addResponse(const JournalResponse(text: 'Reflection'));
+      reflection.addResponse(const JournalResponse(response: 'Reflection'));
 
       reflection.submit();
 
@@ -117,7 +118,7 @@ void main() {
     });
 
     test('raises InsightsGenerated event', () {
-      reflection.addResponse(const JournalResponse(text: 'Reflection'));
+      reflection.addResponse(const JournalResponse(response: 'Reflection'));
 
       reflection.submit();
 
@@ -142,7 +143,7 @@ void main() {
     });
 
     test('adds behavioral evidence after submission', () {
-      reflection.addResponse(const JournalResponse(text: 'Reflection'));
+      reflection.addResponse(const JournalResponse(response: 'Reflection'));
 
       reflection.submit();
 
@@ -158,7 +159,7 @@ void main() {
     });
 
     test('raises BehavioralEvidenceDetected event', () {
-      reflection.addResponse(const JournalResponse(text: 'Reflection'));
+      reflection.addResponse(const JournalResponse(response: 'Reflection'));
 
       reflection.submit();
 
@@ -176,7 +177,7 @@ void main() {
     });
 
     test('deduplicates narrative themes', () {
-      reflection.addResponse(const JournalResponse(text: 'Reflection'));
+      reflection.addResponse(const JournalResponse(response: 'Reflection'));
 
       reflection.submit();
 
@@ -189,7 +190,7 @@ void main() {
 
     test('responses are immutable', () {
       expect(
-        () => reflection.responses.add(const JournalResponse(text: 'test')),
+        () => reflection.responses.add(const JournalResponse(response: 'test')),
         throwsUnsupportedError,
       );
     });

@@ -57,7 +57,7 @@ void main() {
       );
 
       reflection.addResponse(
-        const JournalResponse(text: 'Today I learned persistence.'),
+        const JournalResponse(response: 'Today I learned persistence.'),
       );
 
       await reflectionRepository.save(reflection);
@@ -91,7 +91,9 @@ void main() {
         journeyId: JourneyId.generate(),
       );
 
-      reflection.addResponse(const JournalResponse(text: 'Reflection content'));
+      reflection.addResponse(
+        const JournalResponse(response: 'Reflection content'),
+      );
 
       await reflectionRepository.save(reflection);
 
@@ -127,7 +129,7 @@ void main() {
         journeyId: JourneyId.generate(),
       );
 
-      reflection.addResponse(const JournalResponse(text: 'Test'));
+      reflection.addResponse(const JournalResponse(response: 'Test'));
 
       await reflectionRepository.save(reflection);
 
@@ -144,7 +146,7 @@ void main() {
         journeyId: JourneyId.generate(),
       );
 
-      reflection.addResponse(const JournalResponse(text: 'Test'));
+      reflection.addResponse(const JournalResponse(response: 'Test'));
 
       reflection.submit();
 

@@ -7,4 +7,5 @@ enum ReflectionEmotion {
   overwhelmed,
   calm,
   hopeful,
+  neutral,
 }

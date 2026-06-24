@@ -46,6 +46,11 @@ final class AnalyzeReflectionUseCase {
         );
       }
 
+      // Capture events that already existed when analysis started.
+      // This prevents ReflectionSubmitted from being republished
+      // and recursively invoking this use case.
+      final existingEventCount = reflection.domainEvents.length;
+
       final insights = await _insightExtractionService.extractInsights(
         reflection,
       );
@@ -62,7 +67,11 @@ final class AnalyzeReflectionUseCase {
 
       await _reflectionRepository.save(reflection);
 
-      for (final event in reflection.domainEvents) {
+      final newEvents = reflection.domainEvents
+          .skip(existingEventCount)
+          .toList(growable: false);
+
+      for (final event in newEvents) {
         await _eventBus.publish(event);
       }
 

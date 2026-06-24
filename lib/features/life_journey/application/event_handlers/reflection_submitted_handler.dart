@@ -14,5 +14,13 @@ final class ReflectionSubmittedHandler
     final result = await _useCase.execute(
       AnalyzeReflectionRequest(reflectionId: event.reflectionId),
     );
+    result.fold(
+      onSuccess: (value) {
+        // Handle success case
+      },
+      onFailure: (error) {
+        // Handle failure case
+      },
+    );
   }
 }

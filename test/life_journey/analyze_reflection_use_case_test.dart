@@ -58,7 +58,9 @@ void main() {
       );
 
       reflection.addResponse(
-        const JournalResponse(text: 'I kept going even when it was difficult.'),
+        const JournalResponse(
+          response: 'I kept going even when it was difficult.',
+        ),
       );
 
       reflection.submit();
@@ -96,7 +98,7 @@ void main() {
         journeyId: JourneyId.generate(),
       );
 
-      reflection.addResponse(const JournalResponse(text: 'Test'));
+      reflection.addResponse(const JournalResponse(response: 'Test'));
 
       reflection.submit();
 
@@ -119,7 +121,7 @@ void main() {
         journeyId: JourneyId.generate(),
       );
 
-      reflection.addResponse(const JournalResponse(text: 'Test'));
+      reflection.addResponse(const JournalResponse(response: 'Test'));
 
       reflection.submit();
 
@@ -142,7 +144,7 @@ void main() {
         journeyId: JourneyId.generate(),
       );
 
-      reflection.addResponse(const JournalResponse(text: 'Test'));
+      reflection.addResponse(const JournalResponse(response: 'Test'));
 
       reflection.submit();
 

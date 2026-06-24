@@ -1,0 +1,87 @@
+import 'package:everyonesheroes/core/eventing/event_dispatcher_provider.dart';
+import 'package:everyonesheroes/core/eventing/event_providers.dart';
+import 'package:everyonesheroes/core/ids/journey_id.dart';
+import 'package:everyonesheroes/core/ids/reflection_id.dart';
+
+import 'package:everyonesheroes/features/life_journey/application/event_handlers/reflection_submitted_handler.dart';
+import 'package:everyonesheroes/features/life_journey/application/providers/analyze_reflection_use_case_provider.dart';
+import 'package:everyonesheroes/features/life_journey/application/providers/reflection_repository_provider.dart';
+
+import 'package:everyonesheroes/features/life_journey/domain/aggregates/reflection.dart';
+import 'package:everyonesheroes/features/life_journey/domain/entities/reflection/journal_response.dart';
+import 'package:everyonesheroes/features/life_journey/domain/enums/reflection_emotion.dart';
+import 'package:everyonesheroes/features/life_journey/domain/events/reflection_submitted.dart';
+
+import 'package:everyonesheroes/features/life_journey/domain/repositories/reflection_repository.dart';
+import 'package:everyonesheroes/features/life_journey/infrastructure/repositories/in_memory_reflection_repository.dart';
+
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+void main() {
+  group('Reflection Analysis Pipeline', () {
+    late ProviderContainer container;
+
+    late ReflectionRepository repository;
+
+    setUp(() {
+      repository = InMemoryReflectionRepository();
+
+      container = ProviderContainer(
+        overrides: [reflectionRepositoryProvider.overrideWithValue(repository)],
+      );
+
+      final dispatcher = container.read(eventDispatcherProvider);
+
+      final useCase = container.read(analyzeReflectionUseCaseProvider);
+
+      dispatcher.register<ReflectionSubmitted>(
+        ReflectionSubmittedHandler(useCase: useCase),
+      );
+    });
+
+    tearDown(() {
+      container.dispose();
+    });
+
+    test('submitted reflection is analyzed', () async {
+      final reflection = Reflection.create(
+        id: ReflectionId.generate(),
+        journeyId: JourneyId.generate(),
+      );
+
+      // add at least one response
+      // replace with your actual response type
+
+      reflection.addResponse(
+        JournalResponse(
+          prompt: 'What did you learn?',
+          response: 'I kept going even when it was hard.',
+          emotion: ReflectionEmotion.proud,
+        ),
+      );
+
+      await repository.save(reflection);
+
+      reflection.submit();
+
+      final bus = container.read(eventBusProvider);
+
+      for (final event in reflection.domainEvents) {
+        await bus.publish(event);
+      }
+
+      reflection.clearDomainEvents();
+
+      final updated = await repository.findById(reflection.id);
+
+      expect(updated, isNotNull);
+
+      expect(updated!.insights, isNotEmpty);
+
+      expect(updated.behavioralEvidence, isNotEmpty);
+
+      expect(updated.narrativeThemes, isNotEmpty);
+    });
+  });
+}

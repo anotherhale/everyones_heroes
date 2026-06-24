@@ -5,13 +5,13 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   group('JournalResponse', () {
     test('creates response', () {
-      const response = JournalResponse(text: 'Today was difficult.');
+      const response = JournalResponse(response: 'Today was difficult.');
 
-      expect(response.text, 'Today was difficult.');
+      expect(response.response, 'Today was difficult.');
     });
 
     test('returns journal type', () {
-      const response = JournalResponse(text: 'Test');
+      const response = JournalResponse(response: 'Test');
 
       expect(response.type, ReflectionResponseType.journal);
     });

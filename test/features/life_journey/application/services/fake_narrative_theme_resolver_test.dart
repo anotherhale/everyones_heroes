@@ -29,7 +29,7 @@ void main() {
         journeyId: JourneyId.generate(),
       );
 
-      reflection.addResponse(const JournalResponse(text: 'Test'));
+      reflection.addResponse(const JournalResponse(response: 'Test'));
 
       final themes = await service.resolveThemes(reflection);
 
