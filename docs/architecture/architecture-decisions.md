@@ -521,6 +521,137 @@ The platform should preserve the facts and allow future systems to derive better
 
 ---
 
+# ADR-15 — Behavioral Evidence Is Atomic
+
+Status: Accepted
+
+Date: 2026-06
+
+## Context
+
+The original Life Journey design introduced the concept of a Growth Signal. As the domain evolved, it became clear that growth-oriented signals represented only one subset of observable human behavior.
+
+Reflections may reveal strengths, growth, weaknesses, avoidance patterns, fears, blind spots, emerging capabilities, or other behavioral characteristics. A model focused solely on growth signals imposed an unintended positive bias and limited future analysis capabilities.
+
+The architecture requires a neutral, evidence-based representation of observed behavior that can support future pattern detection, growth opportunity identification, and narrative guidance.
+
+## Decision
+
+Behavioral Evidence is the atomic behavioral observation within the domain.
+
+A BehavioralEvidence instance represents a classified observation derived from a source of evidence.
+
+BehavioralEvidence consists of:
+
+* BehavioralEvidenceType
+* EvidenceSource
+* Strength
+
+BehavioralEvidence does not represent interpretation across time, behavioral trends, or growth opportunities.
+
+BehavioralEvidence is intentionally small and context-independent.
+
+Example:
+
+```text
+BehavioralEvidence
+    Type: Discipline
+    Source: Reflection #123
+    Strength: 0.85
+```
+
+## Evidence Sources
+
+BehavioralEvidence must reference an EvidenceSource.
+
+Current EvidenceSource implementations:
+
+* ReflectionEvidenceSource
+* MissionEvidenceSource
+
+Future sources may include:
+
+* ContributionEvidenceSource
+* MentorshipEvidenceSource
+* DiscoveryEvidenceSource
+* ExternalAssessmentEvidenceSource
+
+## Event Model
+
+Reflections publish:
+
+```text
+BehavioralEvidenceDetected
+```
+
+when behavioral evidence is identified.
+
+BehavioralEvidenceDetected contains one or more BehavioralEvidence instances.
+
+The event represents newly detected evidence, not long-term conclusions.
+
+## Consequences
+
+### Positive
+
+* Supports both strengths and weaknesses.
+* Eliminates positive bias inherent in Growth Signal terminology.
+* Enables future pattern detection across multiple observations.
+* Provides a stable foundation for AI-assisted analysis.
+* Supports multiple evidence sources.
+* Aligns with event sourcing and event-driven architecture.
+
+### Negative
+
+* Additional layers are required to derive meaning from evidence.
+* BehavioralEvidence alone cannot determine growth opportunities.
+* Future pattern detection infrastructure is required.
+
+## Future Architecture
+
+BehavioralEvidence is the foundation for future adaptive narrative systems.
+
+Expected progression:
+
+```text
+BehavioralEvidence
+        ↓
+Pattern Detection
+        ↓
+DetectedPattern
+        ↓
+Growth Opportunity Detection
+        ↓
+GrowthOpportunity
+        ↓
+Narrative Guidance Engine
+        ↓
+Narrative Guidance
+```
+
+BehavioralEvidence remains the atomic observation throughout this pipeline.
+
+## Deprecated Concepts
+
+The following concepts are deprecated and should not be used in new development:
+
+* GrowthSignal
+* GrowthSignalGenerated
+* GrowthSignalObserved
+
+Existing references should be migrated to:
+
+* BehavioralEvidence
+* BehavioralEvidenceDetected
+
+## Related ADRs
+
+* AD-001 Hexagonal Architecture
+* AD-010 Domain First
+* AD-011 Behavioral Signals Become Behavioral Evidence
+
+---
+
 # Architectural North Star
 
 Everyone's Heroes exists to help people:

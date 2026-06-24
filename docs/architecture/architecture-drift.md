@@ -4,13 +4,42 @@ This document tracks places where the implementation has drifted from the intend
 
 Unlike Technical Debt, architecture drift represents inconsistencies between the documented architecture and the current implementation.
 
-Drift items should eventually be resolved and removed.
+Drift items should eventually be resolved and closed and moved to the CLOSED section.
+
+---
+
+# Summary
+
+High Priority
+
+Medium Priority
+
+Low Priority
+
+
+---
+
+# Architectural Goal
+
+The goal is not perfect architecture.
+
+The goal is alignment between:
+
+* Documentation
+* Domain Model
+* Implementation
+
+Architecture drift should trend toward zero over time.
+
+# CLOSED DRIFT Issues
 
 ---
 
 # DRIFT-003 Domain Service Ports Located Under Infrastructure
 
-Status: Open
+Status: Closed
+
+Closed: 2026-06-23
 
 Priority: High
 
@@ -74,7 +103,9 @@ All service ports reside in the domain layer.
 
 # DRIFT-004 Use Cases Split Across Multiple Locations
 
-Status: Open
+Status: Closed
+
+Closed: 2026-06-23
 
 Priority: High
 
@@ -127,7 +158,9 @@ A single application layer contains all Life Journey use cases.
 
 # DRIFT-005 DiscoveryProfile Aggregate Missing
 
-Status: Open
+Status: Closed
+
+Closed: 2026-06-23
 
 Priority: High
 
@@ -182,7 +215,9 @@ All Discovery concepts are owned by a DiscoveryProfile aggregate.
 
 # DRIFT-006 Service Locator Usage
 
-Status: Open
+Status: Closed
+
+Closed: 2026-06-23
 
 Priority: Medium
 
@@ -243,7 +278,9 @@ Static dependency registration is no longer required.
 
 # DRIFT-007 Fake Adapters In Production Code
 
-Status: Open
+Status: Closed
+
+Closed: 2026-06-23
 
 Priority: Medium
 
@@ -305,7 +342,9 @@ Production code contains only production adapters.
 
 # DRIFT-008 BehavioralSignalGenerated Event Is Orphaned
 
-Status: Open
+Status: Closed
+
+Closed: 2026-06-23
 
 Priority: Medium
 
@@ -361,7 +400,9 @@ All GrowthSignal and BehavioralSignal artifacts are removed from production code
 
 # DRIFT-009 behavioral_evidencel_analyzer.dart Filename Typo
 
-Status: Open
+Status: Closed
+
+Closed: 2026-06-23
 
 Priority: Low
 
@@ -400,36 +441,4 @@ Done When:
 
 Filename matches the class it contains.
 
----
 
-# Summary
-
-High Priority
-
-* DRIFT-003 Domain Service Ports Located Under Infrastructure
-* DRIFT-004 Use Cases Split Across Multiple Locations
-* DRIFT-005 DiscoveryProfile Aggregate Missing
-
-Medium Priority
-
-* DRIFT-006 Service Locator Usage
-* DRIFT-007 Fake Adapters In Production Code
-* DRIFT-008 BehavioralSignalGenerated Event Is Orphaned
-
-Low Priority
-
-* DRIFT-009 behavioral_evidencel_analyzer.dart Filename Typo
-
----
-
-# Architectural Goal
-
-The goal is not perfect architecture.
-
-The goal is alignment between:
-
-* Documentation
-* Domain Model
-* Implementation
-
-Architecture drift should trend toward zero over time.

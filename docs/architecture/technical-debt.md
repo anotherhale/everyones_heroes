@@ -22,6 +22,14 @@ Status: Open
 
 Priority: High
 
+Depends On:
+- BehavioralEvidence
+- Reflection Analysis Pipeline
+
+Blocks:
+- TD-002 Growth Opportunity Detection
+- TD-003 Narrative Guidance Engine
+
 Related ADRs:
 
 * AD-008 Pattern Detection Is A Future Layer
@@ -48,11 +56,10 @@ Pattern Detection
 Pattern
 
 Examples:
-
-* StrengthPattern
-* AvoidancePattern
-* EmergingGrowthPattern
-* GrowthOpportunityPattern
+- Consistent Discipline
+- Emerging Leadership
+- Avoidance Trend
+- Service Orientation
 
 Impact:
 
@@ -73,6 +80,9 @@ Introduce:
 Status: Open
 
 Priority: High
+
+Blocks:
+- TD-003 Narrative Guidance Engine
 
 Related ADRs:
 
@@ -154,48 +164,6 @@ Create:
 * Narrative Guidance domain model
 * GenerateNarrativeGuidanceUseCase
 * Guidance recommendation services
-
----
-
-# TD-004 DiscoveryProfile Aggregate
-
-Status: Open
-
-Priority: High
-
-Related ADRs:
-
-* AD-002 Narrative Themes Belong To Discovery
-* AD-003 Influence Is A First-Class Concept
-* AD-015 Narrative Themes Are A Cross-Cutting Concept
-* AD-016 Curated Discovery Before AI Discovery
-
-Description:
-
-Discovery entities exist:
-
-* Influence
-* NarrativeTheme
-
-However, DiscoveryProfile aggregate ownership has not been implemented.
-
-Missing:
-
-* DiscoveryProfile aggregate
-* DiscoveryProfileRepository
-* Discovery use cases
-
-Impact:
-
-Discovery currently lacks a consistency boundary.
-
-Suggested Resolution:
-
-Implement:
-
-* DiscoveryProfile aggregate
-* DiscoveryProfileRepository
-* Discovery use cases
 
 ---
 
@@ -352,6 +320,8 @@ Extend ReflectionRepository with:
 
 Future reporting and pattern detection workflows should avoid loading reflections individually.
 
+Technical Debt items should eventually be resolved and closed and moved to the CLOSED section.
+
 ---
 
 # Technical Debt Prioritization
@@ -360,20 +330,9 @@ Current Focus:
 
 High Priority
 
-* TD-001 Pattern Detection Layer
-* TD-002 Growth Opportunity Detection
-* TD-003 Narrative Guidance Engine
-* TD-004 DiscoveryProfile Aggregate
-
 Medium Priority
 
-* TD-005 Contribution Context
-* TD-006 Event Pipeline Wiring
-* TD-008 Reflection QUery Support
-
 Low Priority
-
-* TD-007 Clock Injection
 
 ---
 
@@ -395,3 +354,51 @@ Generate:
 * Narrative Guidance
 
 Technical debt should be evaluated based on whether it moves the architecture closer to this vision.
+
+---
+# CLOSED TD Issues
+---
+
+# TD-004 DiscoveryProfile Aggregate
+
+Status: CLOSED
+
+Closed: 2026-06-23
+
+Priority: High
+
+Related ADRs:
+
+* AD-002 Narrative Themes Belong To Discovery
+* AD-003 Influence Is A First-Class Concept
+* AD-015 Narrative Themes Are A Cross-Cutting Concept
+* AD-016 Curated Discovery Before AI Discovery
+
+Description:
+
+Discovery entities exist:
+
+* Influence
+* NarrativeTheme
+
+However, DiscoveryProfile aggregate ownership has not been implemented.
+
+Missing:
+
+* DiscoveryProfile aggregate
+* DiscoveryProfileRepository
+* Discovery use cases
+
+Impact:
+
+Discovery currently lacks a consistency boundary.
+
+Suggested Resolution:
+
+Implement:
+
+* DiscoveryProfile aggregate
+* DiscoveryProfileRepository
+* Discovery use cases
+
+---
