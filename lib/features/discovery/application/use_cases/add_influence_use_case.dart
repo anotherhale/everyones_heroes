@@ -4,8 +4,7 @@ import 'package:everyonesheroes/core/ids/influence_id.dart';
 import '../../domain/repositories/discovery_profile_repository.dart';
 
 final class AddInfluenceUseCase {
-  AddInfluenceUseCase({required DiscoveryProfileRepository repository})
-    : _repository = repository;
+  AddInfluenceUseCase({required this._repository});
 
   final DiscoveryProfileRepository _repository;
 

@@ -5,7 +5,7 @@ import 'package:everyonesheroes/core/shared_kernel/entity.dart';
 
 final class NarrativeTheme extends Entity<NarrativeThemeId> {
   NarrativeTheme({
-    required this.id,
+    required NarrativeThemeId id,
     required String name,
     required String description,
   }) : _name = name.trim(),
@@ -15,9 +15,6 @@ final class NarrativeTheme extends Entity<NarrativeThemeId> {
       throw ArgumentError('Theme name cannot be empty.');
     }
   }
-
-  @override
-  final NarrativeThemeId id;
 
   final String _name;
 

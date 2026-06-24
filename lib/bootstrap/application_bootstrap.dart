@@ -1,4 +1,5 @@
 import 'package:everyonesheroes/core/eventing/event_dispatcher_provider.dart';
+import 'package:everyonesheroes/features/life_journey/application/providers/analyze_reflection_use_case_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:everyonesheroes/core/eventing/event_providers.dart';
@@ -6,8 +7,7 @@ import 'package:everyonesheroes/core/eventing/event_providers.dart';
 import 'event_pipeline_registration.dart';
 
 final class ApplicationBootstrap {
-  ApplicationBootstrap({required ProviderContainer container})
-    : _container = container;
+  ApplicationBootstrap({required this._container});
 
   final ProviderContainer _container;
 
@@ -20,6 +20,11 @@ final class ApplicationBootstrap {
 
     _container.read(eventBusProvider);
 
-    EventPipelineRegistration.register();
+    EventPipelineRegistration.register(
+      dispatcher: _container.read(eventDispatcherProvider),
+      analyzeReflectionUseCase: _container.read(
+        analyzeReflectionUseCaseProvider,
+      ),
+    );
   }
 }
