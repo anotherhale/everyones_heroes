@@ -6,13 +6,17 @@ abstract base class AggregateRoot<TId> extends Entity<TId> {
 
   AggregateRoot(super.id);
 
-  List<DomainEvent> get domainEvents => List.unmodifiable(_domainEvents);
-
   void raise(DomainEvent event) {
     _domainEvents.add(event);
   }
 
   void clearDomainEvents() {
     _domainEvents.clear();
+  }
+
+  List<DomainEvent> pullDomainEvents() {
+    final events = List<DomainEvent>.unmodifiable(_domainEvents);
+    _domainEvents.clear();
+    return events;
   }
 }

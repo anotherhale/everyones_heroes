@@ -1,5 +1,5 @@
 import 'package:everyonesheroes/core/eventing/domain_event.dart';
-import 'package:everyonesheroes/core/eventing/event_handler.dart';
+import 'package:everyonesheroes/core/eventing/domain_event_reactor.dart';
 import 'package:everyonesheroes/core/eventing/event_dispatcher.dart'
     as eventing;
 import 'package:everyonesheroes/core/eventing/in_memory_event_bus.dart';
@@ -17,7 +17,7 @@ final class SpyDispatcher implements eventing.EventDispatcher {
   }
 
   @override
-  void register<T extends DomainEvent>(EventHandler<T> handler) {}
+  void register<T extends DomainEvent>(DomainEventReactor<T> reactor) {}
 }
 
 void main() {

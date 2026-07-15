@@ -10,16 +10,16 @@ import 'package:everyonesheroes/core/ids/journey_id.dart';
 import 'package:everyonesheroes/core/ids/mission_id.dart';
 import 'package:everyonesheroes/core/ids/quest_id.dart';
 
-import 'package:everyonesheroes/features/life_journey/application/requests/create_journey_request.dart';
+import 'package:everyonesheroes/features/life_journey/application/dto/requests/create_journey_request.dart';
 import 'package:everyonesheroes/features/life_journey/application/use_cases/create_journey_use_case.dart';
 
-import 'package:everyonesheroes/features/life_journey/application/requests/create_quest_request.dart';
+import 'package:everyonesheroes/features/life_journey/application/dto/requests/create_quest_request.dart';
 import 'package:everyonesheroes/features/life_journey/application/use_cases/create_quest_use_case.dart';
 
-import 'package:everyonesheroes/features/life_journey/application/requests/create_mission_request.dart';
+import 'package:everyonesheroes/features/life_journey/application/dto/requests/create_mission_request.dart';
 import 'package:everyonesheroes/features/life_journey/application/use_cases/create_mission_use_case.dart';
 
-import 'package:everyonesheroes/features/life_journey/application/requests/complete_mission_request.dart';
+import 'package:everyonesheroes/features/life_journey/application/dto/requests/complete_mission_request.dart';
 import 'package:everyonesheroes/features/life_journey/application/use_cases/complete_mission_use_case.dart';
 
 import 'package:everyonesheroes/features/life_journey/domain/events/journey_created.dart';

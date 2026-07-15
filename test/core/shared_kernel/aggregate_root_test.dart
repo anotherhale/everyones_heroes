@@ -29,22 +29,16 @@ final class TestAggregate extends AggregateRoot<String> {
 
 void main() {
   group('AggregateRoot', () {
-    test('raises domain event', () {
+    test('pullDomainEvents returns events only once', () {
       final aggregate = TestAggregate();
 
       aggregate.raise(TestEvent());
 
-      expect(aggregate.domainEvents.length, 1);
-    });
+      final firstPull = aggregate.pullDomainEvents();
+      final secondPull = aggregate.pullDomainEvents();
 
-    test('clears domain events', () {
-      final aggregate = TestAggregate();
-
-      aggregate.raise(TestEvent());
-
-      aggregate.clearDomainEvents();
-
-      expect(aggregate.domainEvents, isEmpty);
+      expect(firstPull, hasLength(1));
+      expect(secondPull, isEmpty);
     });
   });
 }

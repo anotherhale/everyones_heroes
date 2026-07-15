@@ -1,4 +1,4 @@
-import 'package:everyonesheroes/features/life_journey/application/requests/submit_reflection_request.dart';
+import 'package:everyonesheroes/features/life_journey/application/dto/requests/submit_reflection_request.dart';
 import 'package:everyonesheroes/features/life_journey/application/use_cases/submit_reflection_use_case.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -19,6 +19,8 @@ import 'package:everyonesheroes/features/life_journey/domain/entities/reflection
 import 'package:everyonesheroes/features/life_journey/domain/events/reflection_submitted.dart';
 
 import 'package:everyonesheroes/features/life_journey/infrastructure/repositories/in_memory_reflection_repository.dart';
+
+import '../helpers/aggregate_assertions.dart';
 
 void main() {
   group('SubmitReflectionUseCase', () {
@@ -137,7 +139,7 @@ void main() {
         SubmitReflectionRequest(reflectionId: reflection.id),
       );
 
-      expect(reflection.domainEvents, isEmpty);
+      expectNoDomainEvents(reflection);
     });
 
     test('cannot submit already submitted reflection', () async {
@@ -150,7 +152,7 @@ void main() {
 
       reflection.submit();
 
-      reflection.clearDomainEvents();
+      reflection.pullDomainEvents();
 
       await reflectionRepository.save(reflection);
 

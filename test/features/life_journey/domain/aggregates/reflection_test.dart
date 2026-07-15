@@ -18,6 +18,8 @@ import 'package:everyonesheroes/features/life_journey/domain/value_objects/insig
 
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../../../helpers/event_assertions.dart';
+
 void main() {
   group('Reflection', () {
     late Reflection reflection;
@@ -80,10 +82,9 @@ void main() {
       reflection.addResponse(const JournalResponse(response: 'Reflection'));
 
       reflection.submit();
-
-      expect(reflection.domainEvents.length, 1);
-
-      expect(reflection.domainEvents.first, isA<ReflectionSubmitted>());
+      final events = reflection.pullDomainEvents();
+      expectEventRaised<ReflectionSubmitted>(events);
+      expectEventCount(events, 1);
     });
 
     test('cannot add response after submission', () {
@@ -122,11 +123,17 @@ void main() {
 
       reflection.submit();
 
-      reflection.clearDomainEvents();
+      // Ignore ReflectionSubmitted
+      reflection.pullDomainEvents();
 
       reflection.addInsights([Insight(statement: 'Insight', confidence: 0.9)]);
 
-      expect(reflection.domainEvents.first, isA<InsightsGenerated>());
+      final events = reflection.pullDomainEvents();
+
+      expect(events.single, isA<InsightsGenerated>());
+
+      // Ensure the queue has been consumed.
+      expect(reflection.pullDomainEvents(), isEmpty);
     });
 
     test('cannot add behavioral evidence before submission', () {
@@ -163,7 +170,8 @@ void main() {
 
       reflection.submit();
 
-      reflection.clearDomainEvents();
+      // Consume ReflectionSubmitted.
+      reflection.pullDomainEvents();
 
       reflection.addBehavioralEvidence([
         BehavioralEvidence(
@@ -173,7 +181,10 @@ void main() {
         ),
       ]);
 
-      expect(reflection.domainEvents.first, isA<BehavioralEvidenceDetected>());
+      final events = reflection.pullDomainEvents();
+
+      expect(events, hasLength(1));
+      expect(events.single, isA<BehavioralEvidenceDetected>());
     });
 
     test('deduplicates narrative themes', () {

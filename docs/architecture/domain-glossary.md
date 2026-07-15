@@ -172,9 +172,30 @@ Insights should always be traceable to reflection data.
 
 ---
 
+# Behavior Pattern
+
+A recurring behavioral trend that emerges from accumulated Behavioral Evidence.
+
+Examples:
+
+* Consistency
+* Leadership
+* Avoidance
+* Resilience
+
+Patterns represent long-term behavior rather than isolated observations.
+
+---
+
 # Behavioral Evidence
 
-An observed indication of behavior found within a Reflection.
+A deterministic observation derived from structured user interactions.
+
+Behavioral Evidence represents facts.
+
+It never represents conclusions.
+
+Behavioral Evidence is intentionally explainable and traceable.
 
 Behavioral Evidence is observational.
 
@@ -279,6 +300,12 @@ A potential area where growth may occur.
 
 Growth Opportunities emerge from patterns.
 
+A meaningful opportunity for future development identified from one or more Behavior Patterns.
+
+Growth Opportunities are deterministic recommendations for where growth could occur next.
+
+They do not determine how growth should be communicated.
+
 Examples:
 
 * Avoiding difficult conversations
@@ -290,6 +317,95 @@ Growth Opportunities should guide reflection and action.
 Current Status:
 Future concept.
 
+---
+
+# Personalization Engine
+
+The central orchestration engine of Everyone's Heroes.
+
+Its purpose is to determine the most inspiring experience for a particular individual at a particular moment.
+
+Inputs include:
+
+* Discovery Profile
+* Behavioral Evidence
+* Behavior Patterns
+* Growth Opportunities
+* Narrative Themes
+* Current Journey
+* Historical Progress
+* Subscription Tier
+* Purchased AI Capabilities
+
+Outputs may include:
+
+* Missions
+* Reflection prompts
+* Hero stories
+* Motivational talks
+* Personalized music
+* Song lyrics
+* Coaching
+* Push notifications
+* Future adaptive experiences
+
+The Personalization Engine is the heart of the platform.
+
+---
+
+# Deterministic Personalization
+
+Personalization driven entirely by deterministic business rules and structured evidence.
+
+This is the default implementation for the free and basic subscription tiers.
+
+Deterministic personalization emphasizes explainability, repeatability, and predictable behavior.
+
+---
+
+# AI Personalization
+
+Personalization that uses AI to creatively generate experiences while remaining grounded in deterministic understanding.
+
+AI does not determine behavioral truth.
+
+AI transforms deterministic understanding into emotionally engaging experiences such as stories, coaching, music, narration, and personalized motivational talks.
+
+---
+
+# Inspiration
+
+The desired outcome of personalization.
+
+The platform does not optimize for engagement alone.
+
+It optimizes for helping an individual take meaningful action by presenting the right experience at the right time.
+
+---
+
+# Personal Hero Journey
+
+The lifelong process through which an individual grows, discovers purpose, overcomes challenges, and ultimately helps others grow.
+
+This is the unifying concept behind the entire platform.
+
+---
+
+# Adaptive Experience
+
+Any personalized experience generated specifically for an individual.
+
+Examples include:
+
+* A mission
+* A hero story
+* An AI-generated motivational speech
+* Personalized music
+* Dynamic lyrics
+* Coaching conversations
+* Future immersive experiences
+
+The platform is intentionally designed so new Adaptive Experience types can be introduced without changing the core domain model.
 ---
 
 # Narrative Guidance
@@ -370,30 +486,39 @@ Other contexts reference NarrativeThemeId.
 
 ---
 
-# Discovery
+# Discovery Activity
 
-The process of understanding what inspires a person.
+A small intentional interaction designed to improve the platform's understanding of an individual.
 
-Discovery helps identify:
+Examples:
 
-* Influences
-* Narrative Themes
-* Motivators
-* Aspirations
+* Favorite hero
+* Inspirational quote
+* Music preference
+* Reflection prompt
+* Story selection
+* Mission preference
 
-Discovery drives personalization.
+Discovery Activities gradually build the Discovery Profile over time.
 
 ---
 
 # Discovery Profile
 
-A future aggregate responsible for storing a person's discovery information.
+The platform's continuously evolving understanding of an individual.
 
-Potential responsibilities:
+The Discovery Profile combines:
 
-* Selected influences
-* Narrative themes
-* Recommendation preferences
+* Discoveries
+* Influences
+* Narrative Themes
+* Motivational Preferences
+* Storytelling Preferences
+* Music Preferences
+* Behavioral Patterns
+* Growth Opportunities
+
+The Discovery Profile is the primary input into personalization.
 
 Current Status:
 Not yet implemented.

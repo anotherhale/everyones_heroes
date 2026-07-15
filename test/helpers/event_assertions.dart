@@ -1,57 +1,35 @@
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:everyonesheroes/core/eventing/domain_event.dart';
-import 'package:everyonesheroes/core/shared_kernel/aggregate_root.dart';
 
-void expectEventRaised<T extends DomainEvent>(
-  AggregateRoot aggregate,
-) {
+void expectEventRaised<T extends DomainEvent>(List<DomainEvent> events) {
   expect(
-    aggregate.domainEvents.any(
-      (event) => event is T,
-    ),
+    events.any((event) => event is T),
     isTrue,
-    reason:
-        'Expected aggregate to raise event of type $T',
+    reason: 'Expected event of type $T',
   );
 }
 
-void expectNoEventRaised<T extends DomainEvent>(
-  AggregateRoot aggregate,
-) {
+void expectNoEventRaised<T extends DomainEvent>(List<DomainEvent> events) {
   expect(
-    aggregate.domainEvents.any(
-      (event) => event is T,
-    ),
+    events.any((event) => event is T),
     isFalse,
-    reason:
-        'Expected aggregate to not raise event of type $T',
+    reason: 'Expected no event of type $T',
   );
 }
 
-T expectSingleEvent<T extends DomainEvent>(
-  AggregateRoot aggregate,
-) {
-  final events = aggregate.domainEvents
-      .whereType<T>()
-      .toList();
+T expectSingleEvent<T extends DomainEvent>(List<DomainEvent> events) {
+  final matching = events.whereType<T>().toList(growable: false);
 
   expect(
-    events.length,
-    1,
-    reason:
-        'Expected exactly one event of type $T',
+    matching,
+    hasLength(1),
+    reason: 'Expected exactly one event of type $T',
   );
 
-  return events.single;
+  return matching.single;
 }
 
-void expectEventCount(
-  AggregateRoot aggregate,
-  int expected,
-) {
-  expect(
-    aggregate.domainEvents.length,
-    expected,
-  );
+void expectEventCount(List<DomainEvent> events, int expected) {
+  expect(events, hasLength(expected));
 }

@@ -15,14 +15,14 @@ import 'package:everyonesheroes/features/life_journey/domain/events/quest_create
 import 'package:everyonesheroes/features/life_journey/domain/value_objects/mission_title.dart';
 import 'package:everyonesheroes/features/life_journey/domain/value_objects/quest_title.dart';
 
+import '../../../../helpers/event_assertions.dart';
+
 void main() {
   Quest createQuest() {
     return Quest.create(
       id: QuestId.generate(),
       journeyId: JourneyId.generate(),
-      title: QuestTitle(
-        'Become Physically Stronger',
-      ),
+      title: QuestTitle('Become Physically Stronger'),
     );
   }
 
@@ -30,35 +30,22 @@ void main() {
     test('creates quest', () {
       final quest = createQuest();
 
-      expect(
-        quest.title,
-        QuestTitle(
-          'Become Physically Stronger',
-        ),
-      );
+      expect(quest.title, QuestTitle('Become Physically Stronger'));
     });
 
     test('starts active', () {
-      expect(
-        createQuest().status,
-        QuestStatus.active,
-      );
+      expect(createQuest().status, QuestStatus.active);
     });
 
     test('starts with no missions', () {
-      expect(
-        createQuest().missions,
-        isEmpty,
-      );
+      expect(createQuest().missions, isEmpty);
     });
 
     test('raises QuestCreated', () {
       final quest = createQuest();
-
-      expect(
-        quest.domainEvents.first,
-        isA<QuestCreated>(),
-      );
+      final events = quest.pullDomainEvents();
+      expectEventRaised<QuestCreated>(events);
+      expectEventCount(events, 1);
     });
   });
 
@@ -68,15 +55,10 @@ void main() {
 
       quest.addMission(
         missionId: MissionId.generate(),
-        title: MissionTitle(
-          'Walk 20 Minutes',
-        ),
+        title: MissionTitle('Walk 20 Minutes'),
       );
 
-      expect(
-        quest.missionCount,
-        1,
-      );
+      expect(quest.missionCount, 1);
     });
 
     test('adds multiple missions', () {
@@ -92,28 +74,18 @@ void main() {
         title: MissionTitle('B'),
       );
 
-      expect(
-        quest.missionCount,
-        2,
-      );
+      expect(quest.missionCount, 2);
     });
 
     test('cannot add duplicate mission ids', () {
       final quest = createQuest();
 
-      final missionId =
-          MissionId.generate();
+      final missionId = MissionId.generate();
 
-      quest.addMission(
-        missionId: missionId,
-        title: MissionTitle('A'),
-      );
+      quest.addMission(missionId: missionId, title: MissionTitle('A'));
 
       expect(
-        () => quest.addMission(
-          missionId: missionId,
-          title: MissionTitle('B'),
-        ),
+        () => quest.addMission(missionId: missionId, title: MissionTitle('B')),
         throwsStateError,
       );
     });
@@ -123,235 +95,136 @@ void main() {
     test('completes mission', () {
       final quest = createQuest();
 
-      final missionId =
-          MissionId.generate();
+      final missionId = MissionId.generate();
 
-      quest.addMission(
-        missionId: missionId,
-        title: MissionTitle('Walk'),
-      );
+      quest.addMission(missionId: missionId, title: MissionTitle('Walk'));
 
-      quest.completeMission(
-        missionId,
-      );
+      quest.completeMission(missionId);
 
-      expect(
-        quest.completedMissionCount,
-        1,
-      );
+      expect(quest.completedMissionCount, 1);
     });
 
     test('raises MissionCompleted', () {
       final quest = createQuest();
+      quest.pullDomainEvents();
+      final missionId = MissionId.generate();
 
-      final missionId =
-          MissionId.generate();
-
-      quest.addMission(
-        missionId: missionId,
-        title: MissionTitle('Walk'),
-      );
-
-      quest.completeMission(
-        missionId,
-      );
-
-      expect(
-        quest.domainEvents.any(
-          (e) => e is MissionCompleted,
-        ),
-        isTrue,
-      );
+      quest.addMission(missionId: missionId, title: MissionTitle('Walk'));
+      quest.pullDomainEvents();
+      quest.completeMission(missionId);
+      final events = quest.pullDomainEvents();
+      expectEventRaised<MissionCompleted>(events);
+      expectEventCount(events, 2);
     });
 
     test('cannot complete unknown mission', () {
       final quest = createQuest();
 
       expect(
-        () => quest.completeMission(
-          MissionId.generate(),
-        ),
+        () => quest.completeMission(MissionId.generate()),
         throwsStateError,
       );
     });
   });
 
   group('Quest Completion', () {
-    test(
-      'remains active if missions remain',
-      () {
-        final quest = createQuest();
+    test('remains active if missions remain', () {
+      final quest = createQuest();
 
-        final first =
-            MissionId.generate();
+      final first = MissionId.generate();
 
-        final second =
-            MissionId.generate();
+      final second = MissionId.generate();
 
-        quest.addMission(
-          missionId: first,
-          title: MissionTitle('A'),
-        );
+      quest.addMission(missionId: first, title: MissionTitle('A'));
 
-        quest.addMission(
-          missionId: second,
-          title: MissionTitle('B'),
-        );
+      quest.addMission(missionId: second, title: MissionTitle('B'));
 
-        quest.completeMission(first);
+      quest.completeMission(first);
 
-        expect(
-          quest.status,
-          QuestStatus.active,
-        );
-      },
-    );
+      expect(quest.status, QuestStatus.active);
+    });
 
-    test(
-      'completes when all missions complete',
-      () {
-        final quest = createQuest();
+    test('completes when all missions complete', () {
+      final quest = createQuest();
 
-        final first =
-            MissionId.generate();
+      final first = MissionId.generate();
 
-        final second =
-            MissionId.generate();
+      final second = MissionId.generate();
 
-        quest.addMission(
-          missionId: first,
-          title: MissionTitle('A'),
-        );
+      quest.addMission(missionId: first, title: MissionTitle('A'));
 
-        quest.addMission(
-          missionId: second,
-          title: MissionTitle('B'),
-        );
+      quest.addMission(missionId: second, title: MissionTitle('B'));
 
-        quest.completeMission(first);
-        quest.completeMission(second);
+      quest.completeMission(first);
+      quest.completeMission(second);
 
-        expect(
-          quest.status,
-          QuestStatus.completed,
-        );
-      },
-    );
+      expect(quest.status, QuestStatus.completed);
+    });
 
     test('raises QuestCompleted', () {
       final quest = createQuest();
+      quest.pullDomainEvents();
+      final missionId = MissionId.generate();
 
-      final missionId =
-          MissionId.generate();
-
-      quest.addMission(
-        missionId: missionId,
-        title: MissionTitle('Walk'),
-      );
-
-      quest.completeMission(
-        missionId,
-      );
-
-      expect(
-        quest.domainEvents.any(
-          (e) => e is QuestCompleted,
-        ),
-        isTrue,
-      );
+      quest.addMission(missionId: missionId, title: MissionTitle('Walk'));
+      quest.pullDomainEvents();
+      quest.completeMission(missionId);
+      final events = quest.pullDomainEvents();
+      expectEventRaised<MissionCompleted>(events);
+      expectEventCount(events, 2);
     });
 
-    test(
-      'cannot add mission after completion',
-      () {
-        final quest = createQuest();
+    test('cannot add mission after completion', () {
+      final quest = createQuest();
 
-        final missionId =
-            MissionId.generate();
+      final missionId = MissionId.generate();
 
-        quest.addMission(
-          missionId: missionId,
-          title: MissionTitle('Walk'),
-        );
+      quest.addMission(missionId: missionId, title: MissionTitle('Walk'));
 
-        quest.completeMission(
-          missionId,
-        );
+      quest.completeMission(missionId);
 
-        expect(
-          () => quest.addMission(
-            missionId:
-                MissionId.generate(),
-            title:
-                MissionTitle('New'),
-          ),
-          throwsStateError,
-        );
-      },
-    );
+      expect(
+        () => quest.addMission(
+          missionId: MissionId.generate(),
+          title: MissionTitle('New'),
+        ),
+        throwsStateError,
+      );
+    });
   });
 
   group('Quest Progress', () {
     test('progress is zero when empty', () {
-      expect(
-        createQuest().progress,
-        0,
-      );
+      expect(createQuest().progress, 0);
     });
 
-    test(
-      'progress reflects completion',
-      () {
-        final quest = createQuest();
+    test('progress reflects completion', () {
+      final quest = createQuest();
 
-        final first =
-            MissionId.generate();
+      final first = MissionId.generate();
 
-        final second =
-            MissionId.generate();
+      final second = MissionId.generate();
 
-        quest.addMission(
-          missionId: first,
-          title: MissionTitle('A'),
-        );
+      quest.addMission(missionId: first, title: MissionTitle('A'));
 
-        quest.addMission(
-          missionId: second,
-          title: MissionTitle('B'),
-        );
+      quest.addMission(missionId: second, title: MissionTitle('B'));
 
-        quest.completeMission(first);
+      quest.completeMission(first);
 
-        expect(
-          quest.progress,
-          0.5,
-        );
-      },
-    );
+      expect(quest.progress, 0.5);
+    });
 
-    test(
-      'progress becomes one when complete',
-      () {
-        final quest = createQuest();
+    test('progress becomes one when complete', () {
+      final quest = createQuest();
 
-        final missionId =
-            MissionId.generate();
+      final missionId = MissionId.generate();
 
-        quest.addMission(
-          missionId: missionId,
-          title: MissionTitle('Walk'),
-        );
+      quest.addMission(missionId: missionId, title: MissionTitle('Walk'));
 
-        quest.completeMission(
-          missionId,
-        );
+      quest.completeMission(missionId);
 
-        expect(
-          quest.progress,
-          1.0,
-        );
-      },
-    );
+      expect(quest.progress, 1.0);
+    });
   });
 
   group('Quest Abandonment', () {
@@ -360,34 +233,19 @@ void main() {
 
       quest.abandon();
 
-      expect(
-        quest.status,
-        QuestStatus.abandoned,
-      );
+      expect(quest.status, QuestStatus.abandoned);
     });
 
-    test(
-      'cannot abandon completed quest',
-      () {
-        final quest = createQuest();
+    test('cannot abandon completed quest', () {
+      final quest = createQuest();
 
-        final missionId =
-            MissionId.generate();
+      final missionId = MissionId.generate();
 
-        quest.addMission(
-          missionId: missionId,
-          title: MissionTitle('Walk'),
-        );
+      quest.addMission(missionId: missionId, title: MissionTitle('Walk'));
 
-        quest.completeMission(
-          missionId,
-        );
+      quest.completeMission(missionId);
 
-        expect(
-          quest.abandon,
-          throwsStateError,
-        );
-      },
-    );
+      expect(quest.abandon, throwsStateError);
+    });
   });
 }

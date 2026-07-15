@@ -1,37 +1,37 @@
 import 'package:everyonesheroes/core/eventing/domain_event.dart';
+import 'package:everyonesheroes/core/eventing/domain_event_reactor.dart';
 import 'package:everyonesheroes/core/eventing/event_dispatcher.dart';
-import 'package:everyonesheroes/core/eventing/event_handler.dart';
 
 final class InMemoryEventDispatcher implements EventDispatcher {
-  final Map<Type, List<EventHandler<DomainEvent>>> _handlers = {};
+  final Map<Type, List<DomainEventReactor<DomainEvent>>> _reactors = {};
 
   @override
-  void register<T extends DomainEvent>(EventHandler<T> handler) {
-    _handlers.putIfAbsent(T, () => []);
+  void register<T extends DomainEvent>(DomainEventReactor<T> reactor) {
+    _reactors.putIfAbsent(T, () => []);
 
-    _handlers[T]!.add(handler);
+    _reactors[T]!.add(reactor);
   }
 
   Future<void> unregister<T extends DomainEvent>(
-    EventHandler<T> handler,
+    DomainEventReactor<T> reactor,
   ) async {
-    _handlers[T]?.remove(handler);
+    _reactors[T]?.remove(reactor);
   }
 
   @override
   Future<void> dispatch(DomainEvent event) async {
-    final handlers = _handlers[event.runtimeType];
+    final reactors = _reactors[event.runtimeType];
 
-    if (handlers == null || handlers.isEmpty) {
+    if (reactors == null || reactors.isEmpty) {
       return;
     }
 
-    for (final handler in handlers) {
-      await handler.handle(event);
+    for (final reactor in reactors) {
+      await reactor.react(event);
     }
   }
 
-  int handlerCount<T extends DomainEvent>() {
-    return _handlers[T]?.length ?? 0;
+  int reactorCount<T extends DomainEvent>() {
+    return _reactors[T]?.length ?? 0;
   }
 }

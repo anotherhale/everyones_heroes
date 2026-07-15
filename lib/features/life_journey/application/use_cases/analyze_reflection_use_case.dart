@@ -12,7 +12,7 @@ import 'package:everyonesheroes/features/life_journey/domain/aggregates/reflecti
 
 import 'package:everyonesheroes/features/life_journey/domain/repositories/reflection_repository.dart';
 
-import '../requests/analyze_reflection_request.dart';
+import '../dto/requests/analyze_reflection_request.dart';
 
 final class AnalyzeReflectionUseCase {
   const AnalyzeReflectionUseCase({
@@ -46,11 +46,6 @@ final class AnalyzeReflectionUseCase {
         );
       }
 
-      // Capture events that already existed when analysis started.
-      // This prevents ReflectionSubmitted from being republished
-      // and recursively invoking this use case.
-      final existingEventCount = reflection.domainEvents.length;
-
       final insights = await _insightExtractionService.extractInsights(
         reflection,
       );
@@ -67,15 +62,11 @@ final class AnalyzeReflectionUseCase {
 
       await _reflectionRepository.save(reflection);
 
-      final newEvents = reflection.domainEvents
-          .skip(existingEventCount)
-          .toList(growable: false);
+      final events = reflection.pullDomainEvents();
 
-      for (final event in newEvents) {
+      for (final event in events) {
         await _eventBus.publish(event);
       }
-
-      reflection.clearDomainEvents();
 
       return Success(reflection);
     } catch (e) {

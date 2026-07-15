@@ -1,4 +1,4 @@
-import 'package:everyonesheroes/features/life_journey/application/requests/create_journey_request.dart';
+import 'package:everyonesheroes/features/life_journey/application/dto/requests/create_journey_request.dart';
 import 'package:everyonesheroes/features/life_journey/application/use_cases/use_case.dart';
 import 'package:everyonesheroes/core/eventing/event_bus.dart';
 import 'package:everyonesheroes/core/results/result.dart';
@@ -27,11 +27,11 @@ final class CreateJourneyUseCase
 
       await _journeyRepository.save(journey);
 
-      for (final event in journey.domainEvents) {
+      final events = journey.pullDomainEvents();
+
+      for (final event in events) {
         await _eventBus.publish(event);
       }
-
-      journey.clearDomainEvents();
 
       return Success(journey);
     } catch (e) {

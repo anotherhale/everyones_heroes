@@ -8,7 +8,7 @@ import 'package:everyonesheroes/features/life_journey/domain/aggregates/reflecti
 
 import 'package:everyonesheroes/features/life_journey/domain/repositories/reflection_repository.dart';
 
-import '../requests/submit_reflection_request.dart';
+import '../dto/requests/submit_reflection_request.dart';
 
 final class SubmitReflectionUseCase {
   const SubmitReflectionUseCase({
@@ -37,11 +37,11 @@ final class SubmitReflectionUseCase {
 
       await _reflectionRepository.save(reflection);
 
-      for (final event in reflection.domainEvents) {
+      final events = reflection.pullDomainEvents();
+
+      for (final event in events) {
         await _eventBus.publish(event);
       }
-
-      reflection.clearDomainEvents();
 
       return Success(reflection);
     } catch (e) {

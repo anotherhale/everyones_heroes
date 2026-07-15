@@ -1,4 +1,4 @@
-import 'package:everyonesheroes/features/life_journey/application/requests/create_mission_request.dart';
+import 'package:everyonesheroes/features/life_journey/application/dto/requests/create_mission_request.dart';
 import 'package:everyonesheroes/core/eventing/event_bus.dart';
 import 'package:everyonesheroes/core/results/failure.dart';
 import 'package:everyonesheroes/core/results/result.dart';
@@ -28,10 +28,12 @@ final class CreateMissionUseCase {
       quest.addMission(missionId: request.missionId, title: request.title);
 
       await _questRepository.save(quest);
-      for (final event in quest.domainEvents) {
+
+      final events = quest.pullDomainEvents();
+
+      for (final event in events) {
         await _eventBus.publish(event);
       }
-      quest.clearDomainEvents();
 
       return Success(quest);
     } catch (e) {

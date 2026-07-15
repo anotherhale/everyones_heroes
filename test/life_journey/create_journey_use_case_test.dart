@@ -9,7 +9,7 @@ import 'package:everyonesheroes/core/ids/journey_id.dart';
 
 import 'package:everyonesheroes/core/results/success.dart';
 
-import 'package:everyonesheroes/features/life_journey/application/requests/create_journey_request.dart';
+import 'package:everyonesheroes/features/life_journey/application/dto/requests/create_journey_request.dart';
 import 'package:everyonesheroes/features/life_journey/application/use_cases/create_journey_use_case.dart';
 
 import 'package:everyonesheroes/features/life_journey/domain/aggregates/journey.dart';

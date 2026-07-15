@@ -12,7 +12,7 @@ import 'package:everyonesheroes/core/ids/quest_id.dart';
 import 'package:everyonesheroes/core/results/failure.dart';
 import 'package:everyonesheroes/core/results/success.dart';
 
-import 'package:everyonesheroes/features/life_journey/application/requests/create_quest_request.dart';
+import 'package:everyonesheroes/features/life_journey/application/dto/requests/create_quest_request.dart';
 import 'package:everyonesheroes/features/life_journey/application/use_cases/create_quest_use_case.dart';
 
 import 'package:everyonesheroes/features/life_journey/domain/aggregates/journey.dart';
@@ -59,7 +59,7 @@ void main() {
         vision: JourneyVision('Become healthier'),
       );
 
-      existingJourney.clearDomainEvents();
+      existingJourney.pullDomainEvents();
       await journeyRepository.save(existingJourney);
     });
 

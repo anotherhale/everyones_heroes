@@ -1,40 +1,43 @@
-import 'package:everyonesheroes/core/eventing/event_handler.dart';
+import 'package:everyonesheroes/core/eventing/domain_event_reactor.dart';
 import 'package:everyonesheroes/core/eventing/in_memory_event_dispatcher.dart';
 import 'package:flutter_test/flutter_test.dart' hide EventDispatcher;
 
 import 'domain_event_test.dart';
 
-final class CountingHandler implements EventHandler<TestEvent> {
+final class Countingreactor implements DomainEventReactor<TestEvent> {
   int count = 0;
 
   @override
-  Future<void> handle(TestEvent event) async {
+  Type get eventType => TestEvent;
+
+  @override
+  Future<void> react(TestEvent event) async {
     count++;
   }
 }
 
 void main() {
   group('InMemoryEventDispatcher', () {
-    test('dispatches to single handler', () async {
+    test('dispatches to single reactor', () async {
       final dispatcher = InMemoryEventDispatcher();
 
-      final handler = CountingHandler();
+      final reactor = Countingreactor();
 
-      dispatcher.register<TestEvent>(handler);
+      dispatcher.register<TestEvent>(reactor);
 
       await dispatcher.dispatch(
         TestEvent(aggregateId: '1', aggregateType: 'Journey'),
       );
 
-      expect(handler.count, 1);
+      expect(reactor.count, 1);
     });
 
-    test('dispatches to multiple handlers', () async {
+    test('dispatches to multiple reactors', () async {
       final dispatcher = InMemoryEventDispatcher();
 
-      final first = CountingHandler();
+      final first = Countingreactor();
 
-      final second = CountingHandler();
+      final second = Countingreactor();
 
       dispatcher.register<TestEvent>(first);
 
@@ -49,7 +52,7 @@ void main() {
       expect(second.count, 1);
     });
 
-    test('dispatch with no handlers does not fail', () async {
+    test('dispatch with no reactors does not fail', () async {
       final dispatcher = InMemoryEventDispatcher();
 
       await dispatcher.dispatch(
@@ -57,12 +60,12 @@ void main() {
       );
     });
 
-    test('tracks handler count', () {
+    test('tracks reactor count', () {
       final dispatcher = InMemoryEventDispatcher();
 
-      dispatcher.register<TestEvent>(CountingHandler());
+      dispatcher.register<TestEvent>(Countingreactor());
 
-      expect(dispatcher.handlerCount<TestEvent>(), 1);
+      expect(dispatcher.reactorCount<TestEvent>(), 1);
     });
   });
 }

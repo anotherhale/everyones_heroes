@@ -1,42 +1,20 @@
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:everyonesheroes/core/eventing/domain_event.dart';
 import 'package:everyonesheroes/core/shared_kernel/aggregate_root.dart';
 
-void expectNoDomainEvents(
-  AggregateRoot aggregate,
-) {
-  expect(
-    aggregate.domainEvents,
-    isEmpty,
-  );
+List<DomainEvent> pullEvents(AggregateRoot aggregate) {
+  return aggregate.pullDomainEvents();
 }
 
-void expectHasDomainEvents(
-  AggregateRoot aggregate,
-) {
-  expect(
-    aggregate.domainEvents,
-    isNotEmpty,
-  );
+void expectNoDomainEvents(AggregateRoot aggregate) {
+  expect(aggregate.pullDomainEvents(), isEmpty);
 }
 
-void expectDomainEventCount(
-  AggregateRoot aggregate,
-  int count,
-) {
-  expect(
-    aggregate.domainEvents.length,
-    count,
-  );
+void expectHasDomainEvents(AggregateRoot aggregate) {
+  expect(aggregate.pullDomainEvents(), isNotEmpty);
 }
 
-void expectEventsCleared(
-  AggregateRoot aggregate,
-) {
-  aggregate.clearDomainEvents();
-
-  expect(
-    aggregate.domainEvents,
-    isEmpty,
-  );
+void expectDomainEventCount(AggregateRoot aggregate, int count) {
+  expect(aggregate.pullDomainEvents(), hasLength(count));
 }

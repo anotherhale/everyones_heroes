@@ -10,7 +10,7 @@ import 'package:everyonesheroes/core/ids/quest_id.dart';
 
 import 'package:everyonesheroes/core/results/failure.dart';
 
-import 'package:everyonesheroes/features/life_journey/application/requests/create_mission_request.dart';
+import 'package:everyonesheroes/features/life_journey/application/dto/requests/create_mission_request.dart';
 import 'package:everyonesheroes/features/life_journey/application/use_cases/create_mission_use_case.dart';
 
 import 'package:everyonesheroes/features/life_journey/domain/aggregates/quest.dart';
@@ -43,7 +43,7 @@ void main() {
         title: QuestTitle('Weight Loss Quest'),
       );
 
-      existingQuest.clearDomainEvents();
+      existingQuest.pullDomainEvents();
 
       await repository.save(existingQuest);
     });

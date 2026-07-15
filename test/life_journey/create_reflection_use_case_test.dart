@@ -1,4 +1,4 @@
-import 'package:everyonesheroes/features/life_journey/application/requests/create_reflection_request.dart';
+import 'package:everyonesheroes/features/life_journey/application/dto/requests/create_reflection_request.dart';
 import 'package:everyonesheroes/features/life_journey/application/use_cases/create_reflection_use_case.dart';
 import 'package:everyonesheroes/features/life_journey/domain/repositories/reflection_repository.dart';
 import 'package:flutter_test/flutter_test.dart';

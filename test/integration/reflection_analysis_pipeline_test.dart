@@ -3,9 +3,9 @@ import 'package:everyonesheroes/core/eventing/event_providers.dart';
 import 'package:everyonesheroes/core/ids/journey_id.dart';
 import 'package:everyonesheroes/core/ids/reflection_id.dart';
 
-import 'package:everyonesheroes/features/life_journey/application/event_handlers/reflection_submitted_handler.dart';
-import 'package:everyonesheroes/features/life_journey/application/providers/analyze_reflection_use_case_provider.dart';
-import 'package:everyonesheroes/features/life_journey/application/providers/reflection_repository_provider.dart';
+import 'package:everyonesheroes/features/life_journey/application/reactors/reflection/reflection_submitted_reactor.dart';
+import 'package:everyonesheroes/features/life_journey/application/providers/use_cases/analyze_reflection_use_case_provider.dart';
+import 'package:everyonesheroes/features/life_journey/application/providers/repositories/reflection_repository_provider.dart';
 
 import 'package:everyonesheroes/features/life_journey/domain/aggregates/reflection.dart';
 import 'package:everyonesheroes/features/life_journey/domain/entities/reflection/journal_response.dart';
@@ -36,7 +36,7 @@ void main() {
       final useCase = container.read(analyzeReflectionUseCaseProvider);
 
       dispatcher.register<ReflectionSubmitted>(
-        ReflectionSubmittedHandler(useCase: useCase),
+        ReflectionSubmittedReactor(useCase: useCase),
       );
     });
 
@@ -67,11 +67,9 @@ void main() {
 
       final bus = container.read(eventBusProvider);
 
-      for (final event in reflection.domainEvents) {
+      for (final event in reflection.pullDomainEvents()) {
         await bus.publish(event);
       }
-
-      reflection.clearDomainEvents();
 
       final updated = await repository.findById(reflection.id);
 

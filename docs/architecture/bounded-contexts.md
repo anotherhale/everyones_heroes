@@ -12,13 +12,14 @@ Cross-context communication should occur through domain events.
 
 # Context Map
 
-Identity
-     ↘
-      Discovery
-          ↘
-       Life Journey
-          ↘
-      Contribution
+    Identity
+        ↓
+    Discovery
+        ↓
+    Life Journey
+        ↓
+    Contribution
+
 
 Identity provides the person.
 
@@ -41,21 +42,13 @@ Who is this person?
 Identity owns:
 
 * User
-* Profile
-* Preferences
-* Settings
-
-Potential Aggregates:
-
-* User
 * UserProfile
-
-Potential Concepts:
-
-* Profile
-* Interests
+* Authentication
 * Preferences
 * Notification Settings
+* Subscription
+* AI Credits
+* Purchased AI Capabilities
 
 Identity should not contain growth logic.
 
@@ -72,22 +65,42 @@ Status: Planned
 ### Responsibility
 
 What inspires this person?
+__Discovery is not an onboarding questionnaire.__
 
-The Discovery Context is responsible for understanding the people, stories, ideas, characters, experiences, and themes that resonate with a user.
+Discovery is a continuous process that gradually learns what motivates each individual through intentional interactions.
 
-The purpose of Discovery is not personality classification.
+Its goal is not personality classification.
 
-The purpose is to identify sources of inspiration and map them to Narrative Themes that can be used throughout the platform.
+Its goal is to build an ever-improving understanding of how this individual can be inspired.
 
-Produces:
+Owns
+* DiscoveryProfile (Aggregate Root)
+* UserDiscovery
+* DiscoveryHistory
+* Influence
+* InfluenceCatalog
+* NarrativeTheme
+* Motivational Preferences
+* Storytelling Preferences
+* Music Preferences
+* Coaching Preferences
 
+Produces
+* Discovery Profile
 * Narrative Themes
-* Influence Selections
-* Discovery Insights
+* Influence Relationships
+* Personalization Inputs
 
-Consumes:
+Consumes
+* Discovery Activities
+* Reflection Responses
+* Preference Selections
+* User Feedback
+* Mission Outcomes
+* Behavioral Patterns
+* Growth Opportunities
 
-* UserId
+Discovery continuously evolves as new information becomes available.
 
 ---
 
@@ -268,9 +281,15 @@ Status: Active
 
 Responsibility:
 
-How is this person growing?
+Understand how this person is growing.
 
-Life Journey is currently the primary bounded context.
+Life Journey owns observable behavior rather than inspiration.
+
+It records experiences.
+
+It derives evidence.
+
+It identifies behavioral trends.
 
 This context manages:
 
@@ -664,3 +683,14 @@ Understand what Inspires Them
 Help Them Grow
 ↓
 Help Them Help Others
+
+The platform does not exist to recommend the next mission.
+
+The platform exists to continuously learn how to inspire each individual by combining:
+
+Discovery
+Behavioral understanding
+Narrative understanding
+Creative personalization
+
+into transformative experiences.

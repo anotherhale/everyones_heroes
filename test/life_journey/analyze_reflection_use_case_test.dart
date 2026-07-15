@@ -11,7 +11,7 @@ import 'package:everyonesheroes/core/ids/reflection_id.dart';
 import 'package:everyonesheroes/core/results/failure.dart';
 import 'package:everyonesheroes/core/results/success.dart';
 
-import 'package:everyonesheroes/features/life_journey/application/requests/analyze_reflection_request.dart';
+import 'package:everyonesheroes/features/life_journey/application/dto/requests/analyze_reflection_request.dart';
 import 'package:everyonesheroes/features/life_journey/application/use_cases/analyze_reflection_use_case.dart';
 
 import 'package:everyonesheroes/features/life_journey/domain/aggregates/reflection.dart';
@@ -65,7 +65,7 @@ void main() {
 
       reflection.submit();
 
-      reflection.clearDomainEvents();
+      reflection.pullDomainEvents();
 
       await reflectionRepository.save(reflection);
 
@@ -102,7 +102,7 @@ void main() {
 
       reflection.submit();
 
-      reflection.clearDomainEvents();
+      reflection.pullDomainEvents();
 
       await reflectionRepository.save(reflection);
 
@@ -125,7 +125,7 @@ void main() {
 
       reflection.submit();
 
-      reflection.clearDomainEvents();
+      reflection.pullDomainEvents();
 
       await reflectionRepository.save(reflection);
 
@@ -148,7 +148,7 @@ void main() {
 
       reflection.submit();
 
-      reflection.clearDomainEvents();
+      reflection.pullDomainEvents();
 
       await reflectionRepository.save(reflection);
 
@@ -156,7 +156,7 @@ void main() {
         AnalyzeReflectionRequest(reflectionId: reflection.id),
       );
 
-      expect(reflection.domainEvents, isEmpty);
+      expect(reflection.pullDomainEvents(), isEmpty);
     });
   });
 }

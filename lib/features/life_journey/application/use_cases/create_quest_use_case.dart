@@ -1,4 +1,4 @@
-import 'package:everyonesheroes/features/life_journey/application/requests/create_quest_request.dart';
+import 'package:everyonesheroes/features/life_journey/application/dto/requests/create_quest_request.dart';
 import 'package:everyonesheroes/core/eventing/event_bus.dart';
 
 import 'package:everyonesheroes/core/results/failure.dart';
@@ -49,14 +49,14 @@ final class CreateQuestUseCase {
 
       await _journeyRepository.save(journey);
 
-      final events = [...quest.domainEvents, ...journey.domainEvents];
+      final events = [
+        ...quest.pullDomainEvents(),
+        ...journey.pullDomainEvents(),
+      ];
 
       for (final event in events) {
         await _eventBus.publish(event);
       }
-
-      quest.clearDomainEvents();
-      journey.clearDomainEvents();
 
       return Success(quest);
     } catch (e) {

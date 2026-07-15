@@ -1,4 +1,4 @@
-import 'package:everyonesheroes/core/eventing/event_handler.dart';
+import 'package:everyonesheroes/core/eventing/domain_event_reactor.dart';
 import 'package:everyonesheroes/core/eventing/in_memory_event_bus.dart';
 import 'package:everyonesheroes/core/eventing/in_memory_event_dispatcher.dart';
 import 'package:everyonesheroes/core/eventing/in_memory_event_store.dart';
@@ -6,25 +6,28 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'domain_event_test.dart';
 
-final class CounterHandler implements EventHandler<TestEvent> {
+final class Counterreactor implements DomainEventReactor<TestEvent> {
   int value = 0;
 
   @override
-  Future<void> handle(TestEvent event) async {
+  Type get eventType => TestEvent;
+
+  @override
+  Future<void> react(TestEvent event) async {
     value++;
   }
 }
 
 void main() {
   group('Event Pipeline Integration', () {
-    test('publish -> store -> dispatch -> handler', () async {
+    test('publish -> store -> dispatch -> reactor', () async {
       final store = InMemoryEventStore();
 
       final dispatcher = InMemoryEventDispatcher();
 
-      final handler = CounterHandler();
+      final reactor = Counterreactor();
 
-      dispatcher.register<TestEvent>(handler);
+      dispatcher.register<TestEvent>(reactor);
 
       final bus = InMemoryEventBus(eventStore: store, dispatcher: dispatcher);
 
@@ -34,7 +37,7 @@ void main() {
 
       expect(events.length, 1);
 
-      expect(handler.value, 1);
+      expect(reactor.value, 1);
     });
   });
 }

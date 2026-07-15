@@ -12,6 +12,8 @@ import 'package:everyonesheroes/features/life_journey/domain/events/journey_crea
 
 import 'package:everyonesheroes/features/life_journey/domain/value_objects/journey_vision.dart';
 
+import '../../../../helpers/event_assertions.dart';
+
 void main() {
   Journey createJourney() {
     return Journey.create(
@@ -37,7 +39,9 @@ void main() {
     test('raises JourneyCreated', () {
       final journey = createJourney();
 
-      expect(journey.domainEvents.first, isA<JourneyCreated>());
+      final events = journey.pullDomainEvents();
+      expectEventRaised<JourneyCreated>(events);
+      expectEventCount(events, 1);
     });
   });
 
@@ -74,10 +78,11 @@ void main() {
 
     test('raises ChapterAdvanced', () {
       final journey = createJourney();
-
+      journey.pullDomainEvents();
       journey.advanceChapter(JourneyChapter.commitment);
-
-      expect(journey.domainEvents.any((e) => e is ChapterAdvanced), isTrue);
+      final events = journey.pullDomainEvents();
+      expectEventRaised<ChapterAdvanced>(events);
+      expectEventCount(events, 1);
     });
 
     test('cannot skip chapter', () {
