@@ -12,4 +12,6 @@ enum InfluenceCategory {
   mentor,
   creator,
   coach,
+  organization,
+  other,
 }
