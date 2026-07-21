@@ -2,7 +2,8 @@ import 'package:everyonesheroes/features/life_journey/domain/aggregates/reflecti
 import 'package:everyonesheroes/features/life_journey/domain/services/insight_extraction_service.dart';
 import 'package:everyonesheroes/features/life_journey/domain/value_objects/insight.dart';
 
-final class FakeInsightExtractionService implements InsightExtractionService {
+final class RuleBasedInsightExtractionService
+    implements InsightExtractionService {
   @override
   Future<List<Insight>> extractInsights(Reflection reflection) {
     return Future.value([

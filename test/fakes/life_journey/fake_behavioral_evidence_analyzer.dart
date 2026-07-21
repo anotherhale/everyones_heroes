@@ -1,3 +1,4 @@
+import 'package:everyonesheroes/features/life_journey/domain/domain.dart';
 import 'package:everyonesheroes/features/life_journey/domain/value_objects/evidence_source.dart';
 import 'package:everyonesheroes/features/life_journey/domain/services/behavioral_evidence_analyzer.dart';
 
@@ -19,9 +20,9 @@ final class FakeBehavioralEvidenceAnalyzer
 
     return [
       BehavioralEvidence(
-        evidenceType: BehavioralEvidenceType.resilience,
+        type: BehavioralEvidenceType.resilience,
         source: ReflectionEvidenceSource(reflectionId: reflection.id),
-        strength: 0.85,
+        strength: Strength(0.85),
       ),
     ];
   }

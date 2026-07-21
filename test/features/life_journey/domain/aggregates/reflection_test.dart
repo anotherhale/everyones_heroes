@@ -3,6 +3,7 @@ import 'package:everyonesheroes/core/ids/narrative_theme_id.dart';
 import 'package:everyonesheroes/core/ids/reflection_id.dart';
 
 import 'package:everyonesheroes/features/life_journey/domain/aggregates/reflection.dart';
+import 'package:everyonesheroes/features/life_journey/domain/domain.dart';
 
 import 'package:everyonesheroes/features/life_journey/domain/entities/reflection/journal_response.dart';
 
@@ -140,9 +141,9 @@ void main() {
       expect(
         () => reflection.addBehavioralEvidence([
           BehavioralEvidence(
-            evidenceType: BehavioralEvidenceType.resilience,
+            type: BehavioralEvidenceType.resilience,
             source: ReflectionEvidenceSource(reflectionId: reflection.id),
-            strength: 0.9,
+            strength: Strength(0.9),
           ),
         ]),
         throwsStateError,
@@ -156,9 +157,9 @@ void main() {
 
       reflection.addBehavioralEvidence([
         BehavioralEvidence(
-          evidenceType: BehavioralEvidenceType.resilience,
+          type: BehavioralEvidenceType.resilience,
           source: ReflectionEvidenceSource(reflectionId: reflection.id),
-          strength: 0.9,
+          strength: Strength(0.9),
         ),
       ]);
 
@@ -175,9 +176,9 @@ void main() {
 
       reflection.addBehavioralEvidence([
         BehavioralEvidence(
-          evidenceType: BehavioralEvidenceType.resilience,
+          type: BehavioralEvidenceType.resilience,
           source: ReflectionEvidenceSource(reflectionId: reflection.id),
-          strength: 0.9,
+          strength: Strength(0.9),
         ),
       ]);
 

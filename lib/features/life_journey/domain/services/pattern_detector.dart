@@ -1,9 +1,9 @@
+import 'package:everyonesheroes/features/life_journey/domain/domain.dart';
 
-import 'package:everyonesheroes/features/life_journey/domain/value_objects/behavior_pattern.dart';
-import 'package:everyonesheroes/features/life_journey/domain/value_objects/behavioral_evidence.dart';
-
+/// Detects recurring behavioral patterns from accumulated Behavioral Evidence.
+///
+/// Pattern detection is deterministic by default. AI implementations may
+/// enhance pattern recognition but must produce equivalent domain concepts.
 abstract interface class PatternDetector {
-  Future<List<BehaviorPattern>> detectPatterns(
-    List<BehavioralEvidence> evidence,
-  );
+  List<Pattern> detect({required List<BehavioralEvidence> evidence});
 }
