@@ -9,7 +9,6 @@ export 'aggregates/reflection.dart';
 export 'entities/mission.dart';
 
 // Value Objects
-export 'value_objects/pattern.dart';
 export 'value_objects/strength.dart';
 
 export 'value_objects/behavioral_evidence.dart';
@@ -26,6 +25,12 @@ export 'entities/reflection/emoji_response.dart';
 export 'entities/reflection/scale_response.dart';
 export 'entities/reflection/voice_response.dart';
 export 'entities/reflection/photo_response.dart';
+
+// Domain Patterns
+export 'patterns/behavior_pattern.dart';
+export 'patterns/behavior_pattern_type.dart';
+export 'patterns/base_pattern_rule.dart';
+export 'patterns/pattern_rule.dart';
 
 // Domain Events
 export 'events/journey_created.dart';

@@ -1,101 +1,120 @@
+import 'package:everyonesheroes/features/life_journey/domain/patterns/rules/consistency_pattern_rule.dart';
+import 'package:everyonesheroes/features/life_journey/domain/patterns/rules/courage_pattern_rule.dart';
+import 'package:everyonesheroes/features/life_journey/infrastructure/services/rule_based/rule_based_pattern_detector.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:everyonesheroes/core/ids/reflection_id.dart';
-
 import 'package:everyonesheroes/features/life_journey/domain/domain.dart';
-import 'package:everyonesheroes/features/life_journey/infrastructure/services/rule_based/rule_based_pattern_detector.dart';
+
+import '../../builders/behavioral_evidence_builder.dart';
 
 void main() {
-  group('RuleBasedPatternDetector', () {
-    late RuleBasedPatternDetector detector;
+  late RuleBasedPatternDetector detector;
 
-    setUp(() {
-      detector = RuleBasedPatternDetector();
-    });
+  setUp(() {
+    detector = const RuleBasedPatternDetector(
+      rules: [
+        ConsistencyPatternRule(),
+        CouragePatternRule(),
+      ],
+    );
+  });
 
-    BehavioralEvidence evidence({
-      required BehavioralEvidenceType type,
-      required double strength,
-    }) {
-      return BehavioralEvidence(
-        type: type,
-        strength: Strength(strength),
-        source: ReflectionEvidenceSource(reflectionId: ReflectionId.generate()),
+  group('detect', () {
+    test('returns empty when no evidence is supplied', () {
+      final patterns = detector.detect(
+        evidence: const [],
       );
-    }
-
-    test('returns empty list when no evidence exists', () {
-      final patterns = detector.detect(evidence: const []);
 
       expect(patterns, isEmpty);
     });
 
-    test('groups evidence by type', () {
+    test('returns empty when no rules match', () {
       final patterns = detector.detect(
         evidence: [
-          evidence(type: BehavioralEvidenceType.discipline, strength: .8),
-          evidence(type: BehavioralEvidenceType.discipline, strength: .9),
-          evidence(type: BehavioralEvidenceType.discipline, strength: .7),
-          evidence(type: BehavioralEvidenceType.courage, strength: .6),
-          evidence(type: BehavioralEvidenceType.courage, strength: .8),
-          evidence(type: BehavioralEvidenceType.courage, strength: .7),
-        ],
-      );
-
-      expect(patterns.length, 2);
-    });
-
-    test('calculates average strength', () {
-      final patterns = detector.detect(
-        evidence: [
-          evidence(type: BehavioralEvidenceType.discipline, strength: .6),
-          evidence(type: BehavioralEvidenceType.discipline, strength: .8),
-          evidence(type: BehavioralEvidenceType.discipline, strength: 1.0),
-        ],
-      );
-
-      expect(patterns.single.strength.value, closeTo(0.8, 1e-9));
-    });
-
-    test('requires at least three observations', () {
-      final patterns = detector.detect(
-        evidence: [
-          evidence(type: BehavioralEvidenceType.discipline, strength: .8),
-          evidence(type: BehavioralEvidenceType.discipline, strength: .9),
+          BehavioralEvidenceBuilder.service().build(),
+          BehavioralEvidenceBuilder.service().build(),
+          BehavioralEvidenceBuilder.service().build(),
         ],
       );
 
       expect(patterns, isEmpty);
     });
 
-    test('preserves supporting evidence', () {
-      final list = [
-        evidence(type: BehavioralEvidenceType.discipline, strength: .8),
-        evidence(type: BehavioralEvidenceType.discipline, strength: .9),
-        evidence(type: BehavioralEvidenceType.discipline, strength: .7),
-      ];
+    test('returns a single matching pattern', () {
+      final patterns = detector.detect(
+        evidence: [
+          BehavioralEvidenceBuilder.discipline().build(),
+          BehavioralEvidenceBuilder.discipline().build(),
+          BehavioralEvidenceBuilder.discipline().build(),
+        ],
+      );
 
-      final pattern = detector.detect(evidence: list).single;
-
-      expect(pattern.supportingEvidence, list);
-    });
-
-    test('supporting evidence is immutable', () {
-      final pattern = detector
-          .detect(
-            evidence: [
-              evidence(type: BehavioralEvidenceType.discipline, strength: .8),
-              evidence(type: BehavioralEvidenceType.discipline, strength: .9),
-              evidence(type: BehavioralEvidenceType.discipline, strength: .7),
-            ],
-          )
-          .single;
+      expect(patterns, hasLength(1));
 
       expect(
-        () => pattern.supportingEvidence.add(
-          evidence(type: BehavioralEvidenceType.discipline, strength: .5),
-        ),
-        throwsUnsupportedError,
+        patterns.single.type,
+        BehaviorPatternType.consistency,
+      );
+    });
+
+    test('returns patterns from all matching rules', () {
+      final patterns = detector.detect(
+        evidence: [
+          BehavioralEvidenceBuilder.discipline().build(),
+          BehavioralEvidenceBuilder.discipline().build(),
+          BehavioralEvidenceBuilder.discipline().build(),
+
+          BehavioralEvidenceBuilder.courage().build(),
+          BehavioralEvidenceBuilder.courage().build(),
+          BehavioralEvidenceBuilder.courage().build(),
+        ],
+      );
+
+      expect(patterns, hasLength(2));
+
+      expect(
+        patterns.map((p) => p.type),
+        containsAll([
+          BehaviorPatternType.consistency,
+          BehaviorPatternType.courage,
+        ]),
+      );
+    });
+
+    test('ignores evidence that does not satisfy any rule', () {
+      final patterns = detector.detect(
+        evidence: [
+          BehavioralEvidenceBuilder.discipline().build(),
+          BehavioralEvidenceBuilder.discipline().build(), // below threshold
+
+          BehavioralEvidenceBuilder.courage().build(),
+          BehavioralEvidenceBuilder.courage().build(), // below threshold
+
+          BehavioralEvidenceBuilder.service().build(),
+          BehavioralEvidenceBuilder.leadership().build(),
+        ],
+      );
+
+      expect(patterns, isEmpty);
+    });
+
+    test('returns only matching patterns when some rules fail', () {
+      final patterns = detector.detect(
+        evidence: [
+          BehavioralEvidenceBuilder.discipline().build(),
+          BehavioralEvidenceBuilder.discipline().build(),
+          BehavioralEvidenceBuilder.discipline().build(),
+
+          BehavioralEvidenceBuilder.courage().build(),
+          BehavioralEvidenceBuilder.courage().build(), // below threshold
+        ],
+      );
+
+      expect(patterns, hasLength(1));
+
+      expect(
+        patterns.single.type,
+        BehaviorPatternType.consistency,
       );
     });
   });

@@ -10,6 +10,7 @@ final class BehavioralEvidence {
     required this.type,
     required this.source,
     required this.strength,
+    required this.observedAt,
   });
 
   final BehavioralEvidenceType type;
@@ -18,14 +19,17 @@ final class BehavioralEvidence {
 
   final Strength strength;
 
+  final DateTime observedAt;
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is BehavioralEvidence &&
           type == other.type &&
           source == other.source &&
-          strength == other.strength;
+          strength == other.strength &&
+          observedAt == other.observedAt;
 
   @override
-  int get hashCode => Object.hash(type, source, strength);
+  int get hashCode => Object.hash(type, source, strength, observedAt);
 }

@@ -6,7 +6,7 @@ final class DetectPatternsUseCase {
 
   final PatternDetector _detector;
 
-  List<Pattern> execute({required List<BehavioralEvidence> evidence}) {
+  List<BehaviorPattern> execute({required List<BehavioralEvidence> evidence}) {
     return _detector.detect(evidence: evidence);
   }
 }

@@ -1,5 +1,6 @@
 import 'package:everyonesheroes/features/life_journey/domain/enums/behavioral_evidence_type.dart';
 import 'package:everyonesheroes/features/life_journey/domain/value_objects/evidence_source.dart';
+import 'package:everyonesheroes/features/life_journey/domain/value_objects/strength.dart';
 
 final class BehavioralEvidence {
   BehavioralEvidence({
@@ -12,5 +13,5 @@ final class BehavioralEvidence {
 
   final EvidenceSource source;
 
-  final double strength;
+  final Strength strength;
 }

@@ -144,6 +144,7 @@ void main() {
             type: BehavioralEvidenceType.resilience,
             source: ReflectionEvidenceSource(reflectionId: reflection.id),
             strength: Strength(0.9),
+            observedAt: DateTime.now(),
           ),
         ]),
         throwsStateError,
@@ -160,6 +161,7 @@ void main() {
           type: BehavioralEvidenceType.resilience,
           source: ReflectionEvidenceSource(reflectionId: reflection.id),
           strength: Strength(0.9),
+          observedAt: DateTime.now(),
         ),
       ]);
 
@@ -179,6 +181,7 @@ void main() {
           type: BehavioralEvidenceType.resilience,
           source: ReflectionEvidenceSource(reflectionId: reflection.id),
           strength: Strength(0.9),
+          observedAt: DateTime.now(),
         ),
       ]);
 

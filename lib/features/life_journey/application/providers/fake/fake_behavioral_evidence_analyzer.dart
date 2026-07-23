@@ -11,6 +11,7 @@ final class FakeBehavioralEvidenceAnalyzer
         type: BehavioralEvidenceType.selfAwareness,
         source: ReflectionEvidenceSource(reflectionId: reflection.id),
         strength: Strength(0.8),
+        observedAt: DateTime.now(),
       ),
     ];
   }
