@@ -8,7 +8,7 @@ final class RuleBasedPatternDetector implements PatternDetector {
   final List<PatternRule> _rules;
 
   @override
-  List<BehaviorPattern> detect({required List<BehavioralEvidence> evidence}) {
+  List<BehaviorPattern> detect({required Iterable<BehavioralEvidence> evidence}) {
     return _rules
         .map((rule) => rule.detect(evidence))
         .whereType<BehaviorPattern>()

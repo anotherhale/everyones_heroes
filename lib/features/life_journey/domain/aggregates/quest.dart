@@ -1,3 +1,4 @@
+import 'package:everyonesheroes/core/ids/aggregate_id.dart';
 import 'package:everyonesheroes/core/ids/journey_id.dart';
 import 'package:everyonesheroes/core/ids/mission_id.dart';
 import 'package:everyonesheroes/core/ids/quest_id.dart';
@@ -40,7 +41,7 @@ final class Quest extends AggregateRoot<QuestId> {
   }) {
     final quest = Quest(id: id, journeyId: journeyId, title: title);
 
-    quest.raise(QuestCreated(aggregateId: id.value, journeyId: journeyId));
+    quest.raise(QuestCreated(aggregateId: id, journeyId: journeyId));
 
     return quest;
   }
@@ -82,7 +83,7 @@ final class Quest extends AggregateRoot<QuestId> {
 
     _missions.add(Mission.create(id: missionId, title: title));
 
-    raise(MissionCreated(aggregateId: id.value, missionId: missionId));
+    raise(MissionCreated(aggregateId: id, missionId: missionId));
   }
 
   void completeMission(MissionId missionId) {
@@ -96,7 +97,7 @@ final class Quest extends AggregateRoot<QuestId> {
 
     targetMission.complete();
 
-    raise(MissionCompleted(aggregateId: id.value, missionId: missionId));
+    raise(MissionCompleted(aggregateId: id, missionId: missionId));
 
     _evaluateCompletion();
   }
@@ -122,6 +123,6 @@ final class Quest extends AggregateRoot<QuestId> {
 
     _status = QuestStatus.completed;
 
-    raise(QuestCompleted(aggregateId: id.value, journeyId: journeyId));
+    raise(QuestCompleted(aggregateId: id, journeyId: journeyId));
   }
 }

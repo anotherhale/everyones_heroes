@@ -1,5 +1,6 @@
 import 'dart:collection';
 
+import 'package:everyonesheroes/core/ids/aggregate_id.dart';
 import 'package:everyonesheroes/core/ids/discovery_profile_id.dart';
 import 'package:everyonesheroes/core/ids/influence_id.dart';
 import 'package:everyonesheroes/core/ids/narrative_theme_id.dart';
@@ -82,7 +83,7 @@ final class DiscoveryProfile extends AggregateRoot<DiscoveryProfileId> {
 
     raise(
       InfluenceAdded(
-        aggregateId: id.value,
+        aggregateId: id,
         discoveryProfileId: id,
         influenceId: influenceId,
       ),
@@ -96,7 +97,7 @@ final class DiscoveryProfile extends AggregateRoot<DiscoveryProfileId> {
 
     raise(
       InfluenceRemoved(
-        aggregateId: id.value,
+        aggregateId: id,
         discoveryProfileId: id,
         influenceId: influenceId,
       ),
@@ -110,7 +111,7 @@ final class DiscoveryProfile extends AggregateRoot<DiscoveryProfileId> {
 
     raise(
       NarrativeThemesResolved(
-        aggregateId: id.value,
+        aggregateId: id,
         discoveryProfileId: id,
         themeIds: List.unmodifiable(_narrativeThemeIds),
       ),

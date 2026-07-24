@@ -1,5 +1,7 @@
 import 'package:everyonesheroes/core/eventing/domain_event_reactor.dart';
 import 'package:everyonesheroes/core/eventing/in_memory_event_dispatcher.dart';
+import 'package:everyonesheroes/core/ids/journey_id.dart';
+import 'package:everyonesheroes/features/life_journey/domain/enums/aggregate_type.dart';
 import 'package:flutter_test/flutter_test.dart' hide EventDispatcher;
 
 import 'domain_event_test.dart';
@@ -26,7 +28,10 @@ void main() {
       dispatcher.register<TestEvent>(reactor);
 
       await dispatcher.dispatch(
-        TestEvent(aggregateId: '1', aggregateType: 'Journey'),
+        TestEvent(
+          aggregateId: JourneyId.generate(),
+          aggregateType: AggregateType.journey,
+        ),
       );
 
       expect(reactor.count, 1);
@@ -44,7 +49,10 @@ void main() {
       dispatcher.register<TestEvent>(second);
 
       await dispatcher.dispatch(
-        TestEvent(aggregateId: '1', aggregateType: 'Journey'),
+        TestEvent(
+          aggregateId: JourneyId.generate(),
+          aggregateType: AggregateType.journey,
+        ),
       );
 
       expect(first.count, 1);
@@ -56,7 +64,10 @@ void main() {
       final dispatcher = InMemoryEventDispatcher();
 
       await dispatcher.dispatch(
-        TestEvent(aggregateId: '1', aggregateType: 'Journey'),
+        TestEvent(
+          aggregateId: JourneyId.generate(),
+          aggregateType: AggregateType.journey,
+        ),
       );
     });
 

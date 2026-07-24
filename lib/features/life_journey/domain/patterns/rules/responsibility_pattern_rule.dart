@@ -6,7 +6,7 @@ final class ResponsibilityPatternRule extends BasePatternRule {
   static const minimumEvidenceCount = 4;
 
   @override
-  BehaviorPattern? detect(List<BehavioralEvidence> evidence) {
+  BehaviorPattern? detect(Iterable<BehavioralEvidence> evidence) {
     final responsibility = evidenceOfType(
       evidence,
       BehavioralEvidenceType.responsibility,

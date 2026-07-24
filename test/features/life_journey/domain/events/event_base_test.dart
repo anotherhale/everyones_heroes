@@ -7,197 +7,98 @@ import 'package:everyonesheroes/features/life_journey/domain/events/journey_crea
 void main() {
   group('EventBase', () {
     test('generates event id', () {
-      final event = JourneyCreated(
-        aggregateId: JourneyId.generate().value,
-      );
+      final event = JourneyCreated(aggregateId: JourneyId.generate());
 
-      expect(
-        event.eventId,
-        isNotNull,
-      );
+      expect(event.eventId, isNotNull);
     });
 
     test('generates occurredAt timestamp', () {
-      final event = JourneyCreated(
-        aggregateId: JourneyId.generate().value,
-      );
+      final event = JourneyCreated(aggregateId: JourneyId.generate());
 
-      expect(
-        event.occurredAt,
-        isNotNull,
-      );
+      expect(event.occurredAt, isNotNull);
 
       expect(
         event.occurredAt.isBefore(
-          DateTime.now().add(
-            const Duration(
-              seconds: 1,
-            ),
-          ),
+          DateTime.now().add(const Duration(seconds: 1)),
         ),
         isTrue,
       );
     });
 
     test('preserves aggregate id', () {
-      const aggregateId =
-          'journey-123';
+      final aggregateId = JourneyId.generate();
 
-      final event = JourneyCreated(
-        aggregateId: aggregateId,
-      );
+      final event = JourneyCreated(aggregateId: aggregateId);
 
-      expect(
-        event.aggregateId,
-        aggregateId,
-      );
+      expect(event.aggregateId, aggregateId);
     });
 
     test('preserves correlation id', () {
       final event = JourneyCreated(
-        aggregateId: 'journey-123',
-        correlationId:
-            'correlation-123',
+        aggregateId: JourneyId.generate(),
+        correlationId: 'correlation-123',
       );
 
-      expect(
-        event.correlationId,
-        'correlation-123',
-      );
+      expect(event.correlationId, 'correlation-123');
     });
 
     test('preserves causation id', () {
       final event = JourneyCreated(
-        aggregateId: 'journey-123',
-        causationId:
-            'causation-123',
+        aggregateId: JourneyId.generate(),
+        causationId: 'causation-123',
       );
 
-      expect(
-        event.causationId,
-        'causation-123',
-      );
+      expect(event.causationId, 'causation-123');
     });
 
-    test(
-      'preserves correlation and causation ids together',
-      () {
-        final event = JourneyCreated(
-          aggregateId:
-              'journey-123',
-          correlationId:
-              'correlation-123',
-          causationId:
-              'causation-456',
-        );
+    test('preserves correlation and causation ids together', () {
+      final event = JourneyCreated(
+        aggregateId: JourneyId.generate(),
+        correlationId: 'correlation-123',
+        causationId: 'causation-456',
+      );
 
-        expect(
-          event.correlationId,
-          'correlation-123',
-        );
+      expect(event.correlationId, 'correlation-123');
 
-        expect(
-          event.causationId,
-          'causation-456',
-        );
-      },
-    );
+      expect(event.causationId, 'causation-456');
+    });
 
-    test(
-      'creates unique event ids for separate events',
-      () {
-        final first =
-            JourneyCreated(
-          aggregateId:
-              'journey-123',
-        );
+    test('creates unique event ids for separate events', () {
+      final first = JourneyCreated(aggregateId: JourneyId.generate());
 
-        final second =
-            JourneyCreated(
-          aggregateId:
-              'journey-123',
-        );
+      final second = JourneyCreated(aggregateId: JourneyId.generate());
 
-        expect(
-          first.eventId,
-          isNot(
-            equals(
-              second.eventId,
-            ),
-          ),
-        );
-      },
-    );
+      expect(first.eventId, isNot(equals(second.eventId)));
+    });
 
-    test(
-      'creates different timestamps for separate events',
-      () async {
-        final first =
-            JourneyCreated(
-          aggregateId:
-              'journey-123',
-        );
+    test('creates different timestamps for separate events', () async {
+      final first = JourneyCreated(aggregateId: JourneyId.generate());
 
-        await Future<void>.delayed(
-          const Duration(
-            milliseconds: 1,
-          ),
-        );
+      await Future<void>.delayed(const Duration(milliseconds: 1));
 
-        final second =
-            JourneyCreated(
-          aggregateId:
-              'journey-123',
-        );
+      final second = JourneyCreated(aggregateId: JourneyId.generate());
 
-        expect(
-          second.occurredAt.isAfter(
-            first.occurredAt,
-          ),
-          isTrue,
-        );
-      },
-    );
+      expect(second.occurredAt.isAfter(first.occurredAt), isTrue);
+    });
 
-    test(
-      'event metadata remains immutable after creation',
-      () {
-        final event =
-            JourneyCreated(
-          aggregateId:
-              'journey-123',
-          correlationId:
-              'corr-123',
-          causationId:
-              'cause-123',
-        );
+    test('event metadata remains immutable after creation', () {
+      final event = JourneyCreated(
+        aggregateId: JourneyId.generate(),
+        correlationId: 'corr-123',
+        causationId: 'cause-123',
+      );
 
-        final eventId =
-            event.eventId;
+      final eventId = event.eventId;
 
-        final occurredAt =
-            event.occurredAt;
+      final occurredAt = event.occurredAt;
 
-        expect(
-          event.eventId,
-          eventId,
-        );
+      expect(event.eventId, eventId);
 
-        expect(
-          event.occurredAt,
-          occurredAt,
-        );
+      expect(event.occurredAt, occurredAt);
 
-        expect(
-          event.correlationId,
-          'corr-123',
-        );
+      expect(event.correlationId, 'corr-123');
 
-        expect(
-          event.causationId,
-          'cause-123',
-        );
-      },
-    );
+      expect(event.causationId, 'cause-123');
+    });
   });
 }

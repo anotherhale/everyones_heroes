@@ -6,7 +6,7 @@ final class ServicePatternRule extends BasePatternRule {
   static const minimumEvidenceCount = 3;
 
   @override
-  BehaviorPattern? detect(List<BehavioralEvidence> evidence) {
+  BehaviorPattern? detect(Iterable<BehavioralEvidence> evidence) {
     final service = evidenceOfType(evidence, BehavioralEvidenceType.service);
 
     if (service.length < minimumEvidenceCount) {

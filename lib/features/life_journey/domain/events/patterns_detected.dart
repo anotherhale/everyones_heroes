@@ -1,5 +1,6 @@
 import 'package:everyonesheroes/core/eventing/event_base.dart';
 import 'package:everyonesheroes/features/life_journey/domain/domain.dart';
+import 'package:everyonesheroes/features/life_journey/domain/enums/aggregate_type.dart';
 
 final class PatternsDetected extends EventBase {
   PatternsDetected({
@@ -7,7 +8,7 @@ final class PatternsDetected extends EventBase {
     required this.patterns,
     super.correlationId,
     super.causationId,
-  }) : super(aggregateType: 'BehavioralEvidence');
+  }) : super(aggregateType: AggregateType.behavioralEvidence);
 
   final List<BehaviorPattern> patterns;
 }

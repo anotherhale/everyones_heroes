@@ -1,3 +1,4 @@
+import 'package:everyonesheroes/core/ids/aggregate_id.dart';
 import 'package:everyonesheroes/core/ids/journey_id.dart';
 import 'package:everyonesheroes/core/ids/quest_id.dart';
 import 'package:everyonesheroes/core/shared_kernel/aggregate_root.dart';
@@ -30,7 +31,7 @@ final class Journey extends AggregateRoot<JourneyId> {
   }) {
     final journey = Journey(id: id, vision: vision);
 
-    journey.raise(JourneyCreated(aggregateId: id.value));
+    journey.raise(JourneyCreated(aggregateId: id));
 
     return journey;
   }
@@ -73,7 +74,7 @@ final class Journey extends AggregateRoot<JourneyId> {
 
     raise(
       ChapterAdvanced(
-        aggregateId: id.value,
+        aggregateId: id,
         previousChapter: previousChapter,
         newChapter: nextChapter,
       ),

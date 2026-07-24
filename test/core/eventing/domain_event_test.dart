@@ -1,3 +1,6 @@
+import 'package:everyonesheroes/core/ids/aggregate_id.dart';
+import 'package:everyonesheroes/core/ids/journey_id.dart';
+import 'package:everyonesheroes/features/life_journey/domain/enums/aggregate_type.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:everyonesheroes/core/eventing/domain_event.dart';
@@ -11,10 +14,10 @@ final class TestEvent extends DomainEvent {
   final DateTime occurredAt;
 
   @override
-  final String aggregateId;
+  final AggregateId aggregateId;
 
   @override
-  final String aggregateType;
+  final AggregateType aggregateType;
 
   @override
   final String? correlationId;
@@ -34,32 +37,38 @@ final class TestEvent extends DomainEvent {
 void main() {
   group('DomainEvent', () {
     test('event contains id', () {
-      final event = TestEvent(aggregateId: '1', aggregateType: 'Journey');
+      final event = TestEvent(
+        aggregateId: JourneyId.generate(),
+        aggregateType: AggregateType.journey,
+      );
 
       expect(event.eventId.value.isNotEmpty, isTrue);
     });
 
     test('event contains timestamp', () {
-      final event = TestEvent(aggregateId: '1', aggregateType: 'Journey');
+      final event = TestEvent(
+        aggregateId: JourneyId.generate(),
+        aggregateType: AggregateType.journey,
+      );
 
       expect(event.occurredAt, isA<DateTime>());
     });
 
     test('stores aggregate metadata', () {
       final event = TestEvent(
-        aggregateId: 'journey-1',
-        aggregateType: 'Journey',
+        aggregateId: JourneyId.generate(),
+        aggregateType: AggregateType.journey,
       );
 
-      expect(event.aggregateId, 'journey-1');
+      expect(event.aggregateId.value, isNotNull);
 
-      expect(event.aggregateType, 'Journey');
+      expect(event.aggregateType.name, 'journey');
     });
 
     test('stores correlation metadata', () {
       final event = TestEvent(
-        aggregateId: '1',
-        aggregateType: 'Journey',
+        aggregateId: JourneyId.generate(),
+        aggregateType: AggregateType.journey,
         correlationId: 'corr-1',
         causationId: 'cause-1',
       );

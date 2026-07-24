@@ -4,7 +4,7 @@ final class RecoveryPatternRule extends BasePatternRule {
   const RecoveryPatternRule();
 
   @override
-  BehaviorPattern? detect(List<BehavioralEvidence> evidence) {
+  BehaviorPattern? detect(Iterable<BehavioralEvidence> evidence) {
     final sorted = [...evidence]
       ..sort((a, b) => a.observedAt.compareTo(b.observedAt));
 

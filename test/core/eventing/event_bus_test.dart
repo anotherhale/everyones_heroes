@@ -4,6 +4,8 @@ import 'package:everyonesheroes/core/eventing/event_dispatcher.dart'
     as eventing;
 import 'package:everyonesheroes/core/eventing/in_memory_event_bus.dart';
 import 'package:everyonesheroes/core/eventing/in_memory_event_store.dart';
+import 'package:everyonesheroes/core/ids/journey_id.dart';
+import 'package:everyonesheroes/features/life_journey/domain/enums/aggregate_type.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'domain_event_test.dart';
@@ -30,7 +32,12 @@ void main() {
         dispatcher: SpyDispatcher(),
       );
 
-      await bus.publish(TestEvent(aggregateId: '1', aggregateType: 'Journey'));
+      await bus.publish(
+        TestEvent(
+          aggregateId: JourneyId.generate(),
+          aggregateType: AggregateType.journey,
+        ),
+      );
 
       final events = await store.allEvents();
 
@@ -44,7 +51,12 @@ void main() {
 
       final bus = InMemoryEventBus(eventStore: store, dispatcher: dispatcher);
 
-      await bus.publish(TestEvent(aggregateId: '1', aggregateType: 'Journey'));
+      await bus.publish(
+        TestEvent(
+          aggregateId: JourneyId.generate(),
+          aggregateType: AggregateType.journey,
+        ),
+      );
 
       expect(dispatcher.dispatchCount, 1);
     });

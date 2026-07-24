@@ -1,6 +1,7 @@
+import 'package:everyonesheroes/core/ids/aggregate_id.dart';
 import 'package:everyonesheroes/core/ids/strongly_typed_id.dart';
 
-final class MissionId extends StronglyTypedId {
+final class MissionId extends StronglyTypedId implements AggregateId {
   const MissionId(super.value);
 
   factory MissionId.generate() {

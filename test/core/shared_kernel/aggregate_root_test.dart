@@ -1,4 +1,7 @@
 import 'package:everyonesheroes/core/eventing/domain_event.dart';
+import 'package:everyonesheroes/core/ids/aggregate_id.dart';
+import 'package:everyonesheroes/core/ids/journey_id.dart';
+import 'package:everyonesheroes/features/life_journey/domain/enums/aggregate_type.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:everyonesheroes/core/shared_kernel/aggregate_root.dart';
 import 'package:everyonesheroes/core/ids/event_id.dart';
@@ -11,10 +14,10 @@ final class TestEvent extends DomainEvent {
   final DateTime occurredAt = DateTime.now();
 
   @override
-  String get aggregateId => '1';
+  AggregateId get aggregateId => JourneyId('1');
 
   @override
-  String get aggregateType => 'Test';
+  AggregateType get aggregateType => AggregateType.test;
 
   @override
   String? get causationId => null;

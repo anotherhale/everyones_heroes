@@ -6,7 +6,7 @@ final class LeadershipPatternRule extends BasePatternRule {
   static const minimumEvidenceCount = 4;
 
   @override
-  BehaviorPattern? detect(List<BehavioralEvidence> evidence) {
+  BehaviorPattern? detect(Iterable<BehavioralEvidence> evidence) {
     final leadership = evidenceOfType(
       evidence,
       BehavioralEvidenceType.leadership,

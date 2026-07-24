@@ -1,13 +1,15 @@
+import 'package:everyonesheroes/core/ids/aggregate_id.dart';
 import 'package:everyonesheroes/core/ids/event_id.dart';
+import 'package:everyonesheroes/features/life_journey/domain/enums/aggregate_type.dart';
 
 abstract base class DomainEvent {
   EventId get eventId;
 
   DateTime get occurredAt;
 
-  String get aggregateId;
+  AggregateId get aggregateId;
 
-  String get aggregateType;
+  AggregateType get aggregateType;
 
   String? get correlationId;
 

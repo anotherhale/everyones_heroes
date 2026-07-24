@@ -1,5 +1,6 @@
 import 'dart:collection';
 
+import 'package:everyonesheroes/core/ids/aggregate_id.dart';
 import 'package:everyonesheroes/core/ids/journey_id.dart';
 import 'package:everyonesheroes/core/ids/mission_id.dart';
 import 'package:everyonesheroes/core/ids/narrative_theme_id.dart';
@@ -118,7 +119,7 @@ final class Reflection extends AggregateRoot<ReflectionId> {
 
     raise(
       ReflectionSubmitted(
-        aggregateId: id.value,
+        aggregateId: id,
         reflectionId: id,
         journeyId: journeyId,
         questId: questId,
@@ -139,11 +140,7 @@ final class Reflection extends AggregateRoot<ReflectionId> {
     _insights.addAll(items);
 
     raise(
-      InsightsGenerated(
-        aggregateId: id.value,
-        reflectionId: id,
-        insights: items,
-      ),
+      InsightsGenerated(aggregateId: id, reflectionId: id, insights: items),
     );
   }
 
@@ -160,37 +157,37 @@ final class Reflection extends AggregateRoot<ReflectionId> {
 
     raise(
       BehavioralEvidenceDetected(
-        aggregateId: id.value,
         reflectionId: id,
+        journeyId: journeyId,
         evidence: items,
       ),
     );
   }
 
-void addNarrativeThemes(Iterable<NarrativeThemeId> themes) {
-  _ensureSubmitted();
+  void addNarrativeThemes(Iterable<NarrativeThemeId> themes) {
+    _ensureSubmitted();
 
-  final addedThemes = <NarrativeThemeId>[];
+    final addedThemes = <NarrativeThemeId>[];
 
-  for (final themeId in themes) {
-    if (!_narrativeThemes.contains(themeId)) {
-      _narrativeThemes.add(themeId);
-      addedThemes.add(themeId);
+    for (final themeId in themes) {
+      if (!_narrativeThemes.contains(themeId)) {
+        _narrativeThemes.add(themeId);
+        addedThemes.add(themeId);
+      }
     }
-  }
 
-  if (addedThemes.isEmpty) {
-    return;
-  }
+    if (addedThemes.isEmpty) {
+      return;
+    }
 
-  raise(
-    NarrativeThemesAdded(
-      aggregateId: id.value,
-      reflectionId: id,
-      narrativeThemeIds: addedThemes,
-    ),
-  );
-}
+    raise(
+      NarrativeThemesAdded(
+        aggregateId: id,
+        reflectionId: id,
+        narrativeThemeIds: addedThemes,
+      ),
+    );
+  }
 
   void _ensureSubmitted() {
     if (!isSubmitted) {

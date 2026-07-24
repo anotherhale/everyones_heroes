@@ -1,3 +1,5 @@
+import 'package:everyonesheroes/core/ids/journey_id.dart';
+import 'package:everyonesheroes/features/life_journey/domain/enums/aggregate_type.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:everyonesheroes/core/eventing/event_envelope.dart';
@@ -19,7 +21,10 @@ void main() {
       final store = InMemoryEventStore();
 
       final envelope = EventEnvelope(
-        event: TestEvent(aggregateId: '1', aggregateType: 'Journey'),
+        event: TestEvent(
+          aggregateId: JourneyId.generate(),
+          aggregateType: AggregateType.journey,
+        ),
       );
 
       await store.append(envelope);
@@ -33,11 +38,17 @@ void main() {
       final store = InMemoryEventStore();
 
       final first = EventEnvelope(
-        event: TestEvent(aggregateId: '1', aggregateType: 'Journey'),
+        event: TestEvent(
+          aggregateId: JourneyId.generate(),
+          aggregateType: AggregateType.journey,
+        ),
       );
 
       final second = EventEnvelope(
-        event: TestEvent(aggregateId: '2', aggregateType: 'Journey'),
+        event: TestEvent(
+          aggregateId: JourneyId.generate(),
+          aggregateType: AggregateType.journey,
+        ),
       );
 
       await store.append(first);

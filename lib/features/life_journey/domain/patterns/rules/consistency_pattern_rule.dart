@@ -6,7 +6,7 @@ final class ConsistencyPatternRule extends BasePatternRule {
   static const minimumEvidenceCount = 3;
 
   @override
-  BehaviorPattern? detect(List<BehavioralEvidence> evidence) {
+  BehaviorPattern? detect(Iterable<BehavioralEvidence> evidence) {
     final discipline = evidenceOfType(
       evidence,
       BehavioralEvidenceType.discipline,
