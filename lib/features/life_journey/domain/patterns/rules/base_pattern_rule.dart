@@ -1,5 +1,4 @@
 import 'package:everyonesheroes/features/life_journey/domain/domain.dart';
-import 'package:everyonesheroes/features/life_journey/domain/patterns/pattern_rule.dart';
 
 abstract base class BasePatternRule implements PatternRule {
   const BasePatternRule();

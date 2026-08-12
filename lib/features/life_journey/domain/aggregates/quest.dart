@@ -1,4 +1,3 @@
-import 'package:everyonesheroes/core/ids/aggregate_id.dart';
 import 'package:everyonesheroes/core/ids/journey_id.dart';
 import 'package:everyonesheroes/core/ids/mission_id.dart';
 import 'package:everyonesheroes/core/ids/quest_id.dart';

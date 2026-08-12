@@ -3,6 +3,7 @@ import 'package:everyonesheroes/core/eventing/event_bus.dart';
 import 'package:everyonesheroes/core/results/failure.dart';
 import 'package:everyonesheroes/core/results/result.dart';
 import 'package:everyonesheroes/core/results/success.dart';
+import 'package:everyonesheroes/features/life_journey/application/use_cases/use_case.dart';
 
 import 'package:everyonesheroes/features/life_journey/domain/services/behavioral_evidence_analyzer.dart';
 import 'package:everyonesheroes/features/life_journey/domain/services/insight_extraction_service.dart';
@@ -14,7 +15,8 @@ import 'package:everyonesheroes/features/life_journey/domain/repositories/reflec
 
 import '../dto/requests/analyze_reflection_request.dart';
 
-final class AnalyzeReflectionUseCase {
+final class AnalyzeReflectionUseCase
+    implements UseCase<AnalyzeReflectionRequest, Reflection> {
   const AnalyzeReflectionUseCase({
     required this._reflectionRepository,
     required this._insightExtractionService,
@@ -33,6 +35,7 @@ final class AnalyzeReflectionUseCase {
 
   final EventBus _eventBus;
 
+  @override
   Future<Result<Reflection>> execute(AnalyzeReflectionRequest request) async {
     try {
       final reflection = await _reflectionRepository.findById(

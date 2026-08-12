@@ -3,10 +3,12 @@ import 'package:everyonesheroes/core/eventing/event_bus.dart';
 import 'package:everyonesheroes/core/results/failure.dart';
 import 'package:everyonesheroes/core/results/result.dart';
 import 'package:everyonesheroes/core/results/success.dart';
+import 'package:everyonesheroes/features/life_journey/application/use_cases/use_case.dart';
 import 'package:everyonesheroes/features/life_journey/domain/aggregates/quest.dart';
 import 'package:everyonesheroes/features/life_journey/domain/repositories/quest_repository.dart';
 
-final class CompleteMissionUseCase {
+final class CompleteMissionUseCase
+    implements UseCase<CompleteMissionRequest, Quest> {
   const CompleteMissionUseCase({
     required this._questRepository,
     required this._eventBus,
@@ -16,6 +18,7 @@ final class CompleteMissionUseCase {
 
   final EventBus _eventBus;
 
+  @override
   Future<Result<Quest>> execute(CompleteMissionRequest request) async {
     try {
       final quest = await _questRepository.findById(request.questId);

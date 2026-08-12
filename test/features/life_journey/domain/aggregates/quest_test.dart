@@ -9,7 +9,6 @@ import 'package:everyonesheroes/features/life_journey/domain/aggregates/quest.da
 import 'package:everyonesheroes/features/life_journey/domain/enums/quest_status.dart';
 
 import 'package:everyonesheroes/features/life_journey/domain/events/mission_completed.dart';
-import 'package:everyonesheroes/features/life_journey/domain/events/quest_completed.dart';
 import 'package:everyonesheroes/features/life_journey/domain/events/quest_created.dart';
 
 import 'package:everyonesheroes/features/life_journey/domain/value_objects/mission_title.dart';

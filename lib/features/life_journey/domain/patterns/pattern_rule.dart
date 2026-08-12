@@ -4,5 +4,5 @@ abstract interface class PatternRule {
   /// Attempts to detect a behavioral pattern.
   ///
   /// Returns `null` if the pattern is not present.
-  BehaviorPattern? detect(Iterable<BehavioralEvidence> evidence);
+  BehaviorPattern? detect(List<BehavioralEvidence> evidence);
 }

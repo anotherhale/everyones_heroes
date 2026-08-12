@@ -1,6 +1,7 @@
 import 'package:everyonesheroes/core/results/failure.dart';
 import 'package:everyonesheroes/core/results/result.dart';
 import 'package:everyonesheroes/core/results/success.dart';
+import 'package:everyonesheroes/features/life_journey/application/use_cases/use_case.dart';
 
 import 'package:everyonesheroes/features/life_journey/domain/aggregates/reflection.dart';
 
@@ -8,11 +9,13 @@ import 'package:everyonesheroes/features/life_journey/domain/repositories/reflec
 
 import '../dto/requests/create_reflection_request.dart';
 
-final class CreateReflectionUseCase {
+final class CreateReflectionUseCase
+    implements UseCase<CreateReflectionRequest, Reflection> {
   const CreateReflectionUseCase({required this._reflectionRepository});
 
   final ReflectionRepository _reflectionRepository;
 
+  @override
   Future<Result<Reflection>> execute(CreateReflectionRequest request) async {
     try {
       final reflection = Reflection.create(

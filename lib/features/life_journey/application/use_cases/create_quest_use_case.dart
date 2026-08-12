@@ -4,6 +4,7 @@ import 'package:everyonesheroes/core/eventing/event_bus.dart';
 import 'package:everyonesheroes/core/results/failure.dart';
 import 'package:everyonesheroes/core/results/result.dart';
 import 'package:everyonesheroes/core/results/success.dart';
+import 'package:everyonesheroes/features/life_journey/application/use_cases/use_case.dart';
 
 import 'package:everyonesheroes/features/life_journey/domain/aggregates/journey.dart';
 import 'package:everyonesheroes/features/life_journey/domain/aggregates/quest.dart';
@@ -11,7 +12,7 @@ import 'package:everyonesheroes/features/life_journey/domain/aggregates/quest.da
 import 'package:everyonesheroes/features/life_journey/domain/repositories/journey_repository.dart';
 import 'package:everyonesheroes/features/life_journey/domain/repositories/quest_repository.dart';
 
-final class CreateQuestUseCase {
+final class CreateQuestUseCase implements UseCase<CreateQuestRequest, Quest> {
   const CreateQuestUseCase({
     required this._journeyRepository,
     required this._questRepository,
@@ -24,6 +25,7 @@ final class CreateQuestUseCase {
 
   final EventBus _eventBus;
 
+  @override
   Future<Result<Quest>> execute(CreateQuestRequest request) async {
     try {
       final Journey? journey = await _journeyRepository.findById(

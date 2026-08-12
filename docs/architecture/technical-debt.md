@@ -402,3 +402,114 @@ Implement:
 * Discovery use cases
 
 ---
+
+# TD-H2-001: Generalize Collection Interfaces to `Iterable`
+
+## Summary
+
+Review domain APIs that currently accept `List<T>` and update them to accept `Iterable<T>` where only sequential iteration is required.
+
+This is an API refinement intended to reduce coupling to concrete collection types without changing application behavior.
+
+---
+
+## Motivation
+
+Many domain services and rules only iterate over collections and do not require random access or other `List`-specific functionality.
+
+Accepting `Iterable<T>` better communicates the contract of these APIs while allowing callers greater flexibility.
+
+### Benefits
+
+- Reduce coupling to concrete collection implementations.
+- Increase API flexibility.
+- Better communicate intent (iteration vs. indexed access).
+- Avoid unnecessary collection allocations by callers.
+- Align with Dart best practices of accepting the least restrictive type required.
+
+---
+
+## Scope
+
+Review all public APIs in the Life Journey domain, including:
+
+- Pattern detectors
+- Pattern rules
+- Domain services
+- Utility methods
+- Other domain interfaces that currently require `List<T>`
+
+Each API should be evaluated individually.
+
+---
+
+## Guidelines
+
+### Use `Iterable<T>` when
+
+- Only sequential iteration is required.
+- The implementation does not access elements by index.
+- No list-specific operations are used.
+
+Example:
+
+```dart
+List<BehaviorPattern> detect({
+  required Iterable<BehavioralEvidence> evidence,
+});
+```
+
+---
+
+### Keep `List<T>` when
+
+The implementation requires list-specific behavior such as:
+
+- Index access (`list[index]`)
+- `first`, `last`
+- `sublist()`
+- Sorting
+- Random access
+- Other operations requiring a concrete list
+
+---
+
+## Non-Goals
+
+This refactoring should **not**:
+
+- Change business behavior.
+- Modify algorithms.
+- Introduce performance optimizations.
+- Affect persistence or serialization.
+- Change public semantics.
+
+This is strictly an API improvement.
+
+---
+
+## Acceptance Criteria
+
+- [ ] Review all domain APIs accepting `List<T>`.
+- [ ] Convert parameters to `Iterable<T>` where appropriate.
+- [ ] Retain `List<T>` where list semantics are required.
+- [ ] Update unit tests as needed.
+- [ ] No behavioral changes.
+- [ ] `flutter analyze` passes.
+- [ ] `flutter test` passes.
+
+---
+
+## Priority
+
+**Low**
+
+This refactoring should be completed after Phase H.2 functionality is implemented and validated.
+
+---
+
+## Status
+
+**Deferred**
+
+----

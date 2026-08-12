@@ -3,12 +3,11 @@ import 'package:everyonesheroes/features/life_journey/domain/domain.dart';
 
 final class BehavioralEvidenceBuilder {
   BehavioralEvidenceBuilder({
-    BehavioralEvidenceType type = BehavioralEvidenceType.discipline,
+    this._type = BehavioralEvidenceType.discipline,
     double strength = .8,
     DateTime? observedAt,
     EvidenceSource? source,
-  }) : _type = type,
-       _strength = strength,
+  }) : _strength = strength,
        _observedAt = observedAt ?? DateTime(2026, 1, 1),
        _source =
            source ??
@@ -17,49 +16,41 @@ final class BehavioralEvidenceBuilder {
            );
 
   BehavioralEvidenceBuilder.discipline()
-      : this(type: BehavioralEvidenceType.discipline);
+    : this(type: BehavioralEvidenceType.discipline);
 
   BehavioralEvidenceBuilder.courage()
-      : this(type: BehavioralEvidenceType.courage);
+    : this(type: BehavioralEvidenceType.courage);
 
   BehavioralEvidenceBuilder.leadership()
-      : this(type: BehavioralEvidenceType.leadership);
+    : this(type: BehavioralEvidenceType.leadership);
 
   BehavioralEvidenceBuilder.responsibility()
-      : this(type: BehavioralEvidenceType.responsibility);
+    : this(type: BehavioralEvidenceType.responsibility);
 
   BehavioralEvidenceBuilder.service()
-      : this(type: BehavioralEvidenceType.service);
+    : this(type: BehavioralEvidenceType.service);
 
   BehavioralEvidenceType _type;
   double _strength;
   DateTime _observedAt;
   EvidenceSource _source;
 
-  BehavioralEvidenceBuilder withType(
-    BehavioralEvidenceType value,
-  ) {
+  BehavioralEvidenceBuilder withType(BehavioralEvidenceType value) {
     _type = value;
     return this;
   }
 
-  BehavioralEvidenceBuilder withStrength(
-    double value,
-  ) {
+  BehavioralEvidenceBuilder withStrength(double value) {
     _strength = value;
     return this;
   }
 
-  BehavioralEvidenceBuilder observedAt(
-    DateTime value,
-  ) {
+  BehavioralEvidenceBuilder observedAt(DateTime value) {
     _observedAt = value;
     return this;
   }
 
-  BehavioralEvidenceBuilder fromSource(
-    EvidenceSource value,
-  ) {
+  BehavioralEvidenceBuilder fromSource(EvidenceSource value) {
     _source = value;
     return this;
   }

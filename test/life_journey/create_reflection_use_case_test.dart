@@ -100,6 +100,9 @@ final class _ThrowingReflectionRepository implements ReflectionRepository {
   Future<Reflection?> findById(ReflectionId id) async => null;
 
   @override
+  Future<List<Reflection>> findByJourneyId(JourneyId journeyId) async => [];
+
+  @override
   Future<void> save(Reflection reflection) async {
     throw Exception('boom');
   }

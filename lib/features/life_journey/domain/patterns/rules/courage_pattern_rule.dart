@@ -6,7 +6,7 @@ final class CouragePatternRule extends BasePatternRule {
   static const minimumEvidenceCount = 3;
 
   @override
-  BehaviorPattern? detect(Iterable<BehavioralEvidence> evidence) {
+  BehaviorPattern? detect(List<BehavioralEvidence> evidence) {
     final courage = evidenceOfType(evidence, BehavioralEvidenceType.courage);
 
     if (courage.length < minimumEvidenceCount) {

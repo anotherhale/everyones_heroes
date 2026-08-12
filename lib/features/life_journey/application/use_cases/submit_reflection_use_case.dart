@@ -3,6 +3,7 @@ import 'package:everyonesheroes/core/eventing/event_bus.dart';
 import 'package:everyonesheroes/core/results/failure.dart';
 import 'package:everyonesheroes/core/results/result.dart';
 import 'package:everyonesheroes/core/results/success.dart';
+import 'package:everyonesheroes/features/life_journey/application/use_cases/use_case.dart';
 
 import 'package:everyonesheroes/features/life_journey/domain/aggregates/reflection.dart';
 
@@ -10,7 +11,8 @@ import 'package:everyonesheroes/features/life_journey/domain/repositories/reflec
 
 import '../dto/requests/submit_reflection_request.dart';
 
-final class SubmitReflectionUseCase {
+final class SubmitReflectionUseCase
+    implements UseCase<SubmitReflectionRequest, Reflection> {
   const SubmitReflectionUseCase({
     required this._reflectionRepository,
     required this._eventBus,
@@ -20,6 +22,7 @@ final class SubmitReflectionUseCase {
 
   final EventBus _eventBus;
 
+  @override
   Future<Result<Reflection>> execute(SubmitReflectionRequest request) async {
     try {
       final reflection = await _reflectionRepository.findById(

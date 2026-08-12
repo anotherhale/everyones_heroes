@@ -17,13 +17,12 @@ import 'package:everyonesheroes/features/discovery/domain/value_objects/discover
 final class DiscoveryProfile extends AggregateRoot<DiscoveryProfileId> {
   DiscoveryProfile({
     required DiscoveryProfileId id,
-    required UserId userId,
+    required this._userId,
     Iterable<InfluenceId>? influenceIds,
     Iterable<NarrativeThemeId>? narrativeThemeIds,
     Iterable<UserDiscovery>? discoveries,
     Iterable<DiscoveryPreference>? preferences,
-  }) : _userId = userId,
-       _influenceIds = influenceIds?.toSet().toList() ?? [],
+  }) : _influenceIds = influenceIds?.toSet().toList() ?? [],
        _narrativeThemeIds = narrativeThemeIds?.toSet().toList() ?? [],
        _discoveries = discoveries?.toList() ?? [],
        _preferences = preferences?.toList() ?? [],
