@@ -1,4 +1,11 @@
 import 'package:everyonesheroes/core/ids/journey_id.dart';
+import 'package:everyonesheroes/features/life_journey/domain/enums/behavioral_evidence_type.dart';
+import 'package:everyonesheroes/features/life_journey/domain/value_objects/strength.dart';
+import 'package:everyonesheroes/features/life_journey/domain/value_objects/evidence_source.dart';
+import 'package:everyonesheroes/features/life_journey/domain/value_objects/behavioral_evidence.dart';
+import 'package:everyonesheroes/features/life_journey/domain/patterns/behavior_pattern_type.dart';
+import 'package:everyonesheroes/features/life_journey/domain/patterns/behavior_pattern.dart';
+import 'package:everyonesheroes/core/ids/reflection_id.dart';
 
 import 'package:everyonesheroes/features/life_journey/domain/aggregates/journey.dart';
 import 'package:everyonesheroes/features/life_journey/domain/enums/journey_chapter.dart';
@@ -49,17 +56,53 @@ void main() {
         expect(result!.id, equals(journey.id));
       });
 
-      test('saves multiple journeys', () async {
-        final journey1 = createJourney();
-        final journey2 = createJourney();
+      test(
+        'persists behavior patterns as part of the journey aggregate',
+        () async {
+          final firstObservedAt = DateTime(2026, 1, 1);
+          final lastObservedAt = DateTime(2026, 1, 15);
 
-        await repository.save(journey1);
-        await repository.save(journey2);
+          final evidence1 = BehavioralEvidence(
+            type: BehavioralEvidenceType.confidence,
+            source: ReflectionEvidenceSource(
+              reflectionId: ReflectionId.generate(),
+            ),
+            strength: const Strength(0.60),
+            observedAt: firstObservedAt,
+          );
 
-        expect(await repository.findById(journey1.id), isNotNull);
+          final evidence2 = BehavioralEvidence(
+            type: BehavioralEvidenceType.confidence,
+            source: ReflectionEvidenceSource(
+              reflectionId: ReflectionId.generate(),
+            ),
+            strength: const Strength(0.60),
+            observedAt: lastObservedAt,
+          );
 
-        expect(await repository.findById(journey2.id), isNotNull);
-      });
+          final pattern = BehaviorPattern(
+            type: BehaviorPatternType.consistency,
+            strength: const Strength(0.85),
+            supportingEvidence: [evidence1, evidence2],
+            firstObservedAt: firstObservedAt,
+            lastObservedAt: lastObservedAt,
+          );
+
+          final journey = Journey(
+            id: JourneyId.generate(),
+            vision: JourneyVision('Become healthier'),
+            behaviorPatterns: [pattern],
+          );
+
+          await repository.save(journey);
+
+          final result = await repository.findById(journey.id);
+
+          expect(result, isNotNull);
+          expect(result!.behaviorPatterns, hasLength(1));
+          expect(result.behaviorPatterns.single, equals(pattern));
+        },
+      );
       test('overwrites existing journey with same id', () async {
         final id = JourneyId.generate();
 
