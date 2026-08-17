@@ -4,11 +4,10 @@ import 'package:everyonesheroes/features/life_journey/domain/domain.dart';
 final class BehavioralEvidenceBuilder {
   BehavioralEvidenceBuilder({
     this._type = BehavioralEvidenceType.discipline,
-    double strength = .8,
+    this._strength = .8,
     DateTime? observedAt,
     EvidenceSource? source,
-  }) : _strength = strength,
-       _observedAt = observedAt ?? DateTime(2026, 1, 1),
+  }) : _observedAt = observedAt ?? DateTime(2026, 1, 1),
        _source =
            source ??
            const ReflectionEvidenceSource(

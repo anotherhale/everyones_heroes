@@ -1,7 +1,7 @@
 import 'package:everyonesheroes/core/eventing/event_dispatcher_provider.dart';
 import 'package:everyonesheroes/features/life_journey/application/providers/use_cases/analyze_reflection_use_case_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
+import 'package:everyonesheroes/features/life_journey/application/providers/use_cases/detect_pattern_use_case_provider.dart';
 import 'package:everyonesheroes/core/eventing/event_providers.dart';
 
 import 'reactor_registration.dart';
@@ -25,6 +25,7 @@ final class ApplicationBootstrap {
       analyzeReflectionUseCase: _container.read(
         analyzeReflectionUseCaseProvider,
       ),
+      detectPatternUseCase: _container.read(detectPatternUseCaseProvider),
     );
   }
 }

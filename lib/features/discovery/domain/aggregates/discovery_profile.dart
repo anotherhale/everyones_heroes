@@ -1,6 +1,5 @@
 import 'dart:collection';
 
-import 'package:everyonesheroes/core/ids/aggregate_id.dart';
 import 'package:everyonesheroes/core/ids/discovery_profile_id.dart';
 import 'package:everyonesheroes/core/ids/influence_id.dart';
 import 'package:everyonesheroes/core/ids/narrative_theme_id.dart';

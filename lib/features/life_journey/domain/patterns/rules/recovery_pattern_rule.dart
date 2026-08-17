@@ -5,8 +5,8 @@ final class RecoveryPatternRule extends BasePatternRule {
 
   @override
   BehaviorPattern? detect(List<BehavioralEvidence> evidence) {
-    final sorted = [...evidence]
-      ..sort((a, b) => a.observedAt.compareTo(b.observedAt));
+    // final sorted = [...evidence]
+    //   ..sort((a, b) => a.observedAt.compareTo(b.observedAt));
 
     // TODO:
     // Detect:

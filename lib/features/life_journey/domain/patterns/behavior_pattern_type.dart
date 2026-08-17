@@ -1,5 +1,6 @@
 enum BehaviorPatternType {
   consistency,
+  discipline,
   resilience,
   courage,
   leadership,

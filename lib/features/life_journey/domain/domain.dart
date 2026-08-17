@@ -10,11 +10,11 @@ export 'entities/mission.dart';
 
 // Value Objects
 export 'value_objects/strength.dart';
-
+export 'value_objects/journey_vision.dart';
 export 'value_objects/behavioral_evidence.dart';
-export 'enums/behavioral_evidence_type.dart';
 export 'value_objects/evidence_source.dart';
 export 'value_objects/insight.dart';
+export 'enums/behavioral_evidence_type.dart';
 
 // Reflection Entities
 export 'entities/reflection/reflection_response.dart';
@@ -35,17 +35,16 @@ export 'patterns/pattern_rule.dart';
 // Domain Events
 export 'events/journey_created.dart';
 export 'events/chapter_advanced.dart';
-
 export 'events/quest_created.dart';
 export 'events/mission_created.dart';
 export 'events/mission_completed.dart';
 export 'events/quest_completed.dart';
-
 export 'events/reflection_submitted.dart';
 export 'events/insights_generated.dart';
 export 'events/behavioral_evidence_detected.dart';
 export 'events/narrative_themes_added.dart';
 export 'events/patterns_detected.dart';
+export 'events/behavior_patterns_detected.dart';
 
 // Domain Services (Ports)
 export 'services/insight_extraction_service.dart';
@@ -57,3 +56,11 @@ export 'services/pattern_detector.dart';
 export 'repositories/journey_repository.dart';
 export 'repositories/quest_repository.dart';
 export 'repositories/reflection_repository.dart';
+
+// Domain Rules
+export 'patterns/rules/consistency_pattern_rule.dart';
+export 'patterns/rules/courage_pattern_rule.dart';
+export 'patterns/rules/leadership_pattern_rule.dart';
+export 'patterns/rules/recovery_pattern_rule.dart';
+export 'patterns/rules/responsibility_pattern_rule.dart';
+export 'patterns/rules/service_pattern_rule.dart';

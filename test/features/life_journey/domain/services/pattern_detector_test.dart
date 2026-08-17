@@ -1,5 +1,3 @@
-import 'package:everyonesheroes/features/life_journey/domain/patterns/rules/consistency_pattern_rule.dart';
-import 'package:everyonesheroes/features/life_journey/domain/patterns/rules/courage_pattern_rule.dart';
 import 'package:everyonesheroes/features/life_journey/infrastructure/services/rule_based/rule_based_pattern_detector.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -12,18 +10,13 @@ void main() {
 
   setUp(() {
     detector = const RuleBasedPatternDetector(
-      rules: [
-        ConsistencyPatternRule(),
-        CouragePatternRule(),
-      ],
+      rules: [ConsistencyPatternRule(), CouragePatternRule()],
     );
   });
 
   group('detect', () {
     test('returns empty when no evidence is supplied', () {
-      final patterns = detector.detect(
-        evidence: const [],
-      );
+      final patterns = detector.detect(evidence: const []);
 
       expect(patterns, isEmpty);
     });
@@ -51,10 +44,7 @@ void main() {
 
       expect(patterns, hasLength(1));
 
-      expect(
-        patterns.single.type,
-        BehaviorPatternType.consistency,
-      );
+      expect(patterns.single.type, BehaviorPatternType.consistency);
     });
 
     test('returns patterns from all matching rules', () {
@@ -112,10 +102,7 @@ void main() {
 
       expect(patterns, hasLength(1));
 
-      expect(
-        patterns.single.type,
-        BehaviorPatternType.consistency,
-      );
+      expect(patterns.single.type, BehaviorPatternType.consistency);
     });
   });
 }
