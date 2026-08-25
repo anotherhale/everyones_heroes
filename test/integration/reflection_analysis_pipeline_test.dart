@@ -8,6 +8,7 @@ import 'package:everyonesheroes/features/life_journey/application/providers/use_
 import 'package:everyonesheroes/features/life_journey/application/providers/repositories/reflection_repository_provider.dart';
 
 import 'package:everyonesheroes/features/life_journey/domain/aggregates/reflection.dart';
+import 'package:everyonesheroes/features/life_journey/domain/entities/reflection/emoji_response.dart';
 import 'package:everyonesheroes/features/life_journey/domain/entities/reflection/journal_response.dart';
 import 'package:everyonesheroes/features/life_journey/domain/enums/reflection_emotion.dart';
 import 'package:everyonesheroes/features/life_journey/domain/events/reflection_submitted.dart';
@@ -49,17 +50,11 @@ void main() {
         id: ReflectionId.generate(),
         journeyId: JourneyId.generate(),
       );
-
+      reflection.addResponse(
+        const EmojiResponse(emotion: ReflectionEmotion.proud),
+      );
       // add at least one response
       // replace with your actual response type
-
-      reflection.addResponse(
-        JournalResponse(
-          prompt: 'What did you learn?',
-          response: 'I kept going even when it was hard.',
-          emotion: ReflectionEmotion.proud,
-        ),
-      );
 
       await repository.save(reflection);
 
