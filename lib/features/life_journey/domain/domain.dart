@@ -51,7 +51,10 @@ export 'services/insight_extraction_service.dart';
 export 'services/behavioral_evidence_analyzer.dart';
 export 'services/narrative_theme_resolver.dart';
 export 'services/pattern_detector.dart';
-
+export 'services/behavioral_analyzer_capability.dart';
+export 'services/behavioral_analyzer_descriptor.dart';
+export 'services/behavioral_evidence_analysis_context.dart';
+export 'services/behavioral_evidence_analyzer_registry.dart';
 // Repository Ports
 export 'repositories/journey_repository.dart';
 export 'repositories/quest_repository.dart';

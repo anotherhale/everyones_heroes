@@ -6,7 +6,6 @@ import 'package:everyonesheroes/core/results/success.dart';
 import 'package:everyonesheroes/features/life_journey/application/use_cases/detect_pattern_use_case.dart';
 import 'package:everyonesheroes/features/life_journey/domain/domain.dart';
 import 'package:everyonesheroes/features/life_journey/domain/enums/journey_chapter.dart';
-import 'package:everyonesheroes/features/life_journey/domain/value_objects/journey_vision.dart';
 import 'package:everyonesheroes/features/life_journey/infrastructure/repositories/in_memory_journey_repository.dart';
 import 'package:everyonesheroes/features/life_journey/infrastructure/repositories/in_memory_reflection_repository.dart';
 import 'package:flutter_test/flutter_test.dart';

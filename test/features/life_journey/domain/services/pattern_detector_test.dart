@@ -1,4 +1,4 @@
-import 'package:everyonesheroes/features/life_journey/infrastructure/services/rule_based/rule_based_pattern_detector.dart';
+import 'package:everyonesheroes/features/life_journey/infrastructure/services/behavioral_analysis/rule_based_pattern_detector.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:everyonesheroes/features/life_journey/domain/domain.dart';

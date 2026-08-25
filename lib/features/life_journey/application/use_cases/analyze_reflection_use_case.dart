@@ -3,9 +3,9 @@ import 'package:everyonesheroes/core/eventing/event_bus.dart';
 import 'package:everyonesheroes/core/results/failure.dart';
 import 'package:everyonesheroes/core/results/result.dart';
 import 'package:everyonesheroes/core/results/success.dart';
+import 'package:everyonesheroes/features/life_journey/application/services/behavioral_evidence_analysis_orchestrator.dart';
 import 'package:everyonesheroes/features/life_journey/application/use_cases/use_case.dart';
 
-import 'package:everyonesheroes/features/life_journey/domain/services/behavioral_evidence_analyzer.dart';
 import 'package:everyonesheroes/features/life_journey/domain/services/insight_extraction_service.dart';
 import 'package:everyonesheroes/features/life_journey/domain/services/narrative_theme_resolver.dart';
 
@@ -20,7 +20,7 @@ final class AnalyzeReflectionUseCase
   const AnalyzeReflectionUseCase({
     required this._reflectionRepository,
     required this._insightExtractionService,
-    required this._behavioralEvidenceAnalyzer,
+    required this._behavioralEvidenceAnalysisOrchestrator,
     required this._narrativeThemeResolver,
     required this._eventBus,
   });
@@ -29,7 +29,8 @@ final class AnalyzeReflectionUseCase
 
   final InsightExtractionService _insightExtractionService;
 
-  final BehavioralEvidenceAnalyzer _behavioralEvidenceAnalyzer;
+  final BehavioralEvidenceAnalysisOrchestrator
+  _behavioralEvidenceAnalysisOrchestrator;
 
   final NarrativeThemeResolver _narrativeThemeResolver;
 
@@ -55,7 +56,9 @@ final class AnalyzeReflectionUseCase
 
       reflection.addInsights(insights);
 
-      final evidence = await _behavioralEvidenceAnalyzer.analyze(reflection);
+      final evidence = await _behavioralEvidenceAnalysisOrchestrator.analyze(
+        reflection,
+      );
 
       reflection.addBehavioralEvidence(evidence);
 

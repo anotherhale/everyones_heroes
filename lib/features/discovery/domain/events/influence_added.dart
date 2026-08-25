@@ -1,7 +1,7 @@
 import 'package:everyonesheroes/core/eventing/event_base.dart';
 import 'package:everyonesheroes/core/ids/discovery_profile_id.dart';
 import 'package:everyonesheroes/core/ids/influence_id.dart';
-import 'package:everyonesheroes/features/life_journey/domain/enums/aggregate_type.dart';
+import 'package:everyonesheroes/core/eventing/aggregate_type.dart';
 
 final class InfluenceAdded extends EventBase {
   InfluenceAdded({

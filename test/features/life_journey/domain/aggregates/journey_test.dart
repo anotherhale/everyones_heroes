@@ -4,8 +4,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:everyonesheroes/core/ids/journey_id.dart';
 import 'package:everyonesheroes/core/ids/quest_id.dart';
 import 'package:everyonesheroes/features/life_journey/domain/enums/journey_chapter.dart';
-import 'package:everyonesheroes/features/life_journey/domain/value_objects/journey_vision.dart';
-import 'package:everyonesheroes/features/life_journey/domain/events/behavior_patterns_detected.dart';
 
 import '../../../../helpers/event_assertions.dart';
 

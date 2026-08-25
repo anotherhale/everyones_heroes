@@ -1,9 +1,7 @@
-import 'package:flutter/foundation.dart';
 import 'package:everyonesheroes/features/life_journey/domain/patterns/behavior_pattern_type.dart';
 import 'package:everyonesheroes/features/life_journey/domain/value_objects/strength.dart';
 import 'package:everyonesheroes/features/life_journey/domain/value_objects/behavioral_evidence.dart';
 
-@immutable
 final class BehaviorPattern {
   final BehaviorPatternType type;
   final Strength strength;
@@ -33,13 +31,31 @@ final class BehaviorPattern {
 
   bool get isWeak => strength.isWeak;
 
+  bool _listEquals<T>(List<T> a, List<T> b) {
+    if (identical(a, b)) {
+      return true;
+    }
+
+    if (a.length != b.length) {
+      return false;
+    }
+
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is BehaviorPattern &&
           type == other.type &&
           strength == other.strength &&
-          listEquals(supportingEvidence, other.supportingEvidence) &&
+          _listEquals(supportingEvidence, other.supportingEvidence) &&
           firstObservedAt == other.firstObservedAt &&
           lastObservedAt == other.lastObservedAt;
 

@@ -9,7 +9,7 @@ import 'package:everyonesheroes/features/life_journey/application/use_cases/dete
 import 'package:everyonesheroes/features/life_journey/domain/domain.dart';
 import 'package:everyonesheroes/features/life_journey/infrastructure/repositories/in_memory_journey_repository.dart';
 import 'package:everyonesheroes/features/life_journey/infrastructure/repositories/in_memory_reflection_repository.dart';
-import 'package:everyonesheroes/features/life_journey/infrastructure/services/rule_based/rule_based_pattern_detector.dart';
+import 'package:everyonesheroes/features/life_journey/infrastructure/services/behavioral_analysis/rule_based_pattern_detector.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../../../helpers/event_assertions.dart';

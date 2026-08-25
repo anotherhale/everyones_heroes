@@ -1,4 +1,3 @@
-import 'package:everyonesheroes/features/life_journey/domain/patterns/rules/consistency_pattern_rule.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:everyonesheroes/features/life_journey/domain/domain.dart';

@@ -3,7 +3,7 @@ import 'package:everyonesheroes/core/eventing/in_memory_event_bus.dart';
 import 'package:everyonesheroes/core/eventing/in_memory_event_dispatcher.dart';
 import 'package:everyonesheroes/core/eventing/in_memory_event_store.dart';
 import 'package:everyonesheroes/core/ids/journey_id.dart';
-import 'package:everyonesheroes/features/life_journey/domain/enums/aggregate_type.dart';
+import 'package:everyonesheroes/core/eventing/aggregate_type.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'domain_event_test.dart';

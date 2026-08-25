@@ -1,7 +1,7 @@
 import 'package:everyonesheroes/core/eventing/domain_event.dart';
 import 'package:everyonesheroes/core/ids/aggregate_id.dart';
 import 'package:everyonesheroes/core/ids/event_id.dart';
-import 'package:everyonesheroes/features/life_journey/domain/enums/aggregate_type.dart';
+import 'package:everyonesheroes/core/eventing/aggregate_type.dart';
 
 abstract base class EventBase extends DomainEvent {
   EventBase({

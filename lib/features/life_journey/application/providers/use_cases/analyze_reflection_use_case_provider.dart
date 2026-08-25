@@ -1,5 +1,5 @@
 import 'package:everyonesheroes/core/eventing/event_providers.dart';
-import 'package:everyonesheroes/features/life_journey/application/providers/services/behavioral_evidence_analyzer_provider.dart';
+import 'package:everyonesheroes/features/life_journey/application/providers/services/behavioral_evidence_analysis_orchestrator_provider.dart';
 import 'package:everyonesheroes/features/life_journey/application/providers/services/insight_extraction_service_provider.dart';
 import 'package:everyonesheroes/features/life_journey/application/providers/services/narrative_theme_resolver_provider.dart';
 import 'package:everyonesheroes/features/life_journey/application/providers/repositories/reflection_repository_provider.dart';
@@ -14,7 +14,9 @@ final analyzeReflectionUseCaseProvider = Provider<AnalyzeReflectionUseCase>((
 
     insightExtractionService: ref.read(insightExtractionServiceProvider),
 
-    behavioralEvidenceAnalyzer: ref.read(behavioralEvidenceAnalyzerProvider),
+    behavioralEvidenceAnalysisOrchestrator: ref.read(
+      behavioralEvidenceAnalysisOrchestratorProvider,
+    ),
 
     narrativeThemeResolver: ref.read(narrativeThemeResolverProvider),
 

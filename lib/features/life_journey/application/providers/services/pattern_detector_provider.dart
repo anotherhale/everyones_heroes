@@ -7,7 +7,7 @@ import '../../../domain/patterns/rules/recovery_pattern_rule.dart';
 import '../../../domain/patterns/rules/responsibility_pattern_rule.dart';
 import '../../../domain/patterns/rules/service_pattern_rule.dart';
 import '../../../domain/services/pattern_detector.dart';
-import '../../../infrastructure/services/rule_based/rule_based_pattern_detector.dart';
+import '../../../infrastructure/services/behavioral_analysis/rule_based_pattern_detector.dart';
 
 final patternDetectorProvider = Provider<PatternDetector>((ref) {
   return const RuleBasedPatternDetector(

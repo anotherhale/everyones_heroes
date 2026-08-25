@@ -4,7 +4,7 @@ import 'package:everyonesheroes/core/ids/journey_id.dart';
 import 'package:everyonesheroes/core/ids/mission_id.dart';
 import 'package:everyonesheroes/core/ids/quest_id.dart';
 import 'package:everyonesheroes/core/ids/reflection_id.dart';
-import 'package:everyonesheroes/features/life_journey/domain/enums/aggregate_type.dart';
+import 'package:everyonesheroes/core/eventing/aggregate_type.dart';
 
 final class ReflectionSubmitted extends EventBase {
   ReflectionSubmitted({

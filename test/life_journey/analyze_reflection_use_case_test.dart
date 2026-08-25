@@ -1,3 +1,6 @@
+import 'package:everyonesheroes/features/life_journey/application/providers/fake/services/fake_insight_extraction_service.dart';
+import 'package:everyonesheroes/features/life_journey/application/services/behavioral_evidence_analysis_orchestrator.dart';
+import 'package:everyonesheroes/features/life_journey/application/services/default_behavioral_evidence_analyzer_registry.dart';
 import 'package:everyonesheroes/features/life_journey/domain/events/behavioral_evidence_detected.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -22,9 +25,8 @@ import 'package:everyonesheroes/features/life_journey/domain/events/insights_gen
 
 import 'package:everyonesheroes/features/life_journey/infrastructure/repositories/in_memory_reflection_repository.dart';
 
-import '../fakes/life_journey/fake_behavioral_evidence_analyzer.dart';
-import '../fakes/life_journey/fake_insight_extraction_service.dart';
 import '../fakes/life_journey/fake_narrative_theme_resolver.dart';
+import '../features/life_journey/application/services/face_behaviorial_evidence_analyzer.dart';
 
 void main() {
   group('AnalyzeReflectionUseCase', () {
@@ -39,10 +41,18 @@ void main() {
 
       eventStore = InMemoryEventStore();
 
+      final analyzer = const FakeBehavioralEvidenceAnalyzer();
+
+      final registry = DefaultBehavioralEvidenceAnalyzerRegistry([analyzer]);
+
+      final orchestrator = BehavioralEvidenceAnalysisOrchestrator(
+        registry: registry,
+      );
+
       useCase = AnalyzeReflectionUseCase(
         reflectionRepository: reflectionRepository,
         insightExtractionService: const FakeInsightExtractionService(),
-        behavioralEvidenceAnalyzer: const FakeBehavioralEvidenceAnalyzer(),
+        behavioralEvidenceAnalysisOrchestrator: orchestrator,
         narrativeThemeResolver: const FakeNarrativeThemeResolver(),
         eventBus: InMemoryEventBus(
           eventStore: eventStore,
@@ -50,7 +60,6 @@ void main() {
         ),
       );
     });
-
     test('analyzes reflection', () async {
       final reflection = Reflection.create(
         id: ReflectionId.generate(),
