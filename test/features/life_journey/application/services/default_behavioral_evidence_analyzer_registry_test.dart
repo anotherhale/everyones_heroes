@@ -75,7 +75,7 @@ final class FakeBehavioralEvidenceAnalyzer
 
   @override
   BehavioralAnalyzerDescriptor get descriptor => BehavioralAnalyzerDescriptor(
-    id: AnalyzerId.generate(),
+    id: AnalyzerId('journal'),
     capabilities: {BehavioralAnalyzerCapability.journal},
   );
 

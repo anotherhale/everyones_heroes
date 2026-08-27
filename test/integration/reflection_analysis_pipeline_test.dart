@@ -9,7 +9,6 @@ import 'package:everyonesheroes/features/life_journey/application/providers/repo
 
 import 'package:everyonesheroes/features/life_journey/domain/aggregates/reflection.dart';
 import 'package:everyonesheroes/features/life_journey/domain/entities/reflection/emoji_response.dart';
-import 'package:everyonesheroes/features/life_journey/domain/entities/reflection/journal_response.dart';
 import 'package:everyonesheroes/features/life_journey/domain/enums/reflection_emotion.dart';
 import 'package:everyonesheroes/features/life_journey/domain/events/reflection_submitted.dart';
 
@@ -53,8 +52,6 @@ void main() {
       reflection.addResponse(
         const EmojiResponse(emotion: ReflectionEmotion.proud),
       );
-      // add at least one response
-      // replace with your actual response type
 
       await repository.save(reflection);
 

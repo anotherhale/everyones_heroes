@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:everyonesheroes/app/demo_runner.dart';
+import 'package:everyonesheroes/app/presentation/app.dart';
 
-Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-
-  await DemoRunner().run();
-
-  runApp(const Placeholder());
+void main() {
+  runApp(const ProviderScope(child: EveryonesHeroesApp()));
 }

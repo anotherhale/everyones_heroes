@@ -8,7 +8,7 @@ final class EmojiBehavioralEvidenceAnalyzer
 
   @override
   BehavioralAnalyzerDescriptor get descriptor => BehavioralAnalyzerDescriptor(
-    id: AnalyzerId.generate(),
+    id: AnalyzerId('emoji'),
     capabilities: {BehavioralAnalyzerCapability.emoji},
   );
 
