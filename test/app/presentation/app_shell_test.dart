@@ -37,7 +37,7 @@ void main() {
     await tester.tap(find.byKey(const Key('nav-discover')));
     await tester.pumpAndSettle();
 
-    expect(find.text('Discover'), findsOneWidget);
+    expect(find.byKey(const Key('screen-title-discover')), findsOneWidget);
   });
 
   testWidgets('AppShell navigates to Reflect', (tester) async {
@@ -45,6 +45,14 @@ void main() {
     await tester.pumpAndSettle();
 
     await tester.tap(find.byKey(const Key('nav-reflect')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('nav-reflect')));
+    await tester.pumpAndSettle();
+
+    final scrollView = find.byType(CustomScrollView);
+    expect(scrollView, findsOneWidget);
+
+    await tester.drag(scrollView, const Offset(0, -1000));
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('save-reflection')), findsOneWidget);

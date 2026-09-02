@@ -16,6 +16,7 @@ class DiscoverScreen extends StatelessWidget {
               delegate: SliverChildListDelegate([
                 Text(
                   'Discover',
+                  key: const Key('screen-title-discover'),
                   style: theme.textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.w700,
                   ),
