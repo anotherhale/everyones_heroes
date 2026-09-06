@@ -46,7 +46,7 @@ void main() {
         dispatcher: dispatcher,
       );
 
-      useCase = SubmitReflectionUseCase(
+      useCase = DefaultSubmitReflectionUseCase(
         reflectionRepository: reflectionRepository,
         eventBus: eventBus,
       );

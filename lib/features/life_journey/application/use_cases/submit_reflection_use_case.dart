@@ -1,29 +1,30 @@
 import 'package:everyonesheroes/core/eventing/event_bus.dart';
-
 import 'package:everyonesheroes/core/results/failure.dart';
 import 'package:everyonesheroes/core/results/result.dart';
 import 'package:everyonesheroes/core/results/success.dart';
 import 'package:everyonesheroes/features/life_journey/application/use_cases/use_case.dart';
-
 import 'package:everyonesheroes/features/life_journey/domain/aggregates/reflection.dart';
-
 import 'package:everyonesheroes/features/life_journey/domain/repositories/reflection_repository.dart';
 
 import '../dto/requests/submit_reflection_request.dart';
 
-final class SubmitReflectionUseCase
-    implements UseCase<SubmitReflectionRequest, Reflection> {
-  const SubmitReflectionUseCase({
+abstract interface class SubmitReflectionUseCase
+    implements UseCase<SubmitReflectionRequest, Reflection> {}
+
+final class DefaultSubmitReflectionUseCase
+    implements SubmitReflectionUseCase {
+  const DefaultSubmitReflectionUseCase({
     required this._reflectionRepository,
     required this._eventBus,
   });
 
   final ReflectionRepository _reflectionRepository;
-
   final EventBus _eventBus;
 
   @override
-  Future<Result<Reflection>> execute(SubmitReflectionRequest request) async {
+  Future<Result<Reflection>> execute(
+    SubmitReflectionRequest request,
+  ) async {
     try {
       final reflection = await _reflectionRepository.findById(
         request.reflectionId,
@@ -31,8 +32,7 @@ final class SubmitReflectionUseCase
 
       if (reflection == null) {
         return Failure(
-          'Reflection not found: '
-          '${request.reflectionId.value}',
+          'Reflection not found: ${request.reflectionId.value}',
         );
       }
 
@@ -48,10 +48,7 @@ final class SubmitReflectionUseCase
 
       return Success(reflection);
     } catch (e) {
-      return Failure(
-        'Failed to submit reflection: '
-        '$e',
-      );
+      return Failure('Failed to submit reflection: $e');
     }
   }
 }

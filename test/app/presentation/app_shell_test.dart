@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:everyonesheroes/app/presentation/app_shell.dart';
 
 void main() {
   Widget buildSubject() {
-    return const MaterialApp(home: AppShell());
+    return const ProviderScope(
+      child: MaterialApp(home: AppShell()),
+    );
   }
 
   testWidgets('AppShell starts on Home', (tester) async {

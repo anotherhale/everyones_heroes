@@ -1,38 +1,136 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class ReflectScreen extends StatefulWidget {
-  const ReflectScreen({super.key});
+import 'package:everyonesheroes/core/ids/reflection_id.dart';
+import 'package:everyonesheroes/features/life_journey/application/dto/requests/submit_reflection_request.dart';
+import 'package:everyonesheroes/features/life_journey/application/providers/use_cases/add_reflection_response_use_case_provider.dart';
+import 'package:everyonesheroes/features/life_journey/application/providers/use_cases/submit_reflection_use_case_provider.dart';
+import 'package:everyonesheroes/features/life_journey/domain/entities/reflection/emoji_response.dart';
+import 'package:everyonesheroes/features/life_journey/domain/enums/reflection_emotion.dart';
+
+class ReflectScreen extends ConsumerStatefulWidget {
+  const ReflectScreen({this.reflectionId, super.key});
+
+  final ReflectionId? reflectionId;
 
   @override
-  State<ReflectScreen> createState() => _ReflectScreenState();
+  ConsumerState<ReflectScreen> createState() => _ReflectScreenState();
 }
 
-class _ReflectScreenState extends State<ReflectScreen> {
+class _ReflectScreenState extends ConsumerState<ReflectScreen> {
   String? _selectedFeeling;
   String? _confirmationMessage;
+  bool _isSaving = false;
+
   static const _feelings = <_FeelingOption>[
-    _FeelingOption(emoji: '💪', label: 'Strong'),
-    _FeelingOption(emoji: '🌱', label: 'Growing'),
-    _FeelingOption(emoji: '🔥', label: 'Motivated'),
-    _FeelingOption(emoji: '🧘', label: 'Peaceful'),
-    _FeelingOption(emoji: '❤️', label: 'Grateful'),
+    _FeelingOption(
+      emoji: '💪',
+      label: 'Strong',
+      emotion: ReflectionEmotion.proud,
+    ),
+    _FeelingOption(
+      emoji: '🌱',
+      label: 'Growing',
+      emotion: ReflectionEmotion.hopeful,
+    ),
+    _FeelingOption(
+      emoji: '🔥',
+      label: 'Motivated',
+      emotion: ReflectionEmotion.excited,
+    ),
+    _FeelingOption(
+      emoji: '🧘',
+      label: 'Peaceful',
+      emotion: ReflectionEmotion.calm,
+    ),
+    _FeelingOption(
+      emoji: '❤️',
+      label: 'Grateful',
+      emotion: ReflectionEmotion.grateful,
+    ),
   ];
 
   void _selectFeeling(String feeling) {
-    setState(() {
-      _selectedFeeling = feeling;
-    });
-  }
-
-  void _saveReflection() {
-    final feeling = _selectedFeeling;
-    if (feeling == null) {
+    if (_isSaving) {
       return;
     }
 
     setState(() {
-      _confirmationMessage = 'Reflection saved: $feeling';
+      _selectedFeeling = feeling;
+      _confirmationMessage = null;
     });
+  }
+
+  Future<void> _saveReflection() async {
+    final reflectionId = widget.reflectionId;
+    final selectedFeeling = _selectedFeeling;
+
+    if (reflectionId == null || selectedFeeling == null || _isSaving) {
+      return;
+    }
+
+    final feeling = _feelings.firstWhere(
+      (option) => option.label == selectedFeeling,
+    );
+
+    setState(() {
+      _isSaving = true;
+      _confirmationMessage = null;
+    });
+
+    final addResponseResult = await ref
+        .read(addReflectionResponseUseCaseProvider)
+        .execute(
+          reflectionId: reflectionId,
+          response: EmojiResponse(emotion: feeling.emotion),
+        );
+
+    if (!mounted) {
+      return;
+    }
+
+    final responseAdded = addResponseResult.fold(
+      onSuccess: (_) => true,
+      onFailure: (error) {
+        setState(() {
+          _isSaving = false;
+        });
+
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(error)));
+
+        return false;
+      },
+    );
+
+    if (!responseAdded) {
+      return;
+    }
+
+    final submitResult = await ref
+        .read(submitReflectionUseCaseProvider)
+        .execute(SubmitReflectionRequest(reflectionId: reflectionId));
+
+    if (!mounted) {
+      return;
+    }
+
+    submitResult.fold(
+      onSuccess: (_) {
+        setState(() {
+          _isSaving = false;
+          _confirmationMessage = 'Reflection saved: $selectedFeeling';
+        });
+      },
+      onFailure: (error) {
+        setState(() {
+          _isSaving = false;
+        });
+
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(error)));
+      },
+    );
   }
 
   @override
@@ -99,10 +197,20 @@ class _ReflectScreenState extends State<ReflectScreen> {
                 const SizedBox(height: 20),
                 FilledButton(
                   key: const Key('save-reflection'),
-                  onPressed: _selectedFeeling == null ? null : _saveReflection,
-                  child: const Text('Save Reflection'),
+                  onPressed:
+                      _selectedFeeling == null ||
+                          _isSaving ||
+                          widget.reflectionId == null
+                      ? null
+                      : _saveReflection,
+                  child: _isSaving
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text('Save Reflection'),
                 ),
-
                 if (_confirmationMessage != null) ...[
                   const SizedBox(height: 16),
                   Text(
@@ -114,7 +222,6 @@ class _ReflectScreenState extends State<ReflectScreen> {
                     ),
                   ),
                 ],
-
                 const SizedBox(height: 28),
                 Text(
                   "You don't have to explain everything.\n"
@@ -161,10 +268,15 @@ class _MoodEmoji extends StatelessWidget {
 }
 
 class _FeelingOption {
-  const _FeelingOption({required this.emoji, required this.label});
+  const _FeelingOption({
+    required this.emoji,
+    required this.label,
+    required this.emotion,
+  });
 
   final String emoji;
   final String label;
+  final ReflectionEmotion emotion;
 }
 
 class _FeelingTile extends StatelessWidget {

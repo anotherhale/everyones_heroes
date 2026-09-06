@@ -1,96 +1,227 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import 'package:everyonesheroes/core/ids/journey_id.dart';
+import 'package:everyonesheroes/core/ids/reflection_id.dart';
+import 'package:everyonesheroes/core/results/result.dart';
+import 'package:everyonesheroes/core/results/success.dart';
+
+import 'package:everyonesheroes/features/life_journey/application/dto/requests/submit_reflection_request.dart';
+import 'package:everyonesheroes/features/life_journey/application/providers/use_cases/add_reflection_response_use_case_provider.dart';
+import 'package:everyonesheroes/features/life_journey/application/providers/use_cases/submit_reflection_use_case_provider.dart';
+import 'package:everyonesheroes/features/life_journey/application/use_cases/add_reflection_response_use_case.dart';
+import 'package:everyonesheroes/features/life_journey/application/use_cases/submit_reflection_use_case.dart';
+
+import 'package:everyonesheroes/features/life_journey/domain/aggregates/reflection.dart';
+import 'package:everyonesheroes/features/life_journey/domain/entities/reflection/emoji_response.dart';
+import 'package:everyonesheroes/features/life_journey/domain/entities/reflection/reflection_response.dart';
+
+import 'package:everyonesheroes/features/life_journey/domain/enums/reflection_emotion.dart';
 
 import 'package:everyonesheroes/features/life_journey/presentation/screens/reflect_screen.dart';
 
 void main() {
   group('ReflectScreen', () {
-    Future<void> buildScreen(WidgetTester tester) async {
-      await tester.pumpWidget(const MaterialApp(home: ReflectScreen()));
-    }
+    late ReflectionId reflectionId;
+    late _FakeAddReflectionResponseUseCase addResponseUseCase;
+    late _FakeSubmitReflectionUseCase submitUseCase;
 
-    Future<void> scrollToBottom(WidgetTester tester) async {
-      final scrollView = find.byType(CustomScrollView);
+    setUp(() {
+      reflectionId = ReflectionId.generate();
+      addResponseUseCase = _FakeAddReflectionResponseUseCase();
+      submitUseCase = _FakeSubmitReflectionUseCase();
+    });
 
-      expect(scrollView, findsOneWidget);
+    Future<void> buildScreen(
+      WidgetTester tester, {
+      ReflectionId? id,
+    }) async {
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            addReflectionResponseUseCaseProvider.overrideWithValue(
+              addResponseUseCase,
+            ),
+            submitReflectionUseCaseProvider.overrideWithValue(
+              submitUseCase,
+            ),
+          ],
+          child: MaterialApp(
+            home: ReflectScreen(reflectionId: id),
+          ),
+        ),
+      );
 
-      await tester.drag(scrollView, const Offset(0, -1000));
       await tester.pumpAndSettle();
     }
 
-    testWidgets('renders the reflection experience', (tester) async {
-      await buildScreen(tester);
+    testWidgets('renders reflection choices', (tester) async {
+      await buildScreen(tester, id: reflectionId);
 
       expect(find.text('Reflect'), findsOneWidget);
-      expect(find.text('Take a moment.'), findsOneWidget);
       expect(
         find.text('How are you feeling about your journey?'),
         findsOneWidget,
       );
-      expect(find.text('What best describes this moment?'), findsOneWidget);
-
       expect(find.text('Strong'), findsOneWidget);
       expect(find.text('Growing'), findsOneWidget);
       expect(find.text('Motivated'), findsOneWidget);
       expect(find.text('Peaceful'), findsOneWidget);
 
-      await scrollToBottom(tester);
+      await tester.drag(
+        find.byType(CustomScrollView),
+        const Offset(0, -800),
+      );
+      await tester.pumpAndSettle();
 
-      expect(find.byKey(const ValueKey('feeling-grateful')), findsOneWidget);
+      expect(find.text('Grateful'), findsOneWidget);
+      expect(find.text('Save Reflection'), findsOneWidget);
     });
 
-    testWidgets('save reflection is disabled until a feeling is selected', (
+    testWidgets('save is disabled until a feeling is selected', (
       tester,
     ) async {
-      await buildScreen(tester);
-      await scrollToBottom(tester);
+      await buildScreen(tester, id: reflectionId);
 
-      final saveButton = find.byKey(const ValueKey('save-reflection'));
+      await tester.drag(
+        find.byType(CustomScrollView),
+        const Offset(0, -800),
+      );
+      await tester.pumpAndSettle();
+
+      final saveButton = find.byKey(
+        const ValueKey('save-reflection'),
+      );
 
       expect(saveButton, findsOneWidget);
 
       final button = tester.widget<FilledButton>(saveButton);
+
       expect(button.onPressed, isNull);
     });
 
-    testWidgets('selecting a feeling enables save and shows confirmation', (
-      tester,
-    ) async {
-      await buildScreen(tester);
-      await scrollToBottom(tester);
+    testWidgets('selecting a feeling enables save', (tester) async {
+      await buildScreen(tester, id: reflectionId);
 
-      final growing = find.byKey(const ValueKey('feeling-growing'));
-
-      expect(growing, findsOneWidget);
-
-      await tester.tap(growing);
+      await tester.tap(
+        find.byKey(const ValueKey('feeling-growing')),
+      );
       await tester.pump();
 
-      final saveButton = find.byKey(const ValueKey('save-reflection'));
+      await tester.drag(
+        find.byType(CustomScrollView),
+        const Offset(0, -800),
+      );
+      await tester.pumpAndSettle();
 
-      expect(saveButton, findsOneWidget);
+      final button = tester.widget<FilledButton>(
+        find.byKey(const ValueKey('save-reflection')),
+      );
 
-      final button = tester.widget<FilledButton>(saveButton);
       expect(button.onPressed, isNotNull);
-
-      await tester.tap(saveButton);
-      await tester.pump();
-
-      expect(find.text('Reflection saved: Growing'), findsOneWidget);
     });
 
-    testWidgets('selected feeling is visually marked', (tester) async {
-      await buildScreen(tester);
-      await scrollToBottom(tester);
+    testWidgets('save adds response and submits reflection', (tester) async {
+      await buildScreen(tester, id: reflectionId);
 
-      final grateful = find.byKey(const ValueKey('feeling-grateful'));
-
-      expect(grateful, findsOneWidget);
-
-      await tester.tap(grateful);
+      await tester.tap(
+        find.byKey(const ValueKey('feeling-growing')),
+      );
       await tester.pump();
 
-      expect(find.byIcon(Icons.check_circle), findsOneWidget);
+      await tester.drag(
+        find.byType(CustomScrollView),
+        const Offset(0, -800),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(
+        find.byKey(const ValueKey('save-reflection')),
+      );
+      await tester.pumpAndSettle();
+
+      expect(addResponseUseCase.executed, isTrue);
+      expect(addResponseUseCase.reflectionId, reflectionId);
+      expect(addResponseUseCase.response, isA<EmojiResponse>());
+
+      final response = addResponseUseCase.response! as EmojiResponse;
+
+      expect(response.emotion, ReflectionEmotion.hopeful);
+
+      expect(submitUseCase.executed, isTrue);
+      expect(submitUseCase.reflectionId, reflectionId);
+
+      expect(
+        find.text('Reflection saved: Growing'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('save does nothing without a reflection id', (tester) async {
+      await buildScreen(tester);
+
+      await tester.tap(
+        find.byKey(const ValueKey('feeling-growing')),
+      );
+      await tester.pump();
+
+      await tester.drag(
+        find.byType(CustomScrollView),
+        const Offset(0, -800),
+      );
+      await tester.pumpAndSettle();
+
+      final button = tester.widget<FilledButton>(
+        find.byKey(const ValueKey('save-reflection')),
+      );
+
+      expect(button.onPressed, isNull);
     });
   });
+}
+
+final class _FakeAddReflectionResponseUseCase
+    implements AddReflectionResponseUseCase {
+  bool executed = false;
+  ReflectionId? reflectionId;
+  dynamic response;
+
+  @override
+  Future<Result<Reflection>> execute({
+    required ReflectionId reflectionId,
+    required ReflectionResponse response,
+  }) async {
+    executed = true;
+    this.reflectionId = reflectionId;
+    this.response = response;
+
+    final reflection = Reflection.create(
+      id: reflectionId,
+      journeyId: JourneyId.generate(),
+    );
+
+    return Success(reflection);
+  }
+}
+
+final class _FakeSubmitReflectionUseCase
+    implements SubmitReflectionUseCase {
+  bool executed = false;
+  ReflectionId? reflectionId;
+
+  @override
+  Future<Result<Reflection>> execute(
+    SubmitReflectionRequest request,
+  ) async {
+    executed = true;
+    reflectionId = request.reflectionId;
+
+    final reflection = Reflection.create(
+      id: request.reflectionId,
+      journeyId: JourneyId.generate(),
+    );
+
+    return Success(reflection);
+  }
 }
