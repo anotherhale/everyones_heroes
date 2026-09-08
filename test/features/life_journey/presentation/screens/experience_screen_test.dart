@@ -20,7 +20,7 @@ void main() {
 
   final experience = TodayExperienceViewModel(
     id: 'test-experience',
-    experienceType: ExperienceType.mission,
+    experienceType: ExperienceType.reflection,
     action: ExperienceAction.begin,
     title: 'Keep Showing Up',
     description: 'Take one small step today.',

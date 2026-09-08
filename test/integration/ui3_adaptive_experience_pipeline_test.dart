@@ -173,7 +173,7 @@ void main() {
       );
 
       expect(updatedExperience.id, 'consistency-next-step');
-      expect(updatedExperience.type, ExperienceType.mission);
+      expect(updatedExperience.type, ExperienceType.reflection);
       expect(updatedExperience.title, 'Keep Showing Up');
       expect(updatedExperience.action, ExperienceAction.begin);
       expect(

@@ -19,7 +19,7 @@ final class DeterministicExperienceSelectionService
     if (consistency != null) {
       return const AdaptiveExperience(
         id: 'consistency-next-step',
-        type: ExperienceType.mission,
+        type: ExperienceType.reflection,
         title: 'Keep Showing Up',
         description:
             'Take one small step today to strengthen the consistency '

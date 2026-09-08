@@ -8,7 +8,7 @@ void main() {
     test('maps an adaptive experience into presentation state', () {
       const experience = AdaptiveExperience(
         id: 'consistency-next-step',
-        type: ExperienceType.mission,
+        type: ExperienceType.reflection,
         title: 'Keep Showing Up',
         description:
             'Take one small step today to strengthen the consistency '
@@ -22,7 +22,7 @@ void main() {
           TodayExperienceViewModel.fromExperience(experience);
 
       expect(viewModel.id, 'consistency-next-step');
-      expect(viewModel.experienceType, ExperienceType.mission);
+      expect(viewModel.experienceType, ExperienceType.reflection);
       expect(viewModel.title, 'Keep Showing Up');
       expect(
         viewModel.description,

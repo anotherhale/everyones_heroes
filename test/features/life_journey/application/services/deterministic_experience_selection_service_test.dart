@@ -22,7 +22,7 @@ void main() {
       final experience = service.selectFor(journey);
 
       expect(experience.id, 'consistency-next-step');
-      expect(experience.type, ExperienceType.mission);
+      expect(experience.type, ExperienceType.reflection);
       expect(experience.title, 'Keep Showing Up');
       expect(experience.action, ExperienceAction.begin);
       expect(

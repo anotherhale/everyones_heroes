@@ -25,7 +25,7 @@ void main() {
   }) {
     return TodayExperienceViewModel(
       id: 'consistency-next-step',
-      experienceType: ExperienceType.mission,
+      experienceType: ExperienceType.reflection,
       action: ExperienceAction.begin,
       title: title,
       description: description,

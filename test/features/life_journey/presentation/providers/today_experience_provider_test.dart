@@ -16,7 +16,7 @@ void main() {
     test('emits experience view model when use case succeeds', () async {
       const experience = AdaptiveExperience(
         id: 'consistency-next-step',
-        type: ExperienceType.mission,
+        type: ExperienceType.reflection,
         title: 'Keep Showing Up',
         description:
             'Take one small step today to strengthen the consistency '
@@ -43,7 +43,7 @@ void main() {
 
       expect(result, isA<TodayExperienceViewModel>());
       expect(result.id, 'consistency-next-step');
-      expect(result.experienceType, ExperienceType.mission);
+      expect(result.experienceType, ExperienceType.reflection);
       expect(result.title, 'Keep Showing Up');
       expect(result.callToAction, 'Begin Experience');
       expect(
