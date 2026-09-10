@@ -12,22 +12,35 @@ Cross-context communication should occur through domain events.
 
 # Context Map
 
-    Identity
-        ↓
-    Discovery
-        ↓
-    Life Journey
-        ↓
-    Contribution
-
+```text
+Identity
+     │
+     ├──────────────┐
+     │              │
+     ▼              ▼
+Discovery      Hero & Story
+     │              │
+     │              │
+     └──────┬───────┘
+            ▼
+       Life Journey
+            │
+            ▼
+       Contribution
+```
 
 Identity provides the person.
 
 Discovery understands what inspires them.
 
+Hero & Story provides cataloged human stories and lived experience.
+
 Life Journey helps them grow.
 
 Contribution helps them help others grow.
+
+> Note: Older diagrams in this file may still show the pre-HS.1 linear map.
+> Prefer the map above and `AGENTS.md` / HS ADRs when they conflict.
 
 ---
 
