@@ -16,16 +16,13 @@ import 'package:everyonesheroes/features/hero_story/domain/value_objects/hero_pr
 final class Hero extends AggregateRoot<HeroId> {
   Hero({
     required HeroId id,
-    required HeroProfile profile,
+    required this._profile,
     this.identityUserId,
-    HeroVisibility visibility = HeroVisibility.private,
-    HeroStatus status = HeroStatus.active,
+    this._visibility = HeroVisibility.private,
+    this._status = HeroStatus.active,
     Iterable<StoryId>? publishedStoryIds,
     DateTime? createdAt,
-  }) : _profile = profile,
-       _visibility = visibility,
-       _status = status,
-       _publishedStoryIds = [...?publishedStoryIds],
+  }) : _publishedStoryIds = [...?publishedStoryIds],
        _createdAt = createdAt ?? DateTime.now(),
        super(id);
 

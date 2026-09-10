@@ -10,12 +10,10 @@ import 'package:everyonesheroes/features/hero_story/domain/repositories/story_re
 
 final class ArchiveStoryUseCase implements UseCase<StoryIdRequest, Story> {
   const ArchiveStoryUseCase({
-    required StoryRepository storyRepository,
-    required HeroRepository heroRepository,
-    required EventBus eventBus,
-  }) : _storyRepository = storyRepository,
-       _heroRepository = heroRepository,
-       _eventBus = eventBus;
+    required this._storyRepository,
+    required this._heroRepository,
+    required this._eventBus,
+  });
 
   final StoryRepository _storyRepository;
   final HeroRepository _heroRepository;

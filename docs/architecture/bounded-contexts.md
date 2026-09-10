@@ -288,6 +288,49 @@ Discovery determines what inspires a user.
 
 Life Journey determines how a user is growing.
 
+---
+
+# Hero & Story
+
+Status: In Progress (HS.1 Foundation)
+
+Responsibility:
+
+What stories and human experiences are available to inspire people?
+
+Owns:
+
+* Hero (Aggregate Root)
+* Story (Aggregate Root)
+* StoryRepresentation
+* StoryClassification (multidimensional catalog)
+* ContentSuitability
+* SpiritualityClassification
+* StoryProvenance
+* MediaReference
+* HeroRepository / StoryRepository
+* StorySearchPort / HeroSearchPort / StoryCapturePort (replaceable contracts)
+
+Does not own:
+
+* NarrativeTheme (references `NarrativeThemeId` only)
+* Behavioral Evidence
+* Behavior Patterns
+* DiscoveryProfile
+* Personalization decisions
+* Life Journey progression
+* Story interaction as automatic evidence
+
+Cross-context:
+
+* Identity — optional `UserId` reference on Hero
+* Discovery — NarrativeThemeId references; future StoryPublished consumption
+* Life Journey — future Story → Reflection/Experience bridges (not HS.1)
+
+See HS-ADR-001 through HS-ADR-013.
+
+---
+
 # Life Journey
 
 Status: Active

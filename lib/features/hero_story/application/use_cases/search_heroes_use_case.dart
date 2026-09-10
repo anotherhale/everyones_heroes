@@ -7,8 +7,9 @@ import 'package:everyonesheroes/features/hero_story/domain/services/hero_search_
 
 final class SearchHeroesUseCase
     implements UseCase<HeroSearchQuery, List<HeroId>> {
-  const SearchHeroesUseCase({required HeroSearchPort heroSearchPort})
-    : _heroSearchPort = heroSearchPort;
+  const SearchHeroesUseCase({
+    required this._heroSearchPort,
+  });
 
   final HeroSearchPort _heroSearchPort;
 

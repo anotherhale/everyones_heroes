@@ -7,8 +7,9 @@ import 'package:everyonesheroes/core/results/success.dart';
 
 final class SearchStoriesUseCase
     implements UseCase<StorySearchQuery, List<StoryId>> {
-  const SearchStoriesUseCase({required StorySearchPort storySearchPort})
-    : _storySearchPort = storySearchPort;
+  const SearchStoriesUseCase({
+    required this._storySearchPort,
+  });
 
   final StorySearchPort _storySearchPort;
 

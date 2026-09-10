@@ -10,10 +10,9 @@ import 'package:everyonesheroes/features/hero_story/domain/repositories/hero_rep
 final class UpdateHeroProfileUseCase
     implements UseCase<UpdateHeroProfileRequest, Hero> {
   const UpdateHeroProfileUseCase({
-    required HeroRepository heroRepository,
-    required EventBus eventBus,
-  }) : _heroRepository = heroRepository,
-       _eventBus = eventBus;
+    required this._heroRepository,
+    required this._eventBus,
+  });
 
   final HeroRepository _heroRepository;
   final EventBus _eventBus;

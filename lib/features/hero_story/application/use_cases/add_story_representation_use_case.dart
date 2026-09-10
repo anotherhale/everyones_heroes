@@ -10,10 +10,9 @@ import 'package:everyonesheroes/features/hero_story/domain/repositories/story_re
 final class AddStoryRepresentationUseCase
     implements UseCase<AddStoryRepresentationRequest, Story> {
   const AddStoryRepresentationUseCase({
-    required StoryRepository storyRepository,
-    required EventBus eventBus,
-  }) : _storyRepository = storyRepository,
-       _eventBus = eventBus;
+    required this._storyRepository,
+    required this._eventBus,
+  });
 
   final StoryRepository _storyRepository;
   final EventBus _eventBus;
