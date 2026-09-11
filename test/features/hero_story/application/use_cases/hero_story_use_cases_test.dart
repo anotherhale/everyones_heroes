@@ -13,6 +13,8 @@ import 'package:everyonesheroes/features/hero_story/application/dto/requests/cre
 import 'package:everyonesheroes/features/hero_story/application/dto/requests/create_story_request.dart';
 import 'package:everyonesheroes/features/hero_story/application/dto/requests/publish_story_request.dart';
 import 'package:everyonesheroes/features/hero_story/application/dto/requests/story_id_request.dart';
+import 'package:everyonesheroes/features/hero_story/application/dto/requests/update_story_content_suitability_request.dart';
+import 'package:everyonesheroes/features/hero_story/application/dto/requests/update_story_spirituality_request.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/add_story_representation_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/approve_story_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/archive_story_use_case.dart';
@@ -22,6 +24,8 @@ import 'package:everyonesheroes/features/hero_story/application/use_cases/create
 import 'package:everyonesheroes/features/hero_story/application/use_cases/publish_story_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/search_stories_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/submit_story_use_case.dart';
+import 'package:everyonesheroes/features/hero_story/application/use_cases/update_story_content_suitability_use_case.dart';
+import 'package:everyonesheroes/features/hero_story/application/use_cases/update_story_spirituality_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/domain/domain.dart';
 import 'package:everyonesheroes/features/hero_story/infrastructure/repositories/in_memory_hero_repository.dart';
 import 'package:everyonesheroes/features/hero_story/infrastructure/repositories/in_memory_story_repository.dart';
@@ -42,6 +46,8 @@ void main() {
   late ArchiveStoryUseCase archiveStory;
   late AddStoryRepresentationUseCase addRepresentation;
   late ClassifyStoryUseCase classifyStory;
+  late UpdateStoryContentSuitabilityUseCase updateSuitability;
+  late UpdateStorySpiritualityUseCase updateSpirituality;
   late SearchStoriesUseCase searchStories;
 
   final english = LanguageCode('en');
@@ -86,6 +92,14 @@ void main() {
       eventBus: eventBus,
     );
     classifyStory = ClassifyStoryUseCase(
+      storyRepository: storyRepository,
+      eventBus: eventBus,
+    );
+    updateSuitability = UpdateStoryContentSuitabilityUseCase(
+      storyRepository: storyRepository,
+      eventBus: eventBus,
+    );
+    updateSpirituality = UpdateStorySpiritualityUseCase(
       storyRepository: storyRepository,
       eventBus: eventBus,
     );
@@ -237,6 +251,41 @@ void main() {
     expect(result, isA<Success<Story>>());
     final story = await storyRepository.findById(storyId);
     expect(story!.findRepresentation(representationId), isNotNull);
+  });
+
+  test('update suitability and spirituality without new events', () async {
+    final heroId = await seedHero();
+    final storyId = await seedStory(heroId);
+    final before = await eventStore.allEvents();
+
+    final suitabilityResult = await updateSuitability.execute(
+      UpdateStoryContentSuitabilityRequest(
+        storyId: storyId,
+        contentSuitability: const ContentSuitability(
+          violence: SuitabilityLevel.mild,
+          substanceUse: SuitabilityLevel.none,
+        ),
+      ),
+    );
+    expect(suitabilityResult, isA<Success<Story>>());
+
+    final spiritualityResult = await updateSpirituality.execute(
+      UpdateStorySpiritualityRequest(
+        storyId: storyId,
+        spirituality: SpiritualityClassification.nonSpiritual,
+      ),
+    );
+    expect(spiritualityResult, isA<Success<Story>>());
+
+    final stored = await storyRepository.findById(storyId);
+    expect(stored!.contentSuitability.violence, SuitabilityLevel.mild);
+    expect(
+      stored.spirituality.category,
+      SpiritualityCategory.nonSpiritual,
+    );
+
+    final after = await eventStore.allEvents();
+    expect(after.length, before.length);
   });
 }
 

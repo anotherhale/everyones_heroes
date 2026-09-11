@@ -244,5 +244,24 @@ void main() {
         SpiritualityCategory.religious,
       );
     });
+
+    test('suitability and spirituality updates raise no domain events', () {
+      final story = createStory();
+      story.pullDomainEvents();
+
+      story.updateContentSuitability(
+        const ContentSuitability(violence: SuitabilityLevel.mild),
+      );
+      story.updateSpirituality(SpiritualityClassification.nonSpiritual);
+
+      expect(story.pullDomainEvents(), isEmpty);
+    });
+
+    test('StoryChallenge enum does not include resilience', () {
+      expect(
+        StoryChallenge.values.map((value) => value.name),
+        isNot(contains('resilience')),
+      );
+    });
   });
 }

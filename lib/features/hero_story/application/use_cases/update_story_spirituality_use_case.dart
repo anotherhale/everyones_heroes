@@ -1,0 +1,44 @@
+import 'package:everyonesheroes/core/eventing/event_bus.dart';
+import 'package:everyonesheroes/core/results/failure.dart';
+import 'package:everyonesheroes/core/results/result.dart';
+import 'package:everyonesheroes/core/results/success.dart';
+import 'package:everyonesheroes/features/hero_story/application/dto/requests/update_story_spirituality_request.dart';
+import 'package:everyonesheroes/features/hero_story/application/use_cases/use_case.dart';
+import 'package:everyonesheroes/features/hero_story/domain/aggregates/story.dart';
+import 'package:everyonesheroes/features/hero_story/domain/repositories/story_repository.dart';
+
+/// Authoritative spirituality classification update path.
+///
+/// Does not raise a dedicated domain event in HS.2 (no current consumer).
+/// Must not infer Hero religious identity from Story content.
+final class UpdateStorySpiritualityUseCase
+    implements UseCase<UpdateStorySpiritualityRequest, Story> {
+  const UpdateStorySpiritualityUseCase({
+    required this._storyRepository,
+    required this._eventBus,
+  });
+
+  final StoryRepository _storyRepository;
+  final EventBus _eventBus;
+
+  @override
+  Future<Result<Story>> execute(UpdateStorySpiritualityRequest request) async {
+    try {
+      final story = await _storyRepository.findById(request.storyId);
+      if (story == null) {
+        return Failure('Story not found: ${request.storyId.value}');
+      }
+
+      story.updateSpirituality(request.spirituality);
+      await _storyRepository.save(story);
+
+      for (final event in story.pullDomainEvents()) {
+        await _eventBus.publish(event);
+      }
+
+      return Success(story);
+    } catch (e) {
+      return Failure('Failed to update story spirituality: $e');
+    }
+  }
+}
