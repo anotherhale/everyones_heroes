@@ -957,3 +957,90 @@ Decision:
 Rationale:
 
 Domain events must identify the owning aggregate accurately.
+
+---
+
+# HS-ADR-014 Local Story Catalog Taxonomies Are Closed Enums
+
+Status: Accepted
+
+Date: 2026-09-11
+
+Phase: HS.2
+
+Decision:
+
+Local Story Catalog dimensions remain closed Dart enums for HS.2:
+
+* `StorySubject`
+* `StoryChallenge`
+* `StoryOutcome`
+* `EmotionalCharacter`
+* `StoryAudience`
+* representation format/origin enums
+* suitability/spirituality enums
+
+Hero & Story must not introduce taxonomy repositories, taxonomy aggregates,
+runtime taxonomy IDs, or taxonomy database infrastructure in HS.2.
+
+Narrative themes remain Discovery-owned and are referenced only by
+`NarrativeThemeId`.
+
+Rationale:
+
+HS.1 already established closed enums as the working model. Extensible
+taxonomies are deferred until product requirements justify them.
+
+---
+
+# HS-ADR-015 AI Classification Is Deferred To HS.4
+
+Status: Accepted
+
+Date: 2026-09-11
+
+Phase: HS.2
+
+Decision:
+
+HS.2 does not implement classification proposals, pending classification state,
+AI classification approval workflows, classification history, or AI adapters.
+
+`ClassifyStoryUseCase` / `Story.classify` remain the authoritative classification
+path. `StoryClassified` means authoritative classification was applied.
+
+AI-assisted classification proposal → human approval → authoritative catalog
+state belongs to HS.4 Story Understanding.
+
+Rationale:
+
+Preserves the architectural boundary without prematurely expanding the Story
+aggregate with proposal lifecycle.
+
+---
+
+# HS-ADR-016 Duration Queries Match Any Eligible Representation
+
+Status: Accepted
+
+Date: 2026-09-11
+
+Phase: HS.2
+
+Decision:
+
+Duration is owned by `StoryRepresentation` and is not duplicated on `Story`.
+
+`StorySearchQuery.minDuration` / `maxDuration` match a Story when ANY
+representation with a non-null duration satisfies the constraint.
+
+When both minimum and maximum are provided, the same representation must
+satisfy the full window.
+
+A representation with null duration does not satisfy duration constraints.
+
+Rationale:
+
+Stories may have multiple language/format representations of different lengths.
+Catalog filtering should discover a Story if any available representation fits
+the listener's duration constraint.
