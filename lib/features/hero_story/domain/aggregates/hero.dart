@@ -1,7 +1,4 @@
-import 'dart:collection';
-
 import 'package:everyonesheroes/core/ids/hero_id.dart';
-import 'package:everyonesheroes/core/ids/story_id.dart';
 import 'package:everyonesheroes/core/ids/user_id.dart';
 import 'package:everyonesheroes/core/shared_kernel/aggregate_root.dart';
 import 'package:everyonesheroes/features/hero_story/domain/enums/hero_status.dart';
@@ -13,6 +10,9 @@ import 'package:everyonesheroes/features/hero_story/domain/value_objects/hero_pr
 /// A person whose lived experience may inspire others.
 ///
 /// Hero identity is distinct from authentication identity ([identityUserId]).
+///
+/// Published Stories are not stored on Hero. [Story.heroId] is authoritative;
+/// "Hero's published stories" is derived by querying Story.
 final class Hero extends AggregateRoot<HeroId> {
   Hero({
     required HeroId id,
@@ -20,10 +20,8 @@ final class Hero extends AggregateRoot<HeroId> {
     this.identityUserId,
     this._visibility = HeroVisibility.private,
     this._status = HeroStatus.active,
-    Iterable<StoryId>? publishedStoryIds,
     DateTime? createdAt,
-  }) : _publishedStoryIds = [...?publishedStoryIds],
-       _createdAt = createdAt ?? DateTime.now(),
+  }) : _createdAt = createdAt ?? DateTime.now(),
        super(id);
 
   factory Hero.create({
@@ -50,16 +48,12 @@ final class Hero extends AggregateRoot<HeroId> {
   HeroProfile _profile;
   HeroVisibility _visibility;
   HeroStatus _status;
-  final List<StoryId> _publishedStoryIds;
   final DateTime _createdAt;
 
   HeroProfile get profile => _profile;
   HeroVisibility get visibility => _visibility;
   HeroStatus get status => _status;
   DateTime get createdAt => _createdAt;
-
-  UnmodifiableListView<StoryId> get publishedStoryIds =>
-      UnmodifiableListView(_publishedStoryIds);
 
   bool get isActive => _status == HeroStatus.active;
 
@@ -88,21 +82,6 @@ final class Hero extends AggregateRoot<HeroId> {
 
   void reactivate() {
     _status = HeroStatus.active;
-  }
-
-  /// Records a published Story reference owned by this Hero.
-  void attachPublishedStory(StoryId storyId) {
-    _ensureActive();
-
-    if (_publishedStoryIds.contains(storyId)) {
-      return;
-    }
-
-    _publishedStoryIds.add(storyId);
-  }
-
-  void detachPublishedStory(StoryId storyId) {
-    _publishedStoryIds.remove(storyId);
   }
 
   void _ensureActive() {

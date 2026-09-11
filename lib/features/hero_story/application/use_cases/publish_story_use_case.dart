@@ -27,6 +27,7 @@ final class PublishStoryUseCase implements UseCase<PublishStoryRequest, Story> {
         return Failure('Story not found: ${request.storyId.value}');
       }
 
+      // Referential integrity only: do not mutate Hero for publication.
       final hero = await _heroRepository.findById(story.heroId);
       if (hero == null) {
         return Failure('Hero not found: ${story.heroId.value}');
@@ -37,16 +38,9 @@ final class PublishStoryUseCase implements UseCase<PublishStoryRequest, Story> {
       }
 
       story.publish();
-      hero.attachPublishedStory(story.id);
-
       await _storyRepository.save(story);
-      await _heroRepository.save(hero);
 
       for (final event in story.pullDomainEvents()) {
-        await _eventBus.publish(event);
-      }
-
-      for (final event in hero.pullDomainEvents()) {
         await _eventBus.publish(event);
       }
 

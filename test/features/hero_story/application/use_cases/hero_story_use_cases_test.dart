@@ -79,7 +79,6 @@ void main() {
     );
     archiveStory = ArchiveStoryUseCase(
       storyRepository: storyRepository,
-      heroRepository: heroRepository,
       eventBus: eventBus,
     );
     addRepresentation = AddStoryRepresentationUseCase(
@@ -156,14 +155,23 @@ void main() {
     );
     expect(publishResult, isA<Success<Story>>());
 
-    final hero = await heroRepository.findById(heroId);
-    expect(hero!.publishedStoryIds, contains(storyId));
+    final publishedForHero = await storyRepository.findByHeroId(heroId);
+    expect(
+      publishedForHero
+          .where((s) => s.lifecycleStatus == StoryLifecycleStatus.published)
+          .map((s) => s.id),
+      contains(storyId),
+    );
 
     await archiveStory.execute(StoryIdRequest(storyId: storyId));
     final archived = await storyRepository.findById(storyId);
     expect(archived!.lifecycleStatus, StoryLifecycleStatus.archived);
+
+    final remainingPublished = await storyRepository.findByHeroId(heroId);
     expect(
-      (await heroRepository.findById(heroId))!.publishedStoryIds,
+      remainingPublished
+          .where((s) => s.lifecycleStatus == StoryLifecycleStatus.published)
+          .map((s) => s.id),
       isNot(contains(storyId)),
     );
   });

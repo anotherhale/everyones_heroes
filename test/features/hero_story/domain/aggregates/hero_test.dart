@@ -1,5 +1,4 @@
 import 'package:everyonesheroes/core/ids/hero_id.dart';
-import 'package:everyonesheroes/core/ids/story_id.dart';
 import 'package:everyonesheroes/core/ids/user_id.dart';
 import 'package:everyonesheroes/core/shared_kernel/language_code.dart';
 import 'package:everyonesheroes/features/hero_story/domain/domain.dart';
@@ -56,16 +55,6 @@ void main() {
         () => hero.updateProfile(hero.profile.copyWith(displayName: 'Other')),
         throwsStateError,
       );
-    });
-
-    test('attachPublishedStory is idempotent', () {
-      final hero = createHero();
-      final storyId = StoryId.generate();
-
-      hero.attachPublishedStory(storyId);
-      hero.attachPublishedStory(storyId);
-
-      expect(hero.publishedStoryIds, [storyId]);
     });
   });
 }
