@@ -1,7 +1,8 @@
 enum AggregateType {
   behavioralEvidence,
   discoveryProfile,
-  heroStory,
+  hero,
+  story,
   journey,
   mission,
   quest,

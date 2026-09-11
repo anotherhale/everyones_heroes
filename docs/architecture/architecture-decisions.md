@@ -673,3 +673,287 @@ Narrative Guidance
 Contribution
 
 Every major architectural decision should support this progression.
+
+---
+
+# HS-ADR-001 Hero & Story Is a Dedicated Bounded Context
+
+Status: Accepted
+
+Date: 2026-09-10
+
+Phase: HS.1
+
+Decision:
+
+Hero & Story is a dedicated bounded context under `lib/features/hero_story/`.
+
+It owns Heroes, Stories, representations, media references, catalog classification,
+content suitability, spirituality/religion classification, provenance, and
+Hero/Story relationships.
+
+It does not own Behavioral Evidence, Behavior Patterns, Growth Opportunities,
+Discovery Profiles, personalization decisions, or Life Journey progression.
+
+Rationale:
+
+Separating cataloged human stories from Discovery (what inspires a person) and
+Life Journey (how a person grows) preserves content vs personalization boundaries.
+
+---
+
+# HS-ADR-002 Story Is the Canonical Narrative; Media Are Derivatives
+
+Status: Accepted
+
+Date: 2026-09-10
+
+Phase: HS.1
+
+Decision:
+
+`Story` is the canonical domain aggregate representing a lived narrative.
+
+Audio, transcript, translation, script, video, and related artifacts are
+`StoryRepresentation` entities belonging to the Story. They do not replace the Story.
+
+Rationale:
+
+One Story may exist across many formats and languages without duplicating the
+conceptual narrative.
+
+---
+
+# HS-ADR-003 Narrative Themes Remain Owned by Discovery
+
+Status: Accepted
+
+Date: 2026-09-10
+
+Phase: HS.1
+
+Decision:
+
+Hero & Story references themes via `NarrativeThemeId` only.
+
+Hero & Story must not define or own `NarrativeTheme` entities.
+
+Rationale:
+
+Preserves AD-002 and keeps thematic vocabulary consistent across Influences,
+Stories, Reflections, Missions, and Recommendations.
+
+---
+
+# HS-ADR-004 Multilingual Representation Is Fundamental to Story
+
+Status: Accepted
+
+Date: 2026-09-10
+
+Phase: HS.1
+
+Decision:
+
+`LanguageCode` is a shared value object.
+
+Every Story has an explicit `originalLanguage`.
+
+Representations declare their language, origin (original/translated/derived),
+and optional source representation.
+
+Rationale:
+
+Language support must not be bolted on later.
+
+---
+
+# HS-ADR-005 Story Provenance Must Be Preserved Through Transformation
+
+Status: Accepted
+
+Date: 2026-09-10
+
+Phase: HS.1
+
+Decision:
+
+Stories retain `StoryProvenance` with ordered `ProvenanceStep` records for each
+representation transformation.
+
+Rationale:
+
+Trust, correction, attribution, and future AI processing require lineage.
+
+---
+
+# HS-ADR-006 AI-Generated Story Artifacts Are Non-Authoritative Until Approved
+
+Status: Accepted
+
+Date: 2026-09-10
+
+Phase: HS.1
+
+Decision:
+
+`StoryRepresentation.isAiGenerated` representations are not authoritative until
+explicitly approved via `Story.approveRepresentation`.
+
+AI may assist with transcription, translation, and formatting. AI must not
+silently manufacture experiences, facts, achievements, beliefs, quotations, or
+motivations.
+
+Rationale:
+
+The Hero remains the authority over what they intended to communicate.
+
+---
+
+# HS-ADR-007 Story Cataloging Is Multidimensional
+
+Status: Accepted
+
+Date: 2026-09-10
+
+Phase: HS.1
+
+Decision:
+
+Stories are classified with `StoryClassification` containing controlled
+dimensions (subject, challenge, narrative theme ids, outcome, emotional
+character, audience, geography) rather than an unstructured tags collection.
+
+Rationale:
+
+Enables meaningful multidimensional discovery queries.
+
+---
+
+# HS-ADR-008 Content Suitability Is Independent From Story Classification
+
+Status: Accepted
+
+Date: 2026-09-10
+
+Phase: HS.1
+
+Decision:
+
+`ContentSuitability` is a separate value object with per-dimension levels
+(profanity, violence, sexual content, substance use, disturbing content).
+
+It is not collapsed into subject/theme classification or personalization.
+
+Rationale:
+
+Classification answers what a story is about; suitability answers what it
+contains for filtering/appropriateness.
+
+---
+
+# HS-ADR-009 Spirituality and Religion Are Separate Story Classifications
+
+Status: Accepted
+
+Date: 2026-09-10
+
+Phase: HS.1
+
+Decision:
+
+`SpiritualityClassification` models non-spiritual / spiritual / religious story
+content. Optional `ReligiousTradition` applies only when religious.
+
+Story religious content must not be inferred as the Hero's personal religious
+identity.
+
+Rationale:
+
+Protects sensitive identity boundaries while allowing content filtering.
+
+---
+
+# HS-ADR-010 Content Classification Does Not Determine Personalization
+
+Status: Accepted
+
+Date: 2026-09-10
+
+Phase: HS.1
+
+Decision:
+
+Hero & Story provides available cataloged content.
+
+Discovery determines what inspires a person.
+
+Personalization (future) determines what a person should experience next.
+
+Search ports in Hero & Story perform catalog filtering only.
+
+Rationale:
+
+Prevents the catalog from becoming a hidden personalization engine.
+
+---
+
+# HS-ADR-011 Story Interaction Does Not Automatically Constitute Behavioral Evidence
+
+Status: Accepted
+
+Date: 2026-09-10
+
+Phase: HS.1
+
+Decision:
+
+HS.1 does not model Story interactions as Behavioral Evidence.
+
+Future interaction → reflection/action → evidence flows must remain evidence-first
+and owned by Life Journey.
+
+Rationale:
+
+Listening to a story is not proof of inspiration or growth.
+
+---
+
+# HS-ADR-012 Search and Discovery Implementations Are Replaceable
+
+Status: Accepted
+
+Date: 2026-09-10
+
+Phase: HS.1
+
+Decision:
+
+`StorySearchPort`, `HeroSearchPort`, and `StoryCapturePort` are replaceable
+domain/application contracts.
+
+HS.1 ships deterministic in-memory adapters and an unsupported capture stub.
+Production search, media, and AI pipelines remain future work.
+
+Rationale:
+
+Domain must not couple to a particular search engine, media store, or AI vendor.
+
+---
+
+# HS-ADR-013 AggregateType Distinguishes Hero and Story
+
+Status: Accepted
+
+Date: 2026-09-10
+
+Phase: HS.1
+
+Decision:
+
+`AggregateType.heroStory` placeholder is replaced with separate `hero` and
+`story` values matching the two aggregate roots.
+
+Rationale:
+
+Domain events must identify the owning aggregate accurately.

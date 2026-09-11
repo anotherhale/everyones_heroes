@@ -1,0 +1,16 @@
+enum StorySubject {
+  military,
+  firstResponder,
+  parenting,
+  family,
+  career,
+  education,
+  leadership,
+  relationships,
+  entrepreneurship,
+  service,
+  sports,
+  arts,
+  aging,
+  startingOver,
+}

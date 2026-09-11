@@ -12,22 +12,35 @@ Cross-context communication should occur through domain events.
 
 # Context Map
 
-    Identity
-        ↓
-    Discovery
-        ↓
-    Life Journey
-        ↓
-    Contribution
-
+```text
+Identity
+     │
+     ├──────────────┐
+     │              │
+     ▼              ▼
+Discovery      Hero & Story
+     │              │
+     │              │
+     └──────┬───────┘
+            ▼
+       Life Journey
+            │
+            ▼
+       Contribution
+```
 
 Identity provides the person.
 
 Discovery understands what inspires them.
 
+Hero & Story provides cataloged human stories and lived experience.
+
 Life Journey helps them grow.
 
 Contribution helps them help others grow.
+
+> Note: Older diagrams in this file may still show the pre-HS.1 linear map.
+> Prefer the map above and `AGENTS.md` / HS ADRs when they conflict.
 
 ---
 
@@ -274,6 +287,49 @@ Those belong to the Life Journey Context.
 Discovery determines what inspires a user.
 
 Life Journey determines how a user is growing.
+
+---
+
+# Hero & Story
+
+Status: In Progress (HS.1 Foundation)
+
+Responsibility:
+
+What stories and human experiences are available to inspire people?
+
+Owns:
+
+* Hero (Aggregate Root)
+* Story (Aggregate Root)
+* StoryRepresentation
+* StoryClassification (multidimensional catalog)
+* ContentSuitability
+* SpiritualityClassification
+* StoryProvenance
+* MediaReference
+* HeroRepository / StoryRepository
+* StorySearchPort / HeroSearchPort / StoryCapturePort (replaceable contracts)
+
+Does not own:
+
+* NarrativeTheme (references `NarrativeThemeId` only)
+* Behavioral Evidence
+* Behavior Patterns
+* DiscoveryProfile
+* Personalization decisions
+* Life Journey progression
+* Story interaction as automatic evidence
+
+Cross-context:
+
+* Identity — optional `UserId` reference on Hero
+* Discovery — NarrativeThemeId references; future StoryPublished consumption
+* Life Journey — future Story → Reflection/Experience bridges (not HS.1)
+
+See HS-ADR-001 through HS-ADR-013.
+
+---
 
 # Life Journey
 

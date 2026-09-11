@@ -1,0 +1,4 @@
+enum HeroStatus {
+  active,
+  archived,
+}

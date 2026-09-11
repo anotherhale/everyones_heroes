@@ -1,0 +1,40 @@
+import 'package:everyonesheroes/core/eventing/event_bus.dart';
+import 'package:everyonesheroes/core/results/failure.dart';
+import 'package:everyonesheroes/core/results/result.dart';
+import 'package:everyonesheroes/core/results/success.dart';
+import 'package:everyonesheroes/features/hero_story/application/dto/requests/classify_story_request.dart';
+import 'package:everyonesheroes/features/hero_story/application/use_cases/use_case.dart';
+import 'package:everyonesheroes/features/hero_story/domain/aggregates/story.dart';
+import 'package:everyonesheroes/features/hero_story/domain/repositories/story_repository.dart';
+
+final class ClassifyStoryUseCase
+    implements UseCase<ClassifyStoryRequest, Story> {
+  const ClassifyStoryUseCase({
+    required this._storyRepository,
+    required this._eventBus,
+  });
+
+  final StoryRepository _storyRepository;
+  final EventBus _eventBus;
+
+  @override
+  Future<Result<Story>> execute(ClassifyStoryRequest request) async {
+    try {
+      final story = await _storyRepository.findById(request.storyId);
+      if (story == null) {
+        return Failure('Story not found: ${request.storyId.value}');
+      }
+
+      story.classify(request.classification);
+      await _storyRepository.save(story);
+
+      for (final event in story.pullDomainEvents()) {
+        await _eventBus.publish(event);
+      }
+
+      return Success(story);
+    } catch (e) {
+      return Failure('Failed to classify story: $e');
+    }
+  }
+}
