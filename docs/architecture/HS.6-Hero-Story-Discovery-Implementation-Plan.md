@@ -840,9 +840,10 @@ Prefer vertical, independently testable slices. No single mega-PR.
 - **Tests:** full relevant suite green.
 - **AC:** Analyzer clean on touched packages; report lists decisions, files, deferred HS.7/HS.8 work.
 
-**Optional Slice 7 (only if D4 expands):** production search adapter spike — otherwise explicitly defer.
+**Optional slices deferred by confirmed decisions:**
 
-**Optional Slice 8 (only if D7 expands):** minimal Flutter browse screen — otherwise defer to HS.7.
+- **Slice 7 (production search):** deferred — D4 locks in-memory MVP.
+- **Slice 8 (Flutter UI):** deferred — D7 locks UI to HS.7.
 
 ---
 
