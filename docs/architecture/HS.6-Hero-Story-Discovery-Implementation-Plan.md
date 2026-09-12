@@ -1,9 +1,9 @@
 # HS.6 — Hero & Story Discovery Implementation Plan
 
 **Phase:** HS.6 — Hero & Story Discovery  
-**Status:** Planning complete (no production code)  
-**Date:** 2026-09-12  
-**Constraint:** Planning only. Do not implement production code, adapters, SDKs, dependencies, UI screens, migrations, or speculative infrastructure in this planning deliverable.  
+**Status:** Planning complete — **D1–D4 and D7 CONFIRMED**; ready for implementation  
+**Date:** 2026-09-12 (decisions locked 2026-09-12)  
+**Constraint:** This document is the authoritative plan. Production implementation is a separate phase.  
 **Predecessor:** HS.5 Story Authoring — **COMPLETE** (merged PR #12)  
 **Successor (out of scope):** HS.7 Hero Experience; HS.8 Adaptive Hero Discovery  
 
@@ -45,9 +45,17 @@ Treat HS.6 as a **query / read / orchestration** milestone that:
 
 ### Planning readiness
 
-**CONDITIONALLY READY FOR IMPLEMENTATION** after human confirmation of decision gates **D1–D8** in §17.
+**READY FOR IMPLEMENTATION.** Hard gates **D1–D4 and D7** are human-confirmed (see §17). Soft gates **D5/D6/D8/D9/D10** may use plan recommendations unless overridden.
 
-Hard-stop items (must not be inventively resolved by the implementing agent): **D1** (Discover vs Search relationship), **D2** (visibility eligibility), **D3** (authoritative-representation matching), **D4** (production search vs in-memory), **D7** (UI boundary vs HS.7).
+### Locked decisions (summary)
+
+| Gate | Confirmed decision |
+|------|--------------------|
+| **D1** | Reuse existing search ports; add application-level Discover/Browse use cases |
+| **D2** | One authoritative discoverability eligibility rule; **no private/unlisted leakage** (discoverable visibilities = `{public, community}` only) |
+| **D3** | Only authoritative/approved representations participate in representation-dependent discovery/filtering |
+| **D4** | MVP remains deterministic/in-memory; production search remains an adapter concern |
+| **D7** | HS.6 is UI-agnostic; UI belongs to HS.7 |
 
 ---
 
@@ -190,7 +198,7 @@ Success means another agent can implement:
 | **Story discovery** | Application `DiscoverStories` orchestration producing safe story summaries for eligible published content |
 | **Hero discovery** | Application `DiscoverHeroes` orchestration producing safe hero summaries for eligible heroes |
 | **Catalog browsing** | Deterministic browse-by-dimension (subject/challenge/theme/language/format/etc.) without requiring free-text |
-| **Eligibility policy** | Explicit discoverability rules (lifecycle, visibility, hero status/visibility, representation authority — pending D2/D3) |
+| **Eligibility policy** | Explicit discoverability rules (lifecycle, visibility, hero status/visibility, representation authority — **D2/D3 confirmed**) |
 | **Read models / DTOs** | Application summary DTOs (not a second canonical store) |
 | **Deterministic ordering** | Explicit stable sort + optional pagination (pending D6) |
 | **Explainability (catalog-level)** | Optional non-personalized “matched because filter X” reasons (pending D8) |
@@ -272,32 +280,31 @@ If product later wants any of the above inside HS.6, that is a **scope change re
 
 **Hero/Story combination:** Discovery results may *include* `heroId` + safe hero display fields on a Story summary for presentation, but the consistency boundary remains the Story (and separately the Hero). Do not create a `HeroStoryPair` aggregate.
 
-### 6.2 Eligibility rules (proposed; confirm D2/D3)
+### 6.2 Eligibility rules — **authoritative (D2/D3 confirmed)**
 
 #### Story discoverable when all hold:
 
 | Rule | Rationale |
 |------|-----------|
 | `lifecycleStatus == published` | Foundation + existing `publishedOnly` default |
-| Visibility ∈ **allowed discovery set** (D2) | Privacy: publish ≠ automatically globally discoverable |
+| `visibility ∈ {public, community}` | **D2:** no private/unlisted leakage; publish ≠ catalog-discoverable |
 | Publication consent already enforced at publish time | Reuse `StoryConsent`; do not duplicate on read model |
 | Narrative not provisional | Already required to publish/approve |
-| Hero exists and is eligible (D2 companion) | Avoid orphaned / private-hero leakage |
-| Format/language/duration filters match only **authoritative** representations (D3) | Prevent unapproved AI scripts/transcripts from making a Story appear under format/language filters |
+| Hero exists and is discoverability-eligible | Avoid orphaned / private-hero leakage |
+| Format/language/duration filters match only **authoritative** representations | **D3:** `isAuthoritative == true` (`!isAiGenerated \|\| isApproved`) |
 
-**Recommended D2 default:** Discovery-visible Story visibilities = `{public, community}`.  
-- `unlisted` = reachable by direct link / known id, **not** catalog discoverable  
+**D2 locked:** Discovery-visible Story visibilities = `{public, community}` only.  
+- `unlisted` = reachable by direct link / known id (HS.7+), **not** catalog discoverable  
 - `private` / `draft` = never discoverable (also not publishable)
 
-**Recommended D3 default:** For representation-sensitive predicates (format, availableLanguage, duration), match only representations where `isAuthoritative == true` (`!isAiGenerated || isApproved`). Classification/suitability/spirituality remain Story-level authoritative fields.
+**D3 locked:** For representation-sensitive predicates (format, availableLanguage, duration), match only representations where `isAuthoritative == true`. Classification/suitability/spirituality remain Story-level authoritative fields.
 
 #### Hero discoverable when all hold:
 
 | Rule | Rationale |
 |------|-----------|
 | `status == active` (default) | Existing `activeOnly` |
-| Visibility ∈ **allowed discovery set** (D2) | `HeroVisibility` currently unused by search |
-| Recommended default | `{public, community}`; `unlisted` excluded from browse; `private` excluded |
+| `visibility ∈ {public, community}` | **D2:** `unlisted`/`private` excluded from discovery/browse |
 
 ### 6.3 Consent / privacy interaction
 
@@ -664,74 +671,83 @@ Create ADR files/entries during **implementation** (append to `docs/architecture
 
 ## 17. Human Decision Gates
 
-Implementation must not begin until **D1–D4 and D7** are confirmed. D5/D6/D8/D9/D10 may proceed with recommendations if the architect accepts defaults.
+### Confirmed hard gates (implementation-binding)
 
-### D1 — Relationship between Search\* and Discover\*
+#### D1 — Relationship between Search\* and Discover\* — **CONFIRMED**
 
-- **Question:** Are `DiscoverStories` / `DiscoverHeroes` required new use cases, or is expanding Search\* enough?
-- **Recommended:** Add Discover\* (seeker defaults + summaries + eligibility) and keep Search\* as low-level catalog filter.
-- **Alternatives:** Search-only; merge into one use case.
-- **Consequence:** Affects application API surface and tests.
+- **Decision:** Reuse existing search ports; add application-level Discover/Browse use cases.
+- **Binding interpretation:**
+  - Keep `StorySearchPort` / `HeroSearchPort` (+ Search\* use cases) as the catalog-filter substrate.
+  - Add `DiscoverStories` / `DiscoverHeroes` / catalog-browse application use cases with seeker defaults, eligibility, hydration to summary DTOs, ordering, and (per D6 recommendation) pagination.
+  - Do **not** replace Search\* with Discover\*; Discover\* composes Search\*.
 
-### D2 — Visibility eligibility set
+#### D2 — Visibility eligibility set — **CONFIRMED**
 
-- **Question:** Which `StoryVisibility` / `HeroVisibility` values are catalog-discoverable?
-- **Recommended:** `{public, community}` only; `unlisted` excluded from discovery/browse.
-- **Alternatives:** All published; include unlisted; community-only.
-- **Consequence:** Privacy model for unlisted; adapter query fields.
+- **Decision:** Define one authoritative discoverability eligibility rule; **no private/unlisted leakage**.
+- **Binding interpretation (authoritative eligibility rule):**
+  - Story catalog-discoverable only when: `lifecycleStatus == published` **and** `visibility ∈ {public, community}` **and** owning Hero is discoverability-eligible.
+  - Hero catalog-discoverable only when: `status == active` (default) **and** `visibility ∈ {public, community}`.
+  - **Excluded from discovery/browse:** `private`, `draft` (Story), `unlisted`.
+  - `unlisted` remains valid for direct-link / known-id access in later HS.7 detail flows; it must **not** appear in Discover/Browse/catalog search defaults used by discovery.
+  - Eligibility is a single shared policy used by Discover/Browse (and by discovery-default search queries); do not scatter ad-hoc visibility checks.
 
-### D3 — Authoritative representation matching
+#### D3 — Authoritative representation matching — **CONFIRMED**
 
-- **Question:** Must format/language/duration filters ignore non-authoritative representations?
-- **Recommended:** Yes for discovery queries (`authoritativeRepresentationsOnly: true` default on Discover\*).
-- **Alternatives:** Keep current ANY-rep behavior; apply only to AI formats.
-- **Consequence:** Prevents unapproved AI leakage into filters.
+- **Decision:** Only authoritative/approved representations participate in representation-dependent discovery/filtering.
+- **Binding interpretation:**
+  - Representation-dependent predicates (format, available language, duration, and any future rep-level filters) match only representations where `isAuthoritative == true` (`!isAiGenerated || isApproved`).
+  - Discover/Browse defaults: `authoritativeRepresentationsOnly: true`.
+  - Unapproved AI scripts/transcripts/translations must not make a Story appear under format/language/duration filters and must not appear as discoverable representation descriptors in summaries.
 
-### D4 — Production search engine in HS.6?
+#### D4 — Production search engine in HS.6? — **CONFIRMED**
 
-- **Question:** Is an external search engine required now?
-- **Recommended:** No — in-memory only; preserve ports.
-- **Alternatives:** Introduce production adapter + indexing.
-- **Consequence:** Scope/persistence explosion if yes.
+- **Decision:** Keep the MVP deterministic/in-memory; production search remains an adapter concern.
+- **Binding interpretation:**
+  - HS.6 ships / extends `InMemoryStorySearchAdapter` / `InMemoryHeroSearchAdapter` only.
+  - Do **not** add Elastic/Meilisearch/vector engines, migrations, or persistent search indexes in HS.6.
+  - Preserve replaceable `*SearchPort` contracts (HS-ADR-012) so a future production adapter can replace in-memory without changing Discover\* use cases.
 
-### D5 — May Discover\* accept DiscoveryProfile theme IDs as filter input?
+#### D7 — UI in HS.6 vs HS.7 — **CONFIRMED**
 
-- **Question:** Can callers pass `narrativeThemeIds` obtained from DiscoveryProfile?
+- **Decision:** Keep HS.6 UI-agnostic; UI belongs to HS.7.
+- **Binding interpretation:**
+  - HS.6 delivers domain policy, ports/adapters, application use cases, DTOs, tests, Riverpod providers, and ADRs.
+  - **No** Flutter discovery screens, widgets, or presentation models beyond application DTOs.
+  - HS.7 owns Hero Experience UI (profiles, browsing screens, playback, collections).
+
+### Soft gates (recommendations remain defaults unless overridden)
+
+#### D5 — May Discover\* accept DiscoveryProfile theme IDs as filter input?
+
+- **Status:** Open — use recommendation unless overridden.
 - **Recommended:** Yes as **plain catalog filters**; Discover\* must not load DiscoveryProfile inside Hero & Story domain. Optional application façade may read profile in a cross-context app service later — not required for HS.6 MVP.
 - **Alternatives:** Hard-wire DiscoveryProfile into Discover\*; forbid theme filters.
 - **Consequence:** Boundary purity vs convenience.
 
-### D6 — Pagination required?
+#### D6 — Pagination required?
 
-- **Question:** Must Discover/Browse support limit/offset (or cursor) in HS.6?
+- **Status:** Open — use recommendation unless overridden.
 - **Recommended:** Yes, minimal offset/limit.
 - **Alternatives:** Return full lists until HS.7.
 - **Consequence:** Test matrix and DTO shape.
 
-### D7 — UI in HS.6 vs HS.7
+#### D8 — Catalog match explanations
 
-- **Question:** Does HS.6 include Flutter discovery screens?
-- **Recommended:** **Application + providers only**; UI belongs to **HS.7 Hero Experience** (Foundation §72).
-- **Alternatives:** Minimal browse screen in HS.6.
-- **Consequence:** If UI included, expands acceptance criteria substantially.
-
-### D8 — Catalog match explanations
-
-- **Question:** Include non-personalized “matched because …” reasons?
+- **Status:** Open — use recommendation unless overridden.
 - **Recommended:** Optional lightweight match reason codes in summaries; full “Why this story?” personalized explanations wait for HS.8.
 - **Alternatives:** None in HS.6; full explanation engine now.
 - **Consequence:** DTO fields + tests.
 
-### D9 — Narrative body in summaries
+#### D9 — Narrative body in summaries
 
-- **Question:** Include narrative/excerpt in discovery summaries?
+- **Status:** Open — use recommendation unless overridden.
 - **Recommended:** Title + catalog metadata only; full narrative in HS.7 detail.
 - **Alternatives:** Short excerpt; full narrative.
 - **Consequence:** Privacy + payload size.
 
-### D10 — Default sort field
+#### D10 — Default sort field
 
-- **Question:** `updatedAt` vs `createdAt` vs title?
+- **Status:** Open — use recommendation unless overridden.
 - **Recommended:** `updatedAt` desc + id asc.
 - **Alternatives:** createdAt; title.
 - **Consequence:** Deterministic ordering tests.
@@ -747,15 +763,15 @@ Stop implementation planning/execution and escalate if:
 3. Product demands indexing **unapproved AI representations** as discoverable catalog entries.
 4. A design requires a **second canonical Story store** for discovery.
 5. Discoverability ownership is forced into Discovery BC aggregates (violates HS-ADR-001/010) without a new ADR.
-6. D1–D4 or D7 remain unconfirmed and the implementing agent would have to invent them.
+6. An implementing agent attempts to reopen **confirmed** D1–D4/D7 without a new human decision (e.g. adding UI, production search, unlisted discovery, or ANY-rep filtering).
 
-**Unknowns that matter:**
+**Previously open hard unknowns — now locked:**
 
-| Unknown | Why it matters | Options | Recommendation |
-|---------|----------------|---------|----------------|
-| Unlisted discoverability | Privacy vs share links | discoverable / not | Not discoverable |
-| Production search mandate | Scope | in-memory / external | in-memory |
-| UI inclusion | Milestone boundary vs HS.7 | app-only / +UI | app-only |
+| Topic | Locked decision |
+|-------|-----------------|
+| Unlisted discoverability | **Not discoverable** (D2) |
+| Production search mandate | **In-memory MVP**; adapter later (D4) |
+| UI inclusion | **App-only**; UI → HS.7 (D7) |
 
 ---
 
@@ -765,11 +781,11 @@ Prefer vertical, independently testable slices. No single mega-PR.
 
 ### Slice 0 — Decision lock
 
-- **Purpose:** Record D1–D10 outcomes in implementation kickoff notes / ADRs.
-- **Files:** `architecture-decisions.md` (ADR stubs), this plan reference.
-- **Deps:** Human architect.
+- **Purpose:** Encode confirmed D1–D4/D7 into implementation kickoff ADRs; adopt D5/D6/D8/D9/D10 recommendations unless overridden.
+- **Files:** `architecture-decisions.md` (HS-ADR-041+), this plan reference.
+- **Deps:** Human architect — **satisfied for hard gates** (this revision).
 - **Tests:** None.
-- **AC:** D1–D4, D7 confirmed in writing.
+- **AC:** ADRs cite confirmed D1–D4/D7; soft-gate defaults recorded.
 
 ### Slice 1 — Discoverability policy + search query extensions
 
@@ -824,9 +840,10 @@ Prefer vertical, independently testable slices. No single mega-PR.
 - **Tests:** full relevant suite green.
 - **AC:** Analyzer clean on touched packages; report lists decisions, files, deferred HS.7/HS.8 work.
 
-**Optional Slice 7 (only if D4 expands):** production search adapter spike — otherwise explicitly defer.
+**Optional slices deferred by confirmed decisions:**
 
-**Optional Slice 8 (only if D7 expands):** minimal Flutter browse screen — otherwise defer to HS.7.
+- **Slice 7 (production search):** deferred — D4 locks in-memory MVP.
+- **Slice 8 (Flutter UI):** deferred — D7 locks UI to HS.7.
 
 ---
 
@@ -834,13 +851,13 @@ Prefer vertical, independently testable slices. No single mega-PR.
 
 HS.6 implementation is complete when:
 
-1. [ ] D1–D4 and D7 confirmed and reflected in ADRs
-2. [ ] Discoverability eligibility enforced for Stories and Heroes
+1. [x] D1–D4 and D7 confirmed (this plan revision); [ ] reflected in implementation ADRs
+2. [ ] Discoverability eligibility enforced for Stories and Heroes (`{public, community}` only; no private/unlisted)
 3. [ ] Structured catalog filtering remains multidimensional and documented
-4. [ ] `DiscoverStories` / `DiscoverHeroes` (or approved D1 alternative) exist with summary DTOs
+4. [ ] `DiscoverStories` / `DiscoverHeroes` exist with summary DTOs (D1)
 5. [ ] Catalog browsing works without personalization
-6. [ ] Unapproved representations do not leak (per D3)
-7. [ ] Private/unpublished content does not appear
+6. [ ] Unapproved representations do not leak (D3)
+7. [ ] Private/unpublished/unlisted content does not appear in discovery/browse (D2)
 8. [ ] Ordering is deterministic and tested
 9. [ ] Pagination behaves correctly if D6 accepted
 10. [ ] No production AI / vector / personalization code introduced
@@ -940,14 +957,16 @@ test/features/hero_story/infrastructure/search/search_adapters_test.dart
 |------|---------|
 | HS.6 meaning | Catalog findability: search, filter, discover Heroes/Stories, browse |
 | Personalization | **Out** → HS.8 |
-| UI screens | **Out by default** → HS.7 (confirm D7) |
+| UI screens | **Out (D7 confirmed)** → HS.7 |
 | New aggregates | **None** |
-| Reuse search ports | **Yes** |
-| Critical fixes | Visibility eligibility + authoritative representation matching |
-| Production search | **Not required** for MVP |
-| Ready to implement? | **After D1–D4 and D7 confirmation** |
+| Reuse search ports | **Yes (D1 confirmed)** + Discover/Browse application use cases |
+| Critical fixes | Visibility eligibility **{public, community}** (D2) + authoritative representation matching (D3) |
+| Production search | **Not in HS.6** — in-memory MVP; adapter later (D4) |
+| Ready to implement? | **Yes** — hard gates D1–D4 and D7 confirmed |
 
-**This document is planning-only. No HS.6 production implementation was performed in the planning phase.**
+**Hard gates are locked. Soft gates D5/D6/D8/D9/D10 use plan recommendations unless overridden.**
+
+**This revision records decisions only. No HS.6 production implementation was performed.**
 
 ---
 
