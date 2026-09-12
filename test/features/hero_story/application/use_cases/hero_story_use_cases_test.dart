@@ -23,7 +23,9 @@ import 'package:everyonesheroes/features/hero_story/application/use_cases/create
 import 'package:everyonesheroes/features/hero_story/application/use_cases/create_story_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/publish_story_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/search_stories_use_case.dart';
+import 'package:everyonesheroes/features/hero_story/application/dto/requests/update_story_consent_request.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/submit_story_use_case.dart';
+import 'package:everyonesheroes/features/hero_story/application/use_cases/update_story_consent_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/update_story_content_suitability_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/update_story_spirituality_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/domain/domain.dart';
@@ -49,6 +51,7 @@ void main() {
   late UpdateStoryContentSuitabilityUseCase updateSuitability;
   late UpdateStorySpiritualityUseCase updateSpirituality;
   late SearchStoriesUseCase searchStories;
+  late UpdateStoryConsentUseCase updateConsent;
 
   final english = LanguageCode('en');
 
@@ -106,6 +109,10 @@ void main() {
     searchStories = SearchStoriesUseCase(
       storySearchPort: InMemoryStorySearchAdapter(storyRepository),
     );
+    updateConsent = UpdateStoryConsentUseCase(
+      storyRepository: storyRepository,
+      eventBus: eventBus,
+    );
   });
 
   Future<HeroId> seedHero() async {
@@ -158,6 +165,13 @@ void main() {
     final heroId = await seedHero();
     final storyId = await seedStory(heroId);
 
+    await updateConsent.execute(
+      UpdateStoryConsentRequest(
+        storyId: storyId,
+        grantProcessing: true,
+        grantPublication: true,
+      ),
+    );
     await submitStory.execute(StoryIdRequest(storyId: storyId));
     await approveStory.execute(StoryIdRequest(storyId: storyId));
 
@@ -206,6 +220,13 @@ void main() {
       ),
     );
 
+    await updateConsent.execute(
+      UpdateStoryConsentRequest(
+        storyId: storyId,
+        grantProcessing: true,
+        grantPublication: true,
+      ),
+    );
     await submitStory.execute(StoryIdRequest(storyId: storyId));
     await approveStory.execute(StoryIdRequest(storyId: storyId));
     await publishStory.execute(

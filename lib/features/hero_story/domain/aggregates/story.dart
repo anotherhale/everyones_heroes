@@ -18,6 +18,7 @@ import 'package:everyonesheroes/features/hero_story/domain/events/story_publishe
 import 'package:everyonesheroes/features/hero_story/domain/events/story_representation_added.dart';
 import 'package:everyonesheroes/features/hero_story/domain/events/story_submitted.dart';
 import 'package:everyonesheroes/features/hero_story/domain/value_objects/content_suitability.dart';
+import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_consent.dart';
 import 'package:everyonesheroes/features/hero_story/domain/value_objects/provenance_step.dart';
 import 'package:everyonesheroes/features/hero_story/domain/value_objects/spirituality_classification.dart';
 import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_classification.dart';
@@ -42,6 +43,7 @@ final class Story extends AggregateRoot<StoryId> {
     ContentSuitability? contentSuitability,
     SpiritualityClassification? spirituality,
     StoryProvenance? provenance,
+    StoryConsent? consent,
     Iterable<StoryRepresentation>? representations,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -50,6 +52,7 @@ final class Story extends AggregateRoot<StoryId> {
        _spirituality =
            spirituality ?? SpiritualityClassification.nonSpiritual,
        _provenance = provenance ?? StoryProvenance.empty,
+       _consent = consent ?? StoryConsent.none,
        _representations = [...?representations],
        _createdAt = createdAt ?? DateTime.now(),
        _updatedAt = updatedAt ?? createdAt ?? DateTime.now(),
@@ -84,6 +87,30 @@ final class Story extends AggregateRoot<StoryId> {
     return story;
   }
 
+  /// Capture-first draft with provisional narrative and private visibility.
+  ///
+  /// Audio is attached separately as an original [StoryRepresentation].
+  factory Story.createFromCapture({
+    required StoryId id,
+    required HeroId heroId,
+    required LanguageCode originalLanguage,
+    StoryTitle? title,
+    String? originalSourceDescription,
+    DateTime? createdAt,
+  }) {
+    return Story.create(
+      id: id,
+      heroId: heroId,
+      title: title ?? StoryTitle('Untitled Story'),
+      narrative: StoryNarrative.provisional(),
+      originalLanguage: originalLanguage,
+      visibility: StoryVisibility.private,
+      originalSourceDescription:
+          originalSourceDescription ?? 'Hero original audio capture',
+      createdAt: createdAt,
+    );
+  }
+
   final HeroId heroId;
 
   StoryTitle _title;
@@ -95,6 +122,7 @@ final class Story extends AggregateRoot<StoryId> {
   ContentSuitability _contentSuitability;
   SpiritualityClassification _spirituality;
   StoryProvenance _provenance;
+  StoryConsent _consent;
   final List<StoryRepresentation> _representations;
   final DateTime _createdAt;
   DateTime _updatedAt;
@@ -108,6 +136,8 @@ final class Story extends AggregateRoot<StoryId> {
   ContentSuitability get contentSuitability => _contentSuitability;
   SpiritualityClassification get spirituality => _spirituality;
   StoryProvenance get provenance => _provenance;
+  StoryConsent get consent => _consent;
+  bool get hasProvisionalNarrative => _narrative.isProvisional;
   DateTime get createdAt => _createdAt;
   DateTime get updatedAt => _updatedAt;
 
@@ -130,12 +160,34 @@ final class Story extends AggregateRoot<StoryId> {
       _title = title;
     }
     if (narrative != null) {
+      if (narrative.isProvisional && !_narrative.isProvisional) {
+        throw StateError(
+          'Cannot replace an authored narrative with a provisional narrative.',
+        );
+      }
       _narrative = narrative;
     }
     _touch();
   }
 
+  void updateConsent(StoryConsent consent, {DateTime? at}) {
+    _consent = consent;
+    _touch(at);
+  }
+
+  void markCaptureRecorded({DateTime? at}) {
+    final when = at ?? DateTime.now();
+    _consent = _consent.markRecorded(when);
+    _touch(when);
+  }
+
   void submit({DateTime? at}) {
+    if (!_consent.isProcessingApproved) {
+      throw StateError(
+        'Cannot submit story without processing consent.',
+      );
+    }
+
     _transitionTo(StoryLifecycleStatus.processing);
     _touch(at);
     raise(StorySubmitted(storyId: id, heroId: heroId));
@@ -147,6 +199,12 @@ final class Story extends AggregateRoot<StoryId> {
   }
 
   void approve({DateTime? at}) {
+    if (_narrative.isProvisional) {
+      throw StateError(
+        'Cannot approve a story with provisional capture narrative.',
+      );
+    }
+
     _transitionTo(StoryLifecycleStatus.approved);
     _touch(at);
     raise(StoryApproved(storyId: id));
@@ -162,6 +220,18 @@ final class Story extends AggregateRoot<StoryId> {
         _visibility == StoryVisibility.draft) {
       throw StateError(
         'Cannot publish a story with ${_visibility.name} visibility.',
+      );
+    }
+
+    if (!_consent.isPublicationApproved) {
+      throw StateError(
+        'Cannot publish story without publication consent.',
+      );
+    }
+
+    if (_narrative.isProvisional) {
+      throw StateError(
+        'Cannot publish a story with provisional capture narrative.',
       );
     }
 

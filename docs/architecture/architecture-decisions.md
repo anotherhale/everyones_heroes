@@ -1044,3 +1044,123 @@ Rationale:
 Stories may have multiple language/format representations of different lengths.
 Catalog filtering should discover a Story if any available representation fits
 the listener's duration constraint.
+
+---
+
+# HS-ADR-017 Provisional Narrative For Capture Drafts
+
+Status: Accepted
+
+Date: 2026-09-12
+
+Phase: HS.3
+
+Decision:
+
+Capture-created Stories may use a provisional `StoryNarrative` marked via
+`StoryNarrative.provisional()` until the Hero authors the canonical narrative.
+
+Provisional narrative is not AI-authored content and is not an audio substitute
+for Story. Approve and publish require a non-provisional narrative.
+
+Rationale:
+
+Preserves HS-ADR-002 (Story remains the canonical narrative aggregate) while
+allowing capture-first workflows before authoring (HS.5) or understanding (HS.4).
+
+---
+
+# HS-ADR-018 CaptureSession Is Application Workflow Only
+
+Status: Accepted
+
+Date: 2026-09-12
+
+Phase: HS.3
+
+Decision:
+
+`CaptureSession` is not a domain aggregate, entity, value object, or repository
+concept. Capture orchestration is an application workflow. A `sessionId` may be
+used for idempotency only.
+
+Rationale:
+
+Device/recording process state does not protect Story narrative invariants and
+must not create a second consistency boundary.
+
+---
+
+# HS-ADR-019 StorySource Is Not Introduced
+
+Status: Accepted
+
+Date: 2026-09-12
+
+Phase: HS.3
+
+Decision:
+
+Do not introduce a `StorySource` type. Original captured audio is modeled as an
+original `StoryRepresentation` (`format=audio`, `origin=original`) with
+`StoryTransformationType.recording` provenance.
+
+Rationale:
+
+Avoids duplicating representation/provenance semantics and preserves the
+HS.1/HS.2 Story model.
+
+---
+
+# HS-ADR-020 StoryMediaStoragePort Is The Replaceable Media Boundary
+
+Status: Accepted
+
+Date: 2026-09-12
+
+Phase: HS.3
+
+Decision:
+
+Introduce `StoryMediaStoragePort` for storing/retrieving/deleting opaque media
+bytes. Domain state retains only `MediaReference`. HS.3 ships a deterministic
+in-memory adapter. Production cloud adapters are out of scope.
+
+`StoryCapturePort` remains a legacy HS.1 stub (transcription unsupported). Capture
+orchestration is performed by `CompleteStoryCaptureUseCase`, not by expanding
+`StoryCapturePort` into a storage API.
+
+This updates the replaceability intent of HS-ADR-012 for media storage.
+
+Rationale:
+
+Keeps hexagon boundaries clean and prevents provider coupling in domain code.
+
+---
+
+# HS-ADR-021 Minimal StoryConsent With Independent Gates
+
+Status: Accepted
+
+Date: 2026-09-12
+
+Phase: HS.3
+
+Decision:
+
+Stories own a minimal `StoryConsent` value object with independent timestamps:
+
+* recorded
+* processing approved
+* publication approved
+* AI transformation approved
+
+`submit` requires processing consent. `publish` requires publication consent.
+AI consent is recorded for future HS.4 gates and is never implied by other
+stages. Consent stages are independent: recorded ≠ processing ≠ publication ≠ AI.
+
+Rationale:
+
+Raw captures are sensitive. Explicit independent gates prevent accidental
+processing, publication, or future AI transformation without Hero approval.
+
