@@ -191,7 +191,7 @@ Reported (pre-existing / out of scope):
 | Item | Value |
 |------|-------|
 | Branch | `cursor/hs6-hero-story-discovery-fd6a` |
-| Commit | `503db02e65d06d3146e5780c470c4c3f3be7c8c6` |
+| Commit | `16054f9de2cd629da7ac12d0bedba3a778fd82b9` |
 | Implementation status | **Complete** |
 | Validation status | Analyzer clean (HS.6); focused 25/25; full 672/672 |
 | Report path | `docs/architecture/HS.6-Hero-Story-Discovery-Implementation-Report.md` |
