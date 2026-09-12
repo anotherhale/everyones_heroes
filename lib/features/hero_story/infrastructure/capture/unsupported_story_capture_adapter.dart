@@ -32,8 +32,8 @@ final class UnsupportedStoryCaptureAdapter implements StoryCapturePort {
       storyId: storyId,
       status: StoryCaptureStatus.unsupported,
       message:
-          'Transcription requires a replaceable AI adapter; '
-          'not implemented in HS.1.',
+          'Legacy StoryCapturePort transcription is unsupported; '
+          'use StoryTranscriptionPort (HS.4 / HS-ADR-024).',
     );
   }
 }
