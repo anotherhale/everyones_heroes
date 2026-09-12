@@ -16,6 +16,7 @@ import 'package:everyonesheroes/features/hero_story/domain/events/story_classifi
 import 'package:everyonesheroes/features/hero_story/domain/events/story_created.dart';
 import 'package:everyonesheroes/features/hero_story/domain/events/story_published.dart';
 import 'package:everyonesheroes/features/hero_story/domain/events/story_representation_added.dart';
+import 'package:everyonesheroes/features/hero_story/domain/events/story_representation_approved.dart';
 import 'package:everyonesheroes/features/hero_story/domain/events/story_submitted.dart';
 import 'package:everyonesheroes/features/hero_story/domain/value_objects/content_suitability.dart';
 import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_consent.dart';
@@ -337,8 +338,62 @@ final class Story extends AggregateRoot<StoryId> {
       return;
     }
 
+    if (current.isApproved) {
+      return;
+    }
+
     _representations[index] = current.approve();
     _touch();
+    raise(
+      StoryRepresentationApproved(
+        storyId: id,
+        representationId: representationId,
+      ),
+    );
+  }
+
+  /// Human edit of an unapproved representation (HS.5 / D5).
+  ///
+  /// Does not mutate canonical narrative. Approved representations cannot be
+  /// edited in place — regenerate a new derived representation instead.
+  void replaceUnapprovedRepresentationText({
+    required StoryRepresentationId representationId,
+    required String textContent,
+    DateTime? at,
+  }) {
+    final index = _representations.indexWhere((r) => r.id == representationId);
+    if (index < 0) {
+      throw StateError(
+        'Representation ${representationId.value} not found on story.',
+      );
+    }
+
+    final current = _representations[index];
+    if (current.isApproved) {
+      throw StateError(
+        'Cannot edit an approved representation in place; regenerate instead.',
+      );
+    }
+
+    final trimmed = textContent.trim();
+    if (trimmed.isEmpty) {
+      throw ArgumentError('Replacement text content cannot be empty.');
+    }
+
+    final when = at ?? DateTime.now();
+    final updated = current.withTextContent(trimmed);
+    _representations[index] = updated;
+    _provenance = _provenance.append(
+      ProvenanceStep(
+        transformationType: StoryTransformationType.editing,
+        producedRepresentationId: updated.id,
+        sourceRepresentationId: updated.sourceRepresentationId ?? updated.id,
+        occurredAt: when,
+        isAiAssisted: false,
+        note: 'Human edit of unapproved representation',
+      ),
+    );
+    _touch(when);
   }
 
   StoryRepresentation? findRepresentation(StoryRepresentationId id) {

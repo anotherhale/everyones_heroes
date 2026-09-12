@@ -77,6 +77,8 @@ void main() {
         .toList();
     expect(names, contains('in_memory_story_transcription_adapter.dart'));
     expect(names, contains('in_memory_story_understanding_adapter.dart'));
+    expect(names, contains('in_memory_story_authoring_adapter.dart'));
+    expect(names, contains('in_memory_story_translation_adapter.dart'));
     expect(
       names.any((n) => n.contains('openai') || n.contains('anthropic') || n.contains('gemini')),
       isFalse,

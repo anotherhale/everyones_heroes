@@ -34,6 +34,7 @@ export 'events/story_classified.dart';
 export 'events/story_created.dart';
 export 'events/story_published.dart';
 export 'events/story_representation_added.dart';
+export 'events/story_representation_approved.dart';
 export 'events/story_submitted.dart';
 export 'events/story_understanding_proposed.dart';
 export 'events/story_understanding_reviewed.dart';
@@ -47,7 +48,9 @@ export 'services/hero_search_port.dart';
 export 'services/story_capture_port.dart';
 export 'services/story_media_storage_port.dart';
 export 'services/story_search_port.dart';
+export 'services/story_authoring_port.dart';
 export 'services/story_transcription_port.dart';
+export 'services/story_translation_port.dart';
 export 'services/story_understanding_port.dart';
 
 export 'value_objects/candidate_content_suitability.dart';

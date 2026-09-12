@@ -1419,3 +1419,189 @@ Rationale:
 
 Preserves multilingual provenance and avoids collapsing HS.4 into HS.5
 authoring/translation scope.
+
+---
+
+# HS-ADR-032 Story Authoring Produces Unapproved StoryRepresentations; No AuthoringProposal Aggregate
+
+Status: Accepted
+
+Date: 2026-09-12
+
+Phase: HS.5
+
+Decision:
+
+HS.5 does not introduce a `StoryAuthoringProposal` aggregate. AI authoring attaches
+unapproved `StoryRepresentation` values on the existing Story aggregate (same
+pattern as HS.4 transcription). Hero review uses `approveRepresentation`.
+
+Rationale:
+
+Avoids aggregate creep and reuses the proven HS.4 proposal-via-representation model.
+
+---
+
+# HS-ADR-033 Introduce StoryAuthoringPort With Deterministic In-Memory Adapter Only
+
+Status: Accepted
+
+Date: 2026-09-12
+
+Phase: HS.5
+
+Decision:
+
+Introduce `StoryAuthoringPort` for intentional authored text forms. Ship only a
+deterministic in-memory adapter in HS.5. No production AI SDKs, network clients,
+or vendor dependencies.
+
+Rationale:
+
+Keeps authoring vendor-independent and testable while preserving replaceability.
+
+---
+
+# HS-ADR-034 AI-Authored Representations Remain Non-Authoritative Until approveRepresentation
+
+Status: Accepted
+
+Date: 2026-09-12
+
+Phase: HS.5
+
+Decision:
+
+Reinforce HS-ADR-006: AI-authored representations are `isAiGenerated: true` and
+`isApproved: false` until `Story.approveRepresentation` / `ApproveStoryRepresentationUseCase`.
+
+Rationale:
+
+AI may help present the story. AI does not own the story.
+
+---
+
+# HS-ADR-035 Canonical Narrative Authorship Is Explicit UpdateStoryNarrative; AI Scripts Do Not Mutate Narrative
+
+Status: Accepted
+
+Date: 2026-09-12
+
+Phase: HS.5
+
+Decision:
+
+Canonical `Story.narrative` changes only through explicit human
+`UpdateStoryNarrativeUseCase` → `Story.updateNarrative`. Generating or approving
+a representation must never auto-promote content into the canonical narrative.
+Optional promote-from-representation is deferred.
+
+Rationale:
+
+Protects canonical Story authority and prevents AI from becoming an implicit source of truth.
+
+---
+
+# HS-ADR-036 Representation Revision Is Additive For Regeneration; Human Edits May Update Unapproved Text In Place
+
+Status: Accepted
+
+Date: 2026-09-12
+
+Phase: HS.5
+
+Decision:
+
+Human editing of an unapproved representation updates that representation through
+`Story.replaceUnapprovedRepresentationText` (authoritative path) and records an
+editing provenance step. Regeneration creates a new derived representation via
+the authoring port, preserving provenance. Approved representations cannot be
+edited in place. Failed generations do not supersede prior drafts.
+
+Rationale:
+
+Clearly distinguishes human authorship from another AI transformation while
+preserving lineage.
+
+---
+
+# HS-ADR-037 Translation Uses origin translated + StoryTranslationPort (Slice B)
+
+Status: Accepted
+
+Date: 2026-09-12
+
+Phase: HS.5
+
+Decision:
+
+Translation is included as HS.5 Slice B after the script vertical slice. Use
+`StoryTranslationPort` + deterministic in-memory adapter. Translated
+representations use `RepresentationOrigin.translated`, require a source representation
+id, remain unapproved until Hero approval, and must not mutate
+`Story.originalLanguage` or canonical narrative.
+
+Rationale:
+
+Honors HS-ADR-031 placement while proving multilingual provenance without
+blocking the script architecture proof.
+
+---
+
+# HS-ADR-038 Authoring AI Ports Require Processing + AI Consent (reuse HS-ADR-030)
+
+Status: Accepted
+
+Date: 2026-09-12
+
+Phase: HS.5
+
+Decision:
+
+AI authoring and translation ports require processing consent and AI
+transformation consent. Human narrative updates and human-only representation
+edits do not require AI consent. No parallel StoryAuthoringConsent model.
+
+Rationale:
+
+Reuse HS.4 consent gates; do not invent a second consent subsystem.
+
+---
+
+# HS-ADR-039 Event Minimalism: Reuse StoryRepresentationAdded; Add StoryRepresentationApproved
+
+Status: Accepted
+
+Date: 2026-09-12
+
+Phase: HS.5
+
+Decision:
+
+Reuse `StoryRepresentationAdded` for authoring/translation attach. Add
+`StoryRepresentationApproved` raised from `Story.approveRepresentation`. Do not
+add script-generated, edited, rejected, or published representation events in HS.5.
+
+Rationale:
+
+Approval is a meaningful domain fact; event taxonomy stays minimal.
+
+---
+
+# HS-ADR-040 Initial Authored Formats: script + shortForm; narration/TTS deferred
+
+Status: Accepted
+
+Date: 2026-09-12
+
+Phase: HS.5
+
+Decision:
+
+HS.5 authored formats are `script` and `shortForm` (with `longForm` supported by
+the same seam). Narration/TTS, podcast packaging, and production media synthesis
+are deferred.
+
+Rationale:
+
+Proves multi-format authoring without expanding into media synthesis scope.
