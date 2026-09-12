@@ -543,6 +543,82 @@ void main() {
       expect(await search.search(query), [firstId, secondId]);
     });
 
+    test('visibility filter excludes unlisted when requested', () async {
+      final publicId = StoryId.generate();
+      final unlistedId = StoryId.generate();
+      await publishStory(id: publicId, originalLanguage: english);
+
+      final unlisted = Story.create(
+        id: unlistedId,
+        heroId: heroId,
+        title: StoryTitle('Unlisted Catalog Story'),
+        narrative: StoryNarrative('Published but unlisted narrative.'),
+        originalLanguage: english,
+      );
+      unlisted.updateConsent(
+        unlisted.consent
+            .grantProcessing(DateTime.utc(2026, 1, 1))
+            .grantPublication(DateTime.utc(2026, 1, 1)),
+      );
+      unlisted
+        ..submit()
+        ..markReadyForReview()
+        ..approve()
+        ..changeVisibility(StoryVisibility.unlisted)
+        ..publish();
+      await stories.save(unlisted);
+
+      expect(
+        await search.search(
+          StorySearchQuery(
+            visibilities: StoryDiscoverabilityPolicy.discoverableVisibilityList,
+          ),
+        ),
+        [publicId],
+      );
+    });
+
+    test(
+      'authoritativeRepresentationsOnly ignores unapproved AI formats',
+      () async {
+        final storyId = StoryId.generate();
+        await publishStory(
+          id: storyId,
+          originalLanguage: english,
+          representations: [
+            StoryRepresentation(
+              id: StoryRepresentationId.generate(),
+              language: english,
+              format: StoryRepresentationFormat.script,
+              origin: RepresentationOrigin.derived,
+              textContent: 'Unapproved script',
+              isAiGenerated: true,
+              isApproved: false,
+            ),
+          ],
+        );
+
+        expect(
+          await search.search(
+            const StorySearchQuery(
+              formats: [StoryRepresentationFormat.script],
+              authoritativeRepresentationsOnly: true,
+            ),
+          ),
+          isEmpty,
+        );
+        expect(
+          await search.search(
+            const StorySearchQuery(
+              formats: [StoryRepresentationFormat.script],
+              authoritativeRepresentationsOnly: false,
+            ),
+          ),
+          [storyId],
+        );
+      },
+    );
+
     test('Resilience is matched as NarrativeThemeId, not StoryChallenge',
         () async {
       final storyId = StoryId.generate();
@@ -565,6 +641,32 @@ void main() {
         ),
         [storyId],
       );
+    });
+  });
+
+  group('HeroSearchPort visibility', () {
+    test('visibility filter excludes private heroes', () async {
+      final repo = InMemoryHeroRepository();
+      final publicHero = Hero.create(
+        id: HeroId.generate(),
+        profile: HeroProfile(displayName: 'Public'),
+        visibility: HeroVisibility.public,
+      );
+      final privateHero = Hero.create(
+        id: HeroId.generate(),
+        profile: HeroProfile(displayName: 'Private'),
+        visibility: HeroVisibility.private,
+      );
+      await repo.save(publicHero);
+      await repo.save(privateHero);
+
+      final ids = await InMemoryHeroSearchAdapter(repo).search(
+        HeroSearchQuery(
+          visibilities: HeroDiscoverabilityPolicy.discoverableVisibilityList,
+        ),
+      );
+
+      expect(ids, [publicHero.id]);
     });
   });
 }

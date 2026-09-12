@@ -1605,3 +1605,161 @@ are deferred.
 Rationale:
 
 Proves multi-format authoring without expanding into media synthesis scope.
+
+---
+
+# HS-ADR-041 HS.6 Discovery Is Catalog Findability, Not Personalization
+
+Status: Accepted
+
+Date: 2026-09-12
+
+Phase: HS.6
+
+Decision:
+
+HS.6 delivers search, structured filtering, Hero/Story discovery, and catalog
+browsing as seeker-facing findability over eligible catalog content.
+Personalized “what next” ranking remains HS.8. Discover\* must not score by
+user understanding, DiscoveryProfile relevance, engagement, or AI similarity.
+
+Rationale:
+
+Foundation §72 splits HS.6 vs HS.8. HS-ADR-010 already separates Catalog /
+Discovery / Personalization. Keeping findability free of personalization
+preserves explainability and avoids premature recommendation architecture.
+
+---
+
+# HS-ADR-042 Discover\* Use Cases Compose Search Ports; No StoryDiscovery Aggregate
+
+Status: Accepted
+
+Date: 2026-09-12
+
+Phase: HS.6
+
+Decision:
+
+Add application `DiscoverStoriesUseCase`, `DiscoverHeroesUseCase`,
+`BrowseStoriesByCatalogUseCase`, and optional `GetStoryDiscoverySummaryUseCase`
+with summary DTOs. Reuse `StorySearchPort` / `HeroSearchPort`. Do not create a
+Discovery aggregate, `StoryDiscoveryPort`, or `StorySearchRepository`.
+
+Rationale:
+
+Foundation §56 lists Discover\* separately from Search\*. Search ports already
+exist as replaceable catalog filters. Application orchestration applies
+eligibility, hydration, ordering, and pagination without a second source of truth.
+
+---
+
+# HS-ADR-043 Discoverability Requires Lifecycle + Visibility Eligibility
+
+Status: Accepted
+
+Date: 2026-09-12
+
+Phase: HS.6
+
+Decision:
+
+Published lifecycle is necessary but not sufficient for catalog discovery.
+Discoverable Story and Hero visibility is exactly `{public, community}`.
+`unlisted` and `private` content must never appear in Discover/Browse results
+or discovery-summary-by-id APIs. Search query fields accept an explicit
+`visibilities` list so adapters can enforce the same contract.
+
+Rationale:
+
+Privacy: publish ≠ globally discoverable. Unlisted remains reachable by known
+id for later HS.7 direct-link semantics, not catalog browse.
+
+---
+
+# HS-ADR-044 Representation-Sensitive Discovery Filters Use Authoritative Representations Only
+
+Status: Accepted
+
+Date: 2026-09-12
+
+Phase: HS.6
+
+Decision:
+
+Format, availableLanguage, and duration discovery filters match only
+authoritative representations (`!isAiGenerated || isApproved`) when
+`authoritativeRepresentationsOnly` is true. Discover\* defaults this flag to
+true. Search\* retains default false for low-level/admin catalog filtering.
+
+Rationale:
+
+Preserves HS-ADR-006 / HS-ADR-034: unapproved AI scripts/transcripts/translations
+must not make a Story appear under representation-dependent discovery predicates.
+
+---
+
+# HS-ADR-045 HS.6 Ordering Is Deterministic Non-Personalized Sort
+
+Status: Accepted
+
+Date: 2026-09-12
+
+Phase: HS.6
+
+Decision:
+
+Story discovery/browse orders by `updatedAt` descending, then `storyId.value`
+ascending. Hero discovery orders by `createdAt` descending, then
+`heroId.value` ascending. No relevance scores, ML rankers, or random serendipity
+in HS.6.
+
+Rationale:
+
+Testable browse semantics and replaceable adapters. Serendipity and personalized
+ranking remain HS.8.
+
+---
+
+# HS-ADR-046 HS.6 Ships In-Memory Search Only
+
+Status: Accepted
+
+Date: 2026-09-12
+
+Phase: HS.6
+
+Decision:
+
+Keep `InMemoryStorySearchAdapter` / `InMemoryHeroSearchAdapter` as the only
+search implementations in HS.6. No Elasticsearch, OpenSearch, Algolia, vector
+databases, embeddings, or external search services. Production engines remain
+future replaceable adapters under HS-ADR-012.
+
+Rationale:
+
+Current persistence is in-memory. Ports already provide the extension point.
+Production search is not required by Foundation §72 for HS.6.
+
+---
+
+# HS-ADR-047 Discovery Summaries Are Derived Application Read Models
+
+Status: Accepted
+
+Date: 2026-09-12
+
+Phase: HS.6
+
+Decision:
+
+`StoryDiscoverySummary` and `HeroDiscoverySummary` are non-authoritative
+application projections derived at query time from canonical Story/Hero.
+They must not become a second canonical store. Narrative body, unapproved
+representation text, understanding payloads, and private media references are
+excluded (title + catalog metadata only for Stories).
+
+Rationale:
+
+Prefer derived data over dual writes. Full narrative retrieval belongs to HS.7
+detail/playback.
