@@ -196,15 +196,16 @@ Coverage includes generation, consent, idempotency, shortForm, edit, approval ev
 
 ### Analyzer
 
-`dart analyze lib/features/hero_story` — **no errors** (only pre-existing/info-style `prefer_initializing_formals` hints).
+`dart analyze lib/features/hero_story` — **no errors / no warnings**.  
+9 pre-existing or style `info` findings (`prefer_initializing_formals` only).
 
 ### Focused tests
 
-**19/19 passed** (HS.5 authoring + adapter + domain + AI boundary).
+HS.5 authoring + domain + adapter + AI boundary: **19/19 passed**.
 
 ### Full suite
 
-Reported in final validation section after full `flutter test`.
+`flutter test` — **644/644 passed**.
 
 ---
 
