@@ -519,9 +519,16 @@ void main() {
       );
       expect(
         UnderstandingStatus.superseded.canTransitionTo(
-          UnderstandingStatus.superseded,
+          UnderstandingStatus.approved,
         ),
         isFalse,
+      );
+      // Same-status transitions are allowed by canTransitionTo.
+      expect(
+        UnderstandingStatus.superseded.canTransitionTo(
+          UnderstandingStatus.superseded,
+        ),
+        isTrue,
       );
 
       expect(UnderstandingStatus.proposed.isReviewable, isTrue);
