@@ -25,6 +25,14 @@ void main() {
     );
   }
 
+  void grantRequiredConsents(Story story) {
+    story.updateConsent(
+      story.consent.grantProcessing(DateTime.utc(2026, 1, 1)).grantPublication(
+        DateTime.utc(2026, 1, 1),
+      ),
+    );
+  }
+
   StoryRepresentation originalAudio(StoryRepresentationId id) {
     return StoryRepresentation(
       id: id,
@@ -47,6 +55,11 @@ void main() {
       final story = createStory();
       story.pullDomainEvents();
 
+      story.updateConsent(
+        story.consent.grantProcessing(DateTime.utc(2026, 1, 1)).grantPublication(
+          DateTime.utc(2026, 1, 1),
+        ),
+      );
       story.submit();
       expect(story.lifecycleStatus, StoryLifecycleStatus.processing);
       expectEventRaised<StorySubmitted>(story.pullDomainEvents());
@@ -64,6 +77,7 @@ void main() {
 
     test('cannot publish with draft visibility', () {
       final story = createStory();
+      grantRequiredConsents(story);
       story.submit();
       story.markReadyForReview();
       story.approve();
@@ -78,6 +92,7 @@ void main() {
 
     test('archive published story', () {
       final story = createStory();
+      grantRequiredConsents(story);
       story
         ..submit()
         ..markReadyForReview()

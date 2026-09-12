@@ -36,11 +36,13 @@ export 'repositories/story_repository.dart';
 
 export 'services/hero_search_port.dart';
 export 'services/story_capture_port.dart';
+export 'services/story_media_storage_port.dart';
 export 'services/story_search_port.dart';
 
 export 'value_objects/content_suitability.dart';
 export 'value_objects/hero_profile.dart';
 export 'value_objects/media_reference.dart';
+export 'value_objects/story_consent.dart';
 export 'value_objects/provenance_step.dart';
 export 'value_objects/spirituality_classification.dart';
 export 'value_objects/story_classification.dart';

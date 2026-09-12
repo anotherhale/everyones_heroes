@@ -77,6 +77,11 @@ void main() {
         story.addRepresentation(representation);
       }
 
+      story.updateConsent(
+        story.consent
+            .grantProcessing(DateTime.utc(2026, 1, 1))
+            .grantPublication(DateTime.utc(2026, 1, 1)),
+      );
       story
         ..submit()
         ..markReadyForReview()
