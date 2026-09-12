@@ -33,7 +33,7 @@ import 'package:everyonesheroes/features/hero_story/infrastructure/repositories/
 import 'package:everyonesheroes/features/hero_story/infrastructure/repositories/in_memory_story_understanding_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import '../../../helpers/event_assertions.dart';
+import '../../../../helpers/event_assertions.dart';
 
 void main() {
   late InMemoryHeroRepository heroRepository;
