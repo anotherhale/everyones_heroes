@@ -15,10 +15,9 @@ final class CancelStoryCaptureResponse {
 final class CancelStoryCaptureUseCase
     implements UseCase<CancelStoryCaptureRequest, CancelStoryCaptureResponse> {
   CancelStoryCaptureUseCase({
-    required StoryMediaStoragePort mediaStorage,
+    required this._mediaStorage,
     CaptureCompletionStore? completionStore,
-  }) : _mediaStorage = mediaStorage,
-       _completionStore = completionStore ?? InMemoryCaptureCompletionStore();
+  }) : _completionStore = completionStore ?? InMemoryCaptureCompletionStore();
 
   final StoryMediaStoragePort _mediaStorage;
   final CaptureCompletionStore _completionStore;

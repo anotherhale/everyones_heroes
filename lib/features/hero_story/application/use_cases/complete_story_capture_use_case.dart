@@ -23,16 +23,12 @@ final class CompleteStoryCaptureUseCase
     implements
         UseCase<CompleteStoryCaptureRequest, CompleteStoryCaptureResponse> {
   CompleteStoryCaptureUseCase({
-    required StoryRepository storyRepository,
-    required HeroRepository heroRepository,
-    required StoryMediaStoragePort mediaStorage,
-    required EventBus eventBus,
+    required this._storyRepository,
+    required this._heroRepository,
+    required this._mediaStorage,
+    required this._eventBus,
     CaptureCompletionStore? completionStore,
-  }) : _storyRepository = storyRepository,
-       _heroRepository = heroRepository,
-       _mediaStorage = mediaStorage,
-       _eventBus = eventBus,
-       _completionStore = completionStore ?? InMemoryCaptureCompletionStore();
+  }) : _completionStore = completionStore ?? InMemoryCaptureCompletionStore();
 
   final StoryRepository _storyRepository;
   final HeroRepository _heroRepository;
