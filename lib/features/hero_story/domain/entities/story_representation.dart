@@ -71,4 +71,20 @@ final class StoryRepresentation extends Entity<StoryRepresentationId> {
       isApproved: true,
     );
   }
+
+  /// Returns a copy with replaced text (used for human draft edits).
+  StoryRepresentation withTextContent(String textContent) {
+    return StoryRepresentation(
+      id: id,
+      language: language,
+      format: format,
+      origin: origin,
+      mediaReference: mediaReference,
+      textContent: textContent,
+      sourceRepresentationId: sourceRepresentationId,
+      duration: duration,
+      isAiGenerated: isAiGenerated,
+      isApproved: isApproved,
+    );
+  }
 }
