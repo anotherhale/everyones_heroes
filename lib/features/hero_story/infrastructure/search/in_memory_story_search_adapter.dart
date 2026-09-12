@@ -32,6 +32,11 @@ final class InMemoryStorySearchAdapter implements StorySearchPort {
       return false;
     }
 
+    if (query.visibilities.isNotEmpty &&
+        !query.visibilities.contains(story.visibility)) {
+      return false;
+    }
+
     if (query.heroId != null && story.heroId != query.heroId) {
       return false;
     }
@@ -41,8 +46,15 @@ final class InMemoryStorySearchAdapter implements StorySearchPort {
       return false;
     }
 
+    final matchingRepresentations = query.authoritativeRepresentationsOnly
+        ? story.representations.where((r) => r.isAuthoritative)
+        : story.representations;
+
     if (query.availableLanguage != null &&
-        !_availableLanguages(story).contains(query.availableLanguage)) {
+        !_availableLanguages(
+          story,
+          matchingRepresentations,
+        ).contains(query.availableLanguage)) {
       return false;
     }
 
@@ -108,13 +120,13 @@ final class InMemoryStorySearchAdapter implements StorySearchPort {
     }
 
     if (query.formats.isNotEmpty &&
-        !story.representations.any(
+        !matchingRepresentations.any(
           (representation) => query.formats.contains(representation.format),
         )) {
       return false;
     }
 
-    if (!_matchesDuration(story.representations, query)) {
+    if (!_matchesDuration(matchingRepresentations, query)) {
       return false;
     }
 
@@ -130,9 +142,12 @@ final class InMemoryStorySearchAdapter implements StorySearchPort {
     return true;
   }
 
-  Set<LanguageCode> _availableLanguages(Story story) => {
+  Set<LanguageCode> _availableLanguages(
+    Story story,
+    Iterable<StoryRepresentation> representations,
+  ) => {
     story.originalLanguage,
-    ...story.availableLanguages,
+    ...representations.map((r) => r.language),
   };
 
   bool _matchesGeography(StoryGeography? geography, StorySearchQuery query) {

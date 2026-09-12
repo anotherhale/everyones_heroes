@@ -1,6 +1,5 @@
 import 'package:everyonesheroes/core/ids/hero_id.dart';
 import 'package:everyonesheroes/core/ids/narrative_theme_id.dart';
-import 'package:everyonesheroes/core/ids/story_id.dart';
 import 'package:everyonesheroes/core/shared_kernel/language_code.dart';
 import 'package:everyonesheroes/features/hero_story/domain/enums/emotional_character.dart';
 import 'package:everyonesheroes/features/hero_story/domain/enums/religious_tradition.dart';
@@ -10,32 +9,14 @@ import 'package:everyonesheroes/features/hero_story/domain/enums/story_challenge
 import 'package:everyonesheroes/features/hero_story/domain/enums/story_outcome.dart';
 import 'package:everyonesheroes/features/hero_story/domain/enums/story_representation_format.dart';
 import 'package:everyonesheroes/features/hero_story/domain/enums/story_subject.dart';
-import 'package:everyonesheroes/features/hero_story/domain/enums/story_visibility.dart';
 import 'package:everyonesheroes/features/hero_story/domain/enums/suitability_level.dart';
 
-/// Replaceable catalog query contract for Stories.
+/// Seeker-facing Story discovery filters with pagination (HS.6).
 ///
-/// Catalog filtering only — does not personalize, rank, or score relevance.
-abstract interface class StorySearchPort {
-  Future<List<StoryId>> search(StorySearchQuery query);
-}
-
-/// Explicit multidimensional catalog criteria.
-///
-/// Within a multi-value dimension, matching is OR.
-/// Across dimensions, matching is AND.
-///
-/// Duration filters use ANY-matching representation semantics.
-/// When both [minDuration] and [maxDuration] are set, the same representation
-/// must satisfy the full window.
-///
-/// When [authoritativeRepresentationsOnly] is true, format / availableLanguage /
-/// duration predicates match only authoritative representations
-/// (`!isAiGenerated || isApproved`).
-///
-/// When [visibilities] is non-empty, Stories must have a visibility in that set.
-final class StorySearchQuery {
-  const StorySearchQuery({
+/// Discovery defaults (published + discoverable visibility + authoritative
+/// representations) are applied by [DiscoverStoriesUseCase], not by callers.
+final class DiscoverStoriesRequest {
+  const DiscoverStoriesRequest({
     this.text,
     this.heroId,
     this.subjects = const [],
@@ -60,15 +41,17 @@ final class StorySearchQuery {
     this.maxDuration,
     this.originalLanguage,
     this.availableLanguage,
-    this.publishedOnly = true,
-    this.visibilities = const [],
-    this.authoritativeRepresentationsOnly = false,
+    this.limit = 20,
+    this.offset = 0,
   });
 
   final String? text;
   final HeroId? heroId;
   final List<StorySubject> subjects;
   final List<StoryChallenge> challenges;
+
+  /// Plain catalog theme filters (D5). Callers may pass theme IDs that
+  /// originated from a DiscoveryProfile; Discover does not load that profile.
   final List<NarrativeThemeId> narrativeThemeIds;
   final List<StoryOutcome> outcomes;
   final List<EmotionalCharacter> emotionalCharacters;
@@ -89,11 +72,6 @@ final class StorySearchQuery {
   final Duration? maxDuration;
   final LanguageCode? originalLanguage;
   final LanguageCode? availableLanguage;
-  final bool publishedOnly;
-
-  /// When non-empty, Story visibility must be one of these values.
-  final List<StoryVisibility> visibilities;
-
-  /// When true, representation-sensitive filters ignore non-authoritative reps.
-  final bool authoritativeRepresentationsOnly;
+  final int limit;
+  final int offset;
 }

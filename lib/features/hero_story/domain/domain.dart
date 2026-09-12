@@ -7,6 +7,8 @@ export 'aggregates/story_understanding.dart';
 export 'entities/story_representation.dart';
 
 export 'enums/analysis_support_level.dart';
+export 'enums/catalog_browse_dimension.dart';
+export 'enums/discovery_match_reason.dart';
 export 'enums/emotional_character.dart';
 export 'enums/hero_status.dart';
 export 'enums/hero_visibility.dart';
@@ -44,8 +46,10 @@ export 'repositories/hero_repository.dart';
 export 'repositories/story_repository.dart';
 export 'repositories/story_understanding_repository.dart';
 
+export 'services/hero_discoverability_policy.dart';
 export 'services/hero_search_port.dart';
 export 'services/story_capture_port.dart';
+export 'services/story_discoverability_policy.dart';
 export 'services/story_media_storage_port.dart';
 export 'services/story_search_port.dart';
 export 'services/story_authoring_port.dart';

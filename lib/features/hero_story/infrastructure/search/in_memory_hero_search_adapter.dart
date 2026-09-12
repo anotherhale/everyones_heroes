@@ -19,6 +19,11 @@ final class InMemoryHeroSearchAdapter implements HeroSearchPort {
             return false;
           }
 
+          if (query.visibilities.isNotEmpty &&
+              !query.visibilities.contains(hero.visibility)) {
+            return false;
+          }
+
           if (query.experienceArea != null) {
             final needle = query.experienceArea!.trim().toLowerCase();
             final matches = hero.profile.experienceAreas.any(
