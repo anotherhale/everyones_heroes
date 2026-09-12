@@ -1164,3 +1164,258 @@ Rationale:
 Raw captures are sensitive. Explicit independent gates prevent accidental
 processing, publication, or future AI transformation without Hero approval.
 
+
+---
+
+# HS-ADR-022 StoryUnderstanding Is A Separate Aggregate For AI Proposals
+
+Status: Accepted
+
+Date: 2026-09-12
+
+Phase: HS.4
+
+Decision:
+
+Introduce `StoryUnderstanding` as a separate aggregate root in the Hero & Story
+bounded context. It holds AI-derived proposals (candidate catalog dimensions,
+observations, provenance, and review state) associated with a `StoryId`.
+
+`StoryUnderstanding` does not embed or replace the `Story` aggregate. Canonical
+narrative, classification, suitability, spirituality, representations,
+lifecycle, visibility, and consent remain owned by `Story`.
+
+Rationale:
+
+Preserves HS-ADR-015 (authoritative classification stays explicit) and avoids
+expanding Story with proposal lifecycle, independent versioning, review
+concurrency, and historical analyses that must not corrupt Story state.
+
+---
+
+# HS-ADR-023 AI Proposals Never Auto-Apply To Authoritative Story Catalog
+
+Status: Accepted
+
+Date: 2026-09-12
+
+Phase: HS.4
+
+Decision:
+
+AI output persisted on `StoryUnderstanding` is non-canonical. Generating
+understanding must never call `Story.classify`, update suitability/spirituality,
+or mutate Hero identity.
+
+Approved catalog candidates are applied only through an explicit application
+workflow (`ApplyStoryUnderstandingUseCase`) that invokes existing authoritative
+Story mutators/use cases after human review.
+
+Rationale:
+
+Enforces "AI may help understand the story; AI does not own the story." Silent
+auto-apply would collapse proposal into canonical truth.
+
+---
+
+# HS-ADR-024 Introduce StoryTranscriptionPort And StoryUnderstandingPort
+
+Status: Accepted
+
+Date: 2026-09-12
+
+Phase: HS.4
+
+Decision:
+
+Introduce two provider-independent ports under `domain/services/`:
+
+* `StoryTranscriptionPort` — media/audio → transcript text result
+* `StoryUnderstandingPort` — validated source content → structured understanding draft
+
+Do not expand legacy `StoryCapturePort` into real AI transcription. Keep its
+transcription stub unsupported/deprecated relative to the dedicated port.
+
+HS.4 ships deterministic in-memory adapters only. No production AI SDKs or
+cloud providers.
+
+Rationale:
+
+Purpose-specific ports preserve replaceability (HS-ADR-012/020 pattern) and
+avoid a generic `AIService` that leaks providers into domain/application.
+
+---
+
+# HS-ADR-025 Machine Transcripts Are Derived AI StoryRepresentations
+
+Status: Accepted
+
+Date: 2026-09-12
+
+Phase: HS.4
+
+Decision:
+
+Machine transcripts are attached as derived `StoryRepresentation`s with
+`format: transcript`, `origin: derived`, `sourceRepresentationId` pointing at
+the source audio representation, and `isAiGenerated: true`, using existing
+`Story.addRepresentation` and provenance (`StoryTransformationType.transcription`).
+
+A transcript is not a separate aggregate and is not automatically the canonical
+Story narrative.
+
+Rationale:
+
+Preserves the HS.1/HS.2 representation model and HS-ADR-006 approval semantics
+for AI representations.
+
+---
+
+# HS-ADR-026 Understanding Provenance Is A Dedicated Value Object
+
+Status: Accepted
+
+Date: 2026-09-12
+
+Phase: HS.4
+
+Decision:
+
+Introduce `UnderstandingProvenance` as a minimal analysis-lineage value object
+(source representation ids, analyzed timestamp, provider/model labels,
+processing/template version, optional categorical support level, optional opaque
+provider confidence, optional notes).
+
+Continue using existing `StoryProvenance` / `ProvenanceStep` for representation
+lineage. Do not build a generic audit platform. Do not persist complete prompts
+containing Hero media on the understanding aggregate by default.
+
+Rationale:
+
+Trust and explainability require analysis-level lineage beyond representation
+provenance, without inventing a compliance framework.
+
+---
+
+# HS-ADR-027 Categorical Support Level; No Cross-Provider Numeric Confidence As Truth
+
+Status: Accepted
+
+Date: 2026-09-12
+
+Phase: HS.4
+
+Decision:
+
+Use optional categorical `AnalysisSupportLevel` (`unknown`, `weak`, `moderate`,
+`strong`) as advisory metadata for human review. Do not introduce a normalized
+cross-provider numeric confidence field as a domain invariant or auto-approval
+threshold.
+
+Opaque provider-specific confidence may remain on provenance for display/audit
+only.
+
+Rationale:
+
+Numeric cross-provider confidence creates false precision and risks silent
+auto-approval policies.
+
+---
+
+# HS-ADR-028 Human Review Required Before Applying Catalog Candidates; Partial Apply Allowed
+
+Status: Accepted
+
+Date: 2026-09-12
+
+Phase: HS.4
+
+Decision:
+
+Human review (`accept` / `modify` / `reject` / partial) must be recorded on
+`StoryUnderstanding` before catalog candidates may be applied to Story.
+Partial review and partial application of independent dimensions
+(classification, suitability, spirituality) are allowed.
+
+Rejected understanding must never be applied. Approval of understanding status
+alone does not mutate Story until the explicit apply workflow runs.
+
+Rationale:
+
+Keeps human authority over catalog truth while allowing incremental acceptance
+of independent dimensions.
+
+---
+
+# HS-ADR-029 Understandings Are Versioned Via Immutable Supersession
+
+Status: Accepted
+
+Date: 2026-09-12
+
+Phase: HS.4
+
+Decision:
+
+AI proposal payloads on `StoryUnderstanding` are immutable after creation.
+Review may change status/review fields. Reprocessing creates a new
+`StoryUnderstandingId` linked via `supersedesUnderstandingId`.
+
+On successful generation, prior successful (non-superseded) understandings for
+the Story may become `superseded`. Failed attempts must not supersede prior
+versions. History is retained; superseded records are not deleted merely because
+they are superseded.
+
+Rationale:
+
+Supports reprocessing, model/schema drift, and auditability without mutating
+historical AI payloads.
+
+---
+
+# HS-ADR-030 AI And Processing Consent Required Before AI Port Calls
+
+Status: Accepted
+
+Date: 2026-09-12
+
+Phase: HS.4
+
+Decision:
+
+Before calling `StoryTranscriptionPort` or `StoryUnderstandingPort`, application
+use cases must load the Story and require both
+`consent.isAiTransformationApproved` and `consent.isProcessingApproved`.
+
+Publication consent is not required for private AI understanding. Recording
+consent alone is insufficient. If AI consent is revoked, future AI port calls
+are prohibited until consent is granted again. Existing understanding records
+and AI transcript representations are retained by default.
+
+Rationale:
+
+Enforces the independent AI gate from HS-ADR-021 on the real HS.4 pipeline.
+
+---
+
+# HS-ADR-031 Understanding Operates On Original-Language Material; Translation Remains HS.5
+
+Status: Accepted
+
+Date: 2026-09-12
+
+Phase: HS.4
+
+Decision:
+
+HS.4 transcribes and understands material in the source/original analysis
+language. Store `analysisLanguage` and optionally `detectedLanguage` as an
+observation. Detected language must not silently mutate `Story.originalLanguage`.
+
+Translation, authored scripts, narration, and alternate authored forms remain
+HS.5.
+
+Rationale:
+
+Preserves multilingual provenance and avoids collapsing HS.4 into HS.5
+authoring/translation scope.

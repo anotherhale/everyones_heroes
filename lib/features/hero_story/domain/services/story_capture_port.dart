@@ -3,12 +3,13 @@ import 'package:everyonesheroes/core/shared_kernel/language_code.dart';
 import 'package:everyonesheroes/features/hero_story/domain/enums/story_representation_format.dart';
 import 'package:everyonesheroes/features/hero_story/domain/value_objects/media_reference.dart';
 
-/// Legacy HS.1 capture/transcription stub (HS-ADR-020).
+/// Legacy HS.1 capture/transcription stub (HS-ADR-020 / HS-ADR-024).
 ///
-/// HS.3 capture orchestration uses [StoryMediaStoragePort] plus
-/// `CompleteStoryCaptureUseCase`. Prefer those for new work.
+/// HS.3 capture orchestration uses StoryMediaStoragePort plus
+/// CompleteStoryCaptureUseCase. Prefer those for new work.
 ///
-/// [requestTranscription] remains unsupported until HS.4.
+/// requestTranscription remains unsupported. Real transcription belongs on
+/// StoryTranscriptionPort (HS.4), not this legacy stub.
 abstract interface class StoryCapturePort {
   Future<StoryCaptureResult> captureAudio({
     required StoryId storyId,

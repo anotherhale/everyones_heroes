@@ -3,6 +3,7 @@ enum AggregateType {
   discoveryProfile,
   hero,
   story,
+  storyUnderstanding,
   journey,
   mission,
   quest,
