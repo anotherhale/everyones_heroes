@@ -228,6 +228,7 @@ void main() {
   group('authoritative representations (D3)', () {
     test('unapproved AI format does not satisfy format filter', () async {
       final hero = await seedHero(name: 'Author');
+      final originalId = StoryRepresentationId.generate();
       await seedPublishedStory(
         hero: hero,
         title: 'AI Script Draft',
@@ -236,7 +237,7 @@ void main() {
         ),
         representations: [
           StoryRepresentation(
-            id: StoryRepresentationId.generate(),
+            id: originalId,
             language: english,
             format: StoryRepresentationFormat.audio,
             origin: RepresentationOrigin.original,
@@ -248,6 +249,7 @@ void main() {
             language: english,
             format: StoryRepresentationFormat.script,
             origin: RepresentationOrigin.derived,
+            sourceRepresentationId: originalId,
             textContent: 'Generated script body',
             isAiGenerated: true,
             isApproved: false,
@@ -265,6 +267,7 @@ void main() {
 
     test('approved AI format satisfies format filter', () async {
       final hero = await seedHero(name: 'Author');
+      final originalId = StoryRepresentationId.generate();
       final scriptId = StoryRepresentationId.generate();
       final story = await seedPublishedStory(
         hero: hero,
@@ -274,7 +277,7 @@ void main() {
         ),
         representations: [
           StoryRepresentation(
-            id: StoryRepresentationId.generate(),
+            id: originalId,
             language: english,
             format: StoryRepresentationFormat.audio,
             origin: RepresentationOrigin.original,
@@ -285,6 +288,7 @@ void main() {
             language: english,
             format: StoryRepresentationFormat.script,
             origin: RepresentationOrigin.derived,
+            sourceRepresentationId: originalId,
             textContent: 'Generated script body',
             isAiGenerated: true,
             isApproved: false,
@@ -344,15 +348,24 @@ void main() {
 
     test('summaries never include unapproved representation text bodies', () async {
       final hero = await seedHero(name: 'Author');
+      final originalId = StoryRepresentationId.generate();
       await seedPublishedStory(
         hero: hero,
         title: 'Safe Summary',
         representations: [
           StoryRepresentation(
+            id: originalId,
+            language: english,
+            format: StoryRepresentationFormat.audio,
+            origin: RepresentationOrigin.original,
+            mediaReference: MediaReference('media://audio'),
+          ),
+          StoryRepresentation(
             id: StoryRepresentationId.generate(),
             language: english,
             format: StoryRepresentationFormat.script,
             origin: RepresentationOrigin.derived,
+            sourceRepresentationId: originalId,
             textContent: 'SECRET_UNAPPROVED_SCRIPT',
             isAiGenerated: true,
             isApproved: false,
@@ -366,7 +379,10 @@ void main() {
       final summary =
           (result as Success<DiscoverStoriesResponse>).value.items.single;
       expect(summary.title, 'Safe Summary');
-      expect(summary.authoritativeRepresentations, isEmpty);
+      expect(
+        summary.authoritativeRepresentations.map((r) => r.format),
+        isNot(contains(StoryRepresentationFormat.script)),
+      );
       // Ensure no narrative body exposure either (D9).
       expect(summary.toString().contains('SECRET_UNAPPROVED_SCRIPT'), isFalse);
     });
@@ -463,15 +479,24 @@ void main() {
 
     test('browse by format ignores unapproved scripts', () async {
       final hero = await seedHero(name: 'Hero');
+      final originalId = StoryRepresentationId.generate();
       await seedPublishedStory(
         hero: hero,
         title: 'Unapproved Script Only',
         representations: [
           StoryRepresentation(
+            id: originalId,
+            language: english,
+            format: StoryRepresentationFormat.audio,
+            origin: RepresentationOrigin.original,
+            mediaReference: MediaReference('media://audio'),
+          ),
+          StoryRepresentation(
             id: StoryRepresentationId.generate(),
             language: english,
             format: StoryRepresentationFormat.script,
             origin: RepresentationOrigin.derived,
+            sourceRepresentationId: originalId,
             textContent: 'draft',
             isAiGenerated: true,
             isApproved: false,
@@ -558,8 +583,10 @@ void main() {
           .map((item) => item.storyId.value)
           .toList();
       expect(firstIds, secondIds);
-      expect(firstIds.first, newer.id.value);
+      expect(firstIds.take(2).toList(), ['story-a', 'story-b']);
+      expect(firstIds.contains(newer.id.value), isTrue);
       expect(firstIds.contains(older.id.value), isTrue);
+      expect(firstIds.indexOf(newer.id.value) < firstIds.indexOf(older.id.value), isTrue);
       final indexA = firstIds.indexOf('story-a');
       final indexB = firstIds.indexOf('story-b');
       expect(indexA < indexB, isTrue);

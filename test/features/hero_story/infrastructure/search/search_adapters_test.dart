@@ -582,15 +582,24 @@ void main() {
       'authoritativeRepresentationsOnly ignores unapproved AI formats',
       () async {
         final storyId = StoryId.generate();
+        final originalId = StoryRepresentationId.generate();
         await publishStory(
           id: storyId,
           originalLanguage: english,
           representations: [
             StoryRepresentation(
+              id: originalId,
+              language: english,
+              format: StoryRepresentationFormat.audio,
+              origin: RepresentationOrigin.original,
+              mediaReference: MediaReference('media://audio'),
+            ),
+            StoryRepresentation(
               id: StoryRepresentationId.generate(),
               language: english,
               format: StoryRepresentationFormat.script,
               origin: RepresentationOrigin.derived,
+              sourceRepresentationId: originalId,
               textContent: 'Unapproved script',
               isAiGenerated: true,
               isApproved: false,
