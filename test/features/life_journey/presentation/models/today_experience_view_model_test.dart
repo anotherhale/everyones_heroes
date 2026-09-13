@@ -1,5 +1,7 @@
+import 'package:everyonesheroes/core/ids/story_id.dart';
 import 'package:everyonesheroes/features/life_journey/application/models/adaptive_experience.dart';
 import 'package:everyonesheroes/features/life_journey/application/models/experience_action.dart';
+import 'package:everyonesheroes/features/life_journey/application/models/experience_target.dart';
 import 'package:everyonesheroes/features/life_journey/presentation/models/today_experience_view_model.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -34,6 +36,7 @@ void main() {
         viewModel.rationale,
         'You have been building consistency across your recent journey.',
       );
+      expect(viewModel.storyTargetId, isNull);
     });
 
     test('preserves an absent rationale', () {
@@ -51,6 +54,27 @@ void main() {
           TodayExperienceViewModel.fromExperience(experience);
 
       expect(viewModel.rationale, isNull);
+    });
+
+    test('maps story experience target id for HS.8 routing', () {
+      final storyId = StoryId('story-adaptive-1');
+      final experience = AdaptiveExperience(
+        id: 'adaptive-story-${storyId.value}',
+        type: ExperienceType.story,
+        title: 'A Relevant Story',
+        description: 'A story that connects with themes.',
+        action: ExperienceAction.begin,
+        rationale:
+            'This story connects with themes you\'ve recently reflected on.',
+        target: StoryExperienceTarget(storyId: storyId),
+      );
+
+      final viewModel =
+          TodayExperienceViewModel.fromExperience(experience);
+
+      expect(viewModel.experienceType, ExperienceType.story);
+      expect(viewModel.storyTargetId, 'story-adaptive-1');
+      expect(viewModel.rationale, isNotNull);
     });
   });
 }
