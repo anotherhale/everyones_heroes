@@ -307,6 +307,7 @@ void main() {
 
     test('unapproved representation is rejected by resolve', () async {
       final hero = await seedHero(name: 'Hero');
+      final humanId = StoryRepresentationId('human-written');
       final unapprovedId = StoryRepresentationId('ai-draft');
       final story = await seedPublishedStory(
         hero: hero,
@@ -314,12 +315,13 @@ void main() {
         narrative: 'Narrative.',
         representations: [
           writtenRep(
+            id: humanId.value,
             language: english,
             text: 'Human written.',
           ),
           writtenRep(
             id: unapprovedId.value,
-            language: spanish,
+            language: english,
             text: 'AI draft.',
             ai: true,
             approved: false,
@@ -628,8 +630,9 @@ void main() {
         ],
       );
 
-      final beforeEvents = story.pullDomainEvents();
-      expect(beforeEvents, isEmpty);
+      // Clear lifecycle events from seeding; consume must not raise new ones.
+      story.pullDomainEvents();
+      await stories.save(story);
 
       final begun = await beginStory.execute(
         BeginStoryExperienceRequest(storyId: story.id),
