@@ -14,8 +14,8 @@ abstract interface class ResolveAdaptiveDiscoverySignalsUseCase {
 final class DefaultResolveAdaptiveDiscoverySignalsUseCase
     implements ResolveAdaptiveDiscoverySignalsUseCase {
   const DefaultResolveAdaptiveDiscoverySignalsUseCase({
-    required ReflectionRepository reflectionRepository,
-  }) : _reflectionRepository = reflectionRepository;
+    required this._reflectionRepository,
+  });
 
   final ReflectionRepository _reflectionRepository;
 

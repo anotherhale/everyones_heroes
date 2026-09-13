@@ -56,7 +56,8 @@ void main() {
         );
 
         await tester.tap(find.byKey(const ValueKey('begin-experience-button')));
-        await tester.pumpAndSettle();
+        await tester.pump(); // push route
+        await tester.pump(); // start async load
 
         expect(fakeBegin.executeCount, 0);
         expect(find.byType(StoryDetailScreen), findsOneWidget);

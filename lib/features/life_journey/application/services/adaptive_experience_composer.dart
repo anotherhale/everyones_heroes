@@ -13,8 +13,8 @@ import 'package:everyonesheroes/features/life_journey/domain/patterns/behavior_p
 /// not a hard gate. No candidates → existing [ExperienceSelectionService].
 final class AdaptiveExperienceComposer {
   const AdaptiveExperienceComposer({
-    required ExperienceSelectionService reflectionSelectionService,
-  }) : _reflectionSelectionService = reflectionSelectionService;
+    required this._reflectionSelectionService,
+  });
 
   final ExperienceSelectionService _reflectionSelectionService;
 

@@ -107,6 +107,7 @@ void main() {
           experienceAreas: const ['Leadership'],
           languages: [LanguageCode('en')],
         ),
+        visibility: HeroVisibility.public,
       );
       await heroes.save(hero);
 

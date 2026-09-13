@@ -12,11 +12,9 @@ import 'package:everyonesheroes/features/life_journey/application/ports/discover
 final class DiscoverStoriesCandidateAdapter
     implements DiscoverableStoryCandidatePort {
   const DiscoverStoriesCandidateAdapter({
-    required DiscoverStoriesUseCase discoverStoriesUseCase,
-    DeterministicStoryRelevanceRanker ranker =
-        const DeterministicStoryRelevanceRanker(),
-  }) : _discoverStoriesUseCase = discoverStoriesUseCase,
-       _ranker = ranker;
+    required this._discoverStoriesUseCase,
+    this._ranker = const DeterministicStoryRelevanceRanker(),
+  });
 
   final DiscoverStoriesUseCase _discoverStoriesUseCase;
   final DeterministicStoryRelevanceRanker _ranker;

@@ -21,15 +21,13 @@ abstract interface class GetTodayExperienceUseCase {
 final class DefaultGetTodayExperienceUseCase
     implements GetTodayExperienceUseCase {
   DefaultGetTodayExperienceUseCase({
-    required JourneyRepository journeyRepository,
-    required CurrentJourneyContext currentJourneyContext,
+    required this._journeyRepository,
+    required this._currentJourneyContext,
     required ExperienceSelectionService experienceSelectionService,
     ResolveAdaptiveDiscoverySignalsUseCase? resolveAdaptiveDiscoverySignals,
     DiscoverableStoryCandidatePort? storyCandidatePort,
     AdaptiveExperienceComposer? composer,
-  }) : _journeyRepository = journeyRepository,
-       _currentJourneyContext = currentJourneyContext,
-       _resolveAdaptiveDiscoverySignals = resolveAdaptiveDiscoverySignals,
+  }) : _resolveAdaptiveDiscoverySignals = resolveAdaptiveDiscoverySignals,
        _storyCandidatePort =
            storyCandidatePort ?? const EmptyDiscoverableStoryCandidatePort(),
        _composer =

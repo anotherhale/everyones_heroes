@@ -238,6 +238,7 @@ Future<Hero> _seedHero(
       experienceAreas: const ['Service'],
       languages: [LanguageCode('en')],
     ),
+    visibility: HeroVisibility.public,
   );
   await heroes.save(hero);
   return hero;
