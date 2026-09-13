@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:everyonesheroes/features/hero_story/presentation/screens/hero_catalog_screen.dart';
 import 'package:everyonesheroes/features/life_journey/presentation/screens/discover_screen.dart';
 import 'package:everyonesheroes/features/life_journey/presentation/screens/home_screen.dart';
 import 'package:everyonesheroes/features/life_journey/presentation/screens/journey_screen.dart';
@@ -19,6 +20,7 @@ class _AppShellState extends State<AppShell> {
     KeyedSubtree(key: ValueKey('screen-home'), child: HomeScreen()),
     KeyedSubtree(key: ValueKey('screen-journey'), child: JourneyScreen()),
     KeyedSubtree(key: ValueKey('screen-discover'), child: DiscoverScreen()),
+    KeyedSubtree(key: ValueKey('screen-heroes'), child: HeroCatalogScreen()),
     KeyedSubtree(key: ValueKey('screen-reflect'), child: ReflectScreen()),
   ];
 
@@ -53,6 +55,12 @@ class _AppShellState extends State<AppShell> {
             icon: Icon(Icons.explore_outlined),
             selectedIcon: Icon(Icons.explore),
             label: 'Discover',
+          ),
+          NavigationDestination(
+            key: ValueKey('nav-heroes'),
+            icon: Icon(Icons.people_outline),
+            selectedIcon: Icon(Icons.people),
+            label: 'Heroes',
           ),
           NavigationDestination(
             key: ValueKey('nav-reflect'),

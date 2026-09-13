@@ -20,6 +20,7 @@ void main() {
     expect(find.byKey(const Key('nav-home')), findsOneWidget);
     expect(find.byKey(const Key('nav-journey')), findsOneWidget);
     expect(find.byKey(const Key('nav-discover')), findsOneWidget);
+    expect(find.byKey(const Key('nav-heroes')), findsOneWidget);
     expect(find.byKey(const Key('nav-reflect')), findsOneWidget);
   });
 
@@ -41,6 +42,20 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('screen-title-discover')), findsOneWidget);
+  });
+
+  testWidgets('AppShell navigates to Heroes without overloading Discover', (
+    tester,
+  ) async {
+    await tester.pumpWidget(buildSubject());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('nav-heroes')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('screen-heroes')), findsOneWidget);
+    expect(find.byKey(const Key('heroes-title')), findsOneWidget);
+    expect(find.byKey(const Key('screen-title-discover')), findsNothing);
   });
 
   testWidgets('AppShell navigates to Reflect', (tester) async {
