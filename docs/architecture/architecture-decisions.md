@@ -1763,3 +1763,136 @@ Rationale:
 
 Prefer derived data over dual writes. Full narrative retrieval belongs to HS.7
 detail/playback.
+
+---
+
+# HS-ADR-048 HS.7 Is Experience Over Discoverable Catalog, Not Personalization
+
+Status: Accepted
+
+Date: 2026-09-13
+
+Phase: HS.7
+
+Decision:
+
+HS.7 delivers Hero/Story experience surfaces (profiles, browsing UI, detail,
+consume/playback, optional explicit reflection) over HS.6-eligible content only.
+It does not implement personalized ranking, semantic/vector search, embeddings,
+or HS.8 discovery.
+
+Rationale:
+
+Keep catalog experience distinct from personalization. HS.6 answers what is
+discoverable; HS.7 answers whether it can be meaningfully experienced.
+
+---
+
+# HS-ADR-049 Experience Detail DTOs Are Discoverability-Gated Read Models
+
+Status: Accepted
+
+Date: 2026-09-13
+
+Phase: HS.7
+
+Decision:
+
+Add `StoryExperienceDetail` and `HeroExperienceDetail` as application read
+models derived at query time. Enforce `StoryDiscoverabilityPolicy` /
+`HeroDiscoverabilityPolicy` on all experience entry points including known-id
+access. Narrative body may be exposed only for discoverable Stories. Unapproved
+representations are excluded from playable lists. These DTOs are not aggregates
+and not a second canonical store.
+
+Rationale:
+
+HS.6 summaries intentionally omit narrative/media bodies. Experience requires
+those fields without bypassing discoverability or exposing raw aggregates.
+
+---
+
+# HS-ADR-050 Playback Is Representation Consumption via Media Port, Not a Playback Aggregate
+
+Status: Accepted
+
+Date: 2026-09-13
+
+Phase: HS.7
+
+Decision:
+
+Consume authoritative `StoryRepresentation`s. Text-like formats expose
+`textContent`. Media bytes are retrieved via existing `StoryMediaStoragePort`.
+Consumption state is ephemeral (`StoryConsumptionSession`). No Playback
+aggregate, playback persistence, or production streaming infrastructure.
+
+Rationale:
+
+Avoid speculative aggregates and vendor coupling while proving consumption.
+
+---
+
+# HS-ADR-051 Story Interaction Remains Non-Evidence; Reflection Is Optional Bridge
+
+Status: Accepted
+
+Date: 2026-09-13
+
+Phase: HS.7
+
+Decision:
+
+Reinforce HS-ADR-011 for HS.7. Opening, reading, viewing, playing, beginning,
+or completing a Story must not create BehavioralEvidence, BehaviorPatterns,
+Mission progress, or Life Journey progress. Optional reflection is explicit via
+`StartStoryReflectionUseCase` → existing H.2 `CreateReflectionUseCase`.
+`BeginStoryExperienceUseCase` is independent from Life Journey
+`BeginExperienceUseCase` (which creates Reflections).
+
+Rationale:
+
+Preserve evidence-first integrity. Story consumption ≠ growth evidence.
+
+---
+
+# HS-ADR-052 UI.3 Story Integration Is Optional and Deferred for HS.7 MVP
+
+Status: Accepted
+
+Date: 2026-09-13
+
+Phase: HS.7
+
+Decision:
+
+Primary HS.7 entry is the Hero Experience UI (dedicated Heroes navigation
+surface). Do not modify `DeterministicExperienceSelectionService` or Today’s
+Experience to select Stories in HS.7 MVP. Do not redesign UI.3.
+`ExperienceType.story` remains available for a future optional seam.
+
+Rationale:
+
+Locked HS.7 scope prioritizes Hero Experience UI without altering UI.3
+semantics or Today’s Experience selection.
+
+---
+
+# HS-ADR-053 Hero Journey Structure and Collections Deferred
+
+Status: Accepted
+
+Date: 2026-09-13
+
+Phase: HS.7
+
+Decision:
+
+HS.7 ships “Hero’s Stories” as an ordered discoverable list via
+`ListHeroStoriesUseCase` → HS.6 `DiscoverStories`. No `HeroJourney` aggregate,
+collection aggregates, saves, bookmarks, likes, follows, or social features.
+
+Rationale:
+
+Foundation lists journeys/collections as product intent, but current domain
+lacks justified invariants. Defer until dedicated ADRs exist.
