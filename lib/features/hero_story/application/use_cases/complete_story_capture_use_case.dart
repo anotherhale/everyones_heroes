@@ -61,8 +61,14 @@ final class CompleteStoryCaptureUseCase
         );
       }
 
-      if (request.mediaBytes.isEmpty) {
-        return const Failure('Captured media bytes cannot be empty.');
+      final mediaPath = request.mediaFilePath?.trim();
+      final hasPath = mediaPath != null && mediaPath.isNotEmpty;
+      final mediaBytes = request.mediaBytes;
+      final hasBytes = mediaBytes != null && mediaBytes.isNotEmpty;
+      if (!hasPath && !hasBytes) {
+        return const Failure(
+          'Captured media is required (non-empty mediaBytes or mediaFilePath).',
+        );
       }
 
       final hero = await _heroRepository.findById(request.heroId);
@@ -73,14 +79,25 @@ final class CompleteStoryCaptureUseCase
         return const Failure('Cannot capture a story for an archived hero.');
       }
 
-      storedReference = await _mediaStorage.store(
-        StoreStoryMediaRequest(
-          bytes: request.mediaBytes,
-          contentType: request.contentType,
-          checksum: request.checksum,
-          suggestedKey: 'capture/$sessionId',
-        ),
-      );
+      if (hasPath) {
+        storedReference = await _mediaStorage.storeFromFile(
+          StoreStoryMediaFromFileRequest(
+            filePath: mediaPath,
+            contentType: request.contentType,
+            checksum: request.checksum,
+            suggestedKey: 'capture/$sessionId',
+          ),
+        );
+      } else {
+        storedReference = await _mediaStorage.store(
+          StoreStoryMediaRequest(
+            bytes: mediaBytes!,
+            contentType: request.contentType,
+            checksum: request.checksum,
+            suggestedKey: 'capture/$sessionId',
+          ),
+        );
+      }
 
       var createdStory = false;
       var story = await _storyRepository.findById(request.storyId);

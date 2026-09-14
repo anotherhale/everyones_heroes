@@ -13,7 +13,8 @@ final class CompleteStoryCaptureRequest {
     required this.storyId,
     required this.representationId,
     required this.originalLanguage,
-    required this.mediaBytes,
+    this.mediaBytes,
+    this.mediaFilePath,
     this.title,
     this.originalSourceDescription,
     this.contentType,
@@ -28,7 +29,15 @@ final class CompleteStoryCaptureRequest {
   final StoryId storyId;
   final StoryRepresentationId representationId;
   final LanguageCode originalLanguage;
-  final Uint8List mediaBytes;
+
+  /// In-memory media payload. Provide this **or** [mediaFilePath].
+  final Uint8List? mediaBytes;
+
+  /// Local file path for large recordings (HS.9). Provide this **or**
+  /// [mediaBytes]. Prefer path-based store to avoid loading multi-minute
+  /// recordings entirely into RAM.
+  final String? mediaFilePath;
+
   final StoryTitle? title;
   final String? originalSourceDescription;
   final String? contentType;

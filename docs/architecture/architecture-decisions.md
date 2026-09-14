@@ -2073,3 +2073,184 @@ A single Story target is sufficient and presentation-safe.
 Rejected:
 
 Generalized multi-experience target hierarchies for future possibilities.
+
+---
+
+# HS-ADR-060 HS.9 Is Production Recording Over HS.3 (No CaptureSession Aggregate)
+
+Status: Accepted
+
+Date: 2026-09-14
+
+Phase: HS.9
+
+Decision:
+
+HS.9 is a presentation + infrastructure + application-session vertical slice that
+records opaque media on-device, reviews it, then completes the existing HS.3
+`CompleteStoryCaptureUseCase` path into a draft `Story`. Do not introduce a
+domain `CaptureSession` aggregate. Session phase remains application/presentation
+state (`RecordingSessionPhase`).
+
+Rationale:
+
+HS.3 already modeled capture as an application workflow (HS-ADR-018). HS.9 makes
+that workflow operable on a real device.
+
+Rejected:
+
+- CaptureSession domain aggregate
+- Redesigning Story/Hero for recording
+- Collapsing raw device recording into the Story aggregate
+
+---
+
+# HS-ADR-061 Introduce DeviceRecordingPort; Do Not Expand Legacy StoryCapturePort
+
+Status: Accepted
+
+Date: 2026-09-14
+
+Phase: HS.9
+
+Decision:
+
+Introduce `DeviceRecordingPort` under application/recording for prepare, permission
+checks, start/pause/resume/stop/cancel, and failure observation. Infrastructure
+adapters (`RecordPackageDeviceRecordingAdapter`, `FakeDeviceRecordingAdapter`)
+implement the port. Do not expand the legacy unused `StoryCapturePort`.
+
+Rationale:
+
+Device APIs must stay outside the domain. Legacy `StoryCapturePort` was an HS.1
+stub superseded by HS-ADR-020 media storage + HS.3 completion use cases.
+
+Rejected:
+
+- Expanding `StoryCapturePort` into a device recorder
+- Putting `record` / `permission_handler` imports in domain or use-case business rules
+
+---
+
+# HS-ADR-062 Local Durable StoryMediaStoragePort Adapter; Remote Deferred
+
+Status: Accepted
+
+Date: 2026-09-14
+
+Phase: HS.9
+
+Decision:
+
+Add `LocalFileStoryMediaStorageAdapter` implementing `StoryMediaStoragePort`, plus
+optional `storeFromFile` for multi-minute recordings. Keep in-memory adapter for
+tests. Remote object storage remains a future adapter of the same port. Also add
+file-backed Hero/Story repositories and durable `CaptureCompletionStore` so an
+accepted capture survives process restart.
+
+Rationale:
+
+First Real Hero Story success requires durable local media + Story without a backend.
+
+Rejected:
+
+- Parallel media storage abstractions
+- Requiring cloud upload for MVP capture success
+- Loading multi-minute recordings exclusively as `Uint8List` without a file path option
+
+---
+
+# HS-ADR-063 MVP Recording Format Is Audio; Video Optional Later
+
+Status: Accepted
+
+Date: 2026-09-14
+
+Phase: HS.9
+
+Decision:
+
+HS.9 MVP records audio (matches HS.3 `StoryRepresentationFormat.audio` hardcoding).
+`RecordingMode.video` exists on the port but adapters may reject it until a later
+slice.
+
+Rationale:
+
+Audio unblocks real Hero stories with lower permission/OS complexity than video.
+
+Rejected:
+
+- Requiring video for HS.9 MVP completion
+
+---
+
+# HS-ADR-064 Transcription/AI Remain Post-Capture and Non-Blocking
+
+Status: Accepted
+
+Date: 2026-09-14
+
+Phase: HS.9
+
+Decision:
+
+Recording and capture succeed without transcription, understanding, or authoring AI.
+Existing HS.4/HS.5 ports may consume the Story later behind processing + AI consent.
+
+Rationale:
+
+Recording must work offline and without AI credentials. AI does not own the story.
+
+Rejected:
+
+- Blocking Accept/Capture on transcription
+- Bundling AI into the recording critical path
+
+---
+
+# HS-ADR-065 Local Hero Bootstrap Allowed Until Identity BC Exists
+
+Status: Accepted
+
+Date: 2026-09-14
+
+Phase: HS.9
+
+Decision:
+
+Use `ensureActiveLocalHeroProvider` / `ActiveLocalHeroStore` to create or select a
+local active Hero for capture ownership. This is application composition, not a new
+Identity bounded context. Document the temporary development identity assumption.
+
+Rationale:
+
+Identity/auth is missing; capture still requires a real `HeroId` owner.
+
+Rejected:
+
+- Hard-coding Hero IDs in presentation widgets
+- Inventing a full Identity BC inside HS.9
+
+---
+
+# HS-ADR-066 Recording/Capture Does Not Create BehavioralEvidence
+
+Status: Accepted
+
+Date: 2026-09-14
+
+Phase: HS.9
+
+Decision:
+
+Recording, reviewing, accepting, capturing, or submitting a Story must not
+automatically create H.2 BehavioralEvidence or BehaviorPatterns. Evidence remains
+rooted in meaningful reflection/action signals (HS-ADR-051 continuity).
+
+Rationale:
+
+Capture ≠ growth evidence. Preserve Evidence → Pattern → Experience distinctions.
+
+Rejected:
+
+- Auto-emitting BehavioralEvidenceDetected from capture completion
