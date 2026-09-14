@@ -18,15 +18,14 @@ import 'package:path/path.dart' as p;
 final class FileCaptureCompletionStore implements CaptureCompletionStore {
   FileCaptureCompletionStore({
     required Directory rootDirectory,
-    required StoryRepository storyRepository,
+    required this._storyRepository,
   }) : _indexFile = File(
          p.join(rootDirectory.path, 'capture_completions.json'),
-       ),
-       _storyRepository = storyRepository {
+       ) {
     _loadFromDisk();
   }
 
-  // Reserved for future async hydration / consistency checks.
+  /// Retained for HS.9 wiring symmetry; hydration uses embedded story snapshots.
   // ignore: unused_field
   final StoryRepository _storyRepository;
   final File _indexFile;

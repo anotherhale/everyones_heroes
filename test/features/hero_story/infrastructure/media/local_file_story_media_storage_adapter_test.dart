@@ -2,7 +2,6 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:everyonesheroes/features/hero_story/domain/services/story_media_storage_port.dart';
-import 'package:everyonesheroes/features/hero_story/domain/value_objects/media_reference.dart';
 import 'package:everyonesheroes/features/hero_story/infrastructure/media/local_file_story_media_storage_adapter.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
