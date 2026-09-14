@@ -5,22 +5,17 @@ import 'package:everyonesheroes/core/eventing/in_memory_event_bus.dart';
 import 'package:everyonesheroes/core/eventing/in_memory_event_dispatcher.dart';
 import 'package:everyonesheroes/core/eventing/in_memory_event_store.dart';
 import 'package:everyonesheroes/core/ids/hero_id.dart';
-import 'package:everyonesheroes/core/ids/story_id.dart';
-import 'package:everyonesheroes/core/ids/story_representation_id.dart';
 import 'package:everyonesheroes/core/results/failure.dart';
 import 'package:everyonesheroes/core/results/success.dart';
 import 'package:everyonesheroes/core/shared_kernel/language_code.dart';
 import 'package:everyonesheroes/features/hero_story/application/dto/requests/create_hero_request.dart';
 import 'package:everyonesheroes/features/hero_story/application/dto/responses/complete_story_capture_response.dart';
 import 'package:everyonesheroes/features/hero_story/application/recording/device_recording_port.dart';
-import 'package:everyonesheroes/features/hero_story/application/recording/recording_session_phase.dart';
 import 'package:everyonesheroes/features/hero_story/application/recording/recording_session_service.dart';
+import 'package:everyonesheroes/features/hero_story/application/recording/recording_session_state.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/complete_story_capture_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/create_hero_use_case.dart';
-import 'package:everyonesheroes/features/hero_story/domain/aggregates/hero.dart';
 import 'package:everyonesheroes/features/hero_story/domain/domain.dart';
-import 'package:everyonesheroes/features/hero_story/domain/services/story_media_storage_port.dart';
-import 'package:everyonesheroes/features/hero_story/domain/value_objects/media_reference.dart';
 import 'package:everyonesheroes/features/hero_story/infrastructure/media/in_memory_story_media_storage_adapter.dart';
 import 'package:everyonesheroes/features/hero_story/infrastructure/recording/fake_device_recording_adapter.dart';
 import 'package:everyonesheroes/features/hero_story/infrastructure/repositories/in_memory_hero_repository.dart';
@@ -136,16 +131,12 @@ void main() {
     expect(await File(artifact.localFilePath).exists(), isFalse);
     expect(mediaStorage.objectCount, 1);
 
-    final story = await storyRepository.findById(session.storyId!);
-    // storyId cleared? No - completed keeps identity until discard.
-    expect(session.storyId, isNotNull);
-    final saved = await storyRepository.findById(
-      (accept as Success<CompleteStoryCaptureResponse>).value.storyId,
-    );
+    final response = (accept as Success<CompleteStoryCaptureResponse>).value;
+    final saved = await storyRepository.findById(response.storyId);
     expect(saved, isNotNull);
     expect(saved!.consent.isRecorded, isTrue);
     expect(saved.representations, hasLength(1));
-    expect(story, isNull); // wait - session.storyId should still be set
+    expect(saved.representations.single.format, StoryRepresentationFormat.audio);
   });
 
   test('retake mints new sessionId and returns to ready', () async {

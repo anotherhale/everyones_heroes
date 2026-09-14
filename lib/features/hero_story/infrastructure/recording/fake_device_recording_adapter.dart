@@ -47,7 +47,10 @@ final class FakeDeviceRecordingAdapter implements DeviceRecordingPort {
 
   DevicePermissionStatus get permissionStatus => _permission;
 
-  set permissionStatus(DevicePermissionStatus value) => _permission = value;
+  /// Update mic permission without going through request APIs.
+  void setPermissionStatus(DevicePermissionStatus value) {
+    _permission = value;
+  }
 
   /// Queue a failure for the next mutating call (start/pause/resume/stop).
   void simulateFailure(DeviceRecordingFailureKind kind) {

@@ -6,7 +6,6 @@ import 'package:everyonesheroes/core/ids/story_representation_id.dart';
 import 'package:everyonesheroes/core/ids/strongly_typed_id.dart';
 import 'package:everyonesheroes/core/results/failure.dart';
 import 'package:everyonesheroes/core/results/result.dart';
-import 'package:everyonesheroes/core/results/success.dart';
 import 'package:everyonesheroes/core/shared_kernel/language_code.dart';
 import 'package:everyonesheroes/features/hero_story/application/dto/requests/complete_story_capture_request.dart';
 import 'package:everyonesheroes/features/hero_story/application/dto/responses/complete_story_capture_response.dart';
