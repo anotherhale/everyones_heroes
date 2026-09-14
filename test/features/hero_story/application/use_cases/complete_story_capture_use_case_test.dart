@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:everyonesheroes/core/eventing/in_memory_event_bus.dart';
@@ -226,6 +227,51 @@ void main() {
       ),
     );
     expect(missingHero, isA<Failure>());
+  });
+
+  test('mediaFilePath stores via storeFromFile without mediaBytes', () async {
+    final heroId = await seedHero();
+    final storyId = StoryId.generate();
+    final representationId = StoryRepresentationId.generate();
+    final temp = await Directory.systemTemp.createTemp('capture-path-');
+    addTearDown(() async {
+      if (await temp.exists()) {
+        await temp.delete(recursive: true);
+      }
+    });
+    final file = File('${temp.path}/clip.m4a');
+    await file.writeAsBytes(const [9, 8, 7, 6, 5, 4]);
+
+    final result = await completeCapture.execute(
+      CompleteStoryCaptureRequest(
+        sessionId: 'path-session',
+        heroId: heroId,
+        storyId: storyId,
+        representationId: representationId,
+        originalLanguage: english,
+        mediaFilePath: file.path,
+        contentType: 'audio/mp4',
+        duration: const Duration(seconds: 12),
+      ),
+    );
+
+    expect(result, isA<Success<CompleteStoryCaptureResponse>>());
+    expect(mediaStorage.objectCount, 1);
+    final story = await storyRepository.findById(storyId);
+    expect(story!.representations.single.duration, const Duration(seconds: 12));
+  });
+
+  test('missing mediaBytes and mediaFilePath fails', () async {
+    final result = await completeCapture.execute(
+      CompleteStoryCaptureRequest(
+        sessionId: 'neither',
+        heroId: HeroId.generate(),
+        storyId: StoryId.generate(),
+        representationId: StoryRepresentationId.generate(),
+        originalLanguage: english,
+      ),
+    );
+    expect(result, isA<Failure>());
   });
 
   test('duplicate session completion is idempotent', () async {
