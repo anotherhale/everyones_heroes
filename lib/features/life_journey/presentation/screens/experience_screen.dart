@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:everyonesheroes/features/hero_story/presentation/screens/story_detail_screen.dart';
+import 'package:everyonesheroes/features/life_journey/application/models/adaptive_experience.dart';
 import 'package:everyonesheroes/features/life_journey/application/providers/use_cases/begin_experience_use_case_provider.dart';
 import 'package:everyonesheroes/features/life_journey/presentation/models/today_experience_view_model.dart';
 import 'package:everyonesheroes/features/life_journey/presentation/screens/reflect_screen.dart';
@@ -19,6 +21,24 @@ final class _ExperienceScreenState extends ConsumerState<ExperienceScreen> {
 
   Future<void> _beginExperience() async {
     if (_isBeginning) {
+      return;
+    }
+
+    // HS.8: Story experiences route through HS.7 — never BeginExperienceUseCase.
+    if (widget.experience.experienceType == ExperienceType.story) {
+      final storyId = widget.experience.storyTargetId;
+      if (storyId == null || storyId.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Story experience is unavailable.')),
+        );
+        return;
+      }
+
+      await Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => StoryDetailScreen(storyId: storyId),
+        ),
+      );
       return;
     }
 

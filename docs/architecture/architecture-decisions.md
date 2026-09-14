@@ -1896,3 +1896,180 @@ Rationale:
 
 Foundation lists journeys/collections as product intent, but current domain
 lacks justified invariants. Defer until dedicated ADRs exist.
+
+---
+
+# HS-ADR-054 HS.8 Is Adaptive Relevance Over Discoverable Catalog via UI.3 Seam
+
+Status: Accepted
+
+Date: 2026-09-13
+
+Phase: HS.8
+
+Decision:
+
+HS.8 delivers deterministic Hero/Story relevance into `GetTodayExperienceUseCase`
+composition (signals → Discover* candidates → `AdaptiveExperienceComposer`),
+reusing the UI.3 selection seam. `ExperienceType.story` becomes selectable when
+thematic relevance exists. This ends the HS-ADR-052 deferral for Story selection
+into Today’s Experience while preserving UI.3 architecture.
+
+Do not introduce a `PersonalizationEngine` product or a parallel recommendation
+architecture beside UI.3.
+
+Rationale:
+
+Preserves replaceable UI.3 selection and HS.6 eligibility while proving adaptive
+relevance with the smallest coherent vertical slice.
+
+Rejected:
+
+- New PersonalizationEngine product
+- UI-owned ranking
+- Search*-based seeker adaptive paths
+- Heroes-tab adaptive relevance in HS.8 MVP
+
+---
+
+# HS-ADR-055 AdaptiveDiscoverySignals Instead of Full Discovery Profile Synthesis
+
+Status: Accepted
+
+Date: 2026-09-13
+
+Phase: HS.8
+
+Decision:
+
+Introduce application-facing `AdaptiveDiscoverySignals` sourced from:
+
+1. Union of `Reflection.narrativeThemes` for the current journey
+2. `Journey.behaviorPatterns`
+
+Do not synthesize a full Discovery Profile in HS.8. Optional DiscoveryProfile
+theme loading may feed the same signals object later.
+
+Rationale:
+
+Option B — smallest truthful input contract. Discovery Profile synthesis does
+not exist as a production-consumable product today.
+
+Rejected:
+
+- Full Discovery Profile synthesis (Option A) in HS.8
+- Pretending an existing wired profile already supplies personalization (Option C)
+
+---
+
+# HS-ADR-056 Themes Are Sufficient; Patterns Strengthen Relevance (No Hard Pattern Gate)
+
+Status: Accepted
+
+Date: 2026-09-13
+
+Phase: HS.8
+
+Decision:
+
+Narrative themes may provide sufficient signal for adaptive Story discovery.
+Behavior patterns strengthen relevance (score boost + richer rationale) when
+present, but are not a hard gate.
+
+Cold-start behavior:
+
+- No themes + no patterns → existing UI.3 reflection fallback
+- Patterns only → reflection fallback (no thematic relevance)
+- Themes only → adaptive Story when Discover* yields overlap
+- Themes + patterns → stronger ranking boost and pattern-aware rationale
+
+Rationale:
+
+Supports cold-start honesty. Patterns without themes must not invent Story
+relevance.
+
+Rejected:
+
+`if (patterns.isEmpty) return noAdaptiveExperience;`
+
+---
+
+# HS-ADR-057 Adaptive Candidates Must Use Discover* and Remain Fail-Closed
+
+Status: Accepted
+
+Date: 2026-09-13
+
+Phase: HS.8
+
+Decision:
+
+Candidate generation uses HS.6 `DiscoverStoriesUseCase` exclusively via
+`DiscoverableStoryCandidatePort` / `DiscoverStoriesCandidateAdapter`.
+Private and unlisted content must never surface. Personalization is not a
+discoverability bypass.
+
+Rationale:
+
+Continuity of HS-ADR-043/049 and HS.6 D2.
+
+Rejected:
+
+- Search* for seeker adaptive paths
+- Raw HeroRepository / StoryRepository bypasses in seeker adaptive paths
+
+---
+
+# HS-ADR-058 Story Adaptive Begin Routes Through HS.7, Not BeginExperienceUseCase
+
+Status: Accepted
+
+Date: 2026-09-13
+
+Phase: HS.8
+
+Decision:
+
+When Today’s Experience is `ExperienceType.story`, presentation routes to HS.7
+`StoryDetailScreen` / consume path. Do not call Life Journey
+`BeginExperienceUseCase` (which creates Reflections). Optional reflection after
+story consumption remains the explicit HS.7 `StartStoryReflectionUseCase` bridge.
+
+Rationale:
+
+Preserves HS-ADR-051 — consumption ≠ evidence; Story begin ≠ reflection begin.
+
+Rejected:
+
+Overloading `BeginExperienceUseCase` to return Story|Reflection unions.
+
+---
+
+# HS-ADR-059 Typed StoryExperienceTarget for AdaptiveExperience Routing
+
+Status: Accepted
+
+Date: 2026-09-13
+
+Phase: HS.8
+
+Decision:
+
+Introduce the smallest typed target abstraction required by HS.8:
+
+```text
+ExperienceTarget
+  └── StoryExperienceTarget(storyId)
+```
+
+Attach as optional `AdaptiveExperience.target`. Do not invent a speculative
+multi-type hierarchy (Hero/Mission/Coaching/Music targets) in HS.8.
+
+Rationale:
+
+`AdaptiveExperience.id` alone is stringly typed and unsafe for Story routing.
+A single Story target is sufficient and presentation-safe.
+
+Rejected:
+
+Generalized multi-experience target hierarchies for future possibilities.

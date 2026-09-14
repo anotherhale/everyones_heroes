@@ -1,5 +1,6 @@
 import 'package:everyonesheroes/features/life_journey/application/models/adaptive_experience.dart';
 import 'package:everyonesheroes/features/life_journey/application/models/experience_action.dart';
+import 'package:everyonesheroes/features/life_journey/application/models/experience_target.dart';
 
 final class TodayExperienceViewModel {
   const TodayExperienceViewModel({
@@ -10,6 +11,7 @@ final class TodayExperienceViewModel {
     required this.action,
     required this.callToAction,
     this.rationale,
+    this.storyTargetId,
   });
 
   final String id;
@@ -20,6 +22,9 @@ final class TodayExperienceViewModel {
   final String callToAction;
   final String? rationale;
 
+  /// Story id string when [experienceType] is [ExperienceType.story].
+  final String? storyTargetId;
+
   static String _callToActionFor(ExperienceAction action) {
     return switch (action) {
       ExperienceAction.begin => 'Begin Experience',
@@ -29,6 +34,12 @@ final class TodayExperienceViewModel {
   factory TodayExperienceViewModel.fromExperience(
     AdaptiveExperience experience,
   ) {
+    final target = experience.target;
+    final storyTargetId = switch (target) {
+      StoryExperienceTarget(:final storyId) => storyId.value,
+      null => null,
+    };
+
     return TodayExperienceViewModel(
       id: experience.id,
       experienceType: experience.type,
@@ -37,6 +48,7 @@ final class TodayExperienceViewModel {
       action: experience.action,
       callToAction: _callToActionFor(experience.action),
       rationale: experience.rationale,
+      storyTargetId: storyTargetId,
     );
   }
 }
