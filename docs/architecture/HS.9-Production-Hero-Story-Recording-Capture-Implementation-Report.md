@@ -173,12 +173,12 @@ These are **not** conflated. `RecordingSessionPhase.recording` ≠ `StoryLifecyc
 
 | Gate | Result |
 |------|--------|
-| Focused recording/session/infra tests | Passing (prior commits + this slice) |
-| UI / controller HS.9 tests | Passing |
-| Integration durable e2e | Passing |
-| Composition root | Passing (injectable roots for tests) |
-| `dart analyze` | Clean of errors (pre-existing infos only) |
-| Full `flutter test` | Re-run after composition-root fix — see commit notes |
+| Focused recording / session / infra / capture tests | Passing |
+| UI / controller HS.9 tests (`hs9_tell_your_story_ui_test.dart`) | **4/4 passed** |
+| Integration durable e2e (`hs9_recording_capture_integration_test.dart`) | **Passed** |
+| Composition root | **Passed** (injectable roots for tests) |
+| `dart analyze` | **Exit 0** — 17 info-level style hints only (no errors/warnings) |
+| Full `flutter test` | **764/764 passed** |
 
 ---
 
