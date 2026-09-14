@@ -8,10 +8,12 @@ import 'package:everyonesheroes/features/hero_story/application/recording/record
 import 'package:everyonesheroes/features/hero_story/infrastructure/recording/fake_device_recording_adapter.dart';
 import 'package:everyonesheroes/features/hero_story/infrastructure/recording/record_package_device_recording_adapter.dart';
 
-/// Whether to use the real device recorder (false → fake for tests).
+/// Whether to use the real device recorder (false → fake / unavailable).
 ///
-/// Production [AppCompositionRoot] sets this true and overrides
+/// Native durable [AppCompositionRoot] sets this true and overrides
 /// [deviceRecordingPortProvider] with [RecordPackageDeviceRecordingAdapter].
+/// Browser / in-memory composition sets this false and uses
+/// [UnavailableDeviceRecordingAdapter] so startup never touches the mic.
 final useRealDeviceRecordingProvider = Provider<bool>((ref) => false);
 
 final deviceRecordingPortProvider = Provider<DeviceRecordingPort>((ref) {
