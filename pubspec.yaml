@@ -38,6 +38,12 @@ dependencies:
   collection: ^1.19.1
   flutter_riverpod: ^3.3.2
   meta: ^1.19.0
+  path_provider: ^2.1.6
+  record: ^7.1.1
+  permission_handler: ^13.0.2
+  just_audio: ^0.10.6
+  path: ^1.9.1
+  crypto: ^3.0.7
 
 dev_dependencies:
   flutter_test:
