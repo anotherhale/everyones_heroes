@@ -11,6 +11,15 @@ void main() {
     );
   });
 
+  test('draft can archive for owner soft-remove (HS.10)', () {
+    expect(
+      StoryLifecycleStatus.draft.canTransitionTo(
+        StoryLifecycleStatus.archived,
+      ),
+      isTrue,
+    );
+  });
+
   test('published cannot move directly to approved', () {
     expect(
       StoryLifecycleStatus.published.canTransitionTo(

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:everyonesheroes/features/hero_story/presentation/providers/hero_experience_providers.dart';
 import 'package:everyonesheroes/features/hero_story/presentation/screens/hero_profile_screen.dart';
+import 'package:everyonesheroes/features/hero_story/presentation/screens/my_stories_screen.dart';
 import 'package:everyonesheroes/features/hero_story/presentation/screens/story_catalog_screen.dart';
 import 'package:everyonesheroes/features/hero_story/presentation/screens/tell_your_story_screen.dart';
 
@@ -67,6 +68,22 @@ class HeroCatalogScreen extends ConsumerWidget {
                       },
                       icon: const Icon(Icons.mic_none_outlined),
                       label: const Text('Tell Your Story'),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: OutlinedButton.icon(
+                      key: const ValueKey('my-stories-button'),
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) => const MyStoriesScreen(),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.library_books_outlined),
+                      label: const Text('My Stories'),
                     ),
                   ),
                   const SizedBox(height: 12),

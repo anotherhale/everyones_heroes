@@ -336,7 +336,8 @@ final class TellYourStoryController extends Notifier<TellYourStoryUiState> {
       _setState(state.copyWith(
         isBusy: false,
         phase: _session.phase,
-        errorMessage: result.error,
+        errorMessage:
+            'Story could not be saved. ${result.error} You can retry Accept.',
       ));
       return;
     }
