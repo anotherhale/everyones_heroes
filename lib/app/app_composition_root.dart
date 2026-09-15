@@ -18,7 +18,7 @@ import 'package:everyonesheroes/features/hero_story/application/recording/device
 import 'package:everyonesheroes/features/hero_story/application/recording/recording_session_service.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/complete_story_capture_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/infrastructure/recording/fake_device_recording_adapter.dart';
-import 'package:everyonesheroes/features/hero_story/infrastructure/recording/unavailable_device_recording_adapter.dart';
+import 'package:everyonesheroes/features/hero_story/infrastructure/recording/record_package_web_device_recording_adapter.dart';
 
 /// Application composition root (HS.9 durable capture + device recording).
 ///
@@ -62,15 +62,16 @@ final class AppCompositionRoot {
   /// Browser / in-memory composition: eventing + local Hero bootstrap only.
   ///
   /// Leaves Hero/Story/media repositories on their default in-memory providers.
-  /// Device recording is [UnavailableDeviceRecordingAdapter] so entering Tell
-  /// Your Story does not touch the filesystem or request microphone access.
+  /// Device recording uses [RecordPackageWebDeviceRecordingAdapter] so Tell Your
+  /// Story can request the browser microphone on a user gesture. Filesystem
+  /// path_provider is still avoided. [UnavailableDeviceRecordingAdapter] remains
+  /// available for genuinely unsupported hosts but is not the web default.
   static Future<ProviderContainer> _initializeInMemoryHeroStory() async {
+    final recordingPort = createRecordPackageWebDeviceRecordingAdapter();
     final container = ProviderContainer(
       overrides: [
-        useRealDeviceRecordingProvider.overrideWithValue(false),
-        deviceRecordingPortProvider.overrideWithValue(
-          UnavailableDeviceRecordingAdapter(),
-        ),
+        useRealDeviceRecordingProvider.overrideWithValue(true),
+        deviceRecordingPortProvider.overrideWithValue(recordingPort),
       ],
     );
 

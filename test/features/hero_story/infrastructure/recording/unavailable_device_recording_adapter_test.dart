@@ -2,10 +2,10 @@ import 'package:everyonesheroes/features/hero_story/application/recording/device
 import 'package:everyonesheroes/features/hero_story/infrastructure/recording/unavailable_device_recording_adapter.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-/// Runtime-contract proof for the web composition stub.
+/// Runtime-contract proof for [UnavailableDeviceRecordingAdapter].
 ///
-/// Flutter Web currently binds this adapter. It never calls browser media APIs —
-/// check/request always return [DevicePermissionStatus.unavailable].
+/// Retained for genuinely unsupported hosts / explicit stubs. Normal Flutter
+/// Web composition now binds [RecordPackageWebDeviceRecordingAdapter] instead.
 void main() {
   late UnavailableDeviceRecordingAdapter adapter;
 

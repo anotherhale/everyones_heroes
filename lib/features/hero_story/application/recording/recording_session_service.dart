@@ -279,19 +279,29 @@ final class RecordingSessionService {
       return const Failure('No recording artifact available to accept.');
     }
 
-    final file = File(artifact.localFilePath);
-    if (!await file.exists()) {
-      _lastError = 'Recording file is missing.';
-      _phase = RecordingSessionPhase.failed;
-      await _persistManifest();
-      return Failure(_lastError!);
-    }
-    final length = await file.length();
-    if (length == 0) {
-      _lastError = 'Recording file is empty.';
-      _phase = RecordingSessionPhase.failed;
-      await _persistManifest();
-      return Failure(_lastError!);
+    final inMemoryBytes = artifact.hasBytes ? artifact.bytes : null;
+    if (inMemoryBytes != null) {
+      if (inMemoryBytes.isEmpty) {
+        _lastError = 'Recording data is empty.';
+        _phase = RecordingSessionPhase.failed;
+        await _persistManifest();
+        return Failure(_lastError!);
+      }
+    } else {
+      final file = File(artifact.localFilePath);
+      if (!await file.exists()) {
+        _lastError = 'Recording file is missing.';
+        _phase = RecordingSessionPhase.failed;
+        await _persistManifest();
+        return Failure(_lastError!);
+      }
+      final length = await file.length();
+      if (length == 0) {
+        _lastError = 'Recording file is empty.';
+        _phase = RecordingSessionPhase.failed;
+        await _persistManifest();
+        return Failure(_lastError!);
+      }
     }
 
     _phase = RecordingSessionPhase.persisting;
@@ -304,7 +314,8 @@ final class RecordingSessionService {
         storyId: _storyId!,
         representationId: _representationId!,
         originalLanguage: _originalLanguage!,
-        mediaFilePath: artifact.localFilePath,
+        mediaBytes: inMemoryBytes,
+        mediaFilePath: inMemoryBytes == null ? artifact.localFilePath : null,
         contentType: artifact.contentType,
         checksum: artifact.checksum,
         duration: artifact.duration,
@@ -352,6 +363,13 @@ final class RecordingSessionService {
   Future<void> _deleteArtifactFile(String? path) async {
     final trimmed = path?.trim();
     if (trimmed == null || trimmed.isEmpty) {
+      return;
+    }
+    // Web / in-memory markers are not filesystem paths.
+    if (trimmed.startsWith('memory://') ||
+        trimmed.startsWith('blob:') ||
+        trimmed.startsWith('http://') ||
+        trimmed.startsWith('https://')) {
       return;
     }
     final file = File(trimmed);

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
+// AudioSource is exported by just_audio.
 
 import 'package:everyonesheroes/core/ids/story_id.dart';
 import 'package:everyonesheroes/core/results/failure.dart';
@@ -246,8 +247,8 @@ final class TellYourStoryController extends Notifier<TellYourStoryUiState> {
   }
 
   Future<void> playReview() async {
-    final path = _session.artifact?.localFilePath;
-    if (path == null) {
+    final artifact = _session.artifact;
+    if (artifact == null) {
       _setState(state.copyWith(
         errorMessage: 'Nothing to play. Retake the recording.',
       ));
@@ -255,7 +256,19 @@ final class TellYourStoryController extends Notifier<TellYourStoryUiState> {
     }
     try {
       _player ??= AudioPlayer();
-      await _player!.setFilePath(path);
+      if (artifact.hasBytes) {
+        // Web (and any in-memory) artifacts: play from bytes without dart:io paths.
+        await _player!.setAudioSource(
+          AudioSource.uri(
+            Uri.dataFromBytes(
+              artifact.bytes!,
+              mimeType: artifact.contentType,
+            ),
+          ),
+        );
+      } else {
+        await _player!.setFilePath(artifact.localFilePath);
+      }
       await _player!.play();
       _setState(state.copyWith(isPlayingReview: true, clearError: true));
       _player!.playerStateStream.listen((playerState) {
