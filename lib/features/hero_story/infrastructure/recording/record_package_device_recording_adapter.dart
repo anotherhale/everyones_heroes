@@ -40,6 +40,10 @@ final class RecordPackageDeviceRecordingAdapter implements DeviceRecordingPort {
   Duration _accumulated = Duration.zero;
   bool _trackingPaused = false;
 
+  /// When true, [RecordState.stop] is expected from intentional stop/cancel
+  /// and must not be reported as [DeviceRecordingFailureKind.interrupted].
+  bool _expectingIntentionalStop = false;
+
   @override
   Stream<DeviceRecordingFailureKind> get failures => _failures.stream;
 
@@ -143,6 +147,7 @@ final class RecordPackageDeviceRecordingAdapter implements DeviceRecordingPort {
 
   @override
   Future<LocalRecordingArtifact> stop() async {
+    _expectingIntentionalStop = true;
     try {
       if (!_trackingPaused) {
         _flushSegment();
@@ -181,28 +186,35 @@ final class RecordPackageDeviceRecordingAdapter implements DeviceRecordingPort {
         'Failed to stop recording: $e',
         kind: kind,
       );
+    } finally {
+      _expectingIntentionalStop = false;
     }
   }
 
   @override
   Future<void> cancel() async {
+    _expectingIntentionalStop = true;
     try {
-      await _recorder.cancel();
-    } catch (_) {}
-
-    final path = _tempPath;
-    _tempPath = null;
-    _segmentStartedAt = null;
-    _accumulated = Duration.zero;
-    _trackingPaused = false;
-
-    if (path != null) {
-      final file = File(path);
       try {
-        if (await file.exists()) {
-          await file.delete();
-        }
+        await _recorder.cancel();
       } catch (_) {}
+
+      final path = _tempPath;
+      _tempPath = null;
+      _segmentStartedAt = null;
+      _accumulated = Duration.zero;
+      _trackingPaused = false;
+
+      if (path != null) {
+        final file = File(path);
+        try {
+          if (await file.exists()) {
+            await file.delete();
+          }
+        } catch (_) {}
+      }
+    } finally {
+      _expectingIntentionalStop = false;
     }
   }
 
@@ -242,7 +254,10 @@ final class RecordPackageDeviceRecordingAdapter implements DeviceRecordingPort {
     _stateSub = _recorder.onStateChanged().listen(
       (state) {
         // Unexpected stop while we still track a temp path ≈ interruption.
-        if (state == RecordState.stop && _tempPath != null) {
+        // Intentional stop/cancel also yield RecordState.stop; suppress those.
+        if (state == RecordState.stop &&
+            _tempPath != null &&
+            !_expectingIntentionalStop) {
           _emit(DeviceRecordingFailureKind.interrupted);
         }
       },
