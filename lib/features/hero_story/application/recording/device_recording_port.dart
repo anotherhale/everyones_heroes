@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 /// Device microphone/camera recording boundary (HS.9 / HS-ADR-061).
 ///
 /// Application/infrastructure concern — free of domain Story types and Flutter
@@ -30,6 +32,13 @@ enum DeviceRecordingFailureKind {
 }
 
 /// Local temp recording result before durable [StoryMediaStoragePort] persist.
+///
+/// [localFilePath] is a filesystem path on native platforms. On web it may be a
+/// synthetic marker (e.g. `memory://…`) or a short-lived object URL used only
+/// inside infrastructure — application code should prefer [bytes] when present.
+///
+/// [bytes] carries the recorded media without exposing browser Blob / object-URL
+/// types across the port boundary (required for Flutter Web).
 final class LocalRecordingArtifact {
   const LocalRecordingArtifact({
     required this.localFilePath,
@@ -38,6 +47,7 @@ final class LocalRecordingArtifact {
     required this.mode,
     this.checksum,
     this.byteLength,
+    this.bytes,
   });
 
   final String localFilePath;
@@ -46,6 +56,11 @@ final class LocalRecordingArtifact {
   final RecordingMode mode;
   final String? checksum;
   final int? byteLength;
+
+  /// In-memory media payload (web recordings; optional on native).
+  final Uint8List? bytes;
+
+  bool get hasBytes => bytes != null && bytes!.isNotEmpty;
 }
 
 final class DeviceRecordingException implements Exception {

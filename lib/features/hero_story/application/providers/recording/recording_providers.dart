@@ -7,13 +7,14 @@ import 'package:everyonesheroes/features/hero_story/application/recording/device
 import 'package:everyonesheroes/features/hero_story/application/recording/recording_session_service.dart';
 import 'package:everyonesheroes/features/hero_story/infrastructure/recording/fake_device_recording_adapter.dart';
 import 'package:everyonesheroes/features/hero_story/infrastructure/recording/record_package_device_recording_adapter.dart';
+import 'package:everyonesheroes/features/hero_story/infrastructure/recording/record_package_web_device_recording_adapter.dart';
 
-/// Whether to use the real device recorder (false → fake / unavailable).
+/// Whether to use the real device recorder (false → fake).
 ///
 /// Native durable [AppCompositionRoot] sets this true and overrides
 /// [deviceRecordingPortProvider] with [RecordPackageDeviceRecordingAdapter].
-/// Browser / in-memory composition sets this false and uses
-/// [UnavailableDeviceRecordingAdapter] so startup never touches the mic.
+/// Browser / in-memory composition sets this true and overrides with
+/// [RecordPackageWebDeviceRecordingAdapter] (microphone on user gesture).
 final useRealDeviceRecordingProvider = Provider<bool>((ref) => false);
 
 final deviceRecordingPortProvider = Provider<DeviceRecordingPort>((ref) {
@@ -27,11 +28,16 @@ final deviceRecordingPortProvider = Provider<DeviceRecordingPort>((ref) {
   );
 });
 
-/// Builds a production [RecordPackageDeviceRecordingAdapter].
+/// Builds a production [RecordPackageDeviceRecordingAdapter] (native).
 DeviceRecordingPort createRecordPackageDeviceRecordingAdapter(
   Directory tempDirectory,
 ) {
   return RecordPackageDeviceRecordingAdapter(tempDirectory: tempDirectory);
+}
+
+/// Builds a production web [RecordPackageWebDeviceRecordingAdapter].
+DeviceRecordingPort createRecordPackageWebDeviceRecordingPort() {
+  return createRecordPackageWebDeviceRecordingAdapter();
 }
 
 /// Default session service for tests (no durable manifest directory).

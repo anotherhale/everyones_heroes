@@ -44,6 +44,8 @@ dependencies:
   just_audio: ^0.10.6
   path: ^1.9.1
   crypto: ^3.0.7
+  # Explicit for web object-URL helpers (also transitive via record_web).
+  web: ^1.1.1
 
 dev_dependencies:
   flutter_test:

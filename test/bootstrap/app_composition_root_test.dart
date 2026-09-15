@@ -10,7 +10,7 @@ import 'package:everyonesheroes/app/presentation/app.dart';
 import 'package:everyonesheroes/features/hero_story/application/providers/hero/active_local_hero_provider.dart';
 import 'package:everyonesheroes/features/hero_story/application/providers/recording/recording_providers.dart';
 import 'package:everyonesheroes/features/hero_story/application/providers/repositories/hero_repository_provider.dart';
-import 'package:everyonesheroes/features/hero_story/infrastructure/recording/unavailable_device_recording_adapter.dart';
+import 'package:everyonesheroes/features/hero_story/infrastructure/recording/record_package_web_device_recording_adapter.dart';
 import 'package:everyonesheroes/features/hero_story/infrastructure/repositories/in_memory_hero_repository.dart';
 import 'package:everyonesheroes/features/life_journey/application/providers/context/current_journey_context_provider.dart';
 
@@ -44,7 +44,7 @@ void main() {
       expect(container.read(heroRepositoryProvider), isA<InMemoryHeroRepository>());
       expect(
         container.read(deviceRecordingPortProvider),
-        isA<UnavailableDeviceRecordingAdapter>(),
+        isA<RecordPackageWebDeviceRecordingAdapter>(),
       );
       expect(container.read(ensureActiveLocalHeroProvider).hasValue, isTrue);
 
