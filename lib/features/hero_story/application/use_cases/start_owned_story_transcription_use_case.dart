@@ -6,7 +6,6 @@ import 'package:everyonesheroes/features/hero_story/application/dto/requests/sta
 import 'package:everyonesheroes/features/hero_story/application/dto/requests/transcribe_story_request.dart';
 import 'package:everyonesheroes/features/hero_story/application/dto/responses/start_owned_story_transcription_response.dart';
 import 'package:everyonesheroes/features/hero_story/application/dto/responses/transcribe_story_response.dart';
-import 'package:everyonesheroes/features/hero_story/application/transcription/story_transcription_job.dart';
 import 'package:everyonesheroes/features/hero_story/application/transcription/story_transcription_job_store.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/transcribe_story_representation_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/use_case.dart';
@@ -33,15 +32,12 @@ final class StartOwnedStoryTranscriptionUseCase
           StartOwnedStoryTranscriptionRequest,
           StartOwnedStoryTranscriptionResponse
         > {
-  StartOwnedStoryTranscriptionUseCase({
-    required StoryRepository storyRepository,
-    required HeroRepository heroRepository,
-    required TranscribeStoryRepresentationUseCase transcribeStory,
-    required StoryTranscriptionJobStore jobStore,
-  })  : _storyRepository = storyRepository,
-        _heroRepository = heroRepository,
-        _transcribeStory = transcribeStory,
-        _jobStore = jobStore;
+  const StartOwnedStoryTranscriptionUseCase({
+    required this._storyRepository,
+    required this._heroRepository,
+    required this._transcribeStory,
+    required this._jobStore,
+  });
 
   final StoryRepository _storyRepository;
   final HeroRepository _heroRepository;

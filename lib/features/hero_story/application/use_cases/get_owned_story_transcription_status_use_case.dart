@@ -22,12 +22,10 @@ final class GetOwnedStoryTranscriptionStatusUseCase
           OwnedStoryTranscriptionStatus
         > {
   const GetOwnedStoryTranscriptionStatusUseCase({
-    required StoryRepository storyRepository,
-    required HeroRepository heroRepository,
-    required StoryTranscriptionJobStore jobStore,
-  })  : _storyRepository = storyRepository,
-        _heroRepository = heroRepository,
-        _jobStore = jobStore;
+    required this._storyRepository,
+    required this._heroRepository,
+    required this._jobStore,
+  });
 
   final StoryRepository _storyRepository;
   final HeroRepository _heroRepository;

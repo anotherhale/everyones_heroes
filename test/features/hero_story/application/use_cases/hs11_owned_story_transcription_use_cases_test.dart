@@ -14,6 +14,7 @@ import 'package:everyonesheroes/features/hero_story/application/dto/requests/cre
 import 'package:everyonesheroes/features/hero_story/application/dto/requests/get_owned_story_transcription_status_request.dart';
 import 'package:everyonesheroes/features/hero_story/application/dto/requests/start_owned_story_transcription_request.dart';
 import 'package:everyonesheroes/features/hero_story/application/dto/requests/update_story_consent_request.dart';
+import 'package:everyonesheroes/features/hero_story/application/dto/responses/owned_story_transcription_status.dart';
 import 'package:everyonesheroes/features/hero_story/application/transcription/story_transcription_job_store.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/complete_story_capture_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/create_hero_use_case.dart';
@@ -354,11 +355,13 @@ void main() {
         ),
       );
       expect(before, isA<Success>());
+      final beforeStatus =
+          (before as Success<OwnedStoryTranscriptionStatus>).value;
       expect(
-        (before as Success).value.status,
+        beforeStatus.status,
         StoryTranscriptionJobStatus.notStarted,
       );
-      expect(before.value.canStart, isTrue);
+      expect(beforeStatus.canStart, isTrue);
 
       await startOwned.execute(
         StartOwnedStoryTranscriptionRequest(
@@ -374,12 +377,14 @@ void main() {
         ),
       );
       expect(after, isA<Success>());
+      final afterStatus =
+          (after as Success<OwnedStoryTranscriptionStatus>).value;
       expect(
-        (after as Success).value.status,
+        afterStatus.status,
         StoryTranscriptionJobStatus.completed,
       );
-      expect(after.value.transcriptText, isNotEmpty);
-      expect(after.value.canStart, isFalse);
+      expect(afterStatus.transcriptText, isNotEmpty);
+      expect(afterStatus.canStart, isFalse);
     });
   });
 }

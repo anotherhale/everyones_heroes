@@ -182,14 +182,12 @@ void main() {
 
     await pumpDetail(tester, container, storyId);
 
-    expect(
-      find.byKey(const ValueKey('owned-story-start-transcription-button')),
-      findsOneWidget,
-    );
-
-    await tester.tap(
-      find.byKey(const ValueKey('owned-story-start-transcription-button')),
-    );
+    final startButton =
+        find.byKey(const ValueKey('owned-story-start-transcription-button'));
+    expect(startButton, findsOneWidget);
+    await tester.ensureVisible(startButton);
+    await tester.pumpAndSettle();
+    await tester.tap(startButton);
     await tester.pumpAndSettle();
 
     expect(
@@ -218,9 +216,11 @@ void main() {
     final storyId = await seedOwnedStory(withConsent: true);
 
     await pumpDetail(tester, container, storyId);
-    await tester.tap(
-      find.byKey(const ValueKey('owned-story-start-transcription-button')),
-    );
+    final startButton =
+        find.byKey(const ValueKey('owned-story-start-transcription-button'));
+    await tester.ensureVisible(startButton);
+    await tester.pumpAndSettle();
+    await tester.tap(startButton);
     await tester.pumpAndSettle();
 
     expect(

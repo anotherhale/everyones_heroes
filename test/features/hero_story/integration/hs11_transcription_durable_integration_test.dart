@@ -13,7 +13,6 @@ import 'package:everyonesheroes/features/hero_story/application/dto/requests/com
 import 'package:everyonesheroes/features/hero_story/application/dto/requests/create_hero_request.dart';
 import 'package:everyonesheroes/features/hero_story/application/dto/requests/start_owned_story_transcription_request.dart';
 import 'package:everyonesheroes/features/hero_story/application/dto/requests/update_story_consent_request.dart';
-import 'package:everyonesheroes/features/hero_story/application/transcription/story_transcription_job_store.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/complete_story_capture_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/create_hero_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/get_owned_story_transcription_status_use_case.dart';

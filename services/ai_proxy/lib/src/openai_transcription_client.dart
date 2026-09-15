@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 /// Thin OpenAI STT client used only by the EH AI proxy (HS-ADR-068).
-final class OpenAiTranscriptionClient {
+class OpenAiTranscriptionClient {
   OpenAiTranscriptionClient({
     required this.apiKey,
     required this.baseUrl,

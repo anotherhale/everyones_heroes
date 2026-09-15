@@ -52,7 +52,7 @@ void main() {
         TranscribeStoryMediaRequest(
           storyId: StoryId('story-1'),
           sourceRepresentationId: StoryRepresentationId('rep-1'),
-          mediaReference: const MediaReference('file://audio.wav'),
+          mediaReference: MediaReference('file://audio.wav'),
           language: LanguageCode('en'),
           processingVersion: 'hs4-v1',
           requestId: 'req-1',
@@ -84,7 +84,7 @@ void main() {
           TranscribeStoryMediaRequest(
             storyId: StoryId('story-1'),
             sourceRepresentationId: StoryRepresentationId('rep-1'),
-            mediaReference: const MediaReference('file://audio.wav'),
+            mediaReference: MediaReference('file://audio.wav'),
             language: LanguageCode('en'),
             processingVersion: 'hs4-v1',
             mediaBytes: [1, 2, 3],
@@ -108,7 +108,7 @@ void main() {
           TranscribeStoryMediaRequest(
             storyId: StoryId('story-1'),
             sourceRepresentationId: StoryRepresentationId('rep-1'),
-            mediaReference: const MediaReference('file://audio.wav'),
+            mediaReference: MediaReference('file://audio.wav'),
             language: LanguageCode('en'),
             processingVersion: 'hs4-v1',
             mediaBytes: [9, 9, 9],
@@ -132,7 +132,7 @@ void main() {
         TranscribeStoryMediaRequest(
           storyId: StoryId('s'),
           sourceRepresentationId: StoryRepresentationId('r'),
-          mediaReference: const MediaReference('mem://x'),
+          mediaReference: MediaReference('mem://x'),
           language: LanguageCode('en'),
           processingVersion: 'hs4-v1',
           mediaBytes: Uint8List.fromList([1, 2, 3, 4]),
@@ -142,7 +142,7 @@ void main() {
         TranscribeStoryMediaRequest(
           storyId: StoryId('s'),
           sourceRepresentationId: StoryRepresentationId('r'),
-          mediaReference: const MediaReference('mem://x'),
+          mediaReference: MediaReference('mem://x'),
           language: LanguageCode('en'),
           processingVersion: 'hs4-v1',
           mediaBytes: Uint8List.fromList([1, 2, 3, 4]),
@@ -211,7 +211,7 @@ void main() {
           story: story,
           storyId: story.id,
           transcriptRepresentationId: transcriptId,
-          mediaReference: const MediaReference('file://audio.wav'),
+          mediaReference: MediaReference('file://audio.wav'),
         ),
       );
 

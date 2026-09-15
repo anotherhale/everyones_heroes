@@ -17,25 +17,33 @@ class OwnedStoryTranscriptionSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final async = ref.watch(ownedStoryTranscriptionProvider(storyId));
+    final ui = ref.watch(ownedStoryTranscriptionProvider(storyId));
+    final controller =
+        ref.read(ownedStoryTranscriptionProvider(storyId).notifier);
 
-    return async.when(
-      loading: () => const Padding(
+    if (ui.isLoading && ui.model == null) {
+      return const Padding(
         padding: EdgeInsets.symmetric(vertical: 12),
         child: LinearProgressIndicator(
           key: ValueKey('owned-story-transcription-loading'),
         ),
-      ),
-      error: (error, _) => Text(
-        'Unable to load transcription status.',
+      );
+    }
+
+    if (ui.model == null) {
+      return Text(
+        ui.errorMessage ?? 'Unable to load transcription status.',
         key: const ValueKey('owned-story-transcription-error'),
         style: TextStyle(color: theme.colorScheme.error),
-      ),
-      data: (model) => _TranscriptionBody(
-        storyId: storyId,
-        model: model,
-        theme: theme,
-      ),
+      );
+    }
+
+    return _TranscriptionBody(
+      storyId: storyId,
+      model: ui.model!,
+      theme: theme,
+      busy: ui.isBusy,
+      controller: controller,
     );
   }
 }
@@ -45,11 +53,15 @@ class _TranscriptionBody extends ConsumerStatefulWidget {
     required this.storyId,
     required this.model,
     required this.theme,
+    required this.busy,
+    required this.controller,
   });
 
   final String storyId;
   final OwnedStoryTranscriptionViewModel model;
   final ThemeData theme;
+  final bool busy;
+  final OwnedStoryTranscriptionController controller;
 
   @override
   ConsumerState<_TranscriptionBody> createState() => _TranscriptionBodyState();
@@ -58,7 +70,6 @@ class _TranscriptionBody extends ConsumerStatefulWidget {
 class _TranscriptionBodyState extends ConsumerState<_TranscriptionBody> {
   late final TextEditingController _editController;
   var _editing = false;
-  var _busy = false;
 
   @override
   void initState() {
@@ -84,15 +95,13 @@ class _TranscriptionBodyState extends ConsumerState<_TranscriptionBody> {
   }
 
   Future<void> _run(Future<String?> Function() action) async {
-    if (_busy) {
+    if (widget.busy) {
       return;
     }
-    setState(() => _busy = true);
     final error = await action();
     if (!mounted) {
       return;
     }
-    setState(() => _busy = false);
     if (error != null) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
     }
@@ -102,8 +111,8 @@ class _TranscriptionBodyState extends ConsumerState<_TranscriptionBody> {
   Widget build(BuildContext context) {
     final model = widget.model;
     final theme = widget.theme;
-    final controller =
-        ref.read(ownedStoryTranscriptionProvider(widget.storyId).notifier);
+    final busy = widget.busy;
+    final controller = widget.controller;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -143,9 +152,8 @@ class _TranscriptionBodyState extends ConsumerState<_TranscriptionBody> {
           const SizedBox(height: 12),
           FilledButton(
             key: const ValueKey('owned-story-grant-ai-consent-button'),
-            onPressed: _busy
-                ? null
-                : () => _run(controller.grantAiProcessingConsent),
+            onPressed:
+                busy ? null : () => _run(controller.grantAiProcessingConsent),
             child: const Text('Allow AI processing'),
           ),
         ],
@@ -153,7 +161,7 @@ class _TranscriptionBodyState extends ConsumerState<_TranscriptionBody> {
           const SizedBox(height: 12),
           FilledButton.icon(
             key: const ValueKey('owned-story-start-transcription-button'),
-            onPressed: _busy
+            onPressed: busy
                 ? null
                 : () => _run(() => controller.startTranscription()),
             icon: const Icon(Icons.graphic_eq),
@@ -188,7 +196,7 @@ class _TranscriptionBodyState extends ConsumerState<_TranscriptionBody> {
             const SizedBox(height: 12),
             OutlinedButton.icon(
               key: const ValueKey('owned-story-retry-transcription-button'),
-              onPressed: _busy
+              onPressed: busy
                   ? null
                   : () => _run(
                         () => controller.startTranscription(isRetry: true),
@@ -243,7 +251,7 @@ class _TranscriptionBodyState extends ConsumerState<_TranscriptionBody> {
               if (!model.transcriptIsApproved)
                 OutlinedButton(
                   key: const ValueKey('owned-story-edit-transcript-button'),
-                  onPressed: _busy
+                  onPressed: busy
                       ? null
                       : () async {
                           if (_editing) {
@@ -264,7 +272,7 @@ class _TranscriptionBodyState extends ConsumerState<_TranscriptionBody> {
               if (_editing)
                 TextButton(
                   key: const ValueKey('owned-story-cancel-edit-transcript'),
-                  onPressed: _busy
+                  onPressed: busy
                       ? null
                       : () {
                           setState(() {
@@ -277,7 +285,7 @@ class _TranscriptionBodyState extends ConsumerState<_TranscriptionBody> {
               if (!model.transcriptIsApproved)
                 FilledButton(
                   key: const ValueKey('owned-story-approve-transcript-button'),
-                  onPressed: _busy
+                  onPressed: busy
                       ? null
                       : () => _run(controller.approveTranscript),
                   child: const Text('Approve transcript'),
