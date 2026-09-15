@@ -10,6 +10,7 @@ import 'package:everyonesheroes/features/hero_story/domain/aggregates/story.dart
 import 'package:everyonesheroes/features/hero_story/presentation/models/owned_story_detail_view_model.dart';
 import 'package:everyonesheroes/features/hero_story/presentation/providers/owned_story_playback_controller.dart';
 import 'package:everyonesheroes/features/hero_story/presentation/providers/owned_story_providers.dart';
+import 'package:everyonesheroes/features/hero_story/presentation/widgets/owned_story_transcription_section.dart';
 
 /// Owner Story detail with original recording playback (HS.10).
 class OwnedStoryDetailScreen extends ConsumerWidget {
@@ -261,6 +262,10 @@ class _OwnedStoryDetailBody extends ConsumerWidget {
             style: theme.textTheme.bodySmall,
           ),
         ],
+        const SizedBox(height: 24),
+        const Divider(),
+        const SizedBox(height: 16),
+        OwnedStoryTranscriptionSection(storyId: detail.storyId.value),
         const SizedBox(height: 24),
         const Divider(),
         const SizedBox(height: 16),

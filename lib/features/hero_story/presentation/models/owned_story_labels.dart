@@ -1,7 +1,8 @@
 import 'package:everyonesheroes/features/hero_story/domain/enums/story_lifecycle_status.dart';
+import 'package:everyonesheroes/features/hero_story/domain/enums/story_transcription_job_status.dart';
 import 'package:everyonesheroes/features/hero_story/domain/enums/story_visibility.dart';
 
-/// Human-friendly owner Story labels (HS.10).
+/// Human-friendly owner Story labels (HS.10 / HS.11).
 final class OwnedStoryLabels {
   const OwnedStoryLabels._();
 
@@ -34,6 +35,15 @@ final class OwnedStoryLabels {
       StoryVisibility.unlisted => 'Unlisted',
       StoryVisibility.community => 'Community',
       StoryVisibility.public => 'Public',
+    };
+  }
+
+  static String transcriptionStatusLabel(StoryTranscriptionJobStatus status) {
+    return switch (status) {
+      StoryTranscriptionJobStatus.notStarted => 'Not started',
+      StoryTranscriptionJobStatus.inProgress => 'Transcribing…',
+      StoryTranscriptionJobStatus.completed => 'Transcript ready',
+      StoryTranscriptionJobStatus.failed => 'Transcription failed',
     };
   }
 

@@ -187,6 +187,10 @@ void main() {
     expect(find.byKey(const ValueKey('owned-story-play-button')), findsOneWidget);
     expect(find.byKey(const ValueKey('owned-story-privacy-chip')), findsOneWidget);
     expect(find.byKey(const ValueKey('owned-story-lifecycle-chip')), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('owned-story-consent-summary')),
+      200,
+    );
     expect(find.byKey(const ValueKey('owned-story-consent-summary')), findsOneWidget);
     await tester.scrollUntilVisible(
       find.byKey(const ValueKey('owned-story-archive-button')),

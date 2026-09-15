@@ -10,17 +10,23 @@ import 'package:everyonesheroes/core/eventing/event_providers.dart';
 import 'package:everyonesheroes/features/hero_story/application/providers/hero/active_local_hero_provider.dart';
 import 'package:everyonesheroes/features/hero_story/application/providers/media/story_media_storage_port_provider.dart';
 import 'package:everyonesheroes/features/hero_story/application/providers/persistence/hero_story_persistence_providers.dart';
+import 'package:everyonesheroes/features/hero_story/application/providers/ai/story_transcription_port_provider.dart';
 import 'package:everyonesheroes/features/hero_story/application/providers/recording/recording_providers.dart';
 import 'package:everyonesheroes/features/hero_story/application/providers/repositories/hero_repository_provider.dart';
 import 'package:everyonesheroes/features/hero_story/application/providers/repositories/story_repository_provider.dart';
+import 'package:everyonesheroes/features/hero_story/application/providers/transcription/transcription_store_providers.dart';
 import 'package:everyonesheroes/features/hero_story/application/providers/use_cases/capture_use_case_providers.dart';
 import 'package:everyonesheroes/features/hero_story/application/recording/device_recording_port.dart';
 import 'package:everyonesheroes/features/hero_story/application/recording/recording_session_service.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/complete_story_capture_use_case.dart';
+import 'package:everyonesheroes/features/hero_story/domain/services/story_transcription_port.dart';
+import 'package:everyonesheroes/features/hero_story/infrastructure/ai/in_memory_story_transcription_adapter.dart';
+import 'package:everyonesheroes/features/hero_story/infrastructure/ai/proxy_story_transcription_adapter.dart';
+import 'package:everyonesheroes/features/hero_story/infrastructure/ai/story_transcription_config.dart';
 import 'package:everyonesheroes/features/hero_story/infrastructure/recording/fake_device_recording_adapter.dart';
 import 'package:everyonesheroes/features/hero_story/infrastructure/recording/record_package_web_device_recording_adapter.dart';
 
-/// Application composition root (HS.9 durable capture + device recording).
+/// Application composition root (HS.9 durable capture + HS.11 transcription).
 ///
 /// Temporary development identity: [ensureActiveLocalHeroProvider] bootstraps a
 /// local Hero until the Identity bounded context exists (HS-ADR-065).
@@ -39,24 +45,54 @@ final class AppCompositionRoot {
   /// [enableDurableLocalPersistence] forces the durable or in-memory path.
   /// When omitted: durable when [storageRoot] is provided or the platform is
   /// not web; otherwise in-memory (browser-safe).
+  ///
+  /// Transcription defaults to the development in-memory adapter unless
+  /// [transcriptionPort] is provided or `EH_AI_PROXY_URL` selects proxy mode
+  /// (HS-ADR-067). Production OpenAI secrets never enter this client.
   static Future<ProviderContainer> initialize({
     Directory? storageRoot,
     Directory? recordingTemp,
     bool useRealDeviceRecording = true,
     bool? enableDurableLocalPersistence,
+    StoryTranscriptionPort? transcriptionPort,
   }) async {
     final useDurable = enableDurableLocalPersistence ??
         (storageRoot != null || !kIsWeb);
 
     if (!useDurable) {
-      return _initializeInMemoryHeroStory();
+      return _initializeInMemoryHeroStory(
+        transcriptionPort: transcriptionPort,
+      );
     }
 
     return _initializeDurableHeroStory(
       storageRoot: storageRoot,
       recordingTemp: recordingTemp,
       useRealDeviceRecording: useRealDeviceRecording,
+      transcriptionPort: transcriptionPort,
     );
+  }
+
+  static StoryTranscriptionPort _resolveTranscriptionPort(
+    StoryTranscriptionPort? override,
+  ) {
+    if (override != null) {
+      return override;
+    }
+    final mode = StoryTranscriptionConfig.resolveMode();
+    if (mode == StoryTranscriptionMode.proxy) {
+      final baseUrl = StoryTranscriptionConfig.resolveProxyBaseUrl();
+      if (baseUrl == null) {
+        throw StateError(
+          'EH_TRANSCRIPTION_MODE=proxy requires EH_AI_PROXY_URL.',
+        );
+      }
+      return ProxyStoryTranscriptionAdapter(
+        baseUrl: baseUrl,
+        authToken: StoryTranscriptionConfig.resolveAuthToken(),
+      );
+    }
+    return InMemoryStoryTranscriptionAdapter();
   }
 
   /// Browser / in-memory composition: eventing + local Hero bootstrap only.
@@ -66,12 +102,16 @@ final class AppCompositionRoot {
   /// Story can request the browser microphone on a user gesture. Filesystem
   /// path_provider is still avoided. [UnavailableDeviceRecordingAdapter] remains
   /// available for genuinely unsupported hosts but is not the web default.
-  static Future<ProviderContainer> _initializeInMemoryHeroStory() async {
+  static Future<ProviderContainer> _initializeInMemoryHeroStory({
+    StoryTranscriptionPort? transcriptionPort,
+  }) async {
     final recordingPort = createRecordPackageWebDeviceRecordingAdapter();
+    final resolvedTranscription = _resolveTranscriptionPort(transcriptionPort);
     final container = ProviderContainer(
       overrides: [
         useRealDeviceRecordingProvider.overrideWithValue(true),
         deviceRecordingPortProvider.overrideWithValue(recordingPort),
+        storyTranscriptionPortProvider.overrideWithValue(resolvedTranscription),
       ],
     );
 
@@ -87,6 +127,7 @@ final class AppCompositionRoot {
     required Directory? storageRoot,
     required Directory? recordingTemp,
     required bool useRealDeviceRecording,
+    StoryTranscriptionPort? transcriptionPort,
   }) async {
     final root = storageRoot ??
         Directory(
@@ -116,6 +157,7 @@ final class AppCompositionRoot {
     final DeviceRecordingPort recordingPort = useRealDeviceRecording
         ? createRecordPackageDeviceRecordingAdapter(temp)
         : FakeDeviceRecordingAdapter(outputDirectory: temp);
+    final resolvedTranscription = _resolveTranscriptionPort(transcriptionPort);
 
     // Late-bound session so we can share one EventBus / CompleteCapture instance.
     RecordingSessionService? session;
@@ -128,6 +170,13 @@ final class AppCompositionRoot {
         captureCompletionStoreProvider.overrideWithValue(
           durable.captureCompletionStore,
         ),
+        transcriptionCompletionStoreProvider.overrideWithValue(
+          durable.transcriptionCompletionStore,
+        ),
+        storyTranscriptionJobStoreProvider.overrideWithValue(
+          durable.transcriptionJobStore,
+        ),
+        storyTranscriptionPortProvider.overrideWithValue(resolvedTranscription),
         activeLocalHeroStoreProvider.overrideWithValue(
           ActiveLocalHeroStore(storageRoot: root),
         ),

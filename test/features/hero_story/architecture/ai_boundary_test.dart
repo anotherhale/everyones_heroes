@@ -2,17 +2,24 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
-/// Lightweight architecture boundary checks for HS.4 (no AI SDK leakage).
+/// Architecture boundary checks for HS.4 / HS.11 (no AI SDK leakage).
 void main() {
-  test('domain and application layers do not import AI SDKs', () {
-    final forbidden = [
-      'package:openai',
-      'package:anthropic',
-      'package:google_generative_ai',
-      'package:dart_openai',
-      'package:langchain',
-      'bedrock',
-      'package:http/http.dart', // domain must stay free of HTTP clients
+  test('domain and application layers do not import AI SDKs or HTTP clients', () {
+    final forbiddenImports = [
+      "import 'package:openai",
+      'import "package:openai',
+      "import 'package:anthropic",
+      'import "package:anthropic',
+      "import 'package:google_generative_ai",
+      'import "package:google_generative_ai',
+      "import 'package:dart_openai",
+      'import "package:dart_openai',
+      "import 'package:langchain",
+      'import "package:langchain',
+      "import 'package:http/http.dart'",
+      'import "package:http/http.dart"',
+      "import 'package:http/",
+      'import "package:http/',
     ];
 
     final roots = [
@@ -27,16 +34,9 @@ void main() {
           continue;
         }
         final content = entity.readAsStringSync();
-        for (final needle in forbidden) {
+        for (final needle in forbiddenImports) {
           if (content.contains(needle)) {
-            // Allow clarifying that HTTP is forbidden in comments only if quoted carefully;
-            // fail on actual import lines.
-            if (content.contains("import '$needle") ||
-                content.contains('import "$needle') ||
-                content.contains("import 'package:http") ||
-                content.contains('import "package:http')) {
-              offenders.add('${entity.path} → $needle');
-            }
+            offenders.add('${entity.path} → $needle');
           }
         }
       }
@@ -59,7 +59,9 @@ void main() {
           !content.contains('NarrativeThemeId')) {
         offenders.add(file.path);
       }
-      if (content.contains("import 'package:everyonesheroes/features/discovery")) {
+      if (content.contains(
+        "import 'package:everyonesheroes/features/discovery",
+      )) {
         offenders.add(file.path);
       }
     }
@@ -67,7 +69,7 @@ void main() {
     expect(offenders, isEmpty, reason: offenders.join('\n'));
   });
 
-  test('no production AI provider adapters exist under infrastructure/ai', () {
+  test('infrastructure/ai may include proxy adapter but not vendor SDKs', () {
     final aiDir = Directory('lib/features/hero_story/infrastructure/ai');
     expect(aiDir.existsSync(), isTrue);
     final names = aiDir
@@ -76,12 +78,30 @@ void main() {
         .map((f) => f.uri.pathSegments.last)
         .toList();
     expect(names, contains('in_memory_story_transcription_adapter.dart'));
+    expect(names, contains('proxy_story_transcription_adapter.dart'));
+    expect(names, contains('story_transcription_config.dart'));
     expect(names, contains('in_memory_story_understanding_adapter.dart'));
-    expect(names, contains('in_memory_story_authoring_adapter.dart'));
-    expect(names, contains('in_memory_story_translation_adapter.dart'));
     expect(
-      names.any((n) => n.contains('openai') || n.contains('anthropic') || n.contains('gemini')),
+      names.any(
+        (n) =>
+            n.contains('openai') ||
+            n.contains('anthropic') ||
+            n.contains('gemini'),
+      ),
       isFalse,
+      reason: 'Vendor SDK adapters belong in services/ai_proxy, not Flutter',
     );
+
+    for (final file in aiDir.listSync().whereType<File>()) {
+      if (!file.path.endsWith('.dart')) continue;
+      final content = file.readAsStringSync();
+      expect(
+        content.contains("import 'package:openai") ||
+            content.contains('import "package:openai') ||
+            content.contains("import 'package:dart_openai"),
+        isFalse,
+        reason: file.path,
+      );
+    }
   });
 }
