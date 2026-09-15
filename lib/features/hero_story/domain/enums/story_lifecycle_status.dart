@@ -14,16 +14,20 @@ extension StoryLifecycleTransitions on StoryLifecycleStatus {
   bool canTransitionTo(StoryLifecycleStatus next) {
     switch (this) {
       case StoryLifecycleStatus.draft:
+        // HS.10: owners may archive private drafts without submitting.
         return next == StoryLifecycleStatus.processing ||
+            next == StoryLifecycleStatus.archived ||
             next == StoryLifecycleStatus.removed;
       case StoryLifecycleStatus.processing:
         return next == StoryLifecycleStatus.review ||
             next == StoryLifecycleStatus.draft ||
+            next == StoryLifecycleStatus.archived ||
             next == StoryLifecycleStatus.removed;
       case StoryLifecycleStatus.review:
         return next == StoryLifecycleStatus.approved ||
             next == StoryLifecycleStatus.rejected ||
-            next == StoryLifecycleStatus.processing;
+            next == StoryLifecycleStatus.processing ||
+            next == StoryLifecycleStatus.archived;
       case StoryLifecycleStatus.approved:
         return next == StoryLifecycleStatus.published ||
             next == StoryLifecycleStatus.review ||

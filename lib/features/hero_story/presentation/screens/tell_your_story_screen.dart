@@ -3,7 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:everyonesheroes/features/hero_story/application/recording/device_recording_port.dart';
 import 'package:everyonesheroes/features/hero_story/application/recording/recording_session_state.dart';
+import 'package:everyonesheroes/features/hero_story/presentation/providers/owned_story_providers.dart';
 import 'package:everyonesheroes/features/hero_story/presentation/providers/tell_your_story_controller.dart';
+import 'package:everyonesheroes/features/hero_story/presentation/screens/my_stories_screen.dart';
+import 'package:everyonesheroes/features/hero_story/presentation/screens/owned_story_detail_screen.dart';
 
 /// HS.9 Tell Your Story vertical slice entry screen.
 class TellYourStoryScreen extends ConsumerStatefulWidget {
@@ -81,7 +84,30 @@ class _TellYourStoryScreenState extends ConsumerState<TellYourStoryScreen> {
                     TellYourStoryStep.completed => _CompletedStep(
                       storyId: state.capturedStoryId?.value,
                       theme: theme,
-                      onDone: () => Navigator.of(context).maybePop(),
+                      onViewStory: state.capturedStoryId == null
+                          ? null
+                          : () {
+                              ref.invalidate(ownedStoriesProvider);
+                              Navigator.of(context).pushReplacement(
+                                MaterialPageRoute<void>(
+                                  builder: (_) => OwnedStoryDetailScreen(
+                                    storyId: state.capturedStoryId!.value,
+                                  ),
+                                ),
+                              );
+                            },
+                      onMyStories: () {
+                        ref.invalidate(ownedStoriesProvider);
+                        Navigator.of(context).pushReplacement(
+                          MaterialPageRoute<void>(
+                            builder: (_) => const MyStoriesScreen(),
+                          ),
+                        );
+                      },
+                      onDone: () {
+                        ref.invalidate(ownedStoriesProvider);
+                        Navigator.of(context).maybePop();
+                      },
                     ),
                   },
                 ],
@@ -465,11 +491,15 @@ class _CompletedStep extends StatelessWidget {
     required this.storyId,
     required this.theme,
     required this.onDone,
+    this.onViewStory,
+    this.onMyStories,
   });
 
   final String? storyId;
   final ThemeData theme;
   final VoidCallback onDone;
+  final VoidCallback? onViewStory;
+  final VoidCallback? onMyStories;
 
   @override
   Widget build(BuildContext context) {
@@ -477,7 +507,7 @@ class _CompletedStep extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Your private draft is saved',
+          'Story Saved',
           key: const ValueKey('capture-completed-title'),
           style: theme.textTheme.headlineSmall?.copyWith(
             fontWeight: FontWeight.w700,
@@ -485,8 +515,9 @@ class _CompletedStep extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         Text(
-          'You can close the app and return later — your accepted recording '
-          'persists on this device. It is not published and is not discoverable.',
+          'Your story has been safely saved. It remains private and is not '
+          'discoverable.',
+          key: const ValueKey('capture-completed-body'),
           style: theme.textTheme.bodyLarge?.copyWith(height: 1.45),
         ),
         if (storyId != null) ...[
@@ -498,7 +529,25 @@ class _CompletedStep extends StatelessWidget {
           ),
         ],
         const SizedBox(height: 24),
-        FilledButton(
+        if (onViewStory != null) ...[
+          FilledButton.icon(
+            key: const ValueKey('capture-view-story-button'),
+            onPressed: onViewStory,
+            icon: const Icon(Icons.play_circle_outline),
+            label: const Text('View Story'),
+          ),
+          const SizedBox(height: 12),
+        ],
+        if (onMyStories != null) ...[
+          OutlinedButton.icon(
+            key: const ValueKey('capture-my-stories-button'),
+            onPressed: onMyStories,
+            icon: const Icon(Icons.library_books_outlined),
+            label: const Text('My Stories'),
+          ),
+          const SizedBox(height: 12),
+        ],
+        TextButton(
           key: const ValueKey('capture-done-button'),
           onPressed: onDone,
           child: const Text('Done'),

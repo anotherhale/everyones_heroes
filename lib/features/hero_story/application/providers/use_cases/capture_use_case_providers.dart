@@ -8,9 +8,11 @@ import 'package:everyonesheroes/features/hero_story/application/providers/reposi
 import 'package:everyonesheroes/features/hero_story/application/use_cases/cancel_story_capture_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/complete_story_capture_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/create_hero_use_case.dart';
-import 'package:everyonesheroes/features/hero_story/application/use_cases/list_hero_owned_stories_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/submit_story_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/update_story_consent_use_case.dart';
+
+export 'package:everyonesheroes/features/hero_story/application/providers/use_cases/owned_story_use_case_providers.dart'
+    show listHeroOwnedStoriesUseCaseProvider;
 
 /// Shared capture completion store (must be shared by Complete + Cancel).
 ///
@@ -62,11 +64,3 @@ final submitStoryUseCaseProvider = Provider<SubmitStoryUseCase>((ref) {
     eventBus: ref.watch(eventBusProvider),
   );
 });
-
-final listHeroOwnedStoriesUseCaseProvider =
-    Provider<ListHeroOwnedStoriesUseCase>((ref) {
-      return ListHeroOwnedStoriesUseCase(
-        storyRepository: ref.watch(storyRepositoryProvider),
-        heroRepository: ref.watch(heroRepositoryProvider),
-      );
-    });

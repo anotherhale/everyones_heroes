@@ -127,11 +127,15 @@ void main() {
       expect(owned.isSuccess, isTrue);
       final ownedStories = (owned as Success).value;
       expect(ownedStories, isNotEmpty);
-      expect(ownedStories.first.id, response.storyId);
-      expect(ownedStories.first.consent.isRecorded, isTrue);
-      expect(ownedStories.first.representations, isNotEmpty);
+      expect(ownedStories.first.storyId, response.storyId);
+      expect(ownedStories.first.isRecorded, isTrue);
+      expect(ownedStories.first.hasMedia, isTrue);
+      expect(ownedStories.first.primaryRepresentationId, isNotNull);
 
-      final mediaRef = ownedStories.first.representations.first.mediaReference!;
+      final reloadedStory = await stories2.findById(response.storyId);
+      expect(reloadedStory, isNotNull);
+      expect(reloadedStory!.representations, isNotEmpty);
+      final mediaRef = reloadedStory.representations.first.mediaReference!;
       expect(await media2.exists(mediaRef), isTrue);
       final bytes = await media2.retrieve(mediaRef);
       expect(bytes, isNotNull);
