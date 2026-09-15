@@ -227,15 +227,18 @@ final class TellYourStoryController extends Notifier<TellYourStoryUiState> {
   }
 
   Future<void> stopRecording() async {
-    _setState(state.copyWith(isBusy: true));
+    _setState(state.copyWith(isBusy: true, clearError: true));
     try {
       await _session.stopRecording();
       _elapsedTimer?.cancel();
+      // Intentional Stop is a successful workflow transition — never carry an
+      // interruption/error banner into the review screen.
       _setState(state.copyWith(
         isBusy: false,
         phase: _session.phase,
         step: TellYourStoryStep.review,
         elapsed: _session.artifact?.duration ?? state.elapsed,
+        clearError: true,
       ));
     } catch (e) {
       _setState(state.copyWith(
@@ -415,6 +418,15 @@ final class TellYourStoryController extends Notifier<TellYourStoryUiState> {
   void _listenDeviceFailures() {
     _failureSub?.cancel();
     _failureSub = _session.deviceFailures.listen((kind) {
+      // A clean intentional Stop already finalized review (phase reviewing,
+      // no session error). Do not re-label that success as an interruption
+      // if a late device stop-state event arrives.
+      if (kind == DeviceRecordingFailureKind.interrupted &&
+          state.step == TellYourStoryStep.review &&
+          _session.phase == RecordingSessionPhase.reviewing &&
+          _session.lastError == null) {
+        return;
+      }
       _setState(state.copyWith(
         errorMessage: _messageForFailure(kind),
         phase: _session.phase,
