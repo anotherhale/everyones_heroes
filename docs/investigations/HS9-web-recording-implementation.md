@@ -174,19 +174,32 @@ Browser MediaRecorder / getUserMedia are exercised through the
 **Target origin:** `http://127.0.0.1:18080` (secure context; do not use
 hostname HTTP origins for mic validation).
 
-Intended checklist:
+### Cloud agent Chrome session (2026-09-15)
+
+Served via `flutter run -d web-server --web-hostname=127.0.0.1 --web-port=18080`.
+
+| Step | Result |
+|------|--------|
+| Home / Heroes / Tell Your Story | Loaded |
+| Prepare | **"Microphone: Not requested"** + **Allow microphone** — old stub text **"Microphone is unavailable on this device."** did **not** appear |
+| Allow microphone (Chrome initially Ask) | UI showed **Denied** after first click (no prompt / no device) |
+| Site setting → Allow + reload | **"Microphone: Granted"** + **Continue to record** |
+| Record UI | Ready / Start reached |
+| Start | `startFailed` / `NotFoundError: Requested device not found` — expected: VM has **no physical microphone** |
+| Pause / Resume / Stop / Review with audio | **Not completed** in-agent (hardware blocker) |
+
+Conclusion: composition + permission path are fixed. Full capture still needs an
+operator browser with a real mic (e.g. Windows Chrome at `127.0.0.1:18080`
+over SSH tunnel). SSH does not forward the Mac microphone.
+
+Checklist for operator follow-up:
 
 1. Tell Your Story  
 2. Prepare (must not hard-fail as “unavailable” from the stub)  
 3. Allow microphone → browser prompt if needed  
 4. Start → speak → Pause → Resume → Stop  
 5. Review → Continue / accept through HS.9 flow  
-6. Cancel mid-recording releases the mic / recorder  
-
-Automated verification in this change set: `dart analyze` (no errors on
-touched paths), focused + full Flutter tests, `flutter build web --release`.
-Interactive Chrome mic validation depends on the operator’s secure-context
-browser session with a real microphone (SSH does not forward the Mac mic).
+6. Cancel mid-recording releases the mic / recorder
 
 ---
 
@@ -206,9 +219,10 @@ browser session with a real microphone (SSH does not forward the Mac mic).
 
 ## Remaining Limitations
 
-- Interactive end-to-end Chrome mic capture was not fully automated in the
-  cloud agent environment (needs operator browser + physical mic at
-  `127.0.0.1`).
+- Cloud agent Chrome validated prepare/permission/record UI, but **cannot
+  capture audio** without a physical mic (`NotFoundError` on Start). Operator
+  should finish pause/resume/stop/review on a machine with a mic at
+  `http://127.0.0.1:18080`.
 - Video recording remains unsupported (MVP).
 - Web persistence uses in-memory media storage; durable remote upload is
   out of HS.9 web scope.
@@ -242,10 +256,11 @@ browser session with a real microphone (SSH does not forward the Mac mic).
 
 | Check | Result |
 |-------|--------|
-| Focused recording / composition tests | Pass (24 related tests in prior run) |
+| Focused recording / composition tests | **24/24** pass |
 | Full Flutter test suite | **777/777** pass |
-| `flutter build web --release` | **Success** |
+| `flutter build web --release` | **Success** (build retains `memory://`, `audio/wav`, `hasPermission`) |
 | `dart analyze` (touched areas) | No errors; `web` dep added to clear referenced-package info |
+| Manual web (127.0.0.1:18080) | Prepare/permission/record UI OK; Start fails only for missing mic hardware |
 
 ---
 
