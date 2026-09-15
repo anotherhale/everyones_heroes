@@ -54,7 +54,11 @@ final class OwnedRepresentationSummary {
     required this.origin,
     required this.isAuthoritative,
     required this.hasMedia,
+    required this.isAiGenerated,
+    required this.isApproved,
     this.duration,
+    this.textContent,
+    this.sourceRepresentationId,
   });
 
   final StoryRepresentationId representationId;
@@ -63,5 +67,9 @@ final class OwnedRepresentationSummary {
   final RepresentationOrigin origin;
   final bool isAuthoritative;
   final bool hasMedia;
+  final bool isAiGenerated;
+  final bool isApproved;
   final Duration? duration;
+  final String? textContent;
+  final StoryRepresentationId? sourceRepresentationId;
 }

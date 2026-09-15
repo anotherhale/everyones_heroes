@@ -23,6 +23,7 @@ export 'enums/story_outcome.dart';
 export 'enums/story_representation_format.dart';
 export 'enums/story_subject.dart';
 export 'enums/story_transformation_type.dart';
+export 'enums/story_transcription_job_status.dart';
 export 'enums/story_visibility.dart';
 export 'enums/suitability_level.dart';
 export 'enums/understanding_review_decision.dart';

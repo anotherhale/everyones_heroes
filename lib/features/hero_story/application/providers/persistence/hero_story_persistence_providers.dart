@@ -5,6 +5,8 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 import 'package:everyonesheroes/features/hero_story/application/capture/capture_completion_store.dart';
+import 'package:everyonesheroes/features/hero_story/application/transcription/story_transcription_job_store.dart';
+import 'package:everyonesheroes/features/hero_story/application/understanding/transcription_completion_store.dart';
 import 'package:everyonesheroes/features/hero_story/domain/repositories/hero_repository.dart';
 import 'package:everyonesheroes/features/hero_story/domain/repositories/story_repository.dart';
 import 'package:everyonesheroes/features/hero_story/domain/services/story_media_storage_port.dart';
@@ -12,6 +14,8 @@ import 'package:everyonesheroes/features/hero_story/infrastructure/capture/file_
 import 'package:everyonesheroes/features/hero_story/infrastructure/media/local_file_story_media_storage_adapter.dart';
 import 'package:everyonesheroes/features/hero_story/infrastructure/repositories/file_hero_repository.dart';
 import 'package:everyonesheroes/features/hero_story/infrastructure/repositories/file_story_repository.dart';
+import 'package:everyonesheroes/features/hero_story/infrastructure/transcription/file_story_transcription_job_store.dart';
+import 'package:everyonesheroes/features/hero_story/infrastructure/transcription/file_transcription_completion_store.dart';
 
 /// Root directory for durable Hero & Story local persistence (HS.9).
 ///
@@ -48,15 +52,22 @@ final heroStoryRecordingManifestProvider = FutureProvider<Directory>((
   return dir;
 });
 
-/// Builds durable HS.9 adapters from a resolved storage root.
+/// Builds durable HS.9 / HS.11 adapters from a resolved storage root.
 final class HeroStoryDurablePersistence {
   HeroStoryDurablePersistence(this.rootDirectory)
     : heroRepository = FileHeroRepository(rootDirectory: rootDirectory),
       storyRepository = FileStoryRepository(rootDirectory: rootDirectory),
       mediaStorage = LocalFileStoryMediaStorageAdapter(
         rootDirectory: rootDirectory,
+      ),
+      transcriptionJobStore = FileStoryTranscriptionJobStore(
+        rootDirectory: rootDirectory,
       ) {
     captureCompletionStore = FileCaptureCompletionStore(
+      rootDirectory: rootDirectory,
+      storyRepository: storyRepository,
+    );
+    transcriptionCompletionStore = FileTranscriptionCompletionStore(
       rootDirectory: rootDirectory,
       storyRepository: storyRepository,
     );
@@ -67,4 +78,6 @@ final class HeroStoryDurablePersistence {
   final StoryRepository storyRepository;
   final StoryMediaStoragePort mediaStorage;
   late final CaptureCompletionStore captureCompletionStore;
+  late final TranscriptionCompletionStore transcriptionCompletionStore;
+  final StoryTranscriptionJobStore transcriptionJobStore;
 }

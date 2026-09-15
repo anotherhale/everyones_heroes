@@ -2254,3 +2254,141 @@ Capture ≠ growth evidence. Preserve Evidence → Pattern → Experience distin
 Rejected:
 
 - Auto-emitting BehavioralEvidenceDetected from capture completion
+
+---
+
+# HS-ADR-067 Backend AI Proxy for Production Transcription
+
+Status: Accepted
+
+Date: 2026-09-15
+
+Phase: HS.11
+
+Decision:
+
+Production speech-to-text credentials remain exclusively on an Everyone's Heroes
+backend AI proxy. The Flutter client calls an EH-owned transcription contract
+(`POST /story-transcriptions`) and never embeds production OpenAI (or other
+vendor) API keys.
+
+Architecture:
+
+```text
+Flutter → StoryTranscriptionPort → ProxyStoryTranscriptionAdapter
+       → EH AI Backend / Proxy → OpenAI STT
+```
+
+A development/in-memory adapter remains available for local tests and must be
+explicitly selected; it is never the accidental production path when the proxy
+URL is configured.
+
+Rationale:
+
+HS.11 productionizes HS.4 transcription without putting provider secrets in
+client binaries. Proxy control enables consent audit, logging policy, and
+provider replaceability.
+
+Rejected:
+
+- Client-side production API keys via `--dart-define` as the production model
+- Direct Flutter → OpenAI calls in production builds
+- Putting OpenAI types into Story domain or HS.4 application contracts
+
+---
+
+# HS-ADR-068 OpenAI Is the Initial STT Provider Behind a Neutral Port
+
+Status: Accepted
+
+Date: 2026-09-15
+
+Phase: HS.11
+
+Decision:
+
+OpenAI is the first production STT provider behind the existing provider-neutral
+`StoryTranscriptionPort`. OpenAI-specific request/response shapes and model
+selection live only in the backend proxy. The exact transcription model is
+server-configurable (for example GPT-4o Transcribe / GPT-4o Mini Transcribe)
+and is not hard-coded into Flutter domain or application layers.
+
+Rationale:
+
+HS.4 already established a replaceable transcription boundary. Vendor choice is
+an infrastructure detail.
+
+Rejected:
+
+- Embedding OpenAI concepts in Story aggregates, value objects, widgets, or
+  owner Story UI
+- Replacing `StoryTranscriptionPort` with a vendor-specific interface
+
+---
+
+# HS-ADR-069 Explicit Owner Transcription Initiation
+
+Status: Accepted
+
+Date: 2026-09-15
+
+Phase: HS.11
+
+Decision:
+
+Transcription starts only when the owning Hero explicitly chooses
+**Start Transcription** from Owned Story Detail (after AI-processing consent
+verification). HS.11 does not auto-start transcription after recording
+acceptance or after granting AI consent at capture.
+
+Flow:
+
+```text
+Story Saved → My Stories → Story Detail → Start Transcription
+  → Consent verification → Transcription
+```
+
+Rationale:
+
+Intimate audio must not be uploaded without an explicit owner action. Aligns
+with HS-ADR-064 (AI remains post-capture and non-blocking).
+
+Rejected:
+
+- Automatic/background transcription immediately after Accept or AI consent
+  in HS.11
+
+---
+
+# HS-ADR-070 Transcription Job Status Is Separate From Story Lifecycle
+
+Status: Accepted
+
+Date: 2026-09-15
+
+Phase: HS.11
+
+Decision:
+
+Introduce application-level transcription job status
+(`notStarted` | `inProgress` | `completed` | `failed`) persisted durably
+alongside HS.10 JSON persistence. Do **not** overload
+`StoryLifecycleStatus.processing` (publication/review submit) to mean
+"transcription running."
+
+Job records reference Story, source/original recording representation,
+optional transcript representation, processing state, timestamps, and error
+information. Transcript text continues to persist as a derived
+`StoryRepresentation` inside Story JSON.
+
+Retry after failure reuses the same job record with a new attempt/request id
+and does not replace the original recording or create unbounded concurrent jobs.
+
+Rationale:
+
+Publication lifecycle and AI processing are distinct concerns (HS.10 / HS-ADR-064).
+
+Rejected:
+
+- Adding `StoryLifecycle.processing` solely for transcription
+- A second persistence framework or SQL for HS.11 job state

@@ -39,7 +39,11 @@ final class OwnedStoryMapper {
             origin: representation.origin,
             isAuthoritative: representation.isAuthoritative,
             hasMedia: representation.mediaReference != null,
+            isAiGenerated: representation.isAiGenerated,
+            isApproved: representation.isApproved,
             duration: representation.duration,
+            textContent: representation.textContent,
+            sourceRepresentationId: representation.sourceRepresentationId,
           ),
         )
         .toList(growable: false);
