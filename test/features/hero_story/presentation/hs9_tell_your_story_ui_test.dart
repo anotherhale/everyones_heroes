@@ -207,14 +207,28 @@ void main() {
     (tester) async {
       final container = buildContainer();
       addTearDown(container.dispose);
-      final controller = container.read(tellYourStoryControllerProvider.notifier);
-
-      await controller.startFlow();
-      controller.continueToRecord();
-      await controller.startRecording();
-      await controller.stopRecording();
 
       await pumpTellYourStory(tester, container);
+      await tester.pump();
+      // Allow bootstrap futures to complete outside fake-async.
+      await tester.runAsync(() async {
+        for (var i = 0; i < 40; i++) {
+          final phase = container.read(tellYourStoryControllerProvider).phase;
+          if (phase != RecordingSessionPhase.idle) {
+            break;
+          }
+          await Future<void>.delayed(const Duration(milliseconds: 25));
+        }
+      });
+      await tester.pump();
+
+      final controller = container.read(tellYourStoryControllerProvider.notifier);
+
+      await tester.runAsync(() async {
+        controller.continueToRecord();
+        await controller.startRecording();
+        await controller.stopRecording();
+      });
       await tester.pump();
 
       expect(find.byKey(const ValueKey('review-title')), findsOneWidget);
@@ -225,6 +239,9 @@ void main() {
       expect(find.byKey(const ValueKey('discard-recording-button')), findsOneWidget);
       expect(find.byKey(const ValueKey('tell-your-story-error')), findsNothing);
       expect(find.textContaining('Recording was interrupted'), findsNothing);
+
+      await tester.runAsync(controller.discard);
+      await tester.pump();
     },
   );
 
