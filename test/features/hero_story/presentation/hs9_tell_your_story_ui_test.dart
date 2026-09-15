@@ -182,4 +182,120 @@ void main() {
     expect(owned.first.consent.isProcessingApproved, isTrue);
     expect(media.objectCount, greaterThan(0));
   });
+
+  test('intentional Stop transitions to review without interruption banner',
+      () async {
+    final container = buildContainer();
+    addTearDown(container.dispose);
+    final controller = container.read(tellYourStoryControllerProvider.notifier);
+
+    await controller.startFlow();
+    controller.continueToRecord();
+    await controller.startRecording();
+    await controller.stopRecording();
+
+    final ui = container.read(tellYourStoryControllerProvider);
+    expect(ui.step, TellYourStoryStep.review);
+    expect(ui.phase, RecordingSessionPhase.reviewing);
+    expect(ui.errorMessage, isNull);
+    // Duration is present for the review screen (may be zero in instant fakes).
+    expect(ui.elapsed, isA<Duration>());
+  });
+
+  testWidgets(
+    'intentional Stop review screen has controls and no error banner',
+    (tester) async {
+      final container = buildContainer();
+      addTearDown(container.dispose);
+      final controller = container.read(tellYourStoryControllerProvider.notifier);
+
+      await controller.startFlow();
+      controller.continueToRecord();
+      await controller.startRecording();
+      await controller.stopRecording();
+
+      await pumpTellYourStory(tester, container);
+      await tester.pump();
+
+      expect(find.byKey(const ValueKey('review-title')), findsOneWidget);
+      expect(find.byKey(const ValueKey('review-duration')), findsOneWidget);
+      expect(find.byKey(const ValueKey('review-play-button')), findsOneWidget);
+      expect(find.byKey(const ValueKey('accept-recording-button')), findsOneWidget);
+      expect(find.byKey(const ValueKey('retake-recording-button')), findsOneWidget);
+      expect(find.byKey(const ValueKey('discard-recording-button')), findsOneWidget);
+      expect(find.byKey(const ValueKey('tell-your-story-error')), findsNothing);
+      expect(find.textContaining('Recording was interrupted'), findsNothing);
+    },
+  );
+
+  test('genuine interruption while recording still shows interruption message',
+      () async {
+    final container = buildContainer();
+    addTearDown(container.dispose);
+    final controller = container.read(tellYourStoryControllerProvider.notifier);
+
+    await controller.startFlow();
+    controller.continueToRecord();
+    await controller.startRecording();
+
+    recorder.emitFailure(DeviceRecordingFailureKind.interrupted);
+    await Future<void>.delayed(Duration.zero);
+
+    final ui = container.read(tellYourStoryControllerProvider);
+    expect(ui.step, TellYourStoryStep.record);
+    expect(
+      ui.errorMessage,
+      'Recording was interrupted. You can review what was saved or retake.',
+    );
+  });
+
+  test(
+    'late interrupted signal after clean Stop does not reintroduce banner',
+    () async {
+      final container = buildContainer();
+      addTearDown(container.dispose);
+      final controller =
+          container.read(tellYourStoryControllerProvider.notifier);
+
+      await controller.startFlow();
+      controller.continueToRecord();
+      await controller.startRecording();
+      await controller.stopRecording();
+
+      expect(
+        container.read(tellYourStoryControllerProvider).errorMessage,
+        isNull,
+      );
+
+      // Simulates a late RecordState.stop failure event after intentional Stop.
+      recorder.emitFailure(DeviceRecordingFailureKind.interrupted);
+      await Future<void>.delayed(Duration.zero);
+
+      final ui = container.read(tellYourStoryControllerProvider);
+      expect(ui.step, TellYourStoryStep.review);
+      expect(ui.phase, RecordingSessionPhase.reviewing);
+      expect(ui.errorMessage, isNull);
+    },
+  );
+
+  test('non-interruption device failures remain visible on review', () async {
+    final container = buildContainer();
+    addTearDown(container.dispose);
+    final controller = container.read(tellYourStoryControllerProvider.notifier);
+
+    await controller.startFlow();
+    controller.continueToRecord();
+    await controller.startRecording();
+    await controller.stopRecording();
+
+    recorder.emitFailure(DeviceRecordingFailureKind.storageInsufficient);
+    await Future<void>.delayed(Duration.zero);
+
+    final ui = container.read(tellYourStoryControllerProvider);
+    expect(ui.step, TellYourStoryStep.review);
+    expect(
+      ui.errorMessage,
+      'Not enough storage to continue recording.',
+    );
+  });
 }

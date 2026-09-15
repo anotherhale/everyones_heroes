@@ -58,6 +58,10 @@ final class RecordPackageWebDeviceRecordingAdapter
   Duration _accumulated = Duration.zero;
   bool _trackingPaused = false;
 
+  /// When true, [RecordState.stop] is expected from intentional stop/cancel
+  /// and must not be reported as [DeviceRecordingFailureKind.interrupted].
+  bool _expectingIntentionalStop = false;
+
   @override
   Stream<DeviceRecordingFailureKind> get failures => _failures.stream;
 
@@ -179,6 +183,7 @@ final class RecordPackageWebDeviceRecordingAdapter
 
   @override
   Future<LocalRecordingArtifact> stop() async {
+    _expectingIntentionalStop = true;
     try {
       if (!_trackingPaused) {
         _flushSegment();
@@ -232,21 +237,28 @@ final class RecordPackageWebDeviceRecordingAdapter
         'Failed to stop recording: $e',
         kind: kind,
       );
+    } finally {
+      _expectingIntentionalStop = false;
     }
   }
 
   @override
   Future<void> cancel() async {
-    final recorder = _recorder;
-    if (recorder != null) {
-      try {
-        await recorder.cancel();
-      } catch (_) {}
+    _expectingIntentionalStop = true;
+    try {
+      final recorder = _recorder;
+      if (recorder != null) {
+        try {
+          await recorder.cancel();
+        } catch (_) {}
+      }
+      _revokeActiveObjectUrl();
+      _segmentStartedAt = null;
+      _accumulated = Duration.zero;
+      _trackingPaused = false;
+    } finally {
+      _expectingIntentionalStop = false;
     }
-    _revokeActiveObjectUrl();
-    _segmentStartedAt = null;
-    _accumulated = Duration.zero;
-    _trackingPaused = false;
   }
 
   @override
@@ -303,7 +315,10 @@ final class RecordPackageWebDeviceRecordingAdapter
     }
     _stateSub = _audio.onStateChanged().listen(
       (state) {
-        if (state == RecordState.stop && _segmentStartedAt != null) {
+        // Intentional stop/cancel also yield RecordState.stop; suppress those.
+        if (state == RecordState.stop &&
+            _segmentStartedAt != null &&
+            !_expectingIntentionalStop) {
           _emit(DeviceRecordingFailureKind.interrupted);
         }
       },
