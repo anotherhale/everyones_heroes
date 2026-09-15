@@ -63,7 +63,43 @@ Existing capture-through-consent orchestration test retained.
 
 ## Validation
 
-*(Filled after analyzer/tests run.)*
+Commands run in this environment (Flutter `3.48.0-0.5.pre` / Dart `3.13.0-97.0.dev`, matching `.metadata`):
+
+### `dart analyze`
+
+```text
+$ dart analyze
+Analyzing workspace...
+16 issues found.
+```
+
+Exit code: **0**
+
+All 16 findings are pre-existing `info`/`prefer_initializing_formals` lints in unrelated files (and one pre-existing info on the native recording adapter constructor). No new analyzer errors or warnings were introduced by this change.
+
+### Focused Flutter tests
+
+```text
+$ flutter test \
+  test/features/hero_story/presentation/hs9_tell_your_story_ui_test.dart \
+  test/features/hero_story/application/recording/ \
+  test/features/hero_story/infrastructure/recording/ \
+  test/features/hero_story/integration/hs9_recording_capture_integration_test.dart
+...
+00:02 +31: All tests passed!
+```
+
+Exit code: **0** (31/31)
+
+### Full Flutter test suite
+
+```text
+$ flutter test
+...
+00:35 +799: All tests passed!
+```
+
+Exit code: **0** (799/799)
 
 ## Architecture Review
 
