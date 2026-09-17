@@ -111,6 +111,13 @@ final class TellYourStoryController extends Notifier<TellYourStoryUiState> {
   StreamSubscription<DeviceRecordingFailureKind>? _failureSub;
   AudioPlayer? _player;
 
+  /// True while an intentional user Stop is finalizing the recording.
+  ///
+  /// Used to ignore late [DeviceRecordingFailureKind.interrupted] events that
+  /// can arrive from the platform recorder after Stop begins but before the UI
+  /// has transitioned to review (observed on iOS).
+  bool _intentionalStopInProgress = false;
+
   @override
   TellYourStoryUiState build() {
     // Keep this flow alive across async recording operations.
@@ -227,15 +234,19 @@ final class TellYourStoryController extends Notifier<TellYourStoryUiState> {
   }
 
   Future<void> stopRecording() async {
-    _setState(state.copyWith(isBusy: true));
+    _intentionalStopInProgress = true;
+    _setState(state.copyWith(isBusy: true, clearError: true));
     try {
       await _session.stopRecording();
       _elapsedTimer?.cancel();
+      // Intentional Stop is a successful workflow transition — never carry an
+      // interruption/error banner into the review screen.
       _setState(state.copyWith(
         isBusy: false,
         phase: _session.phase,
         step: TellYourStoryStep.review,
         elapsed: _session.artifact?.duration ?? state.elapsed,
+        clearError: true,
       ));
     } catch (e) {
       _setState(state.copyWith(
@@ -243,6 +254,8 @@ final class TellYourStoryController extends Notifier<TellYourStoryUiState> {
         phase: _session.phase,
         errorMessage: e.toString(),
       ));
+    } finally {
+      _intentionalStopInProgress = false;
     }
   }
 
@@ -415,6 +428,16 @@ final class TellYourStoryController extends Notifier<TellYourStoryUiState> {
   void _listenDeviceFailures() {
     _failureSub?.cancel();
     _failureSub = _session.deviceFailures.listen((kind) {
+      // Intentional Stop (in progress or already finalized into a clean review)
+      // must not be re-labeled as an interruption if a late device stop-state
+      // event arrives — especially on iOS where platform callbacks can lag.
+      if (kind == DeviceRecordingFailureKind.interrupted &&
+          (_intentionalStopInProgress ||
+              (state.step == TellYourStoryStep.review &&
+                  _session.phase == RecordingSessionPhase.reviewing &&
+                  _session.lastError == null))) {
+        return;
+      }
       _setState(state.copyWith(
         errorMessage: _messageForFailure(kind),
         phase: _session.phase,
