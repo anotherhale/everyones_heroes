@@ -66,25 +66,26 @@ Added/updated in `hs9_tell_your_story_ui_test.dart`:
 2. **intentional Stop review screen has controls and no error banner** — widget assertions for review controls and absence of error banner / interruption text
 3. **genuine interruption while recording still shows interruption message** — `emitFailure(interrupted)` during record still shows the message
 4. **late interrupted signal after clean Stop does not reintroduce banner** — race/safety-net coverage
-5. **non-interruption device failures remain visible on review** — ensures we do not blanket-hide all errors
+5. **interrupted during intentional Stop does not surface banner** — in-flight Stop + late interruption callback
+6. **non-interruption device failures remain visible on review** — ensures we do not blanket-hide all errors
 
 Existing capture-through-consent orchestration test retained.
 
 ## Validation
 
-Commands run in this environment (Flutter `3.48.0-0.5.pre` / Dart `3.13.0-97.0.dev`, matching `.metadata`):
+### Restore follow-up (this branch)
+
+Commands run against current `main` + this restore/hardening:
 
 ### `dart analyze`
 
 ```text
 $ dart analyze
 Analyzing workspace...
-16 issues found.
+17 issues found.
 ```
 
-Exit code: **0**
-
-All 16 findings are pre-existing `info`/`prefer_initializing_formals` lints in unrelated files (and one pre-existing info on the native recording adapter constructor). No new analyzer errors or warnings were introduced by this change.
+Exit code: **0** (pre-existing `info` lints only)
 
 ### Focused Flutter tests
 
@@ -95,20 +96,24 @@ $ flutter test \
   test/features/hero_story/infrastructure/recording/ \
   test/features/hero_story/integration/hs9_recording_capture_integration_test.dart
 ...
-00:02 +31: All tests passed!
+00:02 +32: All tests passed!
 ```
 
-Exit code: **0** (31/31)
+Exit code: **0** (32/32)
 
 ### Full Flutter test suite
 
 ```text
 $ flutter test
 ...
-00:35 +799: All tests passed!
+00:36 +819: All tests passed!
 ```
 
-Exit code: **0** (799/799)
+Exit code: **0** (819/819)
+
+### Original PR #31 validation (for history)
+
+At original merge time: analyze exit 0; focused 31/31; full 799/799. That merge was later dropped from `main` by a force-update.
 
 ## Architecture Review
 
