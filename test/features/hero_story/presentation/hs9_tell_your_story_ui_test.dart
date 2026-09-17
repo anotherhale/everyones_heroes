@@ -295,6 +295,30 @@ void main() {
     },
   );
 
+  test(
+    'interrupted during intentional Stop does not surface banner',
+    () async {
+      final container = buildContainer();
+      addTearDown(container.dispose);
+      final controller =
+          container.read(tellYourStoryControllerProvider.notifier);
+
+      await controller.startFlow();
+      controller.continueToRecord();
+      await controller.startRecording();
+
+      // Emit interruption while Stop is in flight (iOS-style late callback).
+      final stopFuture = controller.stopRecording();
+      recorder.emitFailure(DeviceRecordingFailureKind.interrupted);
+      await stopFuture;
+      await Future<void>.delayed(Duration.zero);
+
+      final ui = container.read(tellYourStoryControllerProvider);
+      expect(ui.step, TellYourStoryStep.review);
+      expect(ui.errorMessage, isNull);
+    },
+  );
+
   test('non-interruption device failures remain visible on review', () async {
     final container = buildContainer();
     addTearDown(container.dispose);

@@ -183,10 +183,15 @@ final class RecordPackageWebDeviceRecordingAdapter
 
   @override
   Future<LocalRecordingArtifact> stop() async {
+    // Mark intentional stop and clear the interruption sentinel BEFORE invoking
+    // the platform recorder so late RecordState.stop events are not mislabeled.
     _expectingIntentionalStop = true;
     try {
       if (!_trackingPaused) {
         _flushSegment();
+      } else {
+        // Already flushed on pause; ensure the interruption sentinel is clear.
+        _segmentStartedAt = null;
       }
 
       final stopped = await _audio.stop();

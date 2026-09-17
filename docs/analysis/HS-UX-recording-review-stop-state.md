@@ -19,14 +19,23 @@ Intentional `stop()` / `cancel()` also produce `RecordState.stop` **before** tho
 
 `TellYourStoryController` subscribed to that stream and mapped `interrupted` to the red banner text. Successful `stopRecording()` then moved to Review **without clearing** `errorMessage`, so the banner remained on the review screen.
 
+### Follow-up (2026-09-17): fix missing from `main` on device
+
+PR #31 (`853f578`) merged the original correction, but a subsequent force-update of `main` dropped that commit. Device builds from current `main` therefore still showed the red banner after intentional Stop (confirmed on iPhone).
+
+This follow-up restores the fix onto current `main` and hardens the iOS path:
+
+1. Native adapter clears `_tempPath` **before** `recorder.stop()` so late platform-channel `RecordState.stop` events cannot match the interruption predicate.
+2. Controller tracks `_intentionalStopInProgress` for the whole Stop call and ignores `interrupted` while that flag is set (covers events that arrive before the UI step flips to review).
+
 ## Changes
 
 | File | Change |
 |------|--------|
-| `lib/features/hero_story/infrastructure/recording/record_package_device_recording_adapter.dart` | Add `_expectingIntentionalStop`; set around intentional `stop()`/`cancel()`; suppress `interrupted` emission for expected stop-state events |
+| `lib/features/hero_story/infrastructure/recording/record_package_device_recording_adapter.dart` | `_expectingIntentionalStop`; clear `_tempPath` before platform `stop()`/`cancel()`; suppress expected stop-state interruptions |
 | `lib/features/hero_story/infrastructure/recording/record_package_web_device_recording_adapter.dart` | Same intentional-stop guard for the web adapter |
-| `lib/features/hero_story/presentation/providers/tell_your_story_controller.dart` | Clear errors on successful Stop → Review; ignore late `interrupted` when already in a clean reviewing session |
-| `test/features/hero_story/presentation/hs9_tell_your_story_ui_test.dart` | Focused tests for intentional Stop vs genuine interruption |
+| `lib/features/hero_story/presentation/providers/tell_your_story_controller.dart` | Clear errors on successful Stop → Review; ignore `interrupted` during intentional Stop and after clean review |
+| `test/features/hero_story/presentation/hs9_tell_your_story_ui_test.dart` | Focused tests for intentional Stop vs genuine interruption, including in-flight Stop race |
 | `docs/analysis/HS-UX-recording-review-stop-state.md` | This report |
 
 No new success banner was added. Review itself communicates readiness.

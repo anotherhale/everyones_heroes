@@ -147,13 +147,19 @@ final class RecordPackageDeviceRecordingAdapter implements DeviceRecordingPort {
 
   @override
   Future<LocalRecordingArtifact> stop() async {
+    // Mark intentional stop and clear the interruption sentinel BEFORE invoking
+    // the platform recorder. On iOS, RecordState.stop can arrive asynchronously
+    // via the platform channel after stop() returns; leaving _tempPath set would
+    // mis-classify that event as DeviceRecordingFailureKind.interrupted.
     _expectingIntentionalStop = true;
+    final trackedPath = _tempPath;
+    _tempPath = null;
     try {
       if (!_trackingPaused) {
         _flushSegment();
       }
       final path = await _recorder.stop();
-      final resolved = (path ?? _tempPath)?.trim();
+      final resolved = (path ?? trackedPath)?.trim();
       if (resolved == null || resolved.isEmpty) {
         const kind = DeviceRecordingFailureKind.stopFailed;
         _emit(kind);
@@ -173,7 +179,6 @@ final class RecordPackageDeviceRecordingAdapter implements DeviceRecordingPort {
         byteLength: length,
       );
 
-      _tempPath = null;
       _segmentStartedAt = null;
       _trackingPaused = false;
       return artifact;

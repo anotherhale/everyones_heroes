@@ -111,6 +111,13 @@ final class TellYourStoryController extends Notifier<TellYourStoryUiState> {
   StreamSubscription<DeviceRecordingFailureKind>? _failureSub;
   AudioPlayer? _player;
 
+  /// True while an intentional user Stop is finalizing the recording.
+  ///
+  /// Used to ignore late [DeviceRecordingFailureKind.interrupted] events that
+  /// can arrive from the platform recorder after Stop begins but before the UI
+  /// has transitioned to review (observed on iOS).
+  bool _intentionalStopInProgress = false;
+
   @override
   TellYourStoryUiState build() {
     // Keep this flow alive across async recording operations.
@@ -227,6 +234,7 @@ final class TellYourStoryController extends Notifier<TellYourStoryUiState> {
   }
 
   Future<void> stopRecording() async {
+    _intentionalStopInProgress = true;
     _setState(state.copyWith(isBusy: true, clearError: true));
     try {
       await _session.stopRecording();
@@ -246,6 +254,8 @@ final class TellYourStoryController extends Notifier<TellYourStoryUiState> {
         phase: _session.phase,
         errorMessage: e.toString(),
       ));
+    } finally {
+      _intentionalStopInProgress = false;
     }
   }
 
@@ -418,13 +428,14 @@ final class TellYourStoryController extends Notifier<TellYourStoryUiState> {
   void _listenDeviceFailures() {
     _failureSub?.cancel();
     _failureSub = _session.deviceFailures.listen((kind) {
-      // A clean intentional Stop already finalized review (phase reviewing,
-      // no session error). Do not re-label that success as an interruption
-      // if a late device stop-state event arrives.
+      // Intentional Stop (in progress or already finalized into a clean review)
+      // must not be re-labeled as an interruption if a late device stop-state
+      // event arrives — especially on iOS where platform callbacks can lag.
       if (kind == DeviceRecordingFailureKind.interrupted &&
-          state.step == TellYourStoryStep.review &&
-          _session.phase == RecordingSessionPhase.reviewing &&
-          _session.lastError == null) {
+          (_intentionalStopInProgress ||
+              (state.step == TellYourStoryStep.review &&
+                  _session.phase == RecordingSessionPhase.reviewing &&
+                  _session.lastError == null))) {
         return;
       }
       _setState(state.copyWith(
