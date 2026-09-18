@@ -65,8 +65,9 @@ void main() {
     );
 
     await tester.tap(find.byKey(const ValueKey('begin-experience-button')));
-    // Reflect is pushed before create completes — first frame must appear.
+    // Reflect is pushed before create settles — allow the route frame to build.
     await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
 
     expect(find.byType(ReflectScreen), findsOneWidget);
     expect(fakeUseCase.executeCount, 1);
@@ -98,6 +99,7 @@ void main() {
 
     await tester.tap(find.byKey(const ValueKey('begin-experience-button')));
     await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
 
     expect(find.byType(ReflectScreen), findsOneWidget);
     expect(fakeUseCase.started, isTrue);
