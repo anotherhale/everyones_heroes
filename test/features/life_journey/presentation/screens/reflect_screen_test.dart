@@ -19,6 +19,10 @@ import 'package:everyonesheroes/features/life_journey/domain/entities/reflection
 
 import 'package:everyonesheroes/features/life_journey/domain/enums/reflection_emotion.dart';
 
+import 'package:everyonesheroes/features/life_journey/application/models/adaptive_experience.dart';
+import 'package:everyonesheroes/features/life_journey/application/models/experience_action.dart';
+import 'package:everyonesheroes/features/life_journey/presentation/models/today_experience_view_model.dart';
+import 'package:everyonesheroes/features/life_journey/presentation/providers/today_experience_provider.dart';
 import 'package:everyonesheroes/features/life_journey/presentation/screens/reflect_screen.dart';
 
 void main() {
@@ -36,6 +40,7 @@ void main() {
     Future<void> buildScreen(
       WidgetTester tester, {
       ReflectionId? id,
+      Future<Result<Reflection>>? pendingReflection,
     }) async {
       await tester.pumpWidget(
         ProviderScope(
@@ -48,7 +53,10 @@ void main() {
             ),
           ],
           child: MaterialApp(
-            home: ReflectScreen(reflectionId: id),
+            home: ReflectScreen(
+              reflectionId: id,
+              pendingReflection: pendingReflection,
+            ),
           ),
         ),
       );
@@ -152,6 +160,7 @@ void main() {
       expect(submitUseCase.executed, isTrue);
       expect(submitUseCase.reflectionId, reflectionId);
 
+      // Reflect as MaterialApp home cannot pop — confirmation remains.
       expect(
         find.text('Reflection saved: Growing'),
         findsOneWidget,
@@ -178,6 +187,196 @@ void main() {
 
       expect(button.onPressed, isNull);
     });
+
+    testWidgets('pending reflection enables save after first frame', (
+      tester,
+    ) async {
+      final pending = Future<Result<Reflection>>.value(
+        Success(
+          Reflection.create(
+            id: reflectionId,
+            journeyId: JourneyId.generate(),
+          ),
+        ),
+      );
+
+      await buildScreen(tester, pendingReflection: pending);
+
+      expect(find.byType(CircularProgressIndicator), findsNothing);
+
+      await tester.tap(
+        find.byKey(const ValueKey('feeling-growing')),
+      );
+      await tester.pump();
+
+      await tester.drag(
+        find.byType(CustomScrollView),
+        const Offset(0, -800),
+      );
+      await tester.pumpAndSettle();
+
+      final button = tester.widget<FilledButton>(
+        find.byKey(const ValueKey('save-reflection')),
+      );
+
+      expect(button.onPressed, isNotNull);
+    });
+
+    testWidgets('pushed Reflect shows AppBar back affordance', (tester) async {
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            addReflectionResponseUseCaseProvider.overrideWithValue(
+              addResponseUseCase,
+            ),
+            submitReflectionUseCaseProvider.overrideWithValue(
+              submitUseCase,
+            ),
+          ],
+          child: MaterialApp(
+            home: Builder(
+              builder: (context) {
+                return Scaffold(
+                  body: Center(
+                    child: FilledButton(
+                      key: const Key('open-reflect'),
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) => ReflectScreen(
+                              reflectionId: reflectionId,
+                            ),
+                          ),
+                        );
+                      },
+                      child: const Text('Open'),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.byKey(const Key('open-reflect')));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(ReflectScreen), findsOneWidget);
+      expect(find.byType(BackButton), findsOneWidget);
+      expect(find.widgetWithText(AppBar, 'Reflect'), findsOneWidget);
+
+      await tester.tap(find.byType(BackButton));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(ReflectScreen), findsNothing);
+      expect(find.byKey(const Key('open-reflect')), findsOneWidget);
+    });
+
+    testWidgets(
+      'successful save pops to root and invalidates today experience',
+      (tester) async {
+        var todayExperienceBuilds = 0;
+
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              addReflectionResponseUseCaseProvider.overrideWithValue(
+                addResponseUseCase,
+              ),
+              submitReflectionUseCaseProvider.overrideWithValue(
+                submitUseCase,
+              ),
+              todayExperienceProvider.overrideWith((ref) async {
+                todayExperienceBuilds++;
+                return TodayExperienceViewModel(
+                  id: 'experience-$todayExperienceBuilds',
+                  experienceType: ExperienceType.reflection,
+                  action: ExperienceAction.begin,
+                  title: 'Keep Showing Up',
+                  description: 'Take one small step today.',
+                  callToAction: 'Begin Experience',
+                );
+              }),
+            ],
+            child: MaterialApp(
+              home: Consumer(
+                builder: (context, ref, _) {
+                  // Keep provider alive so invalidate is observable.
+                  ref.watch(todayExperienceProvider);
+                  return Scaffold(
+                    key: const Key('home-root'),
+                    body: Center(
+                      child: FilledButton(
+                        key: const Key('open-stack'),
+                        onPressed: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) => Scaffold(
+                                appBar: AppBar(
+                                  title: const Text("Today's Experience"),
+                                ),
+                                body: Center(
+                                  child: FilledButton(
+                                    key: const Key('open-reflect'),
+                                    onPressed: () {
+                                      Navigator.of(context).push(
+                                        MaterialPageRoute<void>(
+                                          builder: (_) => ReflectScreen(
+                                            reflectionId: reflectionId,
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                    child: const Text('Reflect'),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                        child: const Text('Experience'),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+        );
+
+        await tester.tap(find.byKey(const Key('open-stack')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const Key('open-reflect')));
+        await tester.pumpAndSettle();
+
+        expect(find.byType(ReflectScreen), findsOneWidget);
+
+        await tester.tap(
+          find.byKey(const ValueKey('feeling-growing')),
+        );
+        await tester.pump();
+
+        await tester.drag(
+          find.byType(CustomScrollView),
+          const Offset(0, -800),
+        );
+        await tester.pumpAndSettle();
+
+        final buildsBeforeSave = todayExperienceBuilds;
+
+        await tester.tap(
+          find.byKey(const ValueKey('save-reflection')),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.byType(ReflectScreen), findsNothing);
+        expect(find.text("Today's Experience"), findsNothing);
+        expect(find.byKey(const Key('home-root')), findsOneWidget);
+        expect(submitUseCase.executed, isTrue);
+        expect(todayExperienceBuilds, greaterThan(buildsBeforeSave));
+      },
+    );
   });
 }
 

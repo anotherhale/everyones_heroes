@@ -46,7 +46,9 @@ final class _ExperienceScreenState extends ConsumerState<ExperienceScreen> {
       _isBeginning = true;
     });
 
-    final result = await ref
+    // Start create immediately, but push Reflect without awaiting it so the
+    // first Reflect frame is not blocked on persistence / use-case work.
+    final pendingReflection = ref
         .read(beginExperienceUseCaseProvider)
         .execute(action: widget.experience.action);
 
@@ -54,23 +56,17 @@ final class _ExperienceScreenState extends ConsumerState<ExperienceScreen> {
       return;
     }
 
-    result.fold(
-      onSuccess: (reflection) {
-        Navigator.of(context).push(
-          MaterialPageRoute<void>(
-            builder: (_) => ReflectScreen(reflectionId: reflection.id),
-          ),
-        );
-      },
-      onFailure: (error) {
-        setState(() {
-          _isBeginning = false;
-        });
-
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(error)));
-      },
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => ReflectScreen(pendingReflection: pendingReflection),
+      ),
     );
+
+    if (mounted) {
+      setState(() {
+        _isBeginning = false;
+      });
+    }
   }
 
   @override

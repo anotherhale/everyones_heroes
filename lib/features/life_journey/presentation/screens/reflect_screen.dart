@@ -2,22 +2,38 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:everyonesheroes/core/ids/reflection_id.dart';
+import 'package:everyonesheroes/core/results/result.dart';
 import 'package:everyonesheroes/features/life_journey/application/dto/requests/submit_reflection_request.dart';
 import 'package:everyonesheroes/features/life_journey/application/providers/use_cases/add_reflection_response_use_case_provider.dart';
 import 'package:everyonesheroes/features/life_journey/application/providers/use_cases/submit_reflection_use_case_provider.dart';
+import 'package:everyonesheroes/features/life_journey/domain/aggregates/reflection.dart';
 import 'package:everyonesheroes/features/life_journey/domain/entities/reflection/emoji_response.dart';
 import 'package:everyonesheroes/features/life_journey/domain/enums/reflection_emotion.dart';
+import 'package:everyonesheroes/features/life_journey/presentation/providers/today_experience_provider.dart';
 
 class ReflectScreen extends ConsumerStatefulWidget {
-  const ReflectScreen({this.reflectionId, super.key});
+  const ReflectScreen({
+    this.reflectionId,
+    this.pendingReflection,
+    super.key,
+  });
 
+  /// Ready reflection id (tab entry, tests, or already-created reflection).
   final ReflectionId? reflectionId;
+
+  /// In-flight Begin Experience create. UI paints immediately; save waits
+  /// until this resolves. Used when Reflect is pushed from Today's Experience.
+  final Future<Result<Reflection>>? pendingReflection;
 
   @override
   ConsumerState<ReflectScreen> createState() => _ReflectScreenState();
 }
 
 class _ReflectScreenState extends ConsumerState<ReflectScreen> {
+  ReflectionId? _activeReflectionId;
+  String? _prepareError;
+  bool _isPreparing = false;
+
   String? _selectedFeeling;
   String? _confirmationMessage;
   bool _isSaving = false;
@@ -50,6 +66,46 @@ class _ReflectScreenState extends ConsumerState<ReflectScreen> {
     ),
   ];
 
+  @override
+  void initState() {
+    super.initState();
+    _activeReflectionId = widget.reflectionId;
+
+    final pending = widget.pendingReflection;
+    if (pending != null && _activeReflectionId == null) {
+      _isPreparing = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _resolvePendingReflection(pending);
+      });
+    }
+  }
+
+  Future<void> _resolvePendingReflection(
+    Future<Result<Reflection>> pending,
+  ) async {
+    final result = await pending;
+
+    if (!mounted) {
+      return;
+    }
+
+    result.fold(
+      onSuccess: (reflection) {
+        setState(() {
+          _activeReflectionId = reflection.id;
+          _isPreparing = false;
+          _prepareError = null;
+        });
+      },
+      onFailure: (error) {
+        setState(() {
+          _isPreparing = false;
+          _prepareError = error;
+        });
+      },
+    );
+  }
+
   void _selectFeeling(String feeling) {
     if (_isSaving) {
       return;
@@ -62,7 +118,7 @@ class _ReflectScreenState extends ConsumerState<ReflectScreen> {
   }
 
   Future<void> _saveReflection() async {
-    final reflectionId = widget.reflectionId;
+    final reflectionId = _activeReflectionId;
     final selectedFeeling = _selectedFeeling;
 
     if (reflectionId == null || selectedFeeling == null || _isSaving) {
@@ -117,6 +173,15 @@ class _ReflectScreenState extends ConsumerState<ReflectScreen> {
 
     submitResult.fold(
       onSuccess: (_) {
+        // UI.3: after submit → H.2 pipeline → Experience State Refresh on Home.
+        ref.invalidate(todayExperienceProvider);
+
+        final navigator = Navigator.of(context);
+        if (navigator.canPop()) {
+          navigator.popUntil((route) => route.isFirst);
+          return;
+        }
+
         setState(() {
           _isSaving = false;
           _confirmationMessage = 'Reflection saved: $selectedFeeling';
@@ -136,27 +201,51 @@ class _ReflectScreenState extends ConsumerState<ReflectScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final canPop = Navigator.of(context).canPop();
+    final reflectionReady = _activeReflectionId != null;
 
-    return SafeArea(
+    final body = SafeArea(
       child: CustomScrollView(
         slivers: [
           SliverPadding(
-            padding: const EdgeInsets.fromLTRB(24, 28, 24, 32),
+            padding: EdgeInsets.fromLTRB(24, canPop ? 16 : 28, 24, 32),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
-                Text(
-                  'Reflect',
-                  style: theme.textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
+                if (!canPop) ...[
+                  Text(
+                    'Reflect',
+                    style: theme.textTheme.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 8),
+                  const SizedBox(height: 8),
+                ],
                 Text(
                   'Take a moment.',
                   style: theme.textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.w500,
                   ),
                 ),
+                if (_isPreparing) ...[
+                  const SizedBox(height: 24),
+                  const Center(
+                    child: SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  ),
+                ],
+                if (_prepareError != null) ...[
+                  const SizedBox(height: 24),
+                  Text(
+                    _prepareError!,
+                    key: const Key('reflect-prepare-error'),
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.error,
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 32),
                 Text(
                   'How are you feeling about your journey?',
@@ -200,7 +289,7 @@ class _ReflectScreenState extends ConsumerState<ReflectScreen> {
                   onPressed:
                       _selectedFeeling == null ||
                           _isSaving ||
-                          widget.reflectionId == null
+                          !reflectionReady
                       ? null
                       : _saveReflection,
                   child: _isSaving
@@ -237,6 +326,19 @@ class _ReflectScreenState extends ConsumerState<ReflectScreen> {
           ),
         ],
       ),
+    );
+
+    // Pushed from Today's Experience: Scaffold + AppBar back (same Navigator
+    // pattern as ExperienceScreen). Tab entry cannot pop — keep tab chrome.
+    if (!canPop) {
+      return body;
+    }
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Reflect'),
+      ),
+      body: body,
     );
   }
 }

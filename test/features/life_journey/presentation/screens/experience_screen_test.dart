@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -63,9 +65,48 @@ void main() {
     );
 
     await tester.tap(find.byKey(const ValueKey('begin-experience-button')));
+    // Reflect is pushed before create completes — first frame must appear.
+    await tester.pump();
+
+    expect(find.byType(ReflectScreen), findsOneWidget);
+    expect(fakeUseCase.executeCount, 1);
+
     await tester.pumpAndSettle();
 
-    expect(fakeUseCase.executeCount, 1);
+    expect(find.byType(ReflectScreen), findsOneWidget);
+    expect(find.byType(BackButton), findsOneWidget);
+  });
+
+  testWidgets('begin experience does not await create before pushing Reflect', (
+    tester,
+  ) async {
+    final reflectionId = ReflectionId.generate();
+    final fakeUseCase = _SlowBeginExperienceUseCase(
+      result: Success(
+        Reflection.create(id: reflectionId, journeyId: journeyId),
+      ),
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          beginExperienceUseCaseProvider.overrideWithValue(fakeUseCase),
+        ],
+        child: MaterialApp(home: ExperienceScreen(experience: experience)),
+      ),
+    );
+
+    await tester.tap(find.byKey(const ValueKey('begin-experience-button')));
+    await tester.pump();
+
+    expect(find.byType(ReflectScreen), findsOneWidget);
+    expect(fakeUseCase.started, isTrue);
+    expect(fakeUseCase.completed, isFalse);
+
+    fakeUseCase.complete();
+    await tester.pumpAndSettle();
+
+    expect(fakeUseCase.completed, isTrue);
     expect(find.byType(ReflectScreen), findsOneWidget);
   });
 }
@@ -81,5 +122,30 @@ final class _FakeBeginExperienceUseCase implements BeginExperienceUseCase {
   Future<Result<Reflection>> execute({required ExperienceAction action}) async {
     executeCount++;
     return result;
+  }
+}
+
+final class _SlowBeginExperienceUseCase implements BeginExperienceUseCase {
+  _SlowBeginExperienceUseCase({required this.result});
+
+  final Result<Reflection> result;
+
+  bool started = false;
+  bool completed = false;
+
+  late final Completer<Result<Reflection>> _completer =
+      Completer<Result<Reflection>>();
+
+  void complete() {
+    if (!_completer.isCompleted) {
+      completed = true;
+      _completer.complete(result);
+    }
+  }
+
+  @override
+  Future<Result<Reflection>> execute({required ExperienceAction action}) {
+    started = true;
+    return _completer.future;
   }
 }
