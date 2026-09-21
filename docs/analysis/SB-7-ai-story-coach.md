@@ -195,11 +195,15 @@ Guided Builder continues to work with zero AI dependency.
 
 ### Analyzer
 
-`dart analyze` on `lib/features/hero_story` — no new errors (pre-existing infos/warnings elsewhere unchanged in nature).
+`dart analyze` (workspace): **no errors**. One pre-existing warning in
+`browse_stories_by_catalog_use_case.dart` (unrelated). Remaining issues are
+pre-existing / style `info` lints.
 
 ### Full suite
 
-Recorded in the PR / final agent report after `flutter test`.
+`flutter test`: **926/926 passed**.
+
+`services/ai_proxy` `dart test`: **8/8 passed**.
 
 ---
 
