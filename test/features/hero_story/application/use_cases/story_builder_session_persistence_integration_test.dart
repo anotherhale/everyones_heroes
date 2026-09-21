@@ -51,14 +51,13 @@ void main() {
       eventStore: InMemoryEventStore(),
       dispatcher: InMemoryEventDispatcher(),
     );
-    const strategy = DeterministicStoryBuilderQuestionStrategy();
     start = StartStoryBuilderSessionUseCase(
       sessionRepository: repository,
       eventBus: eventBus,
     );
     advance = AdvanceStoryBuilderUseCase(
       sessionRepository: repository,
-      questionStrategy: strategy,
+      strategyResolver: const DefaultStoryBuilderQuestionStrategyResolver(),
       eventBus: eventBus,
     );
     answer = AnswerStoryBuilderPromptUseCase(
@@ -230,7 +229,7 @@ void main() {
       // Resume after reload: strategy derives next question from responses.
       final resumeAdvance = AdvanceStoryBuilderUseCase(
         sessionRepository: restarted,
-        questionStrategy: const DeterministicStoryBuilderQuestionStrategy(),
+        strategyResolver: const DefaultStoryBuilderQuestionStrategyResolver(),
         eventBus: eventBus,
       );
       // Must resume first (paused → inProgress).

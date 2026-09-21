@@ -1,16 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:everyonesheroes/core/ids/story_builder_session_id.dart';
+import 'package:everyonesheroes/features/hero_story/domain/enums/story_builder_mode.dart';
+import 'package:everyonesheroes/features/hero_story/presentation/providers/resumable_story_builder_sessions_provider.dart';
 import 'package:everyonesheroes/features/hero_story/presentation/providers/story_builder_controller.dart';
 
-/// Guided (deterministic) Story Builder — SB.3.
+/// Guided (deterministic) Story Builder — SB.3 / SB.6.
 ///
 /// Collects Hero-authored responses. No AI, credits, or network required.
+/// Prefer entering via [StoryBuilderEntryScreen] so mode and intent are set.
 class StoryBuilderScreen extends ConsumerStatefulWidget {
-  const StoryBuilderScreen({super.key, this.resumeSessionId});
+  const StoryBuilderScreen({
+    super.key,
+    this.resumeSessionId,
+    this.mode = StoryBuilderMode.guided,
+  });
 
-  /// When null, starts a new guided session on first frame.
+  /// When non-null, loads and resumes that durable session.
   final String? resumeSessionId;
+
+  /// Mode used only when starting a new session without [resumeSessionId].
+  final StoryBuilderMode mode;
 
   @override
   ConsumerState<StoryBuilderScreen> createState() => _StoryBuilderScreenState();
@@ -35,10 +46,12 @@ class _StoryBuilderScreenState extends ConsumerState<StoryBuilderScreen> {
     _started = true;
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final controller = ref.read(storyBuilderControllerProvider.notifier);
-      if (widget.resumeSessionId != null) {
-        // Resume by opaque id string is deferred; always start new for MVP entry.
+      final resumeId = widget.resumeSessionId;
+      if (resumeId != null && resumeId.isNotEmpty) {
+        await controller.resumeSession(StoryBuilderSessionId(resumeId));
+      } else {
+        await controller.startNewSession(mode: widget.mode);
       }
-      await controller.startNewSession();
       _syncDraftFromState();
     });
   }
@@ -50,6 +63,15 @@ class _StoryBuilderScreenState extends ConsumerState<StoryBuilderScreen> {
         text: draft,
         selection: TextSelection.collapsed(offset: draft.length),
       );
+    }
+  }
+
+  Future<void> _pauseAndLeave() async {
+    final state = ref.read(storyBuilderControllerProvider);
+    if (state.phase == StoryBuilderUiPhase.questioning &&
+        state.sessionId != null) {
+      await ref.read(storyBuilderControllerProvider.notifier).pause();
+      ref.invalidate(resumableStoryBuilderSessionsProvider);
     }
   }
 
@@ -70,55 +92,80 @@ class _StoryBuilderScreenState extends ConsumerState<StoryBuilderScreen> {
       }
     });
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Build My Story'),
-        actions: [
-          if (state.phase == StoryBuilderUiPhase.questioning)
-            TextButton(
-              key: const ValueKey('story-builder-pause'),
-              onPressed: state.isBusy
-                  ? null
-                  : () async {
-                      await controller.pause();
-                      if (context.mounted) {
-                        Navigator.of(context).maybePop();
-                      }
-                    },
-              child: const Text('Pause'),
-            ),
-        ],
-      ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
-          child: switch (state.phase) {
-            StoryBuilderUiPhase.loading => const Center(
-              child: CircularProgressIndicator(
-                key: ValueKey('story-builder-loading'),
+    return PopScope(
+      canPop: true,
+      onPopInvokedWithResult: (didPop, _) async {
+        if (!didPop) {
+          return;
+        }
+        await _pauseAndLeave();
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Build My Story'),
+          actions: [
+            if (state.phase == StoryBuilderUiPhase.questioning)
+              TextButton(
+                key: const ValueKey('story-builder-pause'),
+                onPressed: state.isBusy
+                    ? null
+                    : () async {
+                        await controller.pause();
+                        ref.invalidate(resumableStoryBuilderSessionsProvider);
+                        if (context.mounted) {
+                          Navigator.of(context).maybePop();
+                        }
+                      },
+                child: const Text('Pause'),
               ),
-            ),
-            StoryBuilderUiPhase.error => _ErrorBody(
-              message: state.errorMessage ?? 'Something went wrong.',
-              onRetry: () => controller.startNewSession(),
-            ),
-            StoryBuilderUiPhase.completed => _CompletedBody(
-              onDone: () => Navigator.of(context).maybePop(),
-            ),
-            StoryBuilderUiPhase.questioning => _QuestionBody(
-              state: state,
-              textController: _textController,
-              onDraftChanged: controller.updateDraft,
-              onBack: state.canGoBack && !state.isBusy
-                  ? () => controller.goBack()
-                  : null,
-              onSkip: state.isBusy ? null : () => controller.skipCurrent(),
-              onContinue: state.isBusy
-                  ? null
-                  : () => controller.continueForward(),
-              theme: theme,
-            ),
-          },
+          ],
+        ),
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+            child: switch (state.phase) {
+              StoryBuilderUiPhase.loading => const Center(
+                child: CircularProgressIndicator(
+                  key: ValueKey('story-builder-loading'),
+                ),
+              ),
+              StoryBuilderUiPhase.error => _ErrorBody(
+                message: state.errorMessage ?? 'Something went wrong.',
+                onRetry: () {
+                  final resumeId = widget.resumeSessionId;
+                  if (resumeId != null && resumeId.isNotEmpty) {
+                    controller.resumeSession(StoryBuilderSessionId(resumeId));
+                  } else {
+                    controller.startNewSession(mode: widget.mode);
+                  }
+                },
+              ),
+              StoryBuilderUiPhase.unsupportedMode => _UnsupportedModeBody(
+                message: state.errorMessage ??
+                    'This Story Builder mode is not available yet.',
+                onBack: () => Navigator.of(context).maybePop(),
+              ),
+              StoryBuilderUiPhase.completed => _CompletedBody(
+                onDone: () {
+                  ref.invalidate(resumableStoryBuilderSessionsProvider);
+                  Navigator.of(context).maybePop();
+                },
+              ),
+              StoryBuilderUiPhase.questioning => _QuestionBody(
+                state: state,
+                textController: _textController,
+                onDraftChanged: controller.updateDraft,
+                onBack: state.canGoBack && !state.isBusy
+                    ? () => controller.goBack()
+                    : null,
+                onSkip: state.isBusy ? null : () => controller.skipCurrent(),
+                onContinue: state.isBusy
+                    ? null
+                    : () => controller.continueForward(),
+                theme: theme,
+              ),
+            },
+          ),
         ),
       ),
     );
@@ -285,6 +332,43 @@ class _ErrorBody extends StatelessWidget {
         const SizedBox(height: 16),
         FilledButton(onPressed: onRetry, child: const Text('Try again')),
         const Spacer(),
+      ],
+    );
+  }
+}
+
+class _UnsupportedModeBody extends StatelessWidget {
+  const _UnsupportedModeBody({required this.message, required this.onBack});
+
+  final String message;
+  final VoidCallback onBack;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const Spacer(),
+        Text(
+          'AI Story Builder is coming soon',
+          key: const ValueKey('story-builder-unsupported-title'),
+          style: theme.textTheme.headlineSmall?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Text(
+          message,
+          key: const ValueKey('story-builder-unsupported-message'),
+          style: theme.textTheme.bodyLarge?.copyWith(height: 1.5),
+        ),
+        const Spacer(),
+        FilledButton(
+          key: const ValueKey('story-builder-unsupported-back'),
+          onPressed: onBack,
+          child: const Text('Choose another mode'),
+        ),
       ],
     );
   }

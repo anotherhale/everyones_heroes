@@ -7,21 +7,24 @@ import 'package:everyonesheroes/features/hero_story/application/dto/responses/ad
 import 'package:everyonesheroes/features/hero_story/application/use_cases/use_case.dart';
 import 'package:everyonesheroes/features/hero_story/domain/enums/story_builder_session_status.dart';
 import 'package:everyonesheroes/features/hero_story/domain/repositories/story_builder_session_repository.dart';
-import 'package:everyonesheroes/features/hero_story/domain/services/story_builder_question_strategy.dart';
+import 'package:everyonesheroes/features/hero_story/domain/services/story_builder_question_strategy_resolver.dart';
 
 /// Presents the next strategy prompt, or completes the session when done.
+///
+/// Resolves [StoryBuilderQuestionStrategy] from [session.mode] so Guided and
+/// AI modes never silently share the wrong strategy.
 ///
 /// Does not create a [Story]. Does not rewrite Hero responses.
 final class AdvanceStoryBuilderUseCase
     implements UseCase<AdvanceStoryBuilderRequest, AdvanceStoryBuilderResult> {
   const AdvanceStoryBuilderUseCase({
     required this._sessionRepository,
-    required this._questionStrategy,
+    required this._strategyResolver,
     required this._eventBus,
   });
 
   final StoryBuilderSessionRepository _sessionRepository;
-  final StoryBuilderQuestionStrategy _questionStrategy;
+  final StoryBuilderQuestionStrategyResolver _strategyResolver;
   final EventBus _eventBus;
 
   @override
@@ -56,8 +59,9 @@ final class AdvanceStoryBuilderUseCase
         session.resume();
       }
 
-      final next = await _questionStrategy.nextPrompt(session);
-      if (next == null || _questionStrategy.isQuestioningComplete(session)) {
+      final questionStrategy = _strategyResolver.resolve(session.mode);
+      final next = await questionStrategy.nextPrompt(session);
+      if (next == null || questionStrategy.isQuestioningComplete(session)) {
         if (!session.isComplete) {
           session.complete();
         }
@@ -91,6 +95,8 @@ final class AdvanceStoryBuilderUseCase
           questioningComplete: false,
         ),
       );
+    } on UnsupportedError catch (e) {
+      return Failure(e.message ?? '$e');
     } catch (e) {
       return Failure('Failed to advance Story Builder: $e');
     }

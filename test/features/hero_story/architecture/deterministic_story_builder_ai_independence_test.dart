@@ -22,6 +22,12 @@ void main() {
         'lib/features/hero_story/domain/services/deterministic_story_builder_question_strategy.dart',
       ),
       File(
+        'lib/features/hero_story/domain/services/unsupported_ai_story_builder_question_strategy.dart',
+      ),
+      File(
+        'lib/features/hero_story/domain/services/story_builder_question_strategy_resolver.dart',
+      ),
+      File(
         'lib/features/hero_story/application/use_cases/advance_story_builder_use_case.dart',
       ),
       File(
@@ -29,6 +35,9 @@ void main() {
       ),
       File(
         'lib/features/hero_story/presentation/screens/story_builder_screen.dart',
+      ),
+      File(
+        'lib/features/hero_story/presentation/screens/story_builder_entry_screen.dart',
       ),
     ];
 
