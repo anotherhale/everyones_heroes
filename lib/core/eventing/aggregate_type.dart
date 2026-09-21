@@ -4,6 +4,7 @@ enum AggregateType {
   hero,
   story,
   storyUnderstanding,
+  storyBuilderSession,
   journey,
   mission,
   quest,

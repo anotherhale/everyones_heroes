@@ -2,6 +2,7 @@ library;
 
 export 'aggregates/hero.dart';
 export 'aggregates/story.dart';
+export 'aggregates/story_builder_session.dart';
 export 'aggregates/story_understanding.dart';
 
 export 'entities/story_representation.dart';
@@ -17,6 +18,8 @@ export 'enums/religious_tradition.dart';
 export 'enums/representation_origin.dart';
 export 'enums/spirituality_category.dart';
 export 'enums/story_audience.dart';
+export 'enums/story_builder_mode.dart';
+export 'enums/story_builder_session_status.dart';
 export 'enums/story_challenge.dart';
 export 'enums/story_lifecycle_status.dart';
 export 'enums/story_outcome.dart';
@@ -31,6 +34,8 @@ export 'enums/understanding_status.dart';
 
 export 'events/hero_created.dart';
 export 'events/hero_profile_updated.dart';
+export 'events/story_builder_session_completed.dart';
+export 'events/story_builder_session_created.dart';
 export 'events/story_approved.dart';
 export 'events/story_archived.dart';
 export 'events/story_classified.dart';
@@ -44,6 +49,7 @@ export 'events/story_understanding_reviewed.dart';
 export 'events/story_understanding_superseded.dart';
 
 export 'repositories/hero_repository.dart';
+export 'repositories/story_builder_session_repository.dart';
 export 'repositories/story_repository.dart';
 export 'repositories/story_understanding_repository.dart';
 
@@ -54,6 +60,7 @@ export 'services/story_discoverability_policy.dart';
 export 'services/story_media_storage_port.dart';
 export 'services/story_search_port.dart';
 export 'services/story_authoring_port.dart';
+export 'services/story_builder_question_strategy.dart';
 export 'services/story_transcription_port.dart';
 export 'services/story_translation_port.dart';
 export 'services/story_understanding_port.dart';
@@ -67,6 +74,9 @@ export 'value_objects/media_reference.dart';
 export 'value_objects/provenance_step.dart';
 export 'value_objects/source_span_reference.dart';
 export 'value_objects/spirituality_classification.dart';
+export 'value_objects/story_builder_intent.dart';
+export 'value_objects/story_builder_prompt.dart';
+export 'value_objects/story_builder_response.dart';
 export 'value_objects/story_classification.dart';
 export 'value_objects/story_consent.dart';
 export 'value_objects/story_geography.dart';
