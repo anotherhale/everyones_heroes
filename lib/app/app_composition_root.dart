@@ -13,6 +13,7 @@ import 'package:everyonesheroes/features/hero_story/application/providers/persis
 import 'package:everyonesheroes/features/hero_story/application/providers/ai/story_transcription_port_provider.dart';
 import 'package:everyonesheroes/features/hero_story/application/providers/recording/recording_providers.dart';
 import 'package:everyonesheroes/features/hero_story/application/providers/repositories/hero_repository_provider.dart';
+import 'package:everyonesheroes/features/hero_story/application/providers/repositories/story_builder_session_repository_provider.dart';
 import 'package:everyonesheroes/features/hero_story/application/providers/repositories/story_repository_provider.dart';
 import 'package:everyonesheroes/features/hero_story/application/providers/transcription/transcription_store_providers.dart';
 import 'package:everyonesheroes/features/hero_story/application/providers/use_cases/capture_use_case_providers.dart';
@@ -166,6 +167,9 @@ final class AppCompositionRoot {
       overrides: [
         heroRepositoryProvider.overrideWithValue(durable.heroRepository),
         storyRepositoryProvider.overrideWithValue(durable.storyRepository),
+        storyBuilderSessionRepositoryProvider.overrideWithValue(
+          durable.storyBuilderSessionRepository,
+        ),
         storyMediaStoragePortProvider.overrideWithValue(durable.mediaStorage),
         captureCompletionStoreProvider.overrideWithValue(
           durable.captureCompletionStore,
