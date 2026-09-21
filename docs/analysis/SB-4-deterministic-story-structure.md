@@ -192,11 +192,16 @@ Missing session → Failure. No Story is created.
 
 ## 12. Tests
 
-### Analyzer (SB.4 files)
+### Analyzer
 
 ```text
+# SB.4 files only
 dart analyze <SB.4 domain/application files>
 No issues found!
+
+# Full workspace
+dart analyze
+24 issues found (0 errors) — all pre-existing warnings/infos outside SB.4 files
 ```
 
 ### Focused SB.4 tests
@@ -214,7 +219,12 @@ Coverage includes: all 11 role mappings, stable ordering, provenance, skips, edi
 
 ### Full suite
 
-*(Filled after `flutter test` completes for this branch.)*
+```text
+flutter test
+875/875 passed
+```
+
+Baseline before SB.4 was **859/859**; delta is the **16** new SB.4 tests.
 
 ---
 
