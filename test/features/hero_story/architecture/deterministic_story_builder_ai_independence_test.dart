@@ -22,6 +22,12 @@ void main() {
         'lib/features/hero_story/domain/services/deterministic_story_builder_question_strategy.dart',
       ),
       File(
+        'lib/features/hero_story/domain/services/ai_story_builder_question_strategy.dart',
+      ),
+      File(
+        'lib/features/hero_story/domain/services/story_builder_coach_port.dart',
+      ),
+      File(
         'lib/features/hero_story/domain/services/unsupported_ai_story_builder_question_strategy.dart',
       ),
       File(
@@ -52,5 +58,14 @@ void main() {
       }
     }
     expect(offenders, isEmpty, reason: offenders.join('\n'));
+  });
+
+  test('AI Story Coach strategy does not import HTTP or provider SDKs', () {
+    final content = File(
+      'lib/features/hero_story/domain/services/ai_story_builder_question_strategy.dart',
+    ).readAsStringSync();
+    expect(content.contains("package:http"), isFalse);
+    expect(content.contains('OpenAI'), isFalse);
+    expect(content.contains('Anthropic'), isFalse);
   });
 }

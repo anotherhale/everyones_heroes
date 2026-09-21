@@ -1,6 +1,6 @@
 name: ai_proxy
-description: Everyone's Heroes AI backend proxy for story transcription (HS.11).
-version: 0.1.0
+description: Everyone's Heroes AI backend proxy for transcription (HS.11) and Story Builder coaching (SB.7).
+version: 0.2.0
 publish_to: none
 
 environment:

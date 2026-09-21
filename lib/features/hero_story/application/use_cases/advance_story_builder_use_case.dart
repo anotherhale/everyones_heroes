@@ -7,6 +7,7 @@ import 'package:everyonesheroes/features/hero_story/application/dto/responses/ad
 import 'package:everyonesheroes/features/hero_story/application/use_cases/use_case.dart';
 import 'package:everyonesheroes/features/hero_story/domain/enums/story_builder_session_status.dart';
 import 'package:everyonesheroes/features/hero_story/domain/repositories/story_builder_session_repository.dart';
+import 'package:everyonesheroes/features/hero_story/domain/services/story_builder_coach_port.dart';
 import 'package:everyonesheroes/features/hero_story/domain/services/story_builder_question_strategy_resolver.dart';
 
 /// Presents the next strategy prompt, or completes the session when done.
@@ -15,6 +16,7 @@ import 'package:everyonesheroes/features/hero_story/domain/services/story_builde
 /// AI modes never silently share the wrong strategy.
 ///
 /// Does not create a [Story]. Does not rewrite Hero responses.
+/// AI coach failures become [Failure] without mutating mode or losing answers.
 final class AdvanceStoryBuilderUseCase
     implements UseCase<AdvanceStoryBuilderRequest, AdvanceStoryBuilderResult> {
   const AdvanceStoryBuilderUseCase({
@@ -95,6 +97,8 @@ final class AdvanceStoryBuilderUseCase
           questioningComplete: false,
         ),
       );
+    } on StoryBuilderCoachException catch (e) {
+      return Failure(e.message);
     } on UnsupportedError catch (e) {
       return Failure(e.message ?? '$e');
     } catch (e) {

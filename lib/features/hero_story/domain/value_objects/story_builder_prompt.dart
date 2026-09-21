@@ -1,6 +1,7 @@
 import 'package:everyonesheroes/core/ids/story_builder_prompt_id.dart';
 import 'package:everyonesheroes/core/shared_kernel/value_object.dart';
 import 'package:everyonesheroes/features/hero_story/domain/enums/story_builder_narrative_role.dart';
+import 'package:everyonesheroes/features/hero_story/domain/enums/story_builder_prompt_source.dart';
 
 /// A prompt presented to the Hero during Story Builder.
 ///
@@ -12,6 +13,7 @@ final class StoryBuilderPrompt extends ValueObject {
     required this.ordinal,
     this.narrativeRole,
     this.isOptional = true,
+    this.source = StoryBuilderPromptSource.catalog,
   }) {
     if (text.trim().isEmpty) {
       throw ArgumentError('Prompt text cannot be empty.');
@@ -31,6 +33,9 @@ final class StoryBuilderPrompt extends ValueObject {
   /// When true, the Hero may skip without answering.
   final bool isOptional;
 
+  /// Catalog vs AI-generated provenance (same prompt abstraction).
+  final StoryBuilderPromptSource source;
+
   @override
   List<Object?> get equalityProps => [
     id,
@@ -38,5 +43,6 @@ final class StoryBuilderPrompt extends ValueObject {
     ordinal,
     narrativeRole,
     isOptional,
+    source,
   ];
 }

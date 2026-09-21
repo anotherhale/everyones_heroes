@@ -9,9 +9,9 @@ import 'package:everyonesheroes/features/hero_story/presentation/providers/resum
 import 'package:everyonesheroes/features/hero_story/presentation/screens/story_builder_intent_screen.dart';
 import 'package:everyonesheroes/features/hero_story/presentation/screens/story_builder_screen.dart';
 
-/// SB.6 entry: mode selection + resume of incomplete Builder sessions.
+/// SB.6/SB.7 entry: mode selection + resume of incomplete Builder sessions.
 ///
-/// Guided is a complete, no-AI product path. AI is shown as upcoming (SB.7).
+/// Guided is a complete, no-AI product path. AI uses the adaptive Story Coach.
 class StoryBuilderEntryScreen extends ConsumerWidget {
   const StoryBuilderEntryScreen({super.key});
 
@@ -70,16 +70,24 @@ class StoryBuilderEntryScreen extends ConsumerWidget {
             const SizedBox(height: 12),
             _ModeOption(
               key: const ValueKey('story-builder-mode-ai'),
-              title: 'AI Story Builder',
+              title: 'AI Story Coach',
               subtitle:
                   'Have an adaptive conversation that responds to your story '
-                  'and helps you explore what matters most.',
+                  'and helps you explore what matters most. You remain the author.',
               details: const [
-                'Coming soon',
-                'Adaptive guidance will arrive in a later release',
+                'Adaptive questions from the AI Story Coach',
+                'Your words stay exactly as you write them',
+                'Requires network access to the EH AI proxy',
               ],
-              enabled: false,
-              onTap: null,
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const StoryBuilderIntentScreen(
+                      mode: StoryBuilderMode.ai,
+                    ),
+                  ),
+                );
+              },
             ),
             const SizedBox(height: 28),
             Text(
@@ -164,29 +172,23 @@ class _ModeOption extends StatelessWidget {
     required this.subtitle,
     required this.details,
     required this.onTap,
-    this.enabled = true,
   });
 
   final String title;
   final String subtitle;
   final List<String> details;
-  final VoidCallback? onTap;
-  final bool enabled;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final foreground = enabled
-        ? theme.colorScheme.onSurface
-        : theme.colorScheme.onSurface.withValues(alpha: 0.55);
+    final foreground = theme.colorScheme.onSurface;
 
     return Material(
-      color: enabled
-          ? theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.45)
-          : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.25),
+      color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.45),
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
-        onTap: enabled ? onTap : null,
+        onTap: onTap,
         borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
@@ -204,19 +206,10 @@ class _ModeOption extends StatelessWidget {
                       ),
                     ),
                   ),
-                  if (!enabled)
-                    Text(
-                      'Coming soon',
-                      key: const ValueKey('story-builder-ai-coming-soon'),
-                      style: theme.textTheme.labelMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    )
-                  else
-                    Icon(
-                      Icons.chevron_right,
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
+                  Icon(
+                    Icons.chevron_right,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                 ],
               ),
               const SizedBox(height: 8),
@@ -261,7 +254,7 @@ class _ResumeTile extends StatelessWidget {
         : 'In progress';
     final modeLabel = session.mode == StoryBuilderMode.guided
         ? 'Guided'
-        : 'AI';
+        : 'AI Coach';
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),

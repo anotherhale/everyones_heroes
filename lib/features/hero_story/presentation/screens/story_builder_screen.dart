@@ -6,10 +6,10 @@ import 'package:everyonesheroes/features/hero_story/domain/enums/story_builder_m
 import 'package:everyonesheroes/features/hero_story/presentation/providers/resumable_story_builder_sessions_provider.dart';
 import 'package:everyonesheroes/features/hero_story/presentation/providers/story_builder_controller.dart';
 
-/// Guided (deterministic) Story Builder — SB.3 / SB.6.
+/// Story Builder screen — Guided (SB.3) or AI Story Coach (SB.7).
 ///
-/// Collects Hero-authored responses. No AI, credits, or network required.
-/// Prefer entering via [StoryBuilderEntryScreen] so mode and intent are set.
+/// Collects Hero-authored responses. AI mode asks adaptive questions; the Hero
+/// remains the author. Prefer entering via [StoryBuilderEntryScreen].
 class StoryBuilderScreen extends ConsumerStatefulWidget {
   const StoryBuilderScreen({
     super.key,
@@ -102,7 +102,7 @@ class _StoryBuilderScreenState extends ConsumerState<StoryBuilderScreen> {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Build My Story'),
+          title: Text(state.isAiMode ? 'AI Story Coach' : 'Build My Story'),
           actions: [
             if (state.phase == StoryBuilderUiPhase.questioning)
               TextButton(
@@ -129,6 +129,7 @@ class _StoryBuilderScreenState extends ConsumerState<StoryBuilderScreen> {
                   key: ValueKey('story-builder-loading'),
                 ),
               ),
+              StoryBuilderUiPhase.thinking => const _ThinkingBody(),
               StoryBuilderUiPhase.error => _ErrorBody(
                 message: state.errorMessage ?? 'Something went wrong.',
                 onRetry: () {
@@ -140,12 +141,17 @@ class _StoryBuilderScreenState extends ConsumerState<StoryBuilderScreen> {
                   }
                 },
               ),
-              StoryBuilderUiPhase.unsupportedMode => _UnsupportedModeBody(
+              StoryBuilderUiPhase.coachUnavailable => _CoachUnavailableBody(
                 message: state.errorMessage ??
-                    'This Story Builder mode is not available yet.',
+                    'The AI Story Coach is unavailable right now.',
+                onRetry: state.isBusy ? null : () => controller.retryCoach(),
+                onContinueGuided: state.isBusy
+                    ? null
+                    : () => controller.continueWithGuidedBuilder(),
                 onBack: () => Navigator.of(context).maybePop(),
               ),
               StoryBuilderUiPhase.completed => _CompletedBody(
+                isAiMode: state.isAiMode,
                 onDone: () {
                   ref.invalidate(resumableStoryBuilderSessionsProvider);
                   Navigator.of(context).maybePop();
@@ -162,12 +168,46 @@ class _StoryBuilderScreenState extends ConsumerState<StoryBuilderScreen> {
                 onContinue: state.isBusy
                     ? null
                     : () => controller.continueForward(),
+                onFinish: state.canFinishEarly && !state.isBusy
+                    ? () => controller.finishSession()
+                    : null,
                 theme: theme,
               ),
             },
           ),
         ),
       ),
+    );
+  }
+}
+
+class _ThinkingBody extends StatelessWidget {
+  const _ThinkingBody();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      key: const ValueKey('story-builder-thinking'),
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const CircularProgressIndicator(),
+        const SizedBox(height: 20),
+        Text(
+          'Thinking…',
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'The AI Story Coach is choosing the next question.',
+          textAlign: TextAlign.center,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -180,6 +220,7 @@ class _QuestionBody extends StatelessWidget {
     required this.onBack,
     required this.onSkip,
     required this.onContinue,
+    required this.onFinish,
     required this.theme,
   });
 
@@ -189,25 +230,32 @@ class _QuestionBody extends StatelessWidget {
   final VoidCallback? onBack;
   final VoidCallback? onSkip;
   final VoidCallback? onContinue;
+  final VoidCallback? onFinish;
   final ThemeData theme;
 
   @override
   Widget build(BuildContext context) {
     final prompt = state.prompt;
+    final progressLabel = state.isAiMode
+        ? 'Question ${state.displayStep}'
+        : 'Question ${state.displayStep} of ${state.totalQuestions}';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Question ${state.displayStep} of ${state.totalQuestions}',
+          progressLabel,
           key: const ValueKey('story-builder-progress'),
           style: theme.textTheme.labelLarge?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
             letterSpacing: 0.4,
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 8),
         Text(
-          "Let's tell your story together.",
+          state.isAiMode
+              ? 'AI Story Coach — you remain the author.'
+              : "Let's tell your story together.",
+          key: const ValueKey('story-builder-coach-label'),
           style: theme.textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.w600,
           ),
@@ -227,6 +275,7 @@ class _QuestionBody extends StatelessWidget {
             key: const ValueKey('story-builder-response-field'),
             controller: textController,
             onChanged: onDraftChanged,
+            enabled: !state.isBusy,
             maxLines: null,
             expands: true,
             textAlignVertical: TextAlignVertical.top,
@@ -256,6 +305,12 @@ class _QuestionBody extends StatelessWidget {
               child: const Text('Back'),
             ),
             const Spacer(),
+            if (onFinish != null)
+              TextButton(
+                key: const ValueKey('story-builder-finish'),
+                onPressed: onFinish,
+                child: const Text('Finish'),
+              ),
             TextButton(
               key: const ValueKey('story-builder-skip'),
               onPressed: onSkip,
@@ -281,9 +336,10 @@ class _QuestionBody extends StatelessWidget {
 }
 
 class _CompletedBody extends StatelessWidget {
-  const _CompletedBody({required this.onDone});
+  const _CompletedBody({required this.onDone, required this.isAiMode});
 
   final VoidCallback onDone;
+  final bool isAiMode;
 
   @override
   Widget build(BuildContext context) {
@@ -301,8 +357,12 @@ class _CompletedBody extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         Text(
-          'You collected your own words through the guided Story Builder. '
-          'No AI was required. Later, you can shape this into a Story when you are ready.',
+          isAiMode
+              ? 'You collected your own words with help from the AI Story Coach. '
+                  'The coach asked questions — it did not write your story. '
+                  'Later, you can shape this into a Story when you are ready.'
+              : 'You collected your own words through the guided Story Builder. '
+                  'No AI was required. Later, you can shape this into a Story when you are ready.',
           style: theme.textTheme.bodyLarge?.copyWith(height: 1.5),
         ),
         const Spacer(),
@@ -337,10 +397,17 @@ class _ErrorBody extends StatelessWidget {
   }
 }
 
-class _UnsupportedModeBody extends StatelessWidget {
-  const _UnsupportedModeBody({required this.message, required this.onBack});
+class _CoachUnavailableBody extends StatelessWidget {
+  const _CoachUnavailableBody({
+    required this.message,
+    required this.onRetry,
+    required this.onContinueGuided,
+    required this.onBack,
+  });
 
   final String message;
+  final VoidCallback? onRetry;
+  final VoidCallback? onContinueGuided;
   final VoidCallback onBack;
 
   @override
@@ -351,8 +418,8 @@ class _UnsupportedModeBody extends StatelessWidget {
       children: [
         const Spacer(),
         Text(
-          'AI Story Builder is coming soon',
-          key: const ValueKey('story-builder-unsupported-title'),
+          'AI Story Coach unavailable',
+          key: const ValueKey('story-builder-coach-unavailable-title'),
           style: theme.textTheme.headlineSmall?.copyWith(
             fontWeight: FontWeight.w700,
           ),
@@ -360,14 +427,35 @@ class _UnsupportedModeBody extends StatelessWidget {
         const SizedBox(height: 12),
         Text(
           message,
-          key: const ValueKey('story-builder-unsupported-message'),
+          key: const ValueKey('story-builder-coach-unavailable-message'),
           style: theme.textTheme.bodyLarge?.copyWith(height: 1.5),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Your answers so far are saved. The session stays in AI mode unless '
+          'you choose Guided Builder.',
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+            height: 1.45,
+          ),
         ),
         const Spacer(),
         FilledButton(
-          key: const ValueKey('story-builder-unsupported-back'),
+          key: const ValueKey('story-builder-coach-retry'),
+          onPressed: onRetry,
+          child: const Text('Retry AI Coach'),
+        ),
+        const SizedBox(height: 8),
+        OutlinedButton(
+          key: const ValueKey('story-builder-continue-guided'),
+          onPressed: onContinueGuided,
+          child: const Text('Continue with Guided Builder'),
+        ),
+        const SizedBox(height: 8),
+        TextButton(
+          key: const ValueKey('story-builder-coach-back'),
           onPressed: onBack,
-          child: const Text('Choose another mode'),
+          child: const Text('Save and exit'),
         ),
       ],
     );

@@ -62,11 +62,98 @@ void main() {
     });
   });
 
+  group('StoryBuilderCoachHandler', () {
+    late StoryBuilderCoachHandler handler;
+    late _FakeChatClient chat;
+
+    setUp(() {
+      chat = _FakeChatClient();
+      handler = StoryBuilderCoachHandler(
+        config: const ProxyConfig(
+          openAiApiKey: 'test-key',
+          authToken: 'secret',
+        ),
+        client: chat,
+      );
+    });
+
+    test('returns EH-owned coach suggestion', () async {
+      chat.content = jsonEncode({
+        'question': 'What was the turning point?',
+        'narrativeRole': 'turningPoint',
+        'reason': 'gap',
+        'readyToComplete': false,
+      });
+      final body = jsonEncode({
+        'purpose': 'inspireSomeone',
+        'themes': ['perseverance'],
+        'themesUnsure': false,
+        'presentedNarrativeRoles': ['beginning'],
+        'turns': [
+          {
+            'promptText': 'Where did it begin?',
+            'ordinal': 0,
+            'narrativeRole': 'beginning',
+            'responseText': 'On a rainy Tuesday I almost quit.',
+            'skipped': false,
+          },
+        ],
+      });
+      final response = await handler.handleSuggestQuestion(
+        Request(
+          'POST',
+          Uri.parse('http://localhost/story-builder-questions'),
+          body: body,
+        ),
+      );
+      expect(response.statusCode, 200);
+      final json = jsonDecode(await response.readAsString()) as Map;
+      expect(json['question'], 'What was the turning point?');
+      expect(json['narrativeRole'], 'turningPoint');
+      expect(json['providerLabel'], 'openai_via_eh_proxy');
+      expect(chat.lastSystemPrompt, contains('Do not invent facts'));
+      expect(chat.lastUserPrompt, contains('---BEGIN_STORY_BUILDER_CONTEXT---'));
+      expect(chat.lastUserPrompt, contains('almost quit'));
+    });
+
+    test('maps provider failure to 502', () async {
+      chat.throwOnCall = true;
+      final response = await handler.handleSuggestQuestion(
+        Request(
+          'POST',
+          Uri.parse('http://localhost/story-builder-questions'),
+          body: jsonEncode({'turns': []}),
+        ),
+      );
+      expect(response.statusCode, 502);
+    });
+  });
+
+  group('StoryBuilderCoachInstructions', () {
+    test('prompt invariants', () {
+      const prompt = StoryBuilderCoachInstructions.systemPrompt;
+      expect(StoryBuilderCoachInstructions.mentionsOneQuestionConstraint(prompt), isTrue);
+      expect(StoryBuilderCoachInstructions.prohibitsInvention(prompt), isTrue);
+      expect(StoryBuilderCoachInstructions.prohibitsWritingStory(prompt), isTrue);
+      expect(StoryBuilderCoachInstructions.mentionsNarrativeRoles(prompt), isTrue);
+    });
+  });
+
   test('ProxyConfig requires OPENAI_API_KEY', () {
     expect(
       () => ProxyConfig.fromEnvironment(environment: {}),
       throwsStateError,
     );
+  });
+
+  test('ProxyConfig reads chat model', () {
+    final config = ProxyConfig.fromEnvironment(
+      environment: {
+        'OPENAI_API_KEY': 'k',
+        'OPENAI_CHAT_MODEL': 'gpt-test',
+      },
+    );
+    expect(config.chatModel, 'gpt-test');
   });
 }
 
@@ -89,5 +176,32 @@ final class _FakeOpenAiClient extends OpenAiTranscriptionClient {
       text: 'hello from fake openai',
       language: language,
     );
+  }
+}
+
+final class _FakeChatClient extends OpenAiChatClient {
+  _FakeChatClient()
+      : super(
+          apiKey: 'x',
+          baseUrl: 'http://example.com',
+          model: 'test',
+        );
+
+  String content = '{"question":"Q?","readyToComplete":false}';
+  bool throwOnCall = false;
+  String? lastSystemPrompt;
+  String? lastUserPrompt;
+
+  @override
+  Future<OpenAiChatResult> completeJson({
+    required String systemPrompt,
+    required String userPrompt,
+  }) async {
+    lastSystemPrompt = systemPrompt;
+    lastUserPrompt = userPrompt;
+    if (throwOnCall) {
+      throw const OpenAiChatException('provider down');
+    }
+    return OpenAiChatResult(content: content);
   }
 }

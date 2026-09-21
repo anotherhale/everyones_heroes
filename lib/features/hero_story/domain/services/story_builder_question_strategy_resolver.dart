@@ -1,5 +1,5 @@
-import 'package:everyonesheroes/features/hero_story/domain/enums/story_builder_mode.dart';
 import 'package:everyonesheroes/features/hero_story/domain/services/deterministic_story_builder_question_strategy.dart';
+import 'package:everyonesheroes/features/hero_story/domain/enums/story_builder_mode.dart';
 import 'package:everyonesheroes/features/hero_story/domain/services/story_builder_question_strategy.dart';
 import 'package:everyonesheroes/features/hero_story/domain/services/unsupported_ai_story_builder_question_strategy.dart';
 
@@ -11,9 +11,12 @@ abstract interface class StoryBuilderQuestionStrategyResolver {
   StoryBuilderQuestionStrategy resolve(StoryBuilderMode mode);
 }
 
-/// Default SB.6 resolution:
+/// Default resolution:
 /// - guided → deterministic catalog strategy
-/// - ai → explicit unsupported placeholder (SB.7)
+/// - ai → [AiStoryBuilderQuestionStrategy] (SB.7)
+///
+/// Inject [aiStrategy] from composition (coach port wiring). Tests may pass
+/// [UnsupportedAiStoryBuilderQuestionStrategy] explicitly.
 final class DefaultStoryBuilderQuestionStrategyResolver
     implements StoryBuilderQuestionStrategyResolver {
   const DefaultStoryBuilderQuestionStrategyResolver({
