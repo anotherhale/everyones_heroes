@@ -136,11 +136,11 @@ void main() {
       );
 
       final first = await advanceOnce(sessionId);
-      expect(first.prompt, isNotNull);
+      expect(first.currentPrompt, isNotNull);
       await answer.execute(
         AnswerStoryBuilderPromptRequest(
           sessionId: sessionId,
-          promptId: first.prompt!.id,
+          promptId: first.currentPrompt!.id,
           responseId: responseA,
           text: 'It began with uncertainty.',
         ),
@@ -150,7 +150,7 @@ void main() {
       await skip.execute(
         SkipStoryBuilderPromptRequest(
           sessionId: sessionId,
-          promptId: second.prompt!.id,
+          promptId: second.currentPrompt!.id,
           responseId: responseB,
         ),
       );
@@ -159,7 +159,7 @@ void main() {
       await answer.execute(
         AnswerStoryBuilderPromptRequest(
           sessionId: sessionId,
-          promptId: third.prompt!.id,
+          promptId: third.currentPrompt!.id,
           responseId: responseC,
           text: 'It mattered because others were watching.',
         ),
@@ -241,8 +241,8 @@ void main() {
         AdvanceStoryBuilderRequest(sessionId: sessionId),
       );
       final nextResult = (next as Success<AdvanceStoryBuilderResult>).value;
-      expect(nextResult.prompt, isNotNull);
-      expect(nextResult.prompt!.id, DeterministicStoryBuilderCatalog.struggleId);
+      expect(nextResult.currentPrompt, isNotNull);
+      expect(nextResult.currentPrompt!.id, DeterministicStoryBuilderCatalog.struggleId);
     },
   );
 
@@ -258,7 +258,7 @@ void main() {
     await answer.execute(
       AnswerStoryBuilderPromptRequest(
         sessionId: sessionId,
-        promptId: presented.prompt!.id,
+        promptId: presented.currentPrompt!.id,
         responseId: const StoryBuilderResponseId('r1'),
         text: 'Active answer',
       ),
@@ -352,7 +352,7 @@ void main() {
       await answer.execute(
         AnswerStoryBuilderPromptRequest(
           sessionId: sessionId,
-          promptId: presented.prompt!.id,
+          promptId: presented.currentPrompt!.id,
           responseId: responseId,
           text: 'Parity answer',
         ),

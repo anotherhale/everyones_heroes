@@ -102,9 +102,9 @@ final class StoryBuilderSessionSnapshotMapper {
               ? const <String, dynamic>{}
               : Map<String, dynamic>.from(intentRaw as Map),
         ),
-        storyId: storyIdRaw == null || (storyIdRaw as String).isEmpty
+        storyId: storyIdRaw == null || storyIdRaw.isEmpty
             ? null
-            : StoryId(storyIdRaw as String),
+            : StoryId(storyIdRaw),
         prompts: [
           for (final item in (promptsRaw as List? ?? const []))
             _promptFromJson(Map<String, dynamic>.from(item as Map)),
