@@ -5,7 +5,9 @@ import 'package:everyonesheroes/core/ids/story_builder_session_id.dart';
 import 'package:everyonesheroes/core/ids/story_id.dart';
 import 'package:everyonesheroes/core/shared_kernel/aggregate_root.dart';
 import 'package:everyonesheroes/features/hero_story/domain/enums/story_builder_mode.dart';
+import 'package:everyonesheroes/features/hero_story/domain/enums/story_builder_purpose.dart';
 import 'package:everyonesheroes/features/hero_story/domain/enums/story_builder_session_status.dart';
+import 'package:everyonesheroes/features/hero_story/domain/enums/story_builder_theme.dart';
 import 'package:everyonesheroes/features/hero_story/domain/events/story_builder_session_completed.dart';
 import 'package:everyonesheroes/features/hero_story/domain/events/story_builder_session_created.dart';
 import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_builder_intent.dart';
@@ -214,6 +216,26 @@ final class StoryBuilderSession extends AggregateRoot<StoryBuilderSessionId> {
   void setIntent(StoryBuilderIntent intent, {DateTime? at}) {
     _ensureMutable();
     _intent = intent;
+    _touch(at);
+  }
+
+  /// Updates purpose without changing themes.
+  void setPurpose(StoryBuilderPurpose? purpose, {DateTime? at}) {
+    _ensureMutable();
+    _intent = _intent.withPurpose(purpose);
+    _touch(at);
+  }
+
+  /// Updates themes without changing purpose.
+  ///
+  /// When [themesUnsure] is true, [themes] must be empty (or omitted).
+  void setThemes({
+    Iterable<StoryBuilderTheme> themes = const [],
+    bool themesUnsure = false,
+    DateTime? at,
+  }) {
+    _ensureMutable();
+    _intent = _intent.withThemes(themes: themes, themesUnsure: themesUnsure);
     _touch(at);
   }
 

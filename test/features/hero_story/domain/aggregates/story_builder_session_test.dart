@@ -43,7 +43,6 @@ void main() {
       expect(session.storyId, isNull);
       expect(session.intent.purpose, isNull);
       expect(session.intent.themes, isEmpty);
-      expect(session.intent.purposeUnsure, isFalse);
       expect(session.intent.themesUnsure, isFalse);
       expect(session.progress.presentedPromptCount, 0);
       expect(session.progress.responseCount, 0);
@@ -52,22 +51,28 @@ void main() {
     test('can hold purpose and theme intent without catalog apply', () {
       final session = createSession(
         intent: StoryBuilderIntent(
-          purpose: 'Encourage someone',
-          themes: const ['perseverance', 'family'],
+          purpose: StoryBuilderPurpose.encourageSomeone,
+          themes: const [
+            StoryBuilderTheme.perseverance,
+            StoryBuilderTheme.family,
+          ],
         ),
       );
 
-      expect(session.intent.purpose, 'Encourage someone');
-      expect(session.intent.themes, ['perseverance', 'family']);
+      expect(session.intent.purpose, StoryBuilderPurpose.encourageSomeone);
+      expect(session.intent.themes, [
+        StoryBuilderTheme.perseverance,
+        StoryBuilderTheme.family,
+      ]);
       expect(session.intent.hasPurpose, isTrue);
       expect(session.intent.hasThemes, isTrue);
 
       session.pullDomainEvents();
-      session.setIntent(
-        StoryBuilderIntent(purposeUnsure: true, themesUnsure: true),
-      );
-      expect(session.intent.purposeUnsure, isTrue);
+      session.setPurpose(StoryBuilderPurpose.notSureYet);
+      session.setThemes(themesUnsure: true);
+      expect(session.intent.isPurposeUnsure, isTrue);
       expect(session.intent.themesUnsure, isTrue);
+      expect(session.intent.themes, isEmpty);
     });
 
     test('answer preserves exact user text and response identity on edit', () {
@@ -167,7 +172,9 @@ void main() {
       expect(session.isComplete, isTrue);
 
       expect(
-        () => session.setIntent(StoryBuilderIntent(purpose: 'x')),
+        () => session.setIntent(
+          StoryBuilderIntent(purpose: StoryBuilderPurpose.simplyTellMyStory),
+        ),
         throwsStateError,
       );
     });

@@ -128,7 +128,9 @@ void main() {
       await setIntent.execute(
         SetStoryBuilderIntentRequest(
           sessionId: sessionId,
-          intent: StoryBuilderIntent(purpose: 'Help someone feel less alone'),
+          intent: StoryBuilderIntent(
+            purpose: StoryBuilderPurpose.helpSomeoneFeelLessAlone,
+          ),
         ),
       ),
       isA<Success<StoryBuilderSession>>(),
