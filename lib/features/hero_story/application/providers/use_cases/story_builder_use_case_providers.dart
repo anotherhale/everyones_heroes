@@ -2,7 +2,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:everyonesheroes/core/eventing/event_providers.dart';
 import 'package:everyonesheroes/features/hero_story/application/providers/repositories/story_builder_session_repository_provider.dart';
+import 'package:everyonesheroes/features/hero_story/application/providers/story_builder/story_builder_question_strategy_provider.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/abandon_story_builder_session_use_case.dart';
+import 'package:everyonesheroes/features/hero_story/application/use_cases/advance_story_builder_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/answer_story_builder_prompt_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/complete_story_builder_session_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/edit_story_builder_response_use_case.dart';
@@ -116,5 +118,14 @@ final getStoryBuilderSessionUseCaseProvider =
     Provider<GetStoryBuilderSessionUseCase>((ref) {
       return GetStoryBuilderSessionUseCase(
         sessionRepository: ref.watch(storyBuilderSessionRepositoryProvider),
+      );
+    });
+
+final advanceStoryBuilderUseCaseProvider =
+    Provider<AdvanceStoryBuilderUseCase>((ref) {
+      return AdvanceStoryBuilderUseCase(
+        sessionRepository: ref.watch(storyBuilderSessionRepositoryProvider),
+        questionStrategy: ref.watch(storyBuilderQuestionStrategyProvider),
+        eventBus: ref.watch(eventBusProvider),
       );
     });
