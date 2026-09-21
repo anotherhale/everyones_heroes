@@ -2,17 +2,17 @@ import 'package:everyonesheroes/features/hero_story/domain/aggregates/story_buil
 import 'package:everyonesheroes/features/hero_story/domain/services/story_builder_question_strategy.dart';
 import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_builder_prompt.dart';
 
-/// Explicit SB.6 placeholder for [StoryBuilderMode.ai].
+/// Explicit unavailable stub for [StoryBuilderMode.ai].
 ///
-/// Does not invoke AI, credits, or network. SB.7 replaces this with a real
-/// adaptive strategy. Callers must treat [UnsupportedError] as "AI unavailable".
+/// Production SB.7 wiring uses [AiStoryBuilderQuestionStrategy]. This stub
+/// remains for tests and intentional "AI disabled" composition.
 final class UnsupportedAiStoryBuilderQuestionStrategy
     implements StoryBuilderQuestionStrategy {
   const UnsupportedAiStoryBuilderQuestionStrategy();
 
   static const String unavailableMessage =
-      'AI Story Builder is not available yet. '
-      'Choose Guided Story Builder, or continue when adaptive coaching ships.';
+      'AI Story Builder is not available. '
+      'Choose Guided Story Builder, or retry when the AI Story Coach is ready.';
 
   @override
   Future<StoryBuilderPrompt?> nextPrompt(StoryBuilderSession session) {

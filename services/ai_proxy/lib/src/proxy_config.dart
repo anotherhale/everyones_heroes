@@ -1,6 +1,6 @@
 import 'dart:io';
 
-/// Server-side configuration for the EH AI proxy (HS.11 / HS-ADR-067).
+/// Server-side configuration for the EH AI proxy (HS.11 / SB.7).
 ///
 /// OpenAI credentials and model selection live here — never in Flutter.
 final class ProxyConfig {
@@ -8,6 +8,7 @@ final class ProxyConfig {
     required this.openAiApiKey,
     this.openAiBaseUrl = 'https://api.openai.com/v1',
     this.transcriptionModel = 'gpt-4o-mini-transcribe',
+    this.chatModel = 'gpt-4o-mini',
     this.host = '0.0.0.0',
     this.port = 8787,
     this.authToken,
@@ -31,6 +32,9 @@ final class ProxyConfig {
           env['OPENAI_TRANSCRIPTION_MODEL']?.trim().isNotEmpty == true
               ? env['OPENAI_TRANSCRIPTION_MODEL']!.trim()
               : 'gpt-4o-mini-transcribe',
+      chatModel: env['OPENAI_CHAT_MODEL']?.trim().isNotEmpty == true
+          ? env['OPENAI_CHAT_MODEL']!.trim()
+          : 'gpt-4o-mini',
       host: env['EH_AI_PROXY_HOST']?.trim().isNotEmpty == true
           ? env['EH_AI_PROXY_HOST']!.trim()
           : '0.0.0.0',
@@ -44,6 +48,7 @@ final class ProxyConfig {
   final String openAiApiKey;
   final String openAiBaseUrl;
   final String transcriptionModel;
+  final String chatModel;
   final String host;
   final int port;
   final String? authToken;

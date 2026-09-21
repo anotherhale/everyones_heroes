@@ -6,6 +6,7 @@ import 'package:everyonesheroes/core/ids/story_id.dart';
 import 'package:everyonesheroes/features/hero_story/domain/aggregates/story_builder_session.dart';
 import 'package:everyonesheroes/features/hero_story/domain/enums/story_builder_mode.dart';
 import 'package:everyonesheroes/features/hero_story/domain/enums/story_builder_narrative_role.dart';
+import 'package:everyonesheroes/features/hero_story/domain/enums/story_builder_prompt_source.dart';
 import 'package:everyonesheroes/features/hero_story/domain/enums/story_builder_purpose.dart';
 import 'package:everyonesheroes/features/hero_story/domain/enums/story_builder_session_status.dart';
 import 'package:everyonesheroes/features/hero_story/domain/enums/story_builder_theme.dart';
@@ -170,6 +171,7 @@ final class StoryBuilderSessionSnapshotMapper {
       'ordinal': prompt.ordinal,
       'narrativeRole': prompt.narrativeRole?.name,
       'isOptional': prompt.isOptional,
+      'source': prompt.source.name,
     };
   }
 
@@ -197,6 +199,11 @@ final class StoryBuilderSessionSnapshotMapper {
       throw const FormatException('Invalid prompt isOptional.');
     }
 
+    final sourceRaw = json['source'];
+    if (sourceRaw != null && sourceRaw is! String) {
+      throw const FormatException('Invalid prompt source.');
+    }
+
     return StoryBuilderPrompt(
       id: StoryBuilderPromptId(id),
       text: text,
@@ -205,6 +212,9 @@ final class StoryBuilderSessionSnapshotMapper {
           ? null
           : StoryBuilderNarrativeRole.values.byName(roleRaw as String),
       isOptional: isOptional as bool? ?? true,
+      source: sourceRaw == null
+          ? StoryBuilderPromptSource.catalog
+          : StoryBuilderPromptSource.values.byName(sourceRaw as String),
     );
   }
 

@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:everyonesheroes/features/hero_story/application/providers/ai/story_builder_coach_port_provider.dart';
+import 'package:everyonesheroes/features/hero_story/domain/services/ai_story_builder_question_strategy.dart';
 import 'package:everyonesheroes/features/hero_story/domain/services/deterministic_story_builder_question_strategy.dart';
 import 'package:everyonesheroes/features/hero_story/domain/services/story_builder_question_strategy.dart';
 import 'package:everyonesheroes/features/hero_story/domain/services/story_builder_question_strategy_resolver.dart';
@@ -11,10 +13,14 @@ final storyBuilderQuestionStrategyProvider =
       return const DeterministicStoryBuilderQuestionStrategy();
     });
 
-/// Mode → strategy resolution (SB.6).
+/// Mode → strategy resolution (SB.6 / SB.7).
 ///
-/// Guided → deterministic. AI → explicit unsupported placeholder until SB.7.
+/// Guided → deterministic. AI → [AiStoryBuilderQuestionStrategy] via coach port.
 final storyBuilderQuestionStrategyResolverProvider =
     Provider<StoryBuilderQuestionStrategyResolver>((ref) {
-      return const DefaultStoryBuilderQuestionStrategyResolver();
+      return DefaultStoryBuilderQuestionStrategyResolver(
+        aiStrategy: AiStoryBuilderQuestionStrategy(
+          coach: ref.watch(storyBuilderCoachPortProvider),
+        ),
+      );
     });

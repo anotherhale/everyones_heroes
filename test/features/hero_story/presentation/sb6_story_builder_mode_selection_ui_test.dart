@@ -69,21 +69,21 @@ void main() {
     );
   }
 
-  testWidgets('entry shows guided and disabled AI mode options', (tester) async {
+  testWidgets('entry shows guided and enabled AI Story Coach options', (tester) async {
     await tester.pumpWidget(wrap(const StoryBuilderEntryScreen()));
     await tester.pumpAndSettle();
 
     expect(find.byKey(const ValueKey('story-builder-mode-guided')), findsOneWidget);
     expect(find.byKey(const ValueKey('story-builder-mode-ai')), findsOneWidget);
-    expect(find.byKey(const ValueKey('story-builder-ai-coming-soon')), findsOneWidget);
+    expect(find.byKey(const ValueKey('story-builder-ai-coming-soon')), findsNothing);
     expect(find.text('Guided Story Builder'), findsOneWidget);
+    expect(find.text('AI Story Coach'), findsOneWidget);
     expect(find.textContaining('No AI required'), findsOneWidget);
     expect(find.textContaining('Works offline'), findsOneWidget);
 
-    // AI option is not tappable — stays on entry.
     await tester.tap(find.byKey(const ValueKey('story-builder-mode-ai')));
     await tester.pumpAndSettle();
-    expect(find.byKey(const ValueKey('story-builder-mode-title')), findsOneWidget);
+    expect(find.byType(StoryBuilderIntentScreen), findsOneWidget);
   });
 
   testWidgets('guided path creates session with mode and intent then questions',
