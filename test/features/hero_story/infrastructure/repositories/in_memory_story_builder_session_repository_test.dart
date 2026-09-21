@@ -82,4 +82,32 @@ void main() {
     expect(await repository.exists(session.id), isFalse);
     expect(await repository.findById(session.id), isNull);
   });
+
+  test('purpose and themes survive save and reload', () async {
+    final session = newSession(HeroId.generate());
+    session.setPurpose(StoryBuilderPurpose.encourageSomeone);
+    session.setThemes(
+      themes: const [
+        StoryBuilderTheme.perseverance,
+        StoryBuilderTheme.family,
+      ],
+    );
+    await repository.save(session);
+
+    final loaded = await repository.findById(session.id);
+    expect(loaded!.intent.purpose, StoryBuilderPurpose.encourageSomeone);
+    expect(loaded.intent.themes, [
+      StoryBuilderTheme.perseverance,
+      StoryBuilderTheme.family,
+    ]);
+
+    loaded.setPurpose(StoryBuilderPurpose.notSureYet);
+    loaded.setThemes(themesUnsure: true);
+    await repository.save(loaded);
+
+    final reloaded = await repository.findById(session.id);
+    expect(reloaded!.intent.purpose, StoryBuilderPurpose.notSureYet);
+    expect(reloaded.intent.themesUnsure, isTrue);
+    expect(reloaded.intent.themes, isEmpty);
+  });
 }

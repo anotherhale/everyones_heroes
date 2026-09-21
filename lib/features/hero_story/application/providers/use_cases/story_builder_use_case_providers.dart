@@ -11,6 +11,8 @@ import 'package:everyonesheroes/features/hero_story/application/use_cases/pause_
 import 'package:everyonesheroes/features/hero_story/application/use_cases/present_story_builder_prompt_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/resume_story_builder_session_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/set_story_builder_intent_use_case.dart';
+import 'package:everyonesheroes/features/hero_story/application/use_cases/set_story_builder_purpose_use_case.dart';
+import 'package:everyonesheroes/features/hero_story/application/use_cases/set_story_builder_themes_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/skip_story_builder_prompt_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/start_story_builder_session_use_case.dart';
 
@@ -57,6 +59,22 @@ final editStoryBuilderResponseUseCaseProvider =
 final setStoryBuilderIntentUseCaseProvider =
     Provider<SetStoryBuilderIntentUseCase>((ref) {
       return SetStoryBuilderIntentUseCase(
+        sessionRepository: ref.watch(storyBuilderSessionRepositoryProvider),
+        eventBus: ref.watch(eventBusProvider),
+      );
+    });
+
+final setStoryBuilderPurposeUseCaseProvider =
+    Provider<SetStoryBuilderPurposeUseCase>((ref) {
+      return SetStoryBuilderPurposeUseCase(
+        sessionRepository: ref.watch(storyBuilderSessionRepositoryProvider),
+        eventBus: ref.watch(eventBusProvider),
+      );
+    });
+
+final setStoryBuilderThemesUseCaseProvider =
+    Provider<SetStoryBuilderThemesUseCase>((ref) {
+      return SetStoryBuilderThemesUseCase(
         sessionRepository: ref.watch(storyBuilderSessionRepositoryProvider),
         eventBus: ref.watch(eventBusProvider),
       );

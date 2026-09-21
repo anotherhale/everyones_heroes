@@ -1,63 +1,115 @@
 import 'package:everyonesheroes/core/shared_kernel/value_object.dart';
+import 'package:everyonesheroes/features/hero_story/domain/enums/story_builder_purpose.dart';
+import 'package:everyonesheroes/features/hero_story/domain/enums/story_builder_theme.dart';
 
-/// Session-local story purpose and theme selections (SB.1 capacity; SB.2 vocabulary).
+/// Session-local story purpose and theme selections for Story Builder.
 ///
-/// Distinct from authoritative [StoryClassification]. Intent remains editable
-/// while the session is mutable and does not auto-apply to Story catalog.
+/// Purpose (why) and themes (what kind) are independent dimensions.
+/// Does not auto-apply to [StoryClassification] or Discovery NarrativeThemes.
 final class StoryBuilderIntent extends ValueObject {
   StoryBuilderIntent({
     this.purpose,
-    Iterable<String>? themes,
-    this.purposeUnsure = false,
+    Iterable<StoryBuilderTheme>? themes,
     this.themesUnsure = false,
-  }) : themes = List.unmodifiable(
-         (themes ?? const <String>[])
-             .map((t) => t.trim())
-             .where((t) => t.isNotEmpty)
-             .toList(),
-       ) {
-    if (purpose != null && purpose!.trim().isEmpty) {
-      throw ArgumentError('Purpose cannot be blank when provided.');
+  }) : themes = List.unmodifiable(_normalizeThemes(themes)) {
+    if (themesUnsure && this.themes.isNotEmpty) {
+      throw ArgumentError(
+        'themesUnsure cannot be combined with selected themes.',
+      );
     }
   }
 
   /// Empty intent — purpose/themes not yet chosen.
   factory StoryBuilderIntent.empty() => StoryBuilderIntent();
 
-  /// Free-form or future catalog key for why the Hero is telling this story.
-  final String? purpose;
+  factory StoryBuilderIntent.purposeOnly(StoryBuilderPurpose purpose) {
+    return StoryBuilderIntent(purpose: purpose);
+  }
 
-  /// Session-local theme labels (not Discovery NarrativeTheme entities).
-  final List<String> themes;
+  factory StoryBuilderIntent.themesOnly({
+    Iterable<StoryBuilderTheme>? themes,
+    bool themesUnsure = false,
+  }) {
+    return StoryBuilderIntent(themes: themes, themesUnsure: themesUnsure);
+  }
 
-  final bool purposeUnsure;
+  /// Why the Hero is telling this story. `null` = not yet selected.
+  /// [StoryBuilderPurpose.notSureYet] = intentional uncertainty.
+  final StoryBuilderPurpose? purpose;
+
+  /// Zero or more story themes/types. Order is insertion order after dedupe.
+  final List<StoryBuilderTheme> themes;
+
+  /// Explicit "not sure yet" for themes (mutually exclusive with [themes]).
   final bool themesUnsure;
 
-  bool get hasPurpose =>
-      purposeUnsure || (purpose != null && purpose!.trim().isNotEmpty);
+  bool get hasPurpose => purpose != null;
 
   bool get hasThemes => themesUnsure || themes.isNotEmpty;
 
+  bool get isPurposeUnsure => purpose == StoryBuilderPurpose.notSureYet;
+
+  StoryBuilderIntent withPurpose(StoryBuilderPurpose? purpose) {
+    return StoryBuilderIntent(
+      purpose: purpose,
+      themes: themes,
+      themesUnsure: themesUnsure,
+    );
+  }
+
+  StoryBuilderIntent withThemes({
+    Iterable<StoryBuilderTheme>? themes,
+    bool? themesUnsure,
+  }) {
+    return StoryBuilderIntent(
+      purpose: purpose,
+      themes: themes ?? this.themes,
+      themesUnsure: themesUnsure ?? this.themesUnsure,
+    );
+  }
+
+  StoryBuilderIntent withThemesUnsure() {
+    return StoryBuilderIntent(
+      purpose: purpose,
+      themes: const [],
+      themesUnsure: true,
+    );
+  }
+
   StoryBuilderIntent copyWith({
-    String? purpose,
-    Iterable<String>? themes,
-    bool? purposeUnsure,
+    StoryBuilderPurpose? purpose,
+    Iterable<StoryBuilderTheme>? themes,
     bool? themesUnsure,
     bool clearPurpose = false,
+    bool clearThemes = false,
   }) {
     return StoryBuilderIntent(
       purpose: clearPurpose ? null : (purpose ?? this.purpose),
-      themes: themes ?? this.themes,
-      purposeUnsure: purposeUnsure ?? this.purposeUnsure,
-      themesUnsure: themesUnsure ?? this.themesUnsure,
+      themes: clearThemes ? const [] : (themes ?? this.themes),
+      themesUnsure: clearThemes ? false : (themesUnsure ?? this.themesUnsure),
     );
+  }
+
+  static List<StoryBuilderTheme> _normalizeThemes(
+    Iterable<StoryBuilderTheme>? themes,
+  ) {
+    if (themes == null) {
+      return const [];
+    }
+    final seen = <StoryBuilderTheme>{};
+    final result = <StoryBuilderTheme>[];
+    for (final theme in themes) {
+      if (seen.add(theme)) {
+        result.add(theme);
+      }
+    }
+    return result;
   }
 
   @override
   List<Object?> get equalityProps => [
     purpose,
-    themes,
-    purposeUnsure,
     themesUnsure,
+    ...themes,
   ];
 }
