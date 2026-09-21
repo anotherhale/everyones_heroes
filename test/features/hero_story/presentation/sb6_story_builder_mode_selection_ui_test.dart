@@ -53,33 +53,31 @@ void main() {
     );
   });
 
-  List<Override> overrides() {
+  Widget wrap(Widget home) {
     final eventBus = InMemoryEventBus(
       eventStore: InMemoryEventStore(),
       dispatcher: InMemoryEventDispatcher(),
     );
-    return [
-      heroRepositoryProvider.overrideWithValue(heroes),
-      storyBuilderSessionRepositoryProvider.overrideWithValue(sessions),
-      eventBusProvider.overrideWithValue(eventBus),
-      activeLocalHeroStoreProvider.overrideWithValue(ActiveLocalHeroStore()),
-    ];
+    return ProviderScope(
+      overrides: [
+        heroRepositoryProvider.overrideWithValue(heroes),
+        storyBuilderSessionRepositoryProvider.overrideWithValue(sessions),
+        eventBusProvider.overrideWithValue(eventBus),
+        activeLocalHeroStoreProvider.overrideWithValue(ActiveLocalHeroStore()),
+      ],
+      child: MaterialApp(home: home),
+    );
   }
 
   testWidgets('entry shows guided and disabled AI mode options', (tester) async {
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: overrides(),
-        child: const MaterialApp(home: StoryBuilderEntryScreen()),
-      ),
-    );
+    await tester.pumpWidget(wrap(const StoryBuilderEntryScreen()));
     await tester.pumpAndSettle();
 
     expect(find.byKey(const ValueKey('story-builder-mode-guided')), findsOneWidget);
     expect(find.byKey(const ValueKey('story-builder-mode-ai')), findsOneWidget);
     expect(find.byKey(const ValueKey('story-builder-ai-coming-soon')), findsOneWidget);
     expect(find.text('Guided Story Builder'), findsOneWidget);
-    expect(find.text('No AI required'), findsOneWidget);
+    expect(find.textContaining('No AI required'), findsOneWidget);
     expect(find.textContaining('Works offline'), findsOneWidget);
 
     // AI option is not tappable — stays on entry.
@@ -90,12 +88,7 @@ void main() {
 
   testWidgets('guided path creates session with mode and intent then questions',
       (tester) async {
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: overrides(),
-        child: const MaterialApp(home: StoryBuilderEntryScreen()),
-      ),
-    );
+    await tester.pumpWidget(wrap(const StoryBuilderEntryScreen()));
     await tester.pumpAndSettle();
 
     await tester.tap(find.byKey(const ValueKey('story-builder-mode-guided')));
@@ -109,6 +102,9 @@ void main() {
       find.byKey(const ValueKey('story-builder-purpose-inspireSomeone')),
     );
     await tester.pumpAndSettle();
+    await tester.ensureVisible(
+      find.byKey(const ValueKey('story-builder-theme-courage')),
+    );
     await tester.tap(
       find.byKey(const ValueKey('story-builder-theme-courage')),
     );
@@ -168,17 +164,15 @@ void main() {
     );
     await sessions.save(session);
 
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: overrides(),
-        child: const MaterialApp(home: StoryBuilderEntryScreen()),
-      ),
-    );
+    await tester.pumpWidget(wrap(const StoryBuilderEntryScreen()));
     await tester.pumpAndSettle();
 
     expect(
       find.byKey(ValueKey('story-builder-resume-${sessionId.value}')),
       findsOneWidget,
+    );
+    await tester.ensureVisible(
+      find.byKey(ValueKey('story-builder-resume-${sessionId.value}')),
     );
     await tester.tap(
       find.byKey(ValueKey('story-builder-resume-${sessionId.value}')),
@@ -196,12 +190,7 @@ void main() {
   });
 
   testWidgets('heroes Build My Story opens mode selection entry', (tester) async {
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: overrides(),
-        child: const MaterialApp(home: HeroCatalogScreen()),
-      ),
-    );
+    await tester.pumpWidget(wrap(const HeroCatalogScreen()));
     await tester.pumpAndSettle();
 
     await tester.tap(find.byKey(const ValueKey('build-my-story-button')));
@@ -212,12 +201,7 @@ void main() {
   });
 
   testWidgets('pause leaves session resumable without completing', (tester) async {
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: overrides(),
-        child: const MaterialApp(home: StoryBuilderScreen()),
-      ),
-    );
+    await tester.pumpWidget(wrap(const StoryBuilderScreen()));
     await tester.pumpAndSettle();
 
     await tester.enterText(

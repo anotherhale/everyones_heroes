@@ -108,9 +108,11 @@ class _StoryBuilderIntentScreenState
         child: Column(
           children: [
             Expanded(
-              child: ListView(
+              child: SingleChildScrollView(
                 padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
-                children: [
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
                   Text(
                     'What do you want this story to do?',
                     key: const ValueKey('story-builder-purpose-title'),
@@ -127,15 +129,19 @@ class _StoryBuilderIntentScreenState
                   ),
                   const SizedBox(height: 12),
                   for (final purpose in StoryBuilderPurpose.values)
-                    RadioListTile<StoryBuilderPurpose>(
+                    ListTile(
                       key: ValueKey('story-builder-purpose-${purpose.name}'),
                       contentPadding: EdgeInsets.zero,
                       title: Text(StoryBuilderIntentLabels.purpose(purpose)),
-                      value: purpose,
-                      groupValue: _purpose,
-                      onChanged: _isCreating
+                      leading: Icon(
+                        _purpose == purpose
+                            ? Icons.radio_button_checked
+                            : Icons.radio_button_off,
+                      ),
+                      selected: _purpose == purpose,
+                      onTap: _isCreating
                           ? null
-                          : (value) => setState(() => _purpose = value),
+                          : () => setState(() => _purpose = purpose),
                     ),
                   const SizedBox(height: 20),
                   Text(
@@ -199,7 +205,8 @@ class _StoryBuilderIntentScreenState
                       ),
                     ),
                   ],
-                ],
+                  ],
+                ),
               ),
             ),
             Padding(

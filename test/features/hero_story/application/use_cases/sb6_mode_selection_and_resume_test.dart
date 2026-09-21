@@ -197,6 +197,17 @@ void main() {
       );
     }
 
+    // Final advance completes the session after the last answer.
+    final completedAdvance = await advance.execute(
+      AdvanceStoryBuilderRequest(sessionId: sessionId),
+    );
+    expect(
+      (completedAdvance as Success<AdvanceStoryBuilderResult>)
+          .value
+          .questioningComplete,
+      isTrue,
+    );
+
     final listed = await listResumable.execute(
       ListResumableStoryBuilderSessionsRequest(heroId: heroId),
     );

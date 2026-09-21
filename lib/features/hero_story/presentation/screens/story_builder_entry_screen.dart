@@ -26,9 +26,11 @@ class StoryBuilderEntryScreen extends ConsumerWidget {
         key: const ValueKey('story-builder-entry-app-bar'),
       ),
       body: SafeArea(
-        child: ListView(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
-          children: [
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
             Text(
               'How would you like to build your story?',
               key: const ValueKey('story-builder-mode-title'),
@@ -97,7 +99,7 @@ class StoryBuilderEntryScreen extends ConsumerWidget {
                   ),
                 ),
               ),
-              error: (_, __) => Column(
+              error: (_, _) => Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
@@ -148,6 +150,7 @@ class StoryBuilderEntryScreen extends ConsumerWidget {
               },
             ),
           ],
+          ),
         ),
       ),
     );
