@@ -6,6 +6,7 @@ import 'package:everyonesheroes/features/hero_story/application/providers/story_
 import 'package:everyonesheroes/features/hero_story/application/use_cases/abandon_story_builder_session_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/advance_story_builder_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/answer_story_builder_prompt_use_case.dart';
+import 'package:everyonesheroes/features/hero_story/application/use_cases/build_deterministic_story_structure_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/complete_story_builder_session_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/edit_story_builder_response_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/get_story_builder_session_use_case.dart';
@@ -127,5 +128,12 @@ final advanceStoryBuilderUseCaseProvider =
         sessionRepository: ref.watch(storyBuilderSessionRepositoryProvider),
         questionStrategy: ref.watch(storyBuilderQuestionStrategyProvider),
         eventBus: ref.watch(eventBusProvider),
+      );
+    });
+
+final buildDeterministicStoryStructureUseCaseProvider =
+    Provider<BuildDeterministicStoryStructureUseCase>((ref) {
+      return BuildDeterministicStoryStructureUseCase(
+        sessionRepository: ref.watch(storyBuilderSessionRepositoryProvider),
       );
     });
