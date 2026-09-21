@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:everyonesheroes/features/hero_story/presentation/providers/hero_experience_providers.dart';
 import 'package:everyonesheroes/features/hero_story/presentation/screens/hero_profile_screen.dart';
 import 'package:everyonesheroes/features/hero_story/presentation/screens/my_stories_screen.dart';
-import 'package:everyonesheroes/features/hero_story/presentation/screens/story_builder_screen.dart';
+import 'package:everyonesheroes/features/hero_story/presentation/screens/story_builder_entry_screen.dart';
 import 'package:everyonesheroes/features/hero_story/presentation/screens/story_catalog_screen.dart';
 import 'package:everyonesheroes/features/hero_story/presentation/screens/tell_your_story_screen.dart';
 
@@ -79,7 +79,7 @@ class HeroCatalogScreen extends ConsumerWidget {
                       onPressed: () {
                         Navigator.of(context).push(
                           MaterialPageRoute<void>(
-                            builder: (_) => const StoryBuilderScreen(),
+                            builder: (_) => const StoryBuilderEntryScreen(),
                           ),
                         );
                       },

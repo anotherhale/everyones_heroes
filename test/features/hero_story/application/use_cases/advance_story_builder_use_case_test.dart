@@ -36,14 +36,13 @@ void main() {
       eventStore: InMemoryEventStore(),
       dispatcher: InMemoryEventDispatcher(),
     );
-    const strategy = DeterministicStoryBuilderQuestionStrategy();
     start = StartStoryBuilderSessionUseCase(
       sessionRepository: repository,
       eventBus: eventBus,
     );
     advance = AdvanceStoryBuilderUseCase(
       sessionRepository: repository,
-      questionStrategy: strategy,
+      strategyResolver: const DefaultStoryBuilderQuestionStrategyResolver(),
       eventBus: eventBus,
     );
     answer = AnswerStoryBuilderPromptUseCase(

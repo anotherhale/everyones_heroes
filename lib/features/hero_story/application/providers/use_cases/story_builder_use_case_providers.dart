@@ -10,6 +10,7 @@ import 'package:everyonesheroes/features/hero_story/application/use_cases/build_
 import 'package:everyonesheroes/features/hero_story/application/use_cases/complete_story_builder_session_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/edit_story_builder_response_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/get_story_builder_session_use_case.dart';
+import 'package:everyonesheroes/features/hero_story/application/use_cases/list_resumable_story_builder_sessions_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/pause_story_builder_session_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/present_story_builder_prompt_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/resume_story_builder_session_use_case.dart';
@@ -122,11 +123,20 @@ final getStoryBuilderSessionUseCaseProvider =
       );
     });
 
+final listResumableStoryBuilderSessionsUseCaseProvider =
+    Provider<ListResumableStoryBuilderSessionsUseCase>((ref) {
+      return ListResumableStoryBuilderSessionsUseCase(
+        sessionRepository: ref.watch(storyBuilderSessionRepositoryProvider),
+      );
+    });
+
 final advanceStoryBuilderUseCaseProvider =
     Provider<AdvanceStoryBuilderUseCase>((ref) {
       return AdvanceStoryBuilderUseCase(
         sessionRepository: ref.watch(storyBuilderSessionRepositoryProvider),
-        questionStrategy: ref.watch(storyBuilderQuestionStrategyProvider),
+        strategyResolver: ref.watch(
+          storyBuilderQuestionStrategyResolverProvider,
+        ),
         eventBus: ref.watch(eventBusProvider),
       );
     });

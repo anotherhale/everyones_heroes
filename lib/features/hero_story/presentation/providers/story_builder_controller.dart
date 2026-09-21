@@ -18,6 +18,8 @@ import 'package:everyonesheroes/features/hero_story/domain/aggregates/story_buil
 import 'package:everyonesheroes/features/hero_story/domain/enums/story_builder_mode.dart';
 import 'package:everyonesheroes/features/hero_story/domain/enums/story_builder_session_status.dart';
 import 'package:everyonesheroes/features/hero_story/domain/services/deterministic_story_builder_catalog.dart';
+import 'package:everyonesheroes/features/hero_story/domain/services/unsupported_ai_story_builder_question_strategy.dart';
+import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_builder_intent.dart';
 import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_builder_prompt.dart';
 import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_builder_response.dart';
 
@@ -26,6 +28,7 @@ enum StoryBuilderUiPhase {
   questioning,
   completed,
   error,
+  unsupportedMode,
 }
 
 @immutable
@@ -101,7 +104,20 @@ final class StoryBuilderController extends Notifier<StoryBuilderUiState> {
     );
   }
 
-  Future<void> startNewSession() async {
+  Future<void> startNewSession({
+    StoryBuilderMode mode = StoryBuilderMode.guided,
+    StoryBuilderIntent? intent,
+  }) async {
+    if (mode == StoryBuilderMode.ai) {
+      state = state.copyWith(
+        phase: StoryBuilderUiPhase.unsupportedMode,
+        errorMessage:
+            UnsupportedAiStoryBuilderQuestionStrategy.unavailableMessage,
+        isBusy: false,
+      );
+      return;
+    }
+
     state = state.copyWith(
       phase: StoryBuilderUiPhase.loading,
       isBusy: true,
@@ -114,7 +130,8 @@ final class StoryBuilderController extends Notifier<StoryBuilderUiState> {
             StartStoryBuilderSessionRequest(
               sessionId: sessionId,
               heroId: hero.id,
-              mode: StoryBuilderMode.guided,
+              mode: mode,
+              intent: intent,
             ),
           );
       if (started is Failure) {
@@ -155,11 +172,28 @@ final class StoryBuilderController extends Notifier<StoryBuilderUiState> {
       return;
     }
     final session = (loaded as Success<StoryBuilderSession>).value;
+    if (session.mode == StoryBuilderMode.ai) {
+      state = state.copyWith(
+        phase: StoryBuilderUiPhase.unsupportedMode,
+        errorMessage:
+            UnsupportedAiStoryBuilderQuestionStrategy.unavailableMessage,
+        isBusy: false,
+      );
+      return;
+    }
     if (session.status == StoryBuilderSessionStatus.completed) {
       state = state.copyWith(
         phase: StoryBuilderUiPhase.completed,
         isBusy: false,
         clearPrompt: true,
+      );
+      return;
+    }
+    if (session.status == StoryBuilderSessionStatus.abandoned) {
+      state = state.copyWith(
+        phase: StoryBuilderUiPhase.error,
+        errorMessage: 'This Story Builder session was abandoned.',
+        isBusy: false,
       );
       return;
     }
@@ -309,9 +343,13 @@ final class StoryBuilderController extends Notifier<StoryBuilderUiState> {
           AdvanceStoryBuilderRequest(sessionId: sessionId),
         );
     if (result is Failure) {
+      final message = (result as Failure).error;
+      final unsupported = message.contains('AI Story Builder is not available');
       state = state.copyWith(
-        phase: StoryBuilderUiPhase.error,
-        errorMessage: (result as Failure).error,
+        phase: unsupported
+            ? StoryBuilderUiPhase.unsupportedMode
+            : StoryBuilderUiPhase.error,
+        errorMessage: message,
         isBusy: false,
       );
       return;

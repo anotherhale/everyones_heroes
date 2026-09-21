@@ -67,6 +67,8 @@ export 'services/deterministic_story_builder_catalog.dart';
 export 'services/deterministic_story_builder_question_strategy.dart';
 export 'services/deterministic_story_structure_builder.dart';
 export 'services/story_builder_question_strategy.dart';
+export 'services/story_builder_question_strategy_resolver.dart';
+export 'services/unsupported_ai_story_builder_question_strategy.dart';
 export 'services/story_transcription_port.dart';
 export 'services/story_translation_port.dart';
 export 'services/story_understanding_port.dart';
