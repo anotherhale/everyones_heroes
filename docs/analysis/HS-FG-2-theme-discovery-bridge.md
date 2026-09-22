@@ -171,9 +171,10 @@ UI unchanged — bridge is invisible to the Hero.
 
 | Suite | Result |
 |-------|--------|
-| Focused bridge + catalog + FG.2 integration | see Final Cursor report |
-| Full Flutter | see Final Cursor report |
-| Analyzer | see Final Cursor report |
+| Focused bridge + catalog + FG.2 integration | **15/15 passed** |
+| Architecture boundary (`ai_boundary_test`) | **passed** (no Hero & Story → Discovery import) |
+| Full `flutter test` | **1093/1093 passed** |
+| Analyzer (changed paths) | **0 errors / 0 warnings** (info-only `prefer_initializing_formals` on materialize ctor, pre-existing pattern) |
 
 ---
 
