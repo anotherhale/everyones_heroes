@@ -29,7 +29,9 @@ void main() {
       expect(source.toLowerCase(), isNot(contains('openai')), reason: path);
       expect(source.toLowerCase(), isNot(contains('anthropic')), reason: path);
       expect(source, isNot(contains('ProxyStoryBuilder')), reason: path);
-      expect(source, isNot(contains('AiStoryShaper')), reason: path);
+      expect(source, isNot(contains('ProxyStoryShaperAdapter')), reason: path);
+      // Use case may resolve StoryShaperPort strategies; it must not import
+      // AI provider SDKs or the proxy adapter.
     }
   });
 }

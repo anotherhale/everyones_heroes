@@ -240,6 +240,181 @@ void main() {
     });
   });
 
+  group('StoryAuthoringHandler', () {
+    late StoryAuthoringHandler handler;
+    late _FakeChatClient chat;
+
+    setUp(() {
+      chat = _FakeChatClient();
+      handler = StoryAuthoringHandler(
+        config: const ProxyConfig(
+          openAiApiKey: 'test-key',
+          authToken: 'secret',
+        ),
+        client: chat,
+      );
+    });
+
+    test('returns EH-owned authoring payload', () async {
+      chat.content = jsonEncode({
+        'title': 'Kept Going',
+        'summary': 'A short derived summary.',
+        'sections': [
+          {
+            'role': 'struggle',
+            'content':
+                'Even when giving up felt tempting, the Hero chose to keep moving.',
+            'sourceResponseIds': ['r17'],
+          },
+        ],
+        'warnings': [],
+        'lifecycle': 'accepted',
+        'contentOrigin': 'heroAuthored',
+      });
+      final body = jsonEncode({
+        'purpose': 'inspireSomeone',
+        'themes': ['perseverance'],
+        'themesUnsure': false,
+        'title': null,
+        'summary': 'I kept going even when I wanted to quit.',
+        'understandingSummary': 'The Hero appears to value perseverance.',
+        'sections': [
+          {
+            'role': 'struggle',
+            'content': 'I kept going even when I wanted to quit.',
+            'sourceResponseIds': ['r17'],
+            'contentOrigin': 'heroAuthored',
+            'wasSkipped': false,
+          },
+        ],
+      });
+      final response = await handler.handleAuthor(
+        Request(
+          'POST',
+          Uri.parse('http://localhost/story-authoring'),
+          body: body,
+        ),
+      );
+      expect(response.statusCode, 200);
+      final json = jsonDecode(await response.readAsString()) as Map;
+      expect(json['providerLabel'], 'openai_via_eh_proxy');
+      expect(json['promptOrTemplateVersion'], 'sb11.ai.v1');
+      expect(json['sections'], isA<List>());
+      expect(json.containsKey('lifecycle'), isFalse);
+      expect(json.containsKey('contentOrigin'), isFalse);
+      expect(chat.lastSystemPrompt, contains('factual source of truth'));
+      expect(chat.lastUserPrompt, contains('---BEGIN_STORY_AUTHORING_CONTEXT---'));
+      expect(chat.lastUserPrompt, contains('wanted to quit'));
+      expect(
+        chat.lastSystemPrompt,
+        contains(StoryAuthoringInstructions.systemPrompt.substring(0, 40)),
+      );
+    });
+
+    test('rejects malformed request body', () async {
+      final response = await handler.handleAuthor(
+        Request(
+          'POST',
+          Uri.parse('http://localhost/story-authoring'),
+          body: 'not-json',
+        ),
+      );
+      expect(response.statusCode, 400);
+    });
+
+    test('rejects empty sections', () async {
+      final response = await handler.handleAuthor(
+        Request(
+          'POST',
+          Uri.parse('http://localhost/story-authoring'),
+          body: jsonEncode({'sections': []}),
+        ),
+      );
+      expect(response.statusCode, 400);
+    });
+
+    test('maps provider failure to 502', () async {
+      chat.throwOnCall = true;
+      final response = await handler.handleAuthor(
+        Request(
+          'POST',
+          Uri.parse('http://localhost/story-authoring'),
+          body: jsonEncode({
+            'sections': [
+              {
+                'role': 'beginning',
+                'content': 'Once',
+                'sourceResponseIds': ['r1'],
+                'contentOrigin': 'heroAuthored',
+                'wasSkipped': false,
+              },
+            ],
+          }),
+        ),
+      );
+      expect(response.statusCode, 502);
+    });
+
+    test('maps malformed provider response to 502', () async {
+      chat.content = 'not-json';
+      final response = await handler.handleAuthor(
+        Request(
+          'POST',
+          Uri.parse('http://localhost/story-authoring'),
+          body: jsonEncode({
+            'sections': [
+              {
+                'role': 'beginning',
+                'content': 'Once',
+                'sourceResponseIds': ['r1'],
+                'contentOrigin': 'heroAuthored',
+                'wasSkipped': false,
+              },
+            ],
+          }),
+        ),
+      );
+      expect(response.statusCode, 502);
+    });
+
+    test('auth middleware rejects missing bearer token', () async {
+      final pipeline = const Pipeline()
+          .addMiddleware(handler.authMiddleware)
+          .addHandler(handler.router.call);
+      final response = await pipeline(
+        Request(
+          'POST',
+          Uri.parse('http://localhost/story-authoring'),
+          body: jsonEncode({
+            'sections': [
+              {
+                'role': 'beginning',
+                'content': 'Once',
+                'sourceResponseIds': ['r1'],
+                'contentOrigin': 'heroAuthored',
+                'wasSkipped': false,
+              },
+            ],
+          }),
+        ),
+      );
+      expect(response.statusCode, 401);
+    });
+  });
+
+  group('StoryAuthoringInstructions', () {
+    test('prompt invariants', () {
+      const prompt = StoryAuthoringInstructions.systemPrompt;
+      expect(StoryAuthoringInstructions.requiresSourceFidelity(prompt), isTrue);
+      expect(StoryAuthoringInstructions.prohibitsInvention(prompt), isTrue);
+      expect(StoryAuthoringInstructions.requiresProvenance(prompt), isTrue);
+      expect(StoryAuthoringInstructions.distinguishesDerived(prompt), isTrue);
+      expect(StoryAuthoringInstructions.preservesUncertainty(prompt), isTrue);
+      expect(StoryAuthoringInstructions.preservesVoice(prompt), isTrue);
+      expect(prompt.contains('Manufacture quotes'), isTrue);
+    });
+  });
+
   test('ProxyConfig requires OPENAI_API_KEY', () {
     expect(
       () => ProxyConfig.fromEnvironment(environment: {}),
