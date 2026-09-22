@@ -20,6 +20,8 @@ import 'package:everyonesheroes/features/hero_story/application/providers/use_ca
 import 'package:everyonesheroes/features/hero_story/domain/aggregates/story_builder_session.dart';
 import 'package:everyonesheroes/features/hero_story/domain/enums/story_builder_mode.dart';
 import 'package:everyonesheroes/features/hero_story/domain/enums/story_builder_session_status.dart';
+import 'package:everyonesheroes/features/hero_story/domain/enums/story_proposal_derivation_kind.dart';
+import 'package:everyonesheroes/features/hero_story/domain/enums/story_shaper_mode.dart';
 import 'package:everyonesheroes/features/hero_story/domain/services/deterministic_story_builder_catalog.dart';
 import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_builder_intent.dart';
 import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_builder_prompt.dart';
@@ -34,7 +36,9 @@ enum StoryBuilderUiPhase {
   proposalPreview,
   error,
   coachUnavailable,
+  authoringUnavailable,
 }
+
 
 @immutable
 final class StoryBuilderUiState {
@@ -50,6 +54,8 @@ final class StoryBuilderUiState {
     this.errorMessage,
     this.isBusy = false,
     this.proposal,
+    this.originalProposal,
+    this.showingOriginalProposal = false,
   });
 
   final StoryBuilderUiPhase phase;
@@ -64,6 +70,12 @@ final class StoryBuilderUiState {
   final bool isBusy;
   final StoryProposal? proposal;
 
+  /// Pre-AI proposal retained for compare / recovery (SB.11).
+  final StoryProposal? originalProposal;
+
+  /// When true, review UI shows [originalProposal] instead of AI proposal.
+  final bool showingOriginalProposal;
+
   int get displayStep => promptIndex + 1;
 
   bool get isAiMode => mode == StoryBuilderMode.ai;
@@ -76,6 +88,25 @@ final class StoryBuilderUiState {
       (phase == StoryBuilderUiPhase.questioning ||
           phase == StoryBuilderUiPhase.coachUnavailable) &&
       promptIndex > 0;
+
+  bool get isAiAssistedProposal =>
+      proposal?.provenance.derivationKind ==
+      StoryProposalDerivationKind.aiShaped;
+
+  bool get canImproveWithAi =>
+      phase == StoryBuilderUiPhase.proposalPreview &&
+      proposal != null &&
+      !isAiAssistedProposal;
+
+  bool get canCompareProposals =>
+      originalProposal != null && proposal != null && isAiAssistedProposal;
+
+  StoryProposal? get displayedProposal {
+    if (showingOriginalProposal && originalProposal != null) {
+      return originalProposal;
+    }
+    return proposal;
+  }
 
   StoryBuilderUiState copyWith({
     StoryBuilderUiPhase? phase,
@@ -93,6 +124,9 @@ final class StoryBuilderUiState {
     bool? isBusy,
     StoryProposal? proposal,
     bool clearProposal = false,
+    StoryProposal? originalProposal,
+    bool clearOriginalProposal = false,
+    bool? showingOriginalProposal,
   }) {
     return StoryBuilderUiState(
       phase: phase ?? this.phase,
@@ -108,6 +142,11 @@ final class StoryBuilderUiState {
       errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
       isBusy: isBusy ?? this.isBusy,
       proposal: clearProposal ? null : (proposal ?? this.proposal),
+      originalProposal: clearOriginalProposal
+          ? null
+          : (originalProposal ?? this.originalProposal),
+      showingOriginalProposal:
+          showingOriginalProposal ?? this.showingOriginalProposal,
     );
   }
 }
@@ -530,12 +569,18 @@ final class StoryBuilderController extends Notifier<StoryBuilderUiState> {
   /// Builds a Story Proposal then applies deterministic shaping (SB.9 → SB.10).
   ///
   /// UX: Build Story Proposal → shape → Review Story (proposal preview).
+  /// Does not automatically invoke AI authoring (SB.11 is explicit).
   Future<void> buildStoryProposal() async {
     final sessionId = state.sessionId;
     if (sessionId == null || state.isBusy) {
       return;
     }
-    state = state.copyWith(isBusy: true, clearError: true);
+    state = state.copyWith(
+      isBusy: true,
+      clearError: true,
+      clearOriginalProposal: true,
+      showingOriginalProposal: false,
+    );
     final buildResult =
         await ref.read(buildStoryProposalUseCaseProvider).execute(
               BuildStoryProposalRequest(sessionId: sessionId),
@@ -551,7 +596,10 @@ final class StoryBuilderController extends Notifier<StoryBuilderUiState> {
 
     final shapeResult =
         await ref.read(shapeStoryProposalUseCaseProvider).execute(
-              ShapeStoryProposalRequest(proposalId: built.id),
+              ShapeStoryProposalRequest(
+                proposalId: built.id,
+                mode: StoryShaperMode.deterministic,
+              ),
             );
     if (shapeResult is Failure) {
       state = state.copyWith(
@@ -566,6 +614,73 @@ final class StoryBuilderController extends Notifier<StoryBuilderUiState> {
       proposal: proposal,
       isBusy: false,
       clearError: true,
+      clearOriginalProposal: true,
+      showingOriginalProposal: false,
+    );
+  }
+
+  /// Explicitly invokes AI authoring on the current proposal (SB.11).
+  ///
+  /// On failure, keeps the existing proposal and enters authoringUnavailable.
+  Future<void> improveProposalWithAi() async {
+    final current = state.proposal;
+    if (current == null || state.isBusy) {
+      return;
+    }
+    state = state.copyWith(isBusy: true, clearError: true);
+    final result = await ref.read(shapeStoryProposalUseCaseProvider).execute(
+          ShapeStoryProposalRequest(
+            proposalId: current.id,
+            mode: StoryShaperMode.ai,
+          ),
+        );
+    if (result is Failure) {
+      state = state.copyWith(
+        phase: StoryBuilderUiPhase.authoringUnavailable,
+        isBusy: false,
+        errorMessage: (result as Failure).error,
+        // Keep current proposal as the recoverable original.
+        originalProposal: state.originalProposal ?? current,
+        proposal: current,
+      );
+      return;
+    }
+    final shaped = (result as Success<StoryProposal>).value;
+    state = state.copyWith(
+      phase: StoryBuilderUiPhase.proposalPreview,
+      originalProposal: state.originalProposal ?? current,
+      proposal: shaped,
+      showingOriginalProposal: false,
+      isBusy: false,
+      clearError: true,
+    );
+  }
+
+  void retryAiAuthoring() {
+    state = state.copyWith(
+      phase: StoryBuilderUiPhase.proposalPreview,
+      clearError: true,
+    );
+    improveProposalWithAi();
+  }
+
+  void continueWithCurrentProposal() {
+    final proposal = state.proposal ?? state.originalProposal;
+    state = state.copyWith(
+      phase: StoryBuilderUiPhase.proposalPreview,
+      proposal: proposal,
+      clearError: true,
+      isBusy: false,
+      showingOriginalProposal: false,
+    );
+  }
+
+  void toggleProposalCompare() {
+    if (!state.canCompareProposals) {
+      return;
+    }
+    state = state.copyWith(
+      showingOriginalProposal: !state.showingOriginalProposal,
     );
   }
 
@@ -573,6 +688,8 @@ final class StoryBuilderController extends Notifier<StoryBuilderUiState> {
     state = state.copyWith(
       phase: StoryBuilderUiPhase.completed,
       clearProposal: true,
+      clearOriginalProposal: true,
+      showingOriginalProposal: false,
       clearError: true,
     );
   }

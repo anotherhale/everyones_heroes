@@ -153,6 +153,21 @@ class _StoryBuilderScreenState extends ConsumerState<StoryBuilderScreen> {
                     : () => controller.continueWithGuidedBuilder(),
                 onBack: () => Navigator.of(context).maybePop(),
               ),
+              StoryBuilderUiPhase.authoringUnavailable =>
+                _AuthoringUnavailableBody(
+                  message: state.errorMessage ??
+                      "We couldn't create the AI version of your story. "
+                          'Your existing story proposal is still safe.',
+                  onRetry:
+                      state.isBusy ? null : () => controller.retryAiAuthoring(),
+                  onContinueWithCurrent: state.isBusy
+                      ? null
+                      : () => controller.continueWithCurrentProposal(),
+                  onExit: () {
+                    ref.invalidate(resumableStoryBuilderSessionsProvider);
+                    Navigator.of(context).maybePop();
+                  },
+                ),
               StoryBuilderUiPhase.completed => _CompletedBody(
                 isAiMode: state.isAiMode,
                 isBusy: state.isBusy,
@@ -166,7 +181,15 @@ class _StoryBuilderScreenState extends ConsumerState<StoryBuilderScreen> {
                 },
               ),
               StoryBuilderUiPhase.proposalPreview => _ProposalPreviewBody(
-                proposal: state.proposal!,
+                proposal: state.displayedProposal!,
+                isAiAssisted: state.isAiAssistedProposal &&
+                    !state.showingOriginalProposal,
+                showingOriginal: state.showingOriginalProposal,
+                canCompare: state.canCompareProposals,
+                canImproveWithAi: state.canImproveWithAi && !state.isBusy,
+                isBusy: state.isBusy,
+                onImproveWithAi: () => controller.improveProposalWithAi(),
+                onToggleCompare: () => controller.toggleProposalCompare(),
                 onBack: () => controller.leaveProposalPreview(),
                 onDone: () {
                   ref.invalidate(resumableStoryBuilderSessionsProvider);
@@ -420,11 +443,25 @@ class _CompletedBody extends StatelessWidget {
 class _ProposalPreviewBody extends StatelessWidget {
   const _ProposalPreviewBody({
     required this.proposal,
+    required this.isAiAssisted,
+    required this.showingOriginal,
+    required this.canCompare,
+    required this.canImproveWithAi,
+    required this.isBusy,
+    required this.onImproveWithAi,
+    required this.onToggleCompare,
     required this.onBack,
     required this.onDone,
   });
 
   final StoryProposal proposal;
+  final bool isAiAssisted;
+  final bool showingOriginal;
+  final bool canCompare;
+  final bool canImproveWithAi;
+  final bool isBusy;
+  final VoidCallback onImproveWithAi;
+  final VoidCallback onToggleCompare;
   final VoidCallback onBack;
   final VoidCallback onDone;
 
@@ -443,6 +480,11 @@ class _ProposalPreviewBody extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final presented = _presentedSections;
+    final disclaimer = isAiAssisted
+        ? 'This is an AI-assisted story proposal. Wording may have been '
+            'reorganized for clarity. Your original material remains available.'
+        : 'Shaping organizes your story using the material you provided. '
+            'It does not add facts to your story.';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -453,10 +495,21 @@ class _ProposalPreviewBody extends StatelessWidget {
             fontWeight: FontWeight.w700,
           ),
         ),
+        if (isAiAssisted) ...[
+          const SizedBox(height: 8),
+          Text(
+            showingOriginal
+                ? 'Your original material'
+                : 'AI-assisted story proposal',
+            key: const ValueKey('story-builder-proposal-ai-disclosure'),
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
         const SizedBox(height: 8),
         Text(
-          'Shaping organizes your story using the material you provided. '
-          'It does not add facts to your story.',
+          disclaimer,
           key: const ValueKey('story-builder-proposal-disclaimer'),
           style: theme.textTheme.bodyLarge?.copyWith(height: 1.5),
         ),
@@ -489,6 +542,24 @@ class _ProposalPreviewBody extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 8),
+        if (canImproveWithAi)
+          FilledButton(
+            key: const ValueKey('story-builder-improve-with-ai'),
+            onPressed: isBusy ? null : onImproveWithAi,
+            child: Text(isBusy ? 'Creating AI story…' : 'Improve with AI'),
+          ),
+        if (canImproveWithAi) const SizedBox(height: 8),
+        if (canCompare)
+          OutlinedButton(
+            key: const ValueKey('story-builder-proposal-compare'),
+            onPressed: onToggleCompare,
+            child: Text(
+              showingOriginal
+                  ? 'Show AI-assisted version'
+                  : 'Show your original material',
+            ),
+          ),
+        if (canCompare) const SizedBox(height: 8),
         OutlinedButton(
           key: const ValueKey('story-builder-proposal-back'),
           onPressed: onBack,
@@ -518,6 +589,57 @@ class _ProposalPreviewBody extends StatelessWidget {
       StoryBuilderNarrativeRole.reflection => 'Reflection',
       StoryBuilderNarrativeRole.message => 'Message',
     };
+  }
+}
+
+class _AuthoringUnavailableBody extends StatelessWidget {
+  const _AuthoringUnavailableBody({
+    required this.message,
+    required this.onRetry,
+    required this.onContinueWithCurrent,
+    required this.onExit,
+  });
+
+  final String message;
+  final VoidCallback? onRetry;
+  final VoidCallback? onContinueWithCurrent;
+  final VoidCallback onExit;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const Spacer(),
+        Text(
+          "We couldn't create the AI version of your story. "
+          'Your existing story proposal is still safe.',
+          key: const ValueKey('story-builder-authoring-unavailable'),
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        const SizedBox(height: 8),
+        Text(message),
+        const SizedBox(height: 16),
+        FilledButton(
+          key: const ValueKey('story-builder-authoring-retry'),
+          onPressed: onRetry,
+          child: const Text('Retry'),
+        ),
+        const SizedBox(height: 8),
+        OutlinedButton(
+          key: const ValueKey('story-builder-authoring-continue'),
+          onPressed: onContinueWithCurrent,
+          child: const Text('Continue with current proposal'),
+        ),
+        const SizedBox(height: 8),
+        TextButton(
+          key: const ValueKey('story-builder-authoring-exit'),
+          onPressed: onExit,
+          child: const Text('Exit'),
+        ),
+        const Spacer(),
+      ],
+    );
   }
 }
 

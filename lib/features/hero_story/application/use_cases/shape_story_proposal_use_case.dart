@@ -7,27 +7,36 @@ import 'package:everyonesheroes/features/hero_story/domain/repositories/story_bu
 import 'package:everyonesheroes/features/hero_story/domain/repositories/story_proposal_repository.dart';
 import 'package:everyonesheroes/features/hero_story/domain/services/deterministic_story_shaper.dart';
 import 'package:everyonesheroes/features/hero_story/domain/services/story_shaper_port.dart';
+import 'package:everyonesheroes/features/hero_story/domain/services/story_shaper_strategy_resolver.dart';
 import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_proposal.dart';
 
-/// Deterministically shapes a persisted [StoryProposal] (SB.10).
+/// Shapes a persisted [StoryProposal] (SB.10 deterministic / SB.11 AI).
 ///
 /// Flow: load proposal → shape via [StoryShaperPort] → persist shaped proposal.
-/// Never creates a [Story], never mutates the Story Builder session, never
-/// calls AI.
+/// On any failure the original persisted proposal remains intact.
+/// Never creates a [Story], never mutates the Story Builder session.
 final class ShapeStoryProposalUseCase
     implements UseCase<ShapeStoryProposalRequest, StoryProposal> {
   const ShapeStoryProposalUseCase({
-    required this._proposalRepository,
-    this._sessionRepository,
-    this._shaper = const DeterministicStoryShaper(),
-  });
+    required StoryProposalRepository proposalRepository,
+    StoryBuilderSessionRepository? sessionRepository,
+    StoryShaperPort? shaper,
+    StoryShaperStrategyResolver? resolver,
+  })  : _proposalRepository = proposalRepository,
+        _sessionRepository = sessionRepository,
+        _shaper = shaper,
+        _resolver = resolver;
 
   final StoryProposalRepository _proposalRepository;
 
   /// Optional — when provided, used only to assert the session is unchanged.
   final StoryBuilderSessionRepository? _sessionRepository;
 
-  final StoryShaperPort _shaper;
+  /// Optional fixed shaper (SB.10 tests / overrides). Takes precedence.
+  final StoryShaperPort? _shaper;
+
+  /// When set (and [_shaper] is null), resolves shaping by request mode.
+  final StoryShaperStrategyResolver? _resolver;
 
   @override
   Future<Result<StoryProposal>> execute(
@@ -61,8 +70,9 @@ final class ShapeStoryProposalUseCase
       final sourceLifecycle = proposal.lifecycle;
       final sourceProcessingVersion = proposal.provenance.processingVersion;
 
+      final shaper = _resolveShaper(request);
+
       final StoryProposal shaped;
-      final shaper = _shaper;
       if (shaper is DeterministicStoryShaper) {
         shaped = shaper.shapeSync(proposal, shapedAt: request.shapedAt);
       } else {
@@ -101,11 +111,27 @@ final class ShapeStoryProposalUseCase
         }
       }
 
+      // Persist only after full validation succeeded.
       await _proposalRepository.save(shaped);
       return Success(shaped);
+    } on StoryShaperException catch (e) {
+      // Original proposal remains in the repository unchanged.
+      return Failure(e.message);
     } catch (e) {
       return Failure('Failed to shape Story Proposal: $e');
     }
+  }
+
+  StoryShaperPort _resolveShaper(ShapeStoryProposalRequest request) {
+    final fixed = _shaper;
+    if (fixed != null) {
+      return fixed;
+    }
+    final resolver = _resolver;
+    if (resolver != null) {
+      return resolver.resolve(request.mode);
+    }
+    return const DeterministicStoryShaper();
   }
 
   static bool _sameList(List<Object?> a, List<Object?> b) {

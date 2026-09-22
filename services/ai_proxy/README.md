@@ -1,4 +1,4 @@
-# Everyone's Heroes AI Proxy (HS.11 / SB.7 / SB.8)
+# Everyone's Heroes AI Proxy (HS.11 / SB.7 / SB.8 / SB.11)
 
 Production AI credentials stay on this server. The Flutter app never embeds
 OpenAI secrets (HS-ADR-067 / HS-ADR-068).
@@ -10,6 +10,7 @@ OpenAI secrets (HS-ADR-067 / HS-ADR-068).
 | `POST` | `/story-transcriptions` | Speech-to-text (HS.11) |
 | `POST` | `/story-builder-questions` | AI Story Coach next question (SB.7) |
 | `POST` | `/story-understanding` | Story Builder Understanding (SB.8) |
+| `POST` | `/story-authoring` | AI Story Proposal authoring (SB.11) |
 | `GET` | `/health` | Liveness (auth exempt) |
 
 ## Run
@@ -34,11 +35,12 @@ flutter run \
   --dart-define=EH_TRANSCRIPTION_MODE=proxy \
   --dart-define=EH_STORY_BUILDER_COACH_MODE=proxy \
   --dart-define=EH_STORY_BUILDER_UNDERSTANDING_MODE=proxy \
+  --dart-define=EH_STORY_AUTHORING_MODE=proxy \
   --dart-define=EH_AI_PROXY_AUTH_TOKEN=dev-token
 ```
 
 Without `EH_AI_PROXY_URL`, the app uses development in-memory adapters for
-transcription, Story Builder coaching, and Story Understanding.
+transcription, Story Builder coaching, Story Understanding, and Story Authoring.
 
 ## Story Coach contract
 
@@ -113,3 +115,51 @@ Request (JSON, EH-owned — minimized Builder material + SB.4 structure):
 
 Response (JSON): structured themes / narrativeElements / keyElements /
 significantEvents with `sourceResponseIds` provenance — never a polished story.
+
+## Story Authoring contract
+
+`POST /story-authoring`
+
+Request (JSON, EH-owned — minimized StoryProposal payload):
+
+```json
+{
+  "purpose": "inspireSomeone",
+  "themes": ["perseverance"],
+  "themesUnsure": false,
+  "title": null,
+  "summary": "optional existing narrative",
+  "understandingSummary": "optional derived understanding — not fact",
+  "sections": [
+    {
+      "role": "struggle",
+      "content": "I kept going even when I wanted to quit.",
+      "sourceResponseIds": ["sb-response-17"],
+      "contentOrigin": "heroAuthored",
+      "wasSkipped": false
+    }
+  ]
+}
+```
+
+Response (JSON):
+
+```json
+{
+  "title": "optional grounded title",
+  "summary": "optional short derived summary",
+  "sections": [
+    {
+      "role": "struggle",
+      "content": "derived prose grounded in Hero material",
+      "sourceResponseIds": ["sb-response-17"]
+    }
+  ],
+  "warnings": [],
+  "providerLabel": "openai_via_eh_proxy",
+  "promptOrTemplateVersion": "sb11.ai.v1"
+}
+```
+
+Hero-authored content is the factual source of truth. Derived understanding is
+guidance only. The model must not invent facts or sourceResponseIds.

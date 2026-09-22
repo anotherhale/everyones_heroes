@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:everyonesheroes/core/eventing/event_providers.dart';
+import 'package:everyonesheroes/features/hero_story/application/providers/ai/story_authoring_port_provider.dart';
 import 'package:everyonesheroes/features/hero_story/application/providers/ai/story_builder_understanding_port_provider.dart';
 import 'package:everyonesheroes/features/hero_story/application/providers/repositories/story_builder_session_repository_provider.dart';
 import 'package:everyonesheroes/features/hero_story/application/providers/repositories/story_proposal_repository_provider.dart';
@@ -190,6 +191,6 @@ final shapeStoryProposalUseCaseProvider =
       return ShapeStoryProposalUseCase(
         proposalRepository: ref.watch(storyProposalRepositoryProvider),
         sessionRepository: ref.watch(storyBuilderSessionRepositoryProvider),
-        shaper: ref.watch(storyShaperPortProvider),
+        resolver: ref.watch(storyShaperStrategyResolverProvider),
       );
     });
