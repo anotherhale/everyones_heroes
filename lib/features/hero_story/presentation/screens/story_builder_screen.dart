@@ -12,6 +12,7 @@ import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_p
 import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_proposal_section_edit.dart';
 import 'package:everyonesheroes/features/hero_story/presentation/providers/resumable_story_builder_sessions_provider.dart';
 import 'package:everyonesheroes/features/hero_story/presentation/providers/story_builder_controller.dart';
+import 'package:everyonesheroes/features/hero_story/presentation/screens/owned_story_detail_screen.dart';
 
 /// Story Builder screen — Guided (SB.3) or AI Story Coach (SB.7).
 ///
@@ -190,6 +191,15 @@ class _StoryBuilderScreenState extends ConsumerState<StoryBuilderScreen> {
                 onEdit: state.isBusy
                     ? null
                     : () => controller.beginProposalRevision(),
+                onContinueToStory: () {
+                  final storyId = state.materializedStory!.id.value;
+                  ref.invalidate(resumableStoryBuilderSessionsProvider);
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute<void>(
+                      builder: (_) => OwnedStoryDetailScreen(storyId: storyId),
+                    ),
+                  );
+                },
                 onDone: () {
                   ref.invalidate(resumableStoryBuilderSessionsProvider);
                   Navigator.of(context).maybePop();
@@ -1026,12 +1036,14 @@ class _StoryCreatedBody extends StatelessWidget {
   const _StoryCreatedBody({
     required this.story,
     required this.onDone,
+    required this.onContinueToStory,
     required this.onEdit,
     required this.isBusy,
   });
 
   final Story story;
   final VoidCallback onDone;
+  final VoidCallback onContinueToStory;
   final VoidCallback? onEdit;
   final bool isBusy;
 
@@ -1063,14 +1075,29 @@ class _StoryCreatedBody extends StatelessWidget {
           key: const ValueKey('story-builder-story-created-unpublished'),
           style: theme.textTheme.bodyLarge?.copyWith(height: 1.5),
         ),
+        const SizedBox(height: 8),
+        Text(
+          'Continue to your story to Submit, Approve, and Publish when ready.',
+          key: const ValueKey('story-builder-story-created-publish-hint'),
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+            height: 1.4,
+          ),
+        ),
         const Spacer(),
+        FilledButton(
+          key: const ValueKey('story-builder-story-created-continue'),
+          onPressed: onContinueToStory,
+          child: const Text('Continue to Story'),
+        ),
+        const SizedBox(height: 8),
         OutlinedButton(
           key: const ValueKey('story-builder-proposal-edit-after-approve'),
           onPressed: onEdit,
           child: Text(isBusy ? 'Opening editor…' : 'Edit'),
         ),
         const SizedBox(height: 8),
-        FilledButton(
+        TextButton(
           key: const ValueKey('story-builder-story-created-done'),
           onPressed: onDone,
           child: const Text('Done'),

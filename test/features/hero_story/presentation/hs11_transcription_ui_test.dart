@@ -155,6 +155,13 @@ void main() {
 
     await pumpDetail(tester, container, storyId);
 
+    await tester.dragUntilVisible(
+      find.byKey(const ValueKey('owned-story-transcription-heading')),
+      find.byType(ListView),
+      const Offset(0, -200),
+    );
+    await tester.pumpAndSettle();
+
     expect(
       find.byKey(const ValueKey('owned-story-transcription-heading')),
       findsOneWidget,
@@ -184,9 +191,13 @@ void main() {
 
     final startButton =
         find.byKey(const ValueKey('owned-story-start-transcription-button'));
-    expect(startButton, findsOneWidget);
-    await tester.ensureVisible(startButton);
+    await tester.dragUntilVisible(
+      startButton,
+      find.byType(ListView),
+      const Offset(0, -200),
+    );
     await tester.pumpAndSettle();
+    expect(startButton, findsOneWidget);
     await tester.tap(startButton);
     await tester.pumpAndSettle();
 
@@ -218,7 +229,11 @@ void main() {
     await pumpDetail(tester, container, storyId);
     final startButton =
         find.byKey(const ValueKey('owned-story-start-transcription-button'));
-    await tester.ensureVisible(startButton);
+    await tester.dragUntilVisible(
+      startButton,
+      find.byType(ListView),
+      const Offset(0, -200),
+    );
     await tester.pumpAndSettle();
     await tester.tap(startButton);
     await tester.pumpAndSettle();

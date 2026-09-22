@@ -57,6 +57,7 @@ extension OwnedStoryListItemLifecycle on OwnedStoryListItemModel {
 StoryLifecycleStatus? lifecycleStatusFromLabel(String label) {
   return switch (label) {
     'Draft' => StoryLifecycleStatus.draft,
+    'Submitted' => StoryLifecycleStatus.processing,
     'Ready for Review' => StoryLifecycleStatus.review,
     'Approved' => StoryLifecycleStatus.approved,
     'Published' => StoryLifecycleStatus.published,
