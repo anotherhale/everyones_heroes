@@ -5,6 +5,8 @@
 **Status:** Proposed Roadmap
 **Scope:** Hero & Story Platform
 **Current Story Builder:** SB.0–SB.13
+**Companion (execution):** `docs/architecture/Hero and Story Platform Implementation Master Plan.md`
+**Latest checkpoint:** `docs/analysis/HS-architecture-checkpoint.md`
 **Architectural North Star:** Stories become a trustworthy source of human experience that can eventually participate in discovery and personalized growth experiences.
 
 ---
