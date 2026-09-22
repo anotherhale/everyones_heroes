@@ -237,16 +237,20 @@ Proxy: understanding handler success + provider failure + instruction invariants
 |-------|--------|
 | Focused Flutter SB.8 | **14/14 passed** |
 | AI proxy | **11/11 passed** (was 8/8; +3 understanding) |
-| Full `flutter test` | _(recorded after full run)_ |
-| `dart analyze` | _(recorded after analyze)_ |
+| Full `flutter test` | **940/940 passed** (baseline 926 + 14 SB.8) |
+| `dart analyze` | **0 errors**; **1 pre-existing warning** in `browse_stories_by_catalog_use_case.dart` (`unawaited_futures`); remaining issues are pre-existing / style `info` lints (including matching SB.7 proxy adapter patterns) |
 
 ---
 
 ## 15. `dart analyze` result
 
-_(recorded after analyze)_
+```text
+0 errors
+1 warning — browse_stories_by_catalog_use_case.dart (pre-existing, unrelated)
+info lints — prefer_initializing_formals / style (pre-existing pattern + SB.8 proxy matching SB.7)
+```
 
-Expected: no new errors; pre-existing unrelated warning in `browse_stories_by_catalog_use_case.dart` may remain.
+Not claiming a fully clean analyzer result: the existing warning remains.
 
 ---
 

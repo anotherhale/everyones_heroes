@@ -28,16 +28,12 @@ final class UnderstandStoryBuilderSessionUseCase
           StoryBuilderUnderstanding
         > {
   const UnderstandStoryBuilderSessionUseCase({
-    required StoryBuilderSessionRepository sessionRepository,
-    StoryBuilderUnderstandingPort? understandingPort,
-    DeterministicStoryStructureBuilder structureBuilder =
-        const DeterministicStoryStructureBuilder(),
-    DeterministicStoryBuilderUnderstandingBuilder understandingBuilder =
+    required this._sessionRepository,
+    this._understandingPort,
+    this._structureBuilder = const DeterministicStoryStructureBuilder(),
+    this._understandingBuilder =
         const DeterministicStoryBuilderUnderstandingBuilder(),
-  }) : _sessionRepository = sessionRepository,
-       _understandingPort = understandingPort,
-       _structureBuilder = structureBuilder,
-       _understandingBuilder = understandingBuilder;
+  });
 
   final StoryBuilderSessionRepository _sessionRepository;
   final StoryBuilderUnderstandingPort? _understandingPort;

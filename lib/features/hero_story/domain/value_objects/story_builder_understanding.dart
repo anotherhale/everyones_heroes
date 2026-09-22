@@ -41,7 +41,7 @@ final class StoryBuilderUnderstanding extends ValueObject {
     if (processingVersion.trim().isEmpty) {
       throw ArgumentError('processingVersion cannot be empty.');
     }
-    if (this.sessionId != structure.sessionId) {
+    if (sessionId != structure.sessionId) {
       throw ArgumentError(
         'Understanding sessionId must match embedded structure.sessionId.',
       );
