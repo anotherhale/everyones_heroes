@@ -239,7 +239,16 @@ wording. A lightweight compare toggle retains access to the original proposal.
 
 ---
 
-## Architectural verification
+## Test results
+
+| Suite | Result |
+|-------|--------|
+| Focused SB.11 (`sb11_ai_story_authoring_test` + architecture) | **26/26 passed** |
+| AI proxy suite (`services/ai_proxy`) | **18/18 passed** |
+| Full `flutter test` | **1009/1009 passed** (baseline 985 + SB.11) |
+| `dart analyze` | **0 errors**; pre-existing infos/`prefer_initializing_formals` style notes remain; SB.11 unused-import warnings cleaned |
+
+---
 
 | Check | Result |
 |-------|--------|

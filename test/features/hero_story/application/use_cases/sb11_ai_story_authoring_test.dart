@@ -9,19 +9,16 @@ import 'package:everyonesheroes/core/ids/hero_id.dart';
 import 'package:everyonesheroes/core/ids/story_builder_response_id.dart';
 import 'package:everyonesheroes/core/ids/story_builder_session_id.dart';
 import 'package:everyonesheroes/core/ids/story_proposal_id.dart';
-import 'package:everyonesheroes/core/ids/story_proposal_section_id.dart';
 import 'package:everyonesheroes/core/results/failure.dart';
 import 'package:everyonesheroes/core/results/success.dart';
 import 'package:everyonesheroes/features/hero_story/application/dto/requests/advance_story_builder_request.dart';
 import 'package:everyonesheroes/features/hero_story/application/dto/requests/answer_story_builder_prompt_request.dart';
-import 'package:everyonesheroes/features/hero_story/application/dto/requests/build_story_proposal_request.dart';
 import 'package:everyonesheroes/features/hero_story/application/dto/requests/set_story_builder_intent_request.dart';
 import 'package:everyonesheroes/features/hero_story/application/dto/requests/shape_story_proposal_request.dart';
 import 'package:everyonesheroes/features/hero_story/application/dto/requests/start_story_builder_session_request.dart';
 import 'package:everyonesheroes/features/hero_story/application/dto/responses/advance_story_builder_result.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/advance_story_builder_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/answer_story_builder_prompt_use_case.dart';
-import 'package:everyonesheroes/features/hero_story/application/use_cases/build_story_proposal_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/set_story_builder_intent_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/shape_story_proposal_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/skip_story_builder_prompt_use_case.dart';
@@ -50,7 +47,6 @@ void main() {
   late AnswerStoryBuilderPromptUseCase answer;
   late SkipStoryBuilderPromptUseCase skip;
   late SetStoryBuilderIntentUseCase setIntent;
-  late BuildStoryProposalUseCase buildProposal;
   late DeterministicStoryStructureBuilder structureBuilder;
   late DeterministicStoryBuilderUnderstandingBuilder understandingBuilder;
   late DeterministicStoryProposalBuilder proposalBuilder;
@@ -88,10 +84,6 @@ void main() {
     setIntent = SetStoryBuilderIntentUseCase(
       sessionRepository: sessionRepository,
       eventBus: eventBus,
-    );
-    buildProposal = BuildStoryProposalUseCase(
-      sessionRepository: sessionRepository,
-      proposalRepository: proposalRepository,
     );
   });
 
