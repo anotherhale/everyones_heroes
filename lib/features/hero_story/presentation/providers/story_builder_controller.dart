@@ -851,9 +851,11 @@ final class StoryBuilderController extends Notifier<StoryBuilderUiState> {
   Future<StoryProposal?> _loadLatestProposal(
     StoryBuilderSessionId sessionId,
   ) async {
-    final proposals = await ref
-        .read(storyProposalRepositoryProvider)
-        .findBySessionId(sessionId);
+    final proposals = List<StoryProposal>.of(
+      await ref
+          .read(storyProposalRepositoryProvider)
+          .findBySessionId(sessionId),
+    );
     if (proposals.isEmpty) {
       return null;
     }

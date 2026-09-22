@@ -15,10 +15,9 @@ import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_p
 final class EditStoryProposalUseCase
     implements UseCase<EditStoryProposalRequest, StoryProposal> {
   const EditStoryProposalUseCase({
-    required StoryProposalRepository proposalRepository,
-    StoryBuilderSessionRepository? sessionRepository,
-  })  : _proposalRepository = proposalRepository,
-        _sessionRepository = sessionRepository;
+    required this._proposalRepository,
+    this._sessionRepository,
+  });
 
   final StoryProposalRepository _proposalRepository;
   final StoryBuilderSessionRepository? _sessionRepository;

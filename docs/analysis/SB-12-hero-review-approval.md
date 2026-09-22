@@ -220,6 +220,17 @@ Story Builder proposal preview replaced with Hero review:
 
 ---
 
+## Tests
+
+| Check | Result |
+|-------|--------|
+| Focused SB.12 (domain + application + architecture + UI) | **29/29 passed** |
+| SB.9 / SB.10 / SB.11 regression | **62/62 passed** |
+| Full `flutter test` | **1038/1038 passed** |
+| `flutter analyze` | **0 errors** (pre-existing infos/`prefer_initializing_formals` style notes remain elsewhere) |
+
+---
+
 ## Deferred to SB.13
 
 * Materialize `Story` from an accepted `StoryProposal`

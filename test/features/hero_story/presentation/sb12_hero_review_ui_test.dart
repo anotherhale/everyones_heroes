@@ -138,6 +138,10 @@ void main() {
     WidgetTester tester,
     ProviderContainer container,
   ) async {
+    await tester.binding.setSurfaceSize(const Size(900, 2400));
+    addTearDown(() async {
+      await tester.binding.setSurfaceSize(null);
+    });
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,
@@ -146,9 +150,15 @@ void main() {
         ),
       ),
     );
+    // Wait until review UI (or approved/rejected state) is visible.
+    for (var i = 0; i < 40; i++) {
+      await tester.pump(const Duration(milliseconds: 25));
+      final phase = container.read(storyBuilderControllerProvider).phase;
+      if (phase == StoryBuilderUiPhase.proposalPreview) {
+        break;
+      }
+    }
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 50));
-    await tester.pumpAndSettle();
   }
 
   testWidgets('proposal opens in review mode with authorship labels', (
@@ -165,7 +175,8 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('Hero-authored'), findsOneWidget);
-    expect(find.text('AI-assisted'), findsWidgets);
+    // Section label plus the "AI-assisted content" note title / disclosure.
+    expect(find.textContaining('AI-assisted'), findsWidgets);
     expect(find.text('Approve Story'), findsOneWidget);
     expect(find.text('Reject'), findsOneWidget);
     expect(find.text('Save Changes'), findsOneWidget);

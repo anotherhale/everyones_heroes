@@ -14,8 +14,8 @@ import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_p
 final class ApproveStoryProposalUseCase
     implements UseCase<ApproveStoryProposalRequest, StoryProposal> {
   const ApproveStoryProposalUseCase({
-    required StoryProposalRepository proposalRepository,
-  }) : _proposalRepository = proposalRepository;
+    required this._proposalRepository,
+  });
 
   final StoryProposalRepository _proposalRepository;
 

@@ -12,8 +12,8 @@ import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_p
 final class BeginStoryProposalRevisionUseCase
     implements UseCase<BeginStoryProposalRevisionRequest, StoryProposal> {
   const BeginStoryProposalRevisionUseCase({
-    required StoryProposalRepository proposalRepository,
-  }) : _proposalRepository = proposalRepository;
+    required this._proposalRepository,
+  });
 
   final StoryProposalRepository _proposalRepository;
 

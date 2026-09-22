@@ -13,8 +13,8 @@ import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_p
 final class RejectStoryProposalUseCase
     implements UseCase<RejectStoryProposalRequest, StoryProposal> {
   const RejectStoryProposalUseCase({
-    required StoryProposalRepository proposalRepository,
-  }) : _proposalRepository = proposalRepository;
+    required this._proposalRepository,
+  });
 
   final StoryProposalRepository _proposalRepository;
 
