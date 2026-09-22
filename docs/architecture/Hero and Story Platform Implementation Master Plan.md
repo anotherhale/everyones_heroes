@@ -3,8 +3,8 @@
 **Status:** Living execution plan (updated after HS architecture checkpoint)  
 **Companion:** `docs/architecture/Hero and Story Platform Roadmap.md`  
 **Primary bounded context:** Hero & Story  
-**Current checkpoint:** SB.13 complete; Phase B architecture checkpoint complete; HS.FG.1 complete; HS.FG.2 complete  
-**Next slice:** HS.FG.3 — Durable Story Understanding + apply wiring  
+**Current checkpoint:** SB.13 complete; Phase B architecture checkpoint complete; HS.FG.1 complete; HS.FG.2 complete; Post-FG integration checkpoint complete  
+**Next slice:** HS.FG.3 — Owner Hero Discoverability Composition  
 
 **Related reports:**
 - `docs/analysis/SB-13-story-materialization.md`
@@ -12,6 +12,7 @@
 - `docs/analysis/HS-FG-1-owner-publish-path-plan.md`
 - `docs/analysis/HS-FG-1-owner-publish-path.md`
 - `docs/analysis/HS-FG-2-theme-discovery-bridge.md`
+- `docs/analysis/HS-post-FG-integration-checkpoint.md`
 
 ---
 
@@ -85,7 +86,7 @@ Implementation Master Plan  (this document)
 | Story Builder SB.0–SB.12 | Implemented |
 | SB.13 Story Materialization | **Implemented** |
 | Phase B Architecture Checkpoint | **Complete** — `docs/analysis/HS-architecture-checkpoint.md` |
-| Phase C Foundation Gap Closure | **In progress** (HS.FG.1 ✓; HS.FG.2 ✓; next HS.FG.3) |
+| Phase C Foundation Gap Closure | **In progress** (HS.FG.1 ✓; HS.FG.2 ✓; Post-FG checkpoint ✓; next HS.FG.3 Owner Hero Discoverability) |
 
 Historical HS.1→HS.8 numbering must **not** be read as “start from scratch.” Substantial capability already exists via HS.* and SB.* work. Audit first; implement only gaps.
 
@@ -123,10 +124,10 @@ Materialization is **not** publication.
 | **HS.2 Catalog** | Implemented (domain + browse) | Multidimensional classification; browse use case; theme ID refs only |
 | **HS.3 Capture** | Implemented | Device recording, media storage, capture completion |
 | **HS.4 Understanding** | Partially Implemented | SB.8 Builder path wired; HS.4 StoryUnderstanding generate/review/apply unwired; no file understanding repo |
-| **HS.5 Authoring / Approval** | Partially Implemented | SB.9–13 proposal path done; Story publish composition missing; script/translate weak composition |
-| **HS.6 Discovery** | Implemented (deterministic) | Search/Discover/Browse; in-memory adapters |
+| **HS.5 Authoring / Approval** | Partially Implemented | SB.9–13 + FG.1 owner publish composed; script/translate weak composition; Hero visibility owner composition missing |
+| **HS.6 Discovery** | Implemented (deterministic) | Search/Discover/Browse; in-memory adapters; catalog UI unfiltered |
 | **HS.7 Hero Experience** | Partially Implemented | Experience DTOs + consume; seeker playback incomplete |
-| **HS.8 Adaptive Discovery** | Partially Implemented | UI.3 seam + Story candidates; Builder themes not mapped to NarrativeThemeId |
+| **HS.8 Adaptive Discovery** | Partially Implemented | UI.3 seam + Story candidates; FG.2 maps Builder themes → NarrativeThemeId (theme UI still unwired) |
 
 Full evidence: `docs/analysis/HS-architecture-checkpoint.md`.
 
@@ -196,7 +197,13 @@ HS.FG.1 Owner Publish Path Composition    ✓
   ↓
 HS.FG.2 Builder Theme → NarrativeThemeId Bridge    ✓
   ↓
-HS.FG.3 Durable Story Understanding + apply wiring    ← NEXT
+Post-FG Integration Checkpoint    ✓
+  ↓
+HS.FG.3 Owner Hero Discoverability Composition    ← NEXT
+  ↓
+Theme-aware catalog composition / owner→seeker handoff (as needed)
+  ↓
+Durable Story Understanding + apply wiring
   ↓
 Presentation boundary cleanup (Story Builder)
   ↓
@@ -208,6 +215,8 @@ Reassess adaptive discovery quality
 ```
 
 This intentionally differs from historical HS.1→HS.8 greenfield order.
+
+**Post-FG checkpoint revision:** former “next = Durable Story Understanding” was superseded by verified code. Default local Hero is `private`, so published Stories never appear in Discover\* until Hero discoverability is composed. See `docs/analysis/HS-post-FG-integration-checkpoint.md`.
 
 ---
 
@@ -261,7 +270,8 @@ Never: `Story → BehaviorPattern` directly.
 | 7–11. Implement / test / report HS.FG.1 | Complete — `docs/analysis/HS-FG-1-owner-publish-path.md` |
 | 12. Update this master plan after HS.FG.1 | Complete |
 | HS.FG.2 Theme Bridge | Complete — `docs/analysis/HS-FG-2-theme-discovery-bridge.md` |
-| Next | HS.FG.3 — Durable Story Understanding + apply wiring |
+| Post-FG Integration Checkpoint | Complete — `docs/analysis/HS-post-FG-integration-checkpoint.md` |
+| Next | HS.FG.3 — Owner Hero Discoverability Composition |
 
 ---
 
