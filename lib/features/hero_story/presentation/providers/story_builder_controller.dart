@@ -7,8 +7,12 @@ import 'package:everyonesheroes/core/results/failure.dart';
 import 'package:everyonesheroes/core/results/success.dart';
 import 'package:everyonesheroes/features/hero_story/application/dto/requests/advance_story_builder_request.dart';
 import 'package:everyonesheroes/features/hero_story/application/dto/requests/answer_story_builder_prompt_request.dart';
+import 'package:everyonesheroes/features/hero_story/application/dto/requests/approve_story_proposal_request.dart';
+import 'package:everyonesheroes/features/hero_story/application/dto/requests/begin_story_proposal_revision_request.dart';
 import 'package:everyonesheroes/features/hero_story/application/dto/requests/build_story_proposal_request.dart';
 import 'package:everyonesheroes/features/hero_story/application/dto/requests/edit_story_builder_response_request.dart';
+import 'package:everyonesheroes/features/hero_story/application/dto/requests/edit_story_proposal_request.dart';
+import 'package:everyonesheroes/features/hero_story/application/dto/requests/reject_story_proposal_request.dart';
 import 'package:everyonesheroes/features/hero_story/application/dto/requests/set_story_builder_mode_request.dart';
 import 'package:everyonesheroes/features/hero_story/application/dto/requests/shape_story_proposal_request.dart';
 import 'package:everyonesheroes/features/hero_story/application/dto/requests/skip_story_builder_prompt_request.dart';
@@ -16,17 +20,20 @@ import 'package:everyonesheroes/features/hero_story/application/dto/requests/sta
 import 'package:everyonesheroes/features/hero_story/application/dto/requests/story_builder_session_id_request.dart';
 import 'package:everyonesheroes/features/hero_story/application/dto/responses/advance_story_builder_result.dart';
 import 'package:everyonesheroes/features/hero_story/application/providers/hero/active_local_hero_provider.dart';
+import 'package:everyonesheroes/features/hero_story/application/providers/repositories/story_proposal_repository_provider.dart';
 import 'package:everyonesheroes/features/hero_story/application/providers/use_cases/story_builder_use_case_providers.dart';
 import 'package:everyonesheroes/features/hero_story/domain/aggregates/story_builder_session.dart';
 import 'package:everyonesheroes/features/hero_story/domain/enums/story_builder_mode.dart';
 import 'package:everyonesheroes/features/hero_story/domain/enums/story_builder_session_status.dart';
 import 'package:everyonesheroes/features/hero_story/domain/enums/story_proposal_derivation_kind.dart';
+import 'package:everyonesheroes/features/hero_story/domain/enums/story_proposal_lifecycle_status.dart';
 import 'package:everyonesheroes/features/hero_story/domain/enums/story_shaper_mode.dart';
 import 'package:everyonesheroes/features/hero_story/domain/services/deterministic_story_builder_catalog.dart';
 import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_builder_intent.dart';
 import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_builder_prompt.dart';
 import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_builder_response.dart';
 import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_proposal.dart';
+import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_proposal_section_edit.dart';
 
 enum StoryBuilderUiPhase {
   loading,
@@ -227,6 +234,18 @@ final class StoryBuilderController extends Notifier<StoryBuilderUiState> {
     final session = (loaded as Success<StoryBuilderSession>).value;
     state = state.copyWith(mode: session.mode);
     if (session.status == StoryBuilderSessionStatus.completed) {
+      final resumedProposal = await _loadLatestProposal(sessionId);
+      if (resumedProposal != null) {
+        state = state.copyWith(
+          phase: StoryBuilderUiPhase.proposalPreview,
+          proposal: resumedProposal,
+          isBusy: false,
+          clearPrompt: true,
+          clearOriginalProposal: true,
+          showingOriginalProposal: false,
+        );
+        return;
+      }
       state = state.copyWith(
         phase: StoryBuilderUiPhase.completed,
         isBusy: false,
@@ -692,5 +711,155 @@ final class StoryBuilderController extends Notifier<StoryBuilderUiState> {
       showingOriginalProposal: false,
       clearError: true,
     );
+  }
+
+  /// Persists Hero edits to the current proposal (SB.12).
+  Future<bool> saveProposalEdits({
+    String? title,
+    bool updateTitle = false,
+    bool clearTitle = false,
+    String? summary,
+    bool updateSummary = false,
+    bool clearSummary = false,
+    List<StoryProposalSectionEdit> sectionEdits = const [],
+  }) async {
+    final current = state.proposal;
+    if (current == null || state.isBusy) {
+      return false;
+    }
+    state = state.copyWith(isBusy: true, clearError: true);
+    final result = await ref.read(editStoryProposalUseCaseProvider).execute(
+          EditStoryProposalRequest(
+            proposalId: current.id,
+            title: title,
+            updateTitle: updateTitle,
+            clearTitle: clearTitle,
+            summary: summary,
+            updateSummary: updateSummary,
+            clearSummary: clearSummary,
+            sectionEdits: sectionEdits,
+          ),
+        );
+    if (result is Failure) {
+      state = state.copyWith(
+        isBusy: false,
+        errorMessage: (result as Failure).error,
+      );
+      return false;
+    }
+    final edited = (result as Success<StoryProposal>).value;
+    state = state.copyWith(
+      phase: StoryBuilderUiPhase.proposalPreview,
+      proposal: edited,
+      isBusy: false,
+      clearError: true,
+      showingOriginalProposal: false,
+    );
+    return true;
+  }
+
+  /// Explicit Hero approval — only path to accepted (SB.12).
+  Future<bool> approveProposal() async {
+    final current = state.proposal;
+    if (current == null || state.isBusy) {
+      return false;
+    }
+    state = state.copyWith(isBusy: true, clearError: true);
+    final result =
+        await ref.read(approveStoryProposalUseCaseProvider).execute(
+              ApproveStoryProposalRequest(proposalId: current.id),
+            );
+    if (result is Failure) {
+      state = state.copyWith(
+        isBusy: false,
+        errorMessage: (result as Failure).error,
+      );
+      return false;
+    }
+    final approved = (result as Success<StoryProposal>).value;
+    state = state.copyWith(
+      phase: StoryBuilderUiPhase.proposalPreview,
+      proposal: approved,
+      isBusy: false,
+      clearError: true,
+      showingOriginalProposal: false,
+    );
+    return true;
+  }
+
+  /// Explicit Hero rejection (SB.12). Proposal remains persisted.
+  Future<bool> rejectProposal() async {
+    final current = state.proposal;
+    if (current == null || state.isBusy) {
+      return false;
+    }
+    state = state.copyWith(isBusy: true, clearError: true);
+    final result = await ref.read(rejectStoryProposalUseCaseProvider).execute(
+          RejectStoryProposalRequest(proposalId: current.id),
+        );
+    if (result is Failure) {
+      state = state.copyWith(
+        isBusy: false,
+        errorMessage: (result as Failure).error,
+      );
+      return false;
+    }
+    final rejected = (result as Success<StoryProposal>).value;
+    state = state.copyWith(
+      phase: StoryBuilderUiPhase.proposalPreview,
+      proposal: rejected,
+      isBusy: false,
+      clearError: true,
+      showingOriginalProposal: false,
+    );
+    return true;
+  }
+
+  /// Invalidates prior approval/rejection so the Hero can edit again.
+  Future<bool> beginProposalRevision() async {
+    final current = state.proposal;
+    if (current == null || state.isBusy) {
+      return false;
+    }
+    if (current.lifecycle != StoryProposalLifecycleStatus.accepted &&
+        current.lifecycle != StoryProposalLifecycleStatus.rejected) {
+      return true;
+    }
+    state = state.copyWith(isBusy: true, clearError: true);
+    final result =
+        await ref.read(beginStoryProposalRevisionUseCaseProvider).execute(
+              BeginStoryProposalRevisionRequest(proposalId: current.id),
+            );
+    if (result is Failure) {
+      state = state.copyWith(
+        isBusy: false,
+        errorMessage: (result as Failure).error,
+      );
+      return false;
+    }
+    final revised = (result as Success<StoryProposal>).value;
+    state = state.copyWith(
+      phase: StoryBuilderUiPhase.proposalPreview,
+      proposal: revised,
+      isBusy: false,
+      clearError: true,
+      showingOriginalProposal: false,
+    );
+    return true;
+  }
+
+  Future<StoryProposal?> _loadLatestProposal(
+    StoryBuilderSessionId sessionId,
+  ) async {
+    final proposals = List<StoryProposal>.of(
+      await ref
+          .read(storyProposalRepositoryProvider)
+          .findBySessionId(sessionId),
+    );
+    if (proposals.isEmpty) {
+      return null;
+    }
+    proposals.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+    return proposals.first;
   }
 }

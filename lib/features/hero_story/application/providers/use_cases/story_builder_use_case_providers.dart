@@ -12,6 +12,10 @@ import 'package:everyonesheroes/features/hero_story/application/use_cases/answer
 import 'package:everyonesheroes/features/hero_story/application/use_cases/build_deterministic_story_structure_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/build_story_proposal_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/shape_story_proposal_use_case.dart';
+import 'package:everyonesheroes/features/hero_story/application/use_cases/approve_story_proposal_use_case.dart';
+import 'package:everyonesheroes/features/hero_story/application/use_cases/begin_story_proposal_revision_use_case.dart';
+import 'package:everyonesheroes/features/hero_story/application/use_cases/edit_story_proposal_use_case.dart';
+import 'package:everyonesheroes/features/hero_story/application/use_cases/reject_story_proposal_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/complete_story_builder_session_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/domain/services/deterministic_story_shaper.dart';
 import 'package:everyonesheroes/features/hero_story/domain/services/story_shaper_port.dart';
@@ -192,5 +196,34 @@ final shapeStoryProposalUseCaseProvider =
         proposalRepository: ref.watch(storyProposalRepositoryProvider),
         sessionRepository: ref.watch(storyBuilderSessionRepositoryProvider),
         resolver: ref.watch(storyShaperStrategyResolverProvider),
+      );
+    });
+
+final editStoryProposalUseCaseProvider =
+    Provider<EditStoryProposalUseCase>((ref) {
+      return EditStoryProposalUseCase(
+        proposalRepository: ref.watch(storyProposalRepositoryProvider),
+        sessionRepository: ref.watch(storyBuilderSessionRepositoryProvider),
+      );
+    });
+
+final approveStoryProposalUseCaseProvider =
+    Provider<ApproveStoryProposalUseCase>((ref) {
+      return ApproveStoryProposalUseCase(
+        proposalRepository: ref.watch(storyProposalRepositoryProvider),
+      );
+    });
+
+final rejectStoryProposalUseCaseProvider =
+    Provider<RejectStoryProposalUseCase>((ref) {
+      return RejectStoryProposalUseCase(
+        proposalRepository: ref.watch(storyProposalRepositoryProvider),
+      );
+    });
+
+final beginStoryProposalRevisionUseCaseProvider =
+    Provider<BeginStoryProposalRevisionUseCase>((ref) {
+      return BeginStoryProposalRevisionUseCase(
+        proposalRepository: ref.watch(storyProposalRepositoryProvider),
       );
     });

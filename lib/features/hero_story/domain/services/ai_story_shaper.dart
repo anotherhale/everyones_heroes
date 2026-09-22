@@ -8,6 +8,7 @@ import 'package:everyonesheroes/features/hero_story/domain/services/story_author
 import 'package:everyonesheroes/features/hero_story/domain/services/story_shaper_port.dart';
 import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_proposal.dart';
 import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_proposal_provenance.dart';
+import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_proposal_review.dart';
 import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_proposal_section.dart';
 import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_title.dart';
 
@@ -134,6 +135,8 @@ final class AiStoryShaper implements StoryShaperPort {
     final summary = _resolveSummary(response.summary, source.derivedSummary);
 
     // AI must never control lifecycle — always readyForReview.
+    // Fresh AI wording resets section-level hero-edit metadata (new sections)
+    // and starts a clean review surface; never auto-approves.
     return StoryProposal(
       id: source.id,
       sessionId: source.sessionId,
@@ -153,6 +156,7 @@ final class AiStoryShaper implements StoryShaperPort {
       createdAt: source.createdAt,
       updatedAt: shapedAt,
       derivedSummary: summary,
+      review: StoryProposalReview.empty(),
     );
   }
 

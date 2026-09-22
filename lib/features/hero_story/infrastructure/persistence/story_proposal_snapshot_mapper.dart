@@ -9,16 +9,21 @@ import 'package:everyonesheroes/features/hero_story/domain/enums/story_builder_u
 import 'package:everyonesheroes/features/hero_story/domain/enums/story_proposal_content_origin.dart';
 import 'package:everyonesheroes/features/hero_story/domain/enums/story_proposal_derivation_kind.dart';
 import 'package:everyonesheroes/features/hero_story/domain/enums/story_proposal_lifecycle_status.dart';
+import 'package:everyonesheroes/features/hero_story/domain/enums/story_proposal_review_decision.dart';
 import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_builder_intent.dart';
 import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_proposal.dart';
 import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_proposal_provenance.dart';
+import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_proposal_review.dart';
 import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_proposal_section.dart';
 import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_title.dart';
 
-/// JSON snapshot mapper for durable [StoryProposal] persistence (SB.9).
+/// JSON snapshot mapper for durable [StoryProposal] persistence (SB.9 / SB.12).
 ///
 /// Follows SB.5 / HS.9 conventions: enum `.name`, ISO-8601 dates, ID `.value`.
 /// Does not embed a duplicate Story Builder session.
+///
+/// SB.12 extends snapshots with review metadata and section Hero-edit fields.
+/// Older snapshots without those keys remain loadable (defaults applied).
 final class StoryProposalSnapshotMapper {
   const StoryProposalSnapshotMapper._();
 
@@ -37,6 +42,7 @@ final class StoryProposalSnapshotMapper {
       'createdAt': proposal.createdAt.toIso8601String(),
       'updatedAt': proposal.updatedAt.toIso8601String(),
       'derivedSummary': proposal.derivedSummary,
+      'review': _reviewToJson(proposal.review),
     };
   }
 
@@ -95,6 +101,11 @@ final class StoryProposalSnapshotMapper {
         throw const FormatException('Invalid derivedSummary.');
       }
 
+      final reviewRaw = json['review'];
+      if (reviewRaw != null && reviewRaw is! Map) {
+        throw const FormatException('Invalid review object.');
+      }
+
       return StoryProposal(
         id: StoryProposalId(id),
         sessionId: StoryBuilderSessionId(sessionId),
@@ -118,6 +129,9 @@ final class StoryProposalSnapshotMapper {
         createdAt: DateTime.parse(createdAt),
         updatedAt: DateTime.parse(updatedAt),
         derivedSummary: derivedSummaryRaw as String?,
+        review: reviewRaw == null
+            ? StoryProposalReview.empty()
+            : _reviewFromJson(Map<String, dynamic>.from(reviewRaw as Map)),
       );
     } on FormatException {
       rethrow;
@@ -137,6 +151,9 @@ final class StoryProposalSnapshotMapper {
         for (final id in section.sourceResponseIds) id.value,
       ],
       'wasSkipped': section.wasSkipped,
+      'heroEdited': section.heroEdited,
+      'heroEditedAt': section.heroEditedAt?.toIso8601String(),
+      'contentBeforeHeroEdit': section.contentBeforeHeroEdit,
     };
   }
 
@@ -148,6 +165,9 @@ final class StoryProposalSnapshotMapper {
     final wasSkipped = json['wasSkipped'];
     final content = json['content'];
     final sourceIds = json['sourceResponseIds'];
+    final heroEdited = json['heroEdited'];
+    final heroEditedAt = json['heroEditedAt'];
+    final contentBeforeHeroEdit = json['contentBeforeHeroEdit'];
 
     if (id is! String || id.isEmpty) {
       throw const FormatException('Invalid section id.');
@@ -170,6 +190,15 @@ final class StoryProposalSnapshotMapper {
     if (sourceIds is! List) {
       throw const FormatException('Invalid section sourceResponseIds.');
     }
+    if (heroEdited != null && heroEdited is! bool) {
+      throw const FormatException('Invalid section heroEdited.');
+    }
+    if (heroEditedAt != null && heroEditedAt is! String) {
+      throw const FormatException('Invalid section heroEditedAt.');
+    }
+    if (contentBeforeHeroEdit != null && contentBeforeHeroEdit is! String) {
+      throw const FormatException('Invalid section contentBeforeHeroEdit.');
+    }
 
     return StoryProposalSection(
       id: StoryProposalSectionId(id),
@@ -182,6 +211,82 @@ final class StoryProposalSnapshotMapper {
           StoryBuilderResponseId(_requireString(item, 'sourceResponseId')),
       ],
       wasSkipped: wasSkipped,
+      heroEdited: heroEdited as bool? ?? false,
+      heroEditedAt: heroEditedAt == null
+          ? null
+          : DateTime.parse(heroEditedAt as String),
+      contentBeforeHeroEdit: contentBeforeHeroEdit as String?,
+    );
+  }
+
+  static Map<String, dynamic> _reviewToJson(StoryProposalReview review) {
+    return {
+      'decision': review.decision?.name,
+      'reviewedAt': review.reviewedAt?.toIso8601String(),
+      'revision': review.revision,
+      'editedAfterDecision': review.editedAfterDecision,
+      'lastEditedAt': review.lastEditedAt?.toIso8601String(),
+      'titleHeroEdited': review.titleHeroEdited,
+      'summaryHeroEdited': review.summaryHeroEdited,
+      'titleBeforeHeroEdit': review.titleBeforeHeroEdit,
+      'summaryBeforeHeroEdit': review.summaryBeforeHeroEdit,
+    };
+  }
+
+  static StoryProposalReview _reviewFromJson(Map<String, dynamic> json) {
+    final decision = json['decision'];
+    final reviewedAt = json['reviewedAt'];
+    final revision = json['revision'];
+    final editedAfterDecision = json['editedAfterDecision'];
+    final lastEditedAt = json['lastEditedAt'];
+    final titleHeroEdited = json['titleHeroEdited'];
+    final summaryHeroEdited = json['summaryHeroEdited'];
+    final titleBeforeHeroEdit = json['titleBeforeHeroEdit'];
+    final summaryBeforeHeroEdit = json['summaryBeforeHeroEdit'];
+
+    if (decision != null && decision is! String) {
+      throw const FormatException('Invalid review.decision.');
+    }
+    if (reviewedAt != null && reviewedAt is! String) {
+      throw const FormatException('Invalid review.reviewedAt.');
+    }
+    if (revision != null && revision is! int) {
+      throw const FormatException('Invalid review.revision.');
+    }
+    if (editedAfterDecision != null && editedAfterDecision is! bool) {
+      throw const FormatException('Invalid review.editedAfterDecision.');
+    }
+    if (lastEditedAt != null && lastEditedAt is! String) {
+      throw const FormatException('Invalid review.lastEditedAt.');
+    }
+    if (titleHeroEdited != null && titleHeroEdited is! bool) {
+      throw const FormatException('Invalid review.titleHeroEdited.');
+    }
+    if (summaryHeroEdited != null && summaryHeroEdited is! bool) {
+      throw const FormatException('Invalid review.summaryHeroEdited.');
+    }
+    if (titleBeforeHeroEdit != null && titleBeforeHeroEdit is! String) {
+      throw const FormatException('Invalid review.titleBeforeHeroEdit.');
+    }
+    if (summaryBeforeHeroEdit != null && summaryBeforeHeroEdit is! String) {
+      throw const FormatException('Invalid review.summaryBeforeHeroEdit.');
+    }
+
+    return StoryProposalReview(
+      decision: decision == null
+          ? null
+          : StoryProposalReviewDecision.values.byName(decision as String),
+      reviewedAt:
+          reviewedAt == null ? null : DateTime.parse(reviewedAt as String),
+      revision: revision as int? ?? 0,
+      editedAfterDecision: editedAfterDecision as bool? ?? false,
+      lastEditedAt: lastEditedAt == null
+          ? null
+          : DateTime.parse(lastEditedAt as String),
+      titleHeroEdited: titleHeroEdited as bool? ?? false,
+      summaryHeroEdited: summaryHeroEdited as bool? ?? false,
+      titleBeforeHeroEdit: titleBeforeHeroEdit as String?,
+      summaryBeforeHeroEdit: summaryBeforeHeroEdit as String?,
     );
   }
 
