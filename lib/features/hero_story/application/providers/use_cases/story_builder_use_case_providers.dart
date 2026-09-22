@@ -17,6 +17,7 @@ import 'package:everyonesheroes/features/hero_story/application/use_cases/begin_
 import 'package:everyonesheroes/features/hero_story/application/use_cases/edit_story_proposal_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/reject_story_proposal_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/complete_story_builder_session_use_case.dart';
+import 'package:everyonesheroes/features/hero_story/application/use_cases/classify_story_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/create_story_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/materialize_story_proposal_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/domain/services/deterministic_story_shaper.dart';
@@ -240,6 +241,13 @@ final createStoryUseCaseProvider = Provider<CreateStoryUseCase>((ref) {
   );
 });
 
+final classifyStoryUseCaseProvider = Provider<ClassifyStoryUseCase>((ref) {
+  return ClassifyStoryUseCase(
+    storyRepository: ref.watch(storyRepositoryProvider),
+    eventBus: ref.watch(eventBusProvider),
+  );
+});
+
 final materializeStoryProposalUseCaseProvider =
     Provider<MaterializeStoryProposalUseCase>((ref) {
       return MaterializeStoryProposalUseCase(
@@ -248,5 +256,6 @@ final materializeStoryProposalUseCaseProvider =
         storyRepository: ref.watch(storyRepositoryProvider),
         heroRepository: ref.watch(heroRepositoryProvider),
         createStoryUseCase: ref.watch(createStoryUseCaseProvider),
+        classifyStoryUseCase: ref.watch(classifyStoryUseCaseProvider),
       );
     });

@@ -1,9 +1,13 @@
+import 'package:everyonesheroes/core/ids/narrative_theme_id.dart';
 import 'package:everyonesheroes/core/results/failure.dart';
 import 'package:everyonesheroes/core/results/result.dart';
 import 'package:everyonesheroes/core/results/success.dart';
 import 'package:everyonesheroes/core/shared_kernel/language_code.dart';
+import 'package:everyonesheroes/features/hero_story/application/bridges/story_builder_theme_narrative_theme_bridge.dart';
+import 'package:everyonesheroes/features/hero_story/application/dto/requests/classify_story_request.dart';
 import 'package:everyonesheroes/features/hero_story/application/dto/requests/materialize_story_proposal_request.dart';
 import 'package:everyonesheroes/features/hero_story/application/mappers/story_materialization_mapper.dart';
+import 'package:everyonesheroes/features/hero_story/application/use_cases/classify_story_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/create_story_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/use_case.dart';
 import 'package:everyonesheroes/features/hero_story/domain/aggregates/story.dart';
@@ -13,6 +17,7 @@ import 'package:everyonesheroes/features/hero_story/domain/repositories/hero_rep
 import 'package:everyonesheroes/features/hero_story/domain/repositories/story_builder_session_repository.dart';
 import 'package:everyonesheroes/features/hero_story/domain/repositories/story_proposal_repository.dart';
 import 'package:everyonesheroes/features/hero_story/domain/repositories/story_repository.dart';
+import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_classification.dart';
 import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_narrative.dart';
 import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_proposal.dart';
 import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_title.dart';
@@ -21,7 +26,11 @@ import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_t
 ///
 /// Idempotent: repeated calls return the existing Story.
 /// Persistence failure leaves the proposal accepted for retry.
-/// Does not publish, submit, approve, or catalog the Story.
+/// Does not publish, submit, or approve the Story.
+///
+/// HS.FG.2: after create (and on draft refresh), maps Builder intent themes to
+/// Discovery [NarrativeThemeId]s and classifies the Story. Does not alter
+/// provenance, personalize, or emit behavioral evidence.
 final class MaterializeStoryProposalUseCase
     implements UseCase<MaterializeStoryProposalRequest, Story> {
   MaterializeStoryProposalUseCase({
@@ -30,20 +39,27 @@ final class MaterializeStoryProposalUseCase
     required StoryRepository storyRepository,
     required HeroRepository heroRepository,
     required CreateStoryUseCase createStoryUseCase,
+    ClassifyStoryUseCase? classifyStoryUseCase,
     StoryMaterializationMapper mapper = const StoryMaterializationMapper(),
+    StoryBuilderThemeNarrativeThemeBridge themeBridge =
+        const StoryBuilderThemeNarrativeThemeBridge(),
   })  : _proposalRepository = proposalRepository,
         _sessionRepository = sessionRepository,
         _storyRepository = storyRepository,
         _heroRepository = heroRepository,
         _createStoryUseCase = createStoryUseCase,
-        _mapper = mapper;
+        _classifyStoryUseCase = classifyStoryUseCase,
+        _mapper = mapper,
+        _themeBridge = themeBridge;
 
   final StoryProposalRepository _proposalRepository;
   final StoryBuilderSessionRepository _sessionRepository;
   final StoryRepository _storyRepository;
   final HeroRepository _heroRepository;
   final CreateStoryUseCase _createStoryUseCase;
+  final ClassifyStoryUseCase? _classifyStoryUseCase;
   final StoryMaterializationMapper _mapper;
+  final StoryBuilderThemeNarrativeThemeBridge _themeBridge;
 
   @override
   Future<Result<Story>> execute(
@@ -135,7 +151,8 @@ final class MaterializeStoryProposalUseCase
         );
       }
 
-      final story = (createResult as Success<Story>).value;
+      var story = (createResult as Success<Story>).value;
+      story = await _applyThemeClassification(story, proposal);
       await _linkProposalIfNeeded(proposal, story, request);
       return Success(story);
     } catch (e) {
@@ -161,7 +178,71 @@ final class MaterializeStoryProposalUseCase
     for (final _ in story.pullDomainEvents()) {
       // Discard — refresh is not a new StoryCreated fact.
     }
+    return _applyThemeClassification(story, proposal);
+  }
+
+  /// HS.FG.2: translate Builder intent themes → Discovery NarrativeThemeIds.
+  ///
+  /// Empty / unsure theme intent leaves classification themes empty.
+  /// Other classification dimensions are preserved (themes-only update).
+  /// Classification is catalog reference only — provenance is unchanged.
+  Future<Story> _applyThemeClassification(
+    Story story,
+    StoryProposal proposal,
+  ) async {
+    final themeIds = _themeBridge.mapThemes(proposal.intent.themes);
+    final existing = story.classification;
+    final classification = StoryClassification(
+      subjects: existing.subjects,
+      challenges: existing.challenges,
+      narrativeThemeIds: themeIds,
+      outcomes: existing.outcomes,
+      emotionalCharacters: existing.emotionalCharacters,
+      audience: existing.audience,
+      geography: existing.geography,
+    );
+
+    // Skip no-op classify when themes already match.
+    if (_sameThemeIds(existing.narrativeThemeIds, themeIds)) {
+      return story;
+    }
+
+    final classify = _classifyStoryUseCase;
+    if (classify != null) {
+      final result = await classify.execute(
+        ClassifyStoryRequest(
+          storyId: story.id,
+          classification: classification,
+        ),
+      );
+      if (result is Success<Story>) {
+        return result.value;
+      }
+      if (result is Failure<Story>) {
+        throw StateError(
+          'Failed to classify materialized story themes: ${result.error}',
+        );
+      }
+    }
+
+    // Fallback when ClassifyStoryUseCase is not wired (tests / legacy).
+    story.classify(classification);
+    await _storyRepository.save(story);
+    for (final _ in story.pullDomainEvents()) {
+      // Event bus optional in this path; ClassifyStoryUseCase is preferred.
+    }
     return story;
+  }
+
+  bool _sameThemeIds(
+    List<NarrativeThemeId> a,
+    List<NarrativeThemeId> b,
+  ) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
   }
 
   Future<void> _linkProposalIfNeeded(
