@@ -1,12 +1,12 @@
 import 'package:everyonesheroes/core/ids/narrative_theme_id.dart';
 
-/// Stable Discovery-owned [NarrativeThemeId] reference values.
+/// Stable cross-context [NarrativeThemeId] reference values.
 ///
-/// Ownership: Discovery. Other contexts may reference these IDs; they must not
-/// redefine NarrativeTheme entities or invent parallel taxonomies.
+/// These opaque string IDs are the shared contract other contexts use to
+/// reference Discovery-owned NarrativeTheme entities. Display labels are
+/// not IDs — names/descriptions live on Discovery's reference catalog.
 ///
-/// Values are opaque stable strings (not display labels). Presentation labels
-/// live on [NarrativeTheme.name] in the reference catalog.
+/// Ownership of NarrativeTheme entities remains in Discovery.
 abstract final class NarrativeThemeReferenceIds {
   static const NarrativeThemeId overcomingAdversity =
       NarrativeThemeId('overcoming-adversity');

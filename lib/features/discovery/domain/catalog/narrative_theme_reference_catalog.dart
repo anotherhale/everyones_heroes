@@ -1,9 +1,10 @@
-import 'package:everyonesheroes/features/discovery/domain/catalog/narrative_theme_reference_ids.dart';
+import 'package:everyonesheroes/core/ids/narrative_theme_reference_ids.dart';
 import 'package:everyonesheroes/features/discovery/domain/entities/narrative_theme.dart';
 
 /// Discovery-owned seed/reference NarrativeTheme catalog.
 ///
-/// Establishes stable [NarrativeTheme] entities for cross-context reference.
+/// Establishes stable [NarrativeTheme] entities for cross-context reference
+/// using shared-kernel [NarrativeThemeReferenceIds].
 /// Does not personalize; does not infer Hero preferences.
 abstract final class NarrativeThemeReferenceCatalog {
   static List<NarrativeTheme> get themes => List.unmodifiable(_themes);

@@ -1,6 +1,6 @@
 import 'package:everyonesheroes/core/ids/narrative_theme_id.dart';
+import 'package:everyonesheroes/core/ids/narrative_theme_reference_ids.dart';
 import 'package:everyonesheroes/features/discovery/domain/catalog/narrative_theme_reference_catalog.dart';
-import 'package:everyonesheroes/features/discovery/domain/catalog/narrative_theme_reference_ids.dart';
 import 'package:everyonesheroes/features/discovery/infrastructure/repositories/in_memory_narrative_theme_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 

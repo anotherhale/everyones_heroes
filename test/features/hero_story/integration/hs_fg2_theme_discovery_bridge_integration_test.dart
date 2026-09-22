@@ -8,7 +8,7 @@ import 'package:everyonesheroes/core/ids/story_proposal_id.dart';
 import 'package:everyonesheroes/core/ids/story_proposal_section_id.dart';
 import 'package:everyonesheroes/core/results/success.dart';
 import 'package:everyonesheroes/core/shared_kernel/language_code.dart';
-import 'package:everyonesheroes/features/discovery/domain/catalog/narrative_theme_reference_ids.dart';
+import 'package:everyonesheroes/core/ids/narrative_theme_reference_ids.dart';
 import 'package:everyonesheroes/features/discovery/infrastructure/repositories/in_memory_narrative_theme_repository.dart';
 import 'package:everyonesheroes/features/hero_story/application/bridges/story_builder_theme_narrative_theme_bridge.dart';
 import 'package:everyonesheroes/features/hero_story/application/dto/requests/approve_story_proposal_request.dart';

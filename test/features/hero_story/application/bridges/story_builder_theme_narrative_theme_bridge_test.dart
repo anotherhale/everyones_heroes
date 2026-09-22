@@ -1,5 +1,5 @@
 import 'package:everyonesheroes/core/ids/narrative_theme_id.dart';
-import 'package:everyonesheroes/features/discovery/domain/catalog/narrative_theme_reference_ids.dart';
+import 'package:everyonesheroes/core/ids/narrative_theme_reference_ids.dart';
 import 'package:everyonesheroes/features/hero_story/application/bridges/story_builder_theme_narrative_theme_bridge.dart';
 import 'package:everyonesheroes/features/hero_story/domain/enums/story_builder_theme.dart';
 import 'package:flutter_test/flutter_test.dart';

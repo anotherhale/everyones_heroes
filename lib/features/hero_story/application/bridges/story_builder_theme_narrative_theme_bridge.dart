@@ -1,5 +1,5 @@
 import 'package:everyonesheroes/core/ids/narrative_theme_id.dart';
-import 'package:everyonesheroes/features/discovery/domain/catalog/narrative_theme_reference_ids.dart';
+import 'package:everyonesheroes/core/ids/narrative_theme_reference_ids.dart';
 import 'package:everyonesheroes/features/hero_story/domain/enums/story_builder_theme.dart';
 
 /// Application-boundary bridge: Story Builder theme intent → Discovery IDs.
@@ -9,10 +9,10 @@ import 'package:everyonesheroes/features/hero_story/domain/enums/story_builder_t
 /// ```
 ///
 /// Rules:
-/// * Does not create [NarrativeTheme] entities in Hero & Story.
+/// * Does not create NarrativeTheme entities in Hero & Story.
+/// * Does not import Discovery (uses shared-kernel reference IDs only).
 /// * Does not update Discovery profiles or preferences.
 /// * Does not create BehavioralEvidence or personalization signals.
-/// * Uses Discovery-owned [NarrativeThemeReferenceIds] as canonical identity.
 /// * Unmapped themes are omitted (never invents fake IDs).
 final class StoryBuilderThemeNarrativeThemeBridge {
   const StoryBuilderThemeNarrativeThemeBridge();

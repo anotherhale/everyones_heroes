@@ -85,15 +85,15 @@ Discovery reference catalog establishes stable opaque IDs (not display labels):
 | purpose | `purpose` |
 | love | `love` |
 
-Canonical IDs live in Discovery:
+Canonical ID contract lives in Shared Kernel; entities live in Discovery:
 
-* `NarrativeThemeReferenceIds`
-* `NarrativeThemeReferenceCatalog` (entity seed: id + English name + description)
+* `NarrativeThemeReferenceIds` (`lib/core/ids/`) — opaque ID contract
+* `NarrativeThemeReferenceCatalog` (Discovery) — entity seed: id + English name + description
 
 Bridge lives at the application boundary:
 
 * `StoryBuilderThemeNarrativeThemeBridge`
-* Imports Discovery **reference IDs only** (not NarrativeTheme entity ownership into Hero & Story domain)
+* Imports shared-kernel reference IDs only (does **not** import Discovery)
 * Does not import Flutter / AI / personalization
 
 ---
@@ -157,9 +157,9 @@ Theme classification does not alter:
 
 ## Composition changes
 
-1. Discovery reference catalog + IDs
+1. Shared-kernel `NarrativeThemeReferenceIds` + Discovery reference catalog
 2. `InMemoryNarrativeThemeRepository.withReferenceCatalog()`
-3. `StoryBuilderThemeNarrativeThemeBridge`
+3. `StoryBuilderThemeNarrativeThemeBridge` (Hero & Story application; no Discovery import)
 4. `MaterializeStoryProposalUseCase` applies classification after create / draft refresh
 5. Provider wires `ClassifyStoryUseCase` into materialize
 
