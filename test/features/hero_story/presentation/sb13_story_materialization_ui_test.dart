@@ -29,7 +29,6 @@ import 'package:everyonesheroes/features/hero_story/domain/enums/story_visibilit
 import 'package:everyonesheroes/features/hero_story/domain/repositories/story_repository.dart';
 import 'package:everyonesheroes/features/hero_story/domain/value_objects/hero_profile.dart';
 import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_builder_intent.dart';
-import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_narrative.dart';
 import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_proposal.dart';
 import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_proposal_provenance.dart';
 import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_proposal_section.dart';

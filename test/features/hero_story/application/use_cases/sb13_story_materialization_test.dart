@@ -227,7 +227,7 @@ void main() {
         MaterializeStoryProposalRequest(proposalId: draft.id),
       );
       expect(result, isA<Failure<Story>>());
-      expect(await storyRepository.count, 0);
+      expect(storyRepository.count, 0);
     });
 
     test('3. readyForReview proposal is rejected', () async {
@@ -236,7 +236,7 @@ void main() {
         MaterializeStoryProposalRequest(proposalId: ready.id),
       );
       expect(result, isA<Failure<Story>>());
-      expect(await storyRepository.count, 0);
+      expect(storyRepository.count, 0);
     });
 
     test('4. rejected proposal is rejected', () async {
@@ -248,7 +248,7 @@ void main() {
         MaterializeStoryProposalRequest(proposalId: rejected.id),
       );
       expect(result, isA<Failure<Story>>());
-      expect(await storyRepository.count, 0);
+      expect(storyRepository.count, 0);
     });
 
     test('5. missing proposal fails', () async {
@@ -269,7 +269,7 @@ void main() {
         MaterializeStoryProposalRequest(proposalId: approved.id),
       );
       expect(result, isA<Failure<Story>>());
-      expect(await storyRepository.count, 0);
+      expect(storyRepository.count, 0);
       final still = await proposalRepository.findById(approved.id);
       expect(still!.lifecycle, StoryProposalLifecycleStatus.accepted);
     });
@@ -296,7 +296,7 @@ void main() {
         MaterializeStoryProposalRequest(proposalId: approved.id),
       );
       expect(result, isA<Failure<Story>>());
-      expect(await storyRepository.count, 0);
+      expect(storyRepository.count, 0);
 
       final still = await proposalRepository.findById(approved.id);
       expect(still!.lifecycle, StoryProposalLifecycleStatus.accepted);
