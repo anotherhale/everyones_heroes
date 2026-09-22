@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:everyonesheroes/core/ids/story_builder_session_id.dart';
 import 'package:everyonesheroes/features/hero_story/domain/enums/story_builder_mode.dart';
+import 'package:everyonesheroes/features/hero_story/domain/enums/story_builder_narrative_role.dart';
+import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_proposal.dart';
 import 'package:everyonesheroes/features/hero_story/presentation/providers/resumable_story_builder_sessions_provider.dart';
 import 'package:everyonesheroes/features/hero_story/presentation/providers/story_builder_controller.dart';
 
@@ -152,6 +154,19 @@ class _StoryBuilderScreenState extends ConsumerState<StoryBuilderScreen> {
               ),
               StoryBuilderUiPhase.completed => _CompletedBody(
                 isAiMode: state.isAiMode,
+                isBusy: state.isBusy,
+                errorMessage: state.errorMessage,
+                onBuildProposal: state.isBusy
+                    ? null
+                    : () => controller.buildStoryProposal(),
+                onDone: () {
+                  ref.invalidate(resumableStoryBuilderSessionsProvider);
+                  Navigator.of(context).maybePop();
+                },
+              ),
+              StoryBuilderUiPhase.proposalPreview => _ProposalPreviewBody(
+                proposal: state.proposal!,
+                onBack: () => controller.leaveProposalPreview(),
                 onDone: () {
                   ref.invalidate(resumableStoryBuilderSessionsProvider);
                   Navigator.of(context).maybePop();
@@ -336,10 +351,19 @@ class _QuestionBody extends StatelessWidget {
 }
 
 class _CompletedBody extends StatelessWidget {
-  const _CompletedBody({required this.onDone, required this.isAiMode});
+  const _CompletedBody({
+    required this.onDone,
+    required this.isAiMode,
+    required this.onBuildProposal,
+    this.isBusy = false,
+    this.errorMessage,
+  });
 
   final VoidCallback onDone;
+  final VoidCallback? onBuildProposal;
   final bool isAiMode;
+  final bool isBusy;
+  final String? errorMessage;
 
   @override
   Widget build(BuildContext context) {
@@ -365,14 +389,129 @@ class _CompletedBody extends StatelessWidget {
                   'No AI was required. Later, you can shape this into a Story when you are ready.',
           style: theme.textTheme.bodyLarge?.copyWith(height: 1.5),
         ),
+        if (errorMessage != null) ...[
+          const SizedBox(height: 12),
+          Text(
+            errorMessage!,
+            key: const ValueKey('story-builder-proposal-error'),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.error,
+            ),
+          ),
+        ],
         const Spacer(),
         FilledButton(
+          key: const ValueKey('story-builder-build-proposal'),
+          onPressed: onBuildProposal,
+          child: Text(isBusy ? 'Building proposal…' : 'Build Story Proposal'),
+        ),
+        const SizedBox(height: 8),
+        OutlinedButton(
           key: const ValueKey('story-builder-done'),
           onPressed: onDone,
           child: const Text('Done'),
         ),
       ],
     );
+  }
+}
+
+class _ProposalPreviewBody extends StatelessWidget {
+  const _ProposalPreviewBody({
+    required this.proposal,
+    required this.onBack,
+    required this.onDone,
+  });
+
+  final StoryProposal proposal;
+  final VoidCallback onBack;
+  final VoidCallback onDone;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          'Story Proposal preview',
+          key: const ValueKey('story-builder-proposal-preview'),
+          style: theme.textTheme.headlineSmall?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'This is a proposed Story. Your original answers remain yours.',
+          key: const ValueKey('story-builder-proposal-disclaimer'),
+          style: theme.textTheme.bodyLarge?.copyWith(height: 1.5),
+        ),
+        const SizedBox(height: 16),
+        Expanded(
+          child: ListView.separated(
+            itemCount: proposal.sections.length,
+            separatorBuilder: (_, _) => const SizedBox(height: 12),
+            itemBuilder: (context, index) {
+              final section = proposal.sections[index];
+              final status = section.wasSkipped
+                  ? 'Skipped'
+                  : (section.hasContent ? null : 'Not answered');
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _roleLabel(section.narrativeRole),
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    status ?? section.content!,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      height: 1.45,
+                      color: status == null
+                          ? null
+                          : theme.colorScheme.onSurfaceVariant,
+                      fontStyle:
+                          status == null ? FontStyle.normal : FontStyle.italic,
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: 8),
+        OutlinedButton(
+          key: const ValueKey('story-builder-proposal-back'),
+          onPressed: onBack,
+          child: const Text('Back'),
+        ),
+        const SizedBox(height: 8),
+        FilledButton(
+          key: const ValueKey('story-builder-proposal-done'),
+          onPressed: onDone,
+          child: const Text('Done'),
+        ),
+      ],
+    );
+  }
+
+  static String _roleLabel(StoryBuilderNarrativeRole role) {
+    return switch (role) {
+      StoryBuilderNarrativeRole.beginning => 'Beginning',
+      StoryBuilderNarrativeRole.challenge => 'Challenge',
+      StoryBuilderNarrativeRole.importance => 'Importance',
+      StoryBuilderNarrativeRole.struggle => 'Struggle',
+      StoryBuilderNarrativeRole.stakes => 'Stakes',
+      StoryBuilderNarrativeRole.turningPoint => 'Turning point',
+      StoryBuilderNarrativeRole.decision => 'Decision',
+      StoryBuilderNarrativeRole.action => 'Action',
+      StoryBuilderNarrativeRole.outcome => 'Outcome',
+      StoryBuilderNarrativeRole.reflection => 'Reflection',
+      StoryBuilderNarrativeRole.message => 'Message',
+    };
   }
 }
 

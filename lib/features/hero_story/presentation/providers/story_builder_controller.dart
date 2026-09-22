@@ -7,6 +7,7 @@ import 'package:everyonesheroes/core/results/failure.dart';
 import 'package:everyonesheroes/core/results/success.dart';
 import 'package:everyonesheroes/features/hero_story/application/dto/requests/advance_story_builder_request.dart';
 import 'package:everyonesheroes/features/hero_story/application/dto/requests/answer_story_builder_prompt_request.dart';
+import 'package:everyonesheroes/features/hero_story/application/dto/requests/build_story_proposal_request.dart';
 import 'package:everyonesheroes/features/hero_story/application/dto/requests/edit_story_builder_response_request.dart';
 import 'package:everyonesheroes/features/hero_story/application/dto/requests/set_story_builder_mode_request.dart';
 import 'package:everyonesheroes/features/hero_story/application/dto/requests/skip_story_builder_prompt_request.dart';
@@ -22,12 +23,14 @@ import 'package:everyonesheroes/features/hero_story/domain/services/deterministi
 import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_builder_intent.dart';
 import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_builder_prompt.dart';
 import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_builder_response.dart';
+import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_proposal.dart';
 
 enum StoryBuilderUiPhase {
   loading,
   thinking,
   questioning,
   completed,
+  proposalPreview,
   error,
   coachUnavailable,
 }
@@ -45,6 +48,7 @@ final class StoryBuilderUiState {
     this.totalQuestions = 0,
     this.errorMessage,
     this.isBusy = false,
+    this.proposal,
   });
 
   final StoryBuilderUiPhase phase;
@@ -57,6 +61,7 @@ final class StoryBuilderUiState {
   final int totalQuestions;
   final String? errorMessage;
   final bool isBusy;
+  final StoryProposal? proposal;
 
   int get displayStep => promptIndex + 1;
 
@@ -85,6 +90,8 @@ final class StoryBuilderUiState {
     String? errorMessage,
     bool clearError = false,
     bool? isBusy,
+    StoryProposal? proposal,
+    bool clearProposal = false,
   }) {
     return StoryBuilderUiState(
       phase: phase ?? this.phase,
@@ -99,6 +106,7 @@ final class StoryBuilderUiState {
       totalQuestions: totalQuestions ?? this.totalQuestions,
       errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
       isBusy: isBusy ?? this.isBusy,
+      proposal: clearProposal ? null : (proposal ?? this.proposal),
     );
   }
 }
@@ -514,6 +522,40 @@ final class StoryBuilderController extends Notifier<StoryBuilderUiState> {
       clearExistingResponse: existing == null,
       totalQuestions: total,
       isBusy: false,
+      clearError: true,
+    );
+  }
+
+  /// Builds a reviewable Story Proposal from the completed session (SB.9).
+  Future<void> buildStoryProposal() async {
+    final sessionId = state.sessionId;
+    if (sessionId == null || state.isBusy) {
+      return;
+    }
+    state = state.copyWith(isBusy: true, clearError: true);
+    final result = await ref.read(buildStoryProposalUseCaseProvider).execute(
+          BuildStoryProposalRequest(sessionId: sessionId),
+        );
+    if (result is Failure) {
+      state = state.copyWith(
+        isBusy: false,
+        errorMessage: (result as Failure).error,
+      );
+      return;
+    }
+    final proposal = (result as Success<StoryProposal>).value;
+    state = state.copyWith(
+      phase: StoryBuilderUiPhase.proposalPreview,
+      proposal: proposal,
+      isBusy: false,
+      clearError: true,
+    );
+  }
+
+  void leaveProposalPreview() {
+    state = state.copyWith(
+      phase: StoryBuilderUiPhase.completed,
+      clearProposal: true,
       clearError: true,
     );
   }
