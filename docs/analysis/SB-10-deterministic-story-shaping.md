@@ -311,6 +311,6 @@ in the persisted model.
 
 | Suite | Result |
 |-------|--------|
-| Focused SB.10 | *(recorded after run)* |
-| Full `flutter test` | *(recorded after run)* |
-| `dart analyze` (SB.10 surfaces) | *(recorded after run)* |
+| Focused SB.10 (`sb10_deterministic_story_shaping_test` + AI independence) | **27/27 passed** |
+| Full `flutter test` | **985/985 passed** (baseline 958 + 27 SB.10) |
+| `dart analyze` (SB.10 surfaces) | **0 issues** |

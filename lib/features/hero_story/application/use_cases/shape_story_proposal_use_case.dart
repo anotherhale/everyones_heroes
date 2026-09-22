@@ -42,9 +42,10 @@ final class ShapeStoryProposalUseCase
       }
 
       final sessionId = proposal.sessionId;
-      final sessionBefore = _sessionRepository == null
+      final sessionRepo = _sessionRepository;
+      final sessionBefore = sessionRepo == null
           ? null
-          : await _sessionRepository!.findById(sessionId);
+          : await sessionRepo.findById(sessionId);
       final responseCountBefore = sessionBefore?.responses.length;
       final responseTextsBefore = sessionBefore == null
           ? null
@@ -84,8 +85,8 @@ final class ShapeStoryProposalUseCase
         }
       }
 
-      if (sessionBefore != null && _sessionRepository != null) {
-        final sessionAfter = await _sessionRepository!.findById(sessionId);
+      if (sessionBefore != null && sessionRepo != null) {
+        final sessionAfter = await sessionRepo.findById(sessionId);
         if (sessionAfter == null ||
             sessionAfter.responses.length != responseCountBefore ||
             !_sameList(
