@@ -18,19 +18,13 @@ import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_p
 final class BuildStoryProposalUseCase
     implements UseCase<BuildStoryProposalRequest, StoryProposal> {
   const BuildStoryProposalUseCase({
-    required StoryBuilderSessionRepository sessionRepository,
-    required StoryProposalRepository proposalRepository,
-    DeterministicStoryStructureBuilder structureBuilder =
-        const DeterministicStoryStructureBuilder(),
-    DeterministicStoryBuilderUnderstandingBuilder understandingBuilder =
+    required this._sessionRepository,
+    required this._proposalRepository,
+    this._structureBuilder = const DeterministicStoryStructureBuilder(),
+    this._understandingBuilder =
         const DeterministicStoryBuilderUnderstandingBuilder(),
-    DeterministicStoryProposalBuilder proposalBuilder =
-        const DeterministicStoryProposalBuilder(),
-  }) : _sessionRepository = sessionRepository,
-       _proposalRepository = proposalRepository,
-       _structureBuilder = structureBuilder,
-       _understandingBuilder = understandingBuilder,
-       _proposalBuilder = proposalBuilder;
+    this._proposalBuilder = const DeterministicStoryProposalBuilder(),
+  });
 
   final StoryBuilderSessionRepository _sessionRepository;
   final StoryProposalRepository _proposalRepository;

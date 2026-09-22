@@ -79,10 +79,11 @@ final class StoryProposalSnapshotMapper {
         throw const FormatException('Missing or invalid provenance object.');
       }
 
-      final titleRaw = json['title'];
-      if (titleRaw != null && titleRaw is! String) {
+      final titleValue = json['title'];
+      if (titleValue != null && titleValue is! String) {
         throw const FormatException('Invalid title.');
       }
+      final titleString = titleValue as String?;
 
       final narrativeRaw = json['narrative'];
       if (narrativeRaw != null && narrativeRaw is! String) {
@@ -97,9 +98,9 @@ final class StoryProposalSnapshotMapper {
       return StoryProposal(
         id: StoryProposalId(id),
         sessionId: StoryBuilderSessionId(sessionId),
-        title: titleRaw == null || (titleRaw as String).isEmpty
+        title: titleString == null || titleString.isEmpty
             ? null
-            : StoryTitle(titleRaw as String),
+            : StoryTitle(titleString),
         narrative: narrativeRaw as String?,
         sections: [
           for (final item in sectionsRaw)

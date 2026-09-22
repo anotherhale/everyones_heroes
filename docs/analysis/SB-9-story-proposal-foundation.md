@@ -290,3 +290,16 @@ No provider-specific failures — SB.9 is offline.
 | Offline deterministic path | Yes — no network/AI port |
 | Provenance preserved | Yes — sessionId + sourceResponseIds + contentOrigin |
 | Understanding ≠ Hero text | Yes — derivedSummary separate from section content |
+
+---
+
+## Test results
+
+| Suite | Result |
+|-------|--------|
+| Focused SB.9 (`sb9_story_proposal_test` + AI independence) | **18/18 passed** |
+| Full `flutter test` | **958/958 passed** (baseline 940 + 18 SB.9) |
+| `dart analyze` (changed SB.9 surfaces) | **0 issues** |
+| Broader hero_story analyze | **0 errors**; **1 pre-existing warning** in `browse_stories_by_catalog_use_case.dart` (`unawaited_return_in_try_block`); remaining issues are pre-existing `info` style lints |
+
+Not claiming a fully clean analyzer result across the whole package: the existing catalog warning remains.

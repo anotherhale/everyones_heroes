@@ -450,7 +450,7 @@ class _ProposalPreviewBody extends StatelessWidget {
         Expanded(
           child: ListView.separated(
             itemCount: proposal.sections.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 12),
+            separatorBuilder: (_, _) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
               final section = proposal.sections[index];
               final status = section.wasSkipped
