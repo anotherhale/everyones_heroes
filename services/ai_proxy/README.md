@@ -1,4 +1,4 @@
-# Everyone's Heroes AI Proxy (HS.11 / SB.7)
+# Everyone's Heroes AI Proxy (HS.11 / SB.7 / SB.8)
 
 Production AI credentials stay on this server. The Flutter app never embeds
 OpenAI secrets (HS-ADR-067 / HS-ADR-068).
@@ -9,6 +9,7 @@ OpenAI secrets (HS-ADR-067 / HS-ADR-068).
 |--------|------|---------|
 | `POST` | `/story-transcriptions` | Speech-to-text (HS.11) |
 | `POST` | `/story-builder-questions` | AI Story Coach next question (SB.7) |
+| `POST` | `/story-understanding` | Story Builder Understanding (SB.8) |
 | `GET` | `/health` | Liveness (auth exempt) |
 
 ## Run
@@ -32,11 +33,12 @@ flutter run \
   --dart-define=EH_AI_PROXY_URL=http://localhost:8787 \
   --dart-define=EH_TRANSCRIPTION_MODE=proxy \
   --dart-define=EH_STORY_BUILDER_COACH_MODE=proxy \
+  --dart-define=EH_STORY_BUILDER_UNDERSTANDING_MODE=proxy \
   --dart-define=EH_AI_PROXY_AUTH_TOKEN=dev-token
 ```
 
 Without `EH_AI_PROXY_URL`, the app uses development in-memory adapters for
-transcription and Story Builder coaching.
+transcription, Story Builder coaching, and Story Understanding.
 
 ## Story Coach contract
 
@@ -76,3 +78,38 @@ Response (JSON):
 
 Hero response text is treated as untrusted user content and is never merged
 into the system prompt.
+
+## Story Understanding contract
+
+`POST /story-understanding`
+
+Request (JSON, EH-owned — minimized Builder material + SB.4 structure):
+
+```json
+{
+  "purpose": "inspireSomeone",
+  "themes": ["perseverance"],
+  "themesUnsure": false,
+  "structureSections": [
+    {
+      "narrativeRole": "challenge",
+      "order": 1,
+      "sourceResponseIds": ["sb-response-123"],
+      "wasSkipped": false,
+      "hasSourceMaterial": true
+    }
+  ],
+  "responses": [
+    {
+      "id": "sb-response-123",
+      "ordinal": 1,
+      "narrativeRole": "challenge",
+      "text": "...",
+      "skipped": false
+    }
+  ]
+}
+```
+
+Response (JSON): structured themes / narrativeElements / keyElements /
+significantEvents with `sourceResponseIds` provenance — never a polished story.

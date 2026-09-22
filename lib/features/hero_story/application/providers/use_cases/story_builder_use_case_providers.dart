@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:everyonesheroes/core/eventing/event_providers.dart';
+import 'package:everyonesheroes/features/hero_story/application/providers/ai/story_builder_understanding_port_provider.dart';
 import 'package:everyonesheroes/features/hero_story/application/providers/repositories/story_builder_session_repository_provider.dart';
 import 'package:everyonesheroes/features/hero_story/application/providers/story_builder/story_builder_question_strategy_provider.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/abandon_story_builder_session_use_case.dart';
@@ -20,6 +21,7 @@ import 'package:everyonesheroes/features/hero_story/application/use_cases/set_st
 import 'package:everyonesheroes/features/hero_story/application/use_cases/set_story_builder_themes_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/skip_story_builder_prompt_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/start_story_builder_session_use_case.dart';
+import 'package:everyonesheroes/features/hero_story/application/use_cases/understand_story_builder_session_use_case.dart';
 
 final startStoryBuilderSessionUseCaseProvider =
     Provider<StartStoryBuilderSessionUseCase>((ref) {
@@ -154,5 +156,13 @@ final buildDeterministicStoryStructureUseCaseProvider =
     Provider<BuildDeterministicStoryStructureUseCase>((ref) {
       return BuildDeterministicStoryStructureUseCase(
         sessionRepository: ref.watch(storyBuilderSessionRepositoryProvider),
+      );
+    });
+
+final understandStoryBuilderSessionUseCaseProvider =
+    Provider<UnderstandStoryBuilderSessionUseCase>((ref) {
+      return UnderstandStoryBuilderSessionUseCase(
+        sessionRepository: ref.watch(storyBuilderSessionRepositoryProvider),
+        understandingPort: ref.watch(storyBuilderUnderstandingPortProvider),
       );
     });

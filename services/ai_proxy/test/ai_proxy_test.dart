@@ -139,6 +139,107 @@ void main() {
     });
   });
 
+  group('StoryUnderstandingHandler', () {
+    late StoryUnderstandingHandler handler;
+    late _FakeChatClient chat;
+
+    setUp(() {
+      chat = _FakeChatClient();
+      handler = StoryUnderstandingHandler(
+        config: const ProxyConfig(
+          openAiApiKey: 'test-key',
+          authToken: 'secret',
+        ),
+        client: chat,
+      );
+    });
+
+    test('returns EH-owned understanding payload', () async {
+      chat.content = jsonEncode({
+        'themes': [
+          {
+            'theme': 'perseverance',
+            'sourceResponseIds': ['r1'],
+          },
+        ],
+        'narrativeElements': [
+          {
+            'narrativeRole': 'challenge',
+            'sourceResponseIds': ['r1'],
+            'derivedNote': 'Hero described a challenge.',
+          },
+        ],
+        'keyElements': {
+          'challenge': {
+            'sourceResponseIds': ['r1'],
+            'derivedInterpretation': 'A challenge was stated.',
+          },
+        },
+        'significantEvents': [],
+        'derivedSummary': 'Short derived analysis.',
+      });
+      final body = jsonEncode({
+        'purpose': 'inspireSomeone',
+        'themes': ['perseverance'],
+        'themesUnsure': false,
+        'structureSections': [
+          {
+            'narrativeRole': 'challenge',
+            'order': 1,
+            'sourceResponseIds': ['r1'],
+            'wasSkipped': false,
+            'hasSourceMaterial': true,
+          },
+        ],
+        'responses': [
+          {
+            'id': 'r1',
+            'ordinal': 1,
+            'narrativeRole': 'challenge',
+            'text': 'I struggled for years before things changed.',
+            'skipped': false,
+          },
+        ],
+      });
+      final response = await handler.handleUnderstand(
+        Request(
+          'POST',
+          Uri.parse('http://localhost/story-understanding'),
+          body: body,
+        ),
+      );
+      expect(response.statusCode, 200);
+      final json = jsonDecode(await response.readAsString()) as Map;
+      expect(json['providerLabel'], 'openai_via_eh_proxy');
+      expect(json['themes'], isA<List>());
+      expect(chat.lastSystemPrompt, contains('Do not invent facts'));
+      expect(chat.lastUserPrompt, contains('---BEGIN_STORY_BUILDER_CONTEXT---'));
+      expect(chat.lastUserPrompt, contains('struggled for years'));
+    });
+
+    test('maps provider failure to 502', () async {
+      chat.throwOnCall = true;
+      final response = await handler.handleUnderstand(
+        Request(
+          'POST',
+          Uri.parse('http://localhost/story-understanding'),
+          body: jsonEncode({'responses': []}),
+        ),
+      );
+      expect(response.statusCode, 502);
+    });
+  });
+
+  group('StoryUnderstandingInstructions', () {
+    test('prompt invariants', () {
+      const prompt = StoryUnderstandingInstructions.systemPrompt;
+      expect(StoryUnderstandingInstructions.prohibitsInvention(prompt), isTrue);
+      expect(StoryUnderstandingInstructions.prohibitsWritingStory(prompt), isTrue);
+      expect(StoryUnderstandingInstructions.requiresProvenance(prompt), isTrue);
+      expect(StoryUnderstandingInstructions.mentionsClosedThemes(prompt), isTrue);
+    });
+  });
+
   test('ProxyConfig requires OPENAI_API_KEY', () {
     expect(
       () => ProxyConfig.fromEnvironment(environment: {}),
