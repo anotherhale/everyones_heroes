@@ -5,7 +5,8 @@ import 'package:everyonesheroes/features/hero_story/domain/enums/story_builder_t
 /// Session-local story purpose and theme selections for Story Builder.
 ///
 /// Purpose (why) and themes (what kind) are independent dimensions.
-/// Does not auto-apply to [StoryClassification] or Discovery NarrativeThemes.
+/// Themes remain Builder intent here; Discovery [NarrativeThemeId] references
+/// are applied at materialization via the HS.FG.2 application bridge.
 final class StoryBuilderIntent extends ValueObject {
   StoryBuilderIntent({
     this.purpose,

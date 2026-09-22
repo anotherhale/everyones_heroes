@@ -3,14 +3,15 @@
 **Status:** Living execution plan (updated after HS architecture checkpoint)  
 **Companion:** `docs/architecture/Hero and Story Platform Roadmap.md`  
 **Primary bounded context:** Hero & Story  
-**Current checkpoint:** SB.13 complete; Phase B architecture checkpoint complete; HS.FG.1 complete  
-**Next slice:** HS.FG.2 — Builder Theme → NarrativeThemeId Bridge  
+**Current checkpoint:** SB.13 complete; Phase B architecture checkpoint complete; HS.FG.1 complete; HS.FG.2 complete  
+**Next slice:** HS.FG.3 — Durable Story Understanding + apply wiring  
 
 **Related reports:**
 - `docs/analysis/SB-13-story-materialization.md`
 - `docs/analysis/HS-architecture-checkpoint.md`
 - `docs/analysis/HS-FG-1-owner-publish-path-plan.md`
 - `docs/analysis/HS-FG-1-owner-publish-path.md`
+- `docs/analysis/HS-FG-2-theme-discovery-bridge.md`
 
 ---
 
@@ -84,7 +85,7 @@ Implementation Master Plan  (this document)
 | Story Builder SB.0–SB.12 | Implemented |
 | SB.13 Story Materialization | **Implemented** |
 | Phase B Architecture Checkpoint | **Complete** — `docs/analysis/HS-architecture-checkpoint.md` |
-| Phase C Foundation Gap Closure | **In progress** (HS.FG.1 ✓; next HS.FG.2) |
+| Phase C Foundation Gap Closure | **In progress** (HS.FG.1 ✓; HS.FG.2 ✓; next HS.FG.3) |
 
 Historical HS.1→HS.8 numbering must **not** be read as “start from scratch.” Substantial capability already exists via HS.* and SB.* work. Audit first; implement only gaps.
 
@@ -193,9 +194,9 @@ Phase B Architecture Checkpoint ✓
   ↓
 HS.FG.1 Owner Publish Path Composition    ✓
   ↓
-HS.FG.2 Builder Theme → NarrativeThemeId Bridge    ← NEXT
+HS.FG.2 Builder Theme → NarrativeThemeId Bridge    ✓
   ↓
-HS.FG.3 Durable Story Understanding + apply wiring
+HS.FG.3 Durable Story Understanding + apply wiring    ← NEXT
   ↓
 Presentation boundary cleanup (Story Builder)
   ↓
@@ -259,7 +260,8 @@ Never: `Story → BehaviorPattern` directly.
 | 6. Next vertical plan | `docs/analysis/HS-FG-1-owner-publish-path-plan.md` |
 | 7–11. Implement / test / report HS.FG.1 | Complete — `docs/analysis/HS-FG-1-owner-publish-path.md` |
 | 12. Update this master plan after HS.FG.1 | Complete |
-| Next | HS.FG.2 — Builder Theme → NarrativeThemeId Bridge |
+| HS.FG.2 Theme Bridge | Complete — `docs/analysis/HS-FG-2-theme-discovery-bridge.md` |
+| Next | HS.FG.3 — Durable Story Understanding + apply wiring |
 
 ---
 
