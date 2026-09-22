@@ -50,6 +50,10 @@ final class DeterministicStoryShaper implements StoryShaperPort {
           content: source.content,
           sourceResponseIds: source.sourceResponseIds,
           wasSkipped: source.wasSkipped,
+          // Deterministic reorder preserves Hero review/edit metadata.
+          heroEdited: source.heroEdited,
+          heroEditedAt: source.heroEditedAt,
+          contentBeforeHeroEdit: source.contentBeforeHeroEdit,
         ),
       );
     }
@@ -57,6 +61,10 @@ final class DeterministicStoryShaper implements StoryShaperPort {
     final narrative = _assembleNarrative(shapedSections);
 
     final lifecycle = _lifecycleForShaped(proposal.lifecycle);
+    final review = (proposal.lifecycle == StoryProposalLifecycleStatus.accepted ||
+            proposal.lifecycle == StoryProposalLifecycleStatus.rejected)
+        ? proposal.review.copyWith(editedAfterDecision: true)
+        : proposal.review;
 
     return StoryProposal(
       id: proposal.id,
@@ -77,6 +85,8 @@ final class DeterministicStoryShaper implements StoryShaperPort {
       createdAt: proposal.createdAt,
       updatedAt: at,
       derivedSummary: proposal.derivedSummary,
+      // Shaping never approves; may invalidate prior accept/reject.
+      review: review,
     );
   }
 

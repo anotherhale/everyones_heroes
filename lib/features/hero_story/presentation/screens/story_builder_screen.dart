@@ -4,8 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:everyonesheroes/core/ids/story_builder_session_id.dart';
 import 'package:everyonesheroes/features/hero_story/domain/enums/story_builder_mode.dart';
 import 'package:everyonesheroes/features/hero_story/domain/enums/story_builder_narrative_role.dart';
+import 'package:everyonesheroes/features/hero_story/domain/enums/story_proposal_content_origin.dart';
+import 'package:everyonesheroes/features/hero_story/domain/enums/story_proposal_lifecycle_status.dart';
 import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_proposal.dart';
 import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_proposal_section.dart';
+import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_proposal_section_edit.dart';
 import 'package:everyonesheroes/features/hero_story/presentation/providers/resumable_story_builder_sessions_provider.dart';
 import 'package:everyonesheroes/features/hero_story/presentation/providers/story_builder_controller.dart';
 
@@ -180,7 +183,7 @@ class _StoryBuilderScreenState extends ConsumerState<StoryBuilderScreen> {
                   Navigator.of(context).maybePop();
                 },
               ),
-              StoryBuilderUiPhase.proposalPreview => _ProposalPreviewBody(
+              StoryBuilderUiPhase.proposalPreview => _ProposalReviewBody(
                 proposal: state.displayedProposal!,
                 isAiAssisted: state.isAiAssistedProposal &&
                     !state.showingOriginalProposal,
@@ -188,9 +191,32 @@ class _StoryBuilderScreenState extends ConsumerState<StoryBuilderScreen> {
                 canCompare: state.canCompareProposals,
                 canImproveWithAi: state.canImproveWithAi && !state.isBusy,
                 isBusy: state.isBusy,
+                errorMessage: state.errorMessage,
                 onImproveWithAi: () => controller.improveProposalWithAi(),
                 onToggleCompare: () => controller.toggleProposalCompare(),
                 onBack: () => controller.leaveProposalPreview(),
+                onSaveEdits: ({
+                  required String? title,
+                  required bool updateTitle,
+                  required bool clearTitle,
+                  required String? summary,
+                  required bool updateSummary,
+                  required bool clearSummary,
+                  required List<StoryProposalSectionEdit> sectionEdits,
+                }) {
+                  return controller.saveProposalEdits(
+                    title: title,
+                    updateTitle: updateTitle,
+                    clearTitle: clearTitle,
+                    summary: summary,
+                    updateSummary: updateSummary,
+                    clearSummary: clearSummary,
+                    sectionEdits: sectionEdits,
+                  );
+                },
+                onApprove: () => controller.approveProposal(),
+                onReject: () => controller.rejectProposal(),
+                onBeginRevision: () => controller.beginProposalRevision(),
                 onDone: () {
                   ref.invalidate(resumableStoryBuilderSessionsProvider);
                   Navigator.of(context).maybePop();
@@ -440,17 +466,22 @@ class _CompletedBody extends StatelessWidget {
   }
 }
 
-class _ProposalPreviewBody extends StatelessWidget {
-  const _ProposalPreviewBody({
+class _ProposalReviewBody extends StatefulWidget {
+  const _ProposalReviewBody({
     required this.proposal,
     required this.isAiAssisted,
     required this.showingOriginal,
     required this.canCompare,
     required this.canImproveWithAi,
     required this.isBusy,
+    required this.errorMessage,
     required this.onImproveWithAi,
     required this.onToggleCompare,
     required this.onBack,
+    required this.onSaveEdits,
+    required this.onApprove,
+    required this.onReject,
+    required this.onBeginRevision,
     required this.onDone,
   });
 
@@ -460,45 +491,208 @@ class _ProposalPreviewBody extends StatelessWidget {
   final bool canCompare;
   final bool canImproveWithAi;
   final bool isBusy;
+  final String? errorMessage;
   final VoidCallback onImproveWithAi;
   final VoidCallback onToggleCompare;
   final VoidCallback onBack;
+  final Future<bool> Function({
+    required String? title,
+    required bool updateTitle,
+    required bool clearTitle,
+    required String? summary,
+    required bool updateSummary,
+    required bool clearSummary,
+    required List<StoryProposalSectionEdit> sectionEdits,
+  }) onSaveEdits;
+  final Future<bool> Function() onApprove;
+  final Future<bool> Function() onReject;
+  final Future<bool> Function() onBeginRevision;
   final VoidCallback onDone;
 
-  /// Presentation sections: meaningful content only (SB.10 shaped review).
-  List<StoryProposalSection> get _presentedSections {
-    return [
+  @override
+  State<_ProposalReviewBody> createState() => _ProposalReviewBodyState();
+}
+
+class _ProposalReviewBodyState extends State<_ProposalReviewBody> {
+  late TextEditingController _titleController;
+  late TextEditingController _summaryController;
+  late Map<String, TextEditingController> _sectionControllers;
+  late List<StoryProposalSection> _editableSections;
+  var _boundProposalId = '';
+  var _boundUpdatedAt = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _bindControllers(widget.proposal);
+  }
+
+  @override
+  void didUpdateWidget(covariant _ProposalReviewBody oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final proposal = widget.proposal;
+    final identity = proposal.id.value;
+    final updated = proposal.updatedAt.toIso8601String();
+    if (identity != _boundProposalId || updated != _boundUpdatedAt) {
+      _disposeControllers();
+      _bindControllers(proposal);
+    }
+  }
+
+  void _bindControllers(StoryProposal proposal) {
+    _boundProposalId = proposal.id.value;
+    _boundUpdatedAt = proposal.updatedAt.toIso8601String();
+    _editableSections = [
       for (final section in proposal.sections)
-        if (!section.wasSkipped &&
-            section.content != null &&
-            section.content!.trim().isNotEmpty)
-          section,
+        if (!section.wasSkipped) section,
     ];
+    _titleController = TextEditingController(text: proposal.title?.value ?? '');
+    _summaryController = TextEditingController(
+      text: proposal.derivedSummary ?? '',
+    );
+    _sectionControllers = {
+      for (final section in _editableSections)
+        section.id.value: TextEditingController(text: section.content ?? ''),
+    };
+  }
+
+  void _disposeControllers() {
+    _titleController.dispose();
+    _summaryController.dispose();
+    for (final controller in _sectionControllers.values) {
+      controller.dispose();
+    }
+  }
+
+  @override
+  void dispose() {
+    _disposeControllers();
+    super.dispose();
+  }
+
+  bool get _isAccepted =>
+      widget.proposal.lifecycle == StoryProposalLifecycleStatus.accepted;
+
+  bool get _isRejected =>
+      widget.proposal.lifecycle == StoryProposalLifecycleStatus.rejected;
+
+  bool get _isEditable =>
+      widget.proposal.lifecycle == StoryProposalLifecycleStatus.readyForReview &&
+      !widget.showingOriginal;
+
+  Future<void> _handleSave() async {
+    final sectionEdits = <StoryProposalSectionEdit>[];
+    for (final section in _editableSections) {
+      final text = _sectionControllers[section.id.value]?.text;
+      if (text == null) continue;
+      final trimmed = text.trim();
+      final normalized = trimmed.isEmpty ? null : trimmed;
+      if (normalized != section.content) {
+        sectionEdits.add(
+          StoryProposalSectionEdit(
+            sectionId: section.id,
+            content: normalized,
+          ),
+        );
+      }
+    }
+
+    final titleText = _titleController.text.trim();
+    final previousTitle = widget.proposal.title?.value ?? '';
+    final summaryText = _summaryController.text.trim();
+    final previousSummary = widget.proposal.derivedSummary ?? '';
+
+    await widget.onSaveEdits(
+      title: titleText.isEmpty ? null : titleText,
+      updateTitle: titleText != previousTitle,
+      clearTitle: titleText.isEmpty && previousTitle.isNotEmpty,
+      summary: summaryText.isEmpty ? null : summaryText,
+      updateSummary: summaryText != previousSummary,
+      clearSummary: summaryText.isEmpty && previousSummary.isNotEmpty,
+      sectionEdits: sectionEdits,
+    );
+  }
+
+  Future<void> _confirmApprove() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Approve Story?'),
+          content: const Text(
+            'You are approving this version of your story. '
+            'You can make changes before approval.',
+          ),
+          actions: [
+            TextButton(
+              key: const ValueKey('story-builder-approve-cancel'),
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              key: const ValueKey('story-builder-approve-confirm'),
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: const Text('Approve'),
+            ),
+          ],
+        );
+      },
+    );
+    if (confirmed != true || !mounted) {
+      return;
+    }
+    await widget.onApprove();
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final presented = _presentedSections;
-    final disclaimer = isAiAssisted
-        ? 'This is an AI-assisted story proposal. Wording may have been '
-            'reorganized for clarity. Your original material remains available.'
-        : 'Shaping organizes your story using the material you provided. '
-            'It does not add facts to your story.';
+
+    if (_isAccepted) {
+      return _ApprovedBody(
+        onEdit: widget.isBusy ? null : () => widget.onBeginRevision(),
+        onDone: widget.onDone,
+        isBusy: widget.isBusy,
+      );
+    }
+
+    if (_isRejected) {
+      return _RejectedBody(
+        onEdit: widget.isBusy ? null : () => widget.onBeginRevision(),
+        onDone: widget.onDone,
+        isBusy: widget.isBusy,
+      );
+    }
+
+    final hasAiAssistedSections = widget.proposal.sections.any(
+      (s) =>
+          !s.wasSkipped &&
+          s.contentOrigin == StoryProposalContentOrigin.derived &&
+          s.content != null &&
+          s.content!.trim().isNotEmpty,
+    );
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Review your story',
+          'Review Your Story',
           key: const ValueKey('story-builder-proposal-preview'),
           style: theme.textTheme.headlineSmall?.copyWith(
             fontWeight: FontWeight.w700,
           ),
         ),
-        if (isAiAssisted) ...[
+        const SizedBox(height: 8),
+        Text(
+          'Your story is built from what you shared. '
+          'AI-assisted sections are clearly identified.',
+          key: const ValueKey('story-builder-proposal-disclaimer'),
+          style: theme.textTheme.bodyLarge?.copyWith(height: 1.5),
+        ),
+        if (widget.isAiAssisted) ...[
           const SizedBox(height: 8),
           Text(
-            showingOriginal
+            widget.showingOriginal
                 ? 'Your original material'
                 : 'AI-assisted story proposal',
             key: const ValueKey('story-builder-proposal-ai-disclosure'),
@@ -507,69 +701,205 @@ class _ProposalPreviewBody extends StatelessWidget {
             ),
           ),
         ],
-        const SizedBox(height: 8),
-        Text(
-          disclaimer,
-          key: const ValueKey('story-builder-proposal-disclaimer'),
-          style: theme.textTheme.bodyLarge?.copyWith(height: 1.5),
-        ),
+        if (widget.errorMessage != null) ...[
+          const SizedBox(height: 8),
+          Text(
+            widget.errorMessage!,
+            key: const ValueKey('story-builder-review-error'),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.error,
+            ),
+          ),
+        ],
         const SizedBox(height: 16),
         Expanded(
-          child: ListView.separated(
-            itemCount: presented.length,
-            separatorBuilder: (_, _) => const SizedBox(height: 12),
-            itemBuilder: (context, index) {
-              final section = presented[index];
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    _roleLabel(section.narrativeRole),
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+          child: ListView(
+            children: [
+              Text(
+                'Title',
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 4),
+              TextField(
+                key: const ValueKey('story-builder-review-title'),
+                controller: _titleController,
+                enabled: _isEditable && !widget.isBusy,
+                decoration: const InputDecoration(
+                  hintText: 'Add a title',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Summary',
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 4),
+              TextField(
+                key: const ValueKey('story-builder-review-summary'),
+                controller: _summaryController,
+                enabled: _isEditable && !widget.isBusy,
+                maxLines: 3,
+                decoration: const InputDecoration(
+                  hintText: 'Add a short summary',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                'Your Story',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 12),
+              for (final section in _editableSections) ...[
+                _SectionReviewBlock(
+                  section: section,
+                  controller: _sectionControllers[section.id.value]!,
+                  editable: _isEditable && !widget.isBusy,
+                ),
+                const SizedBox(height: 12),
+              ],
+              if (hasAiAssistedSections || widget.isAiAssisted) ...[
+                const SizedBox(height: 8),
+                Text(
+                  'AI-assisted content',
+                  key: const ValueKey('story-builder-ai-assisted-note-title'),
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    section.content!,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      height: 1.45,
-                    ),
-                  ),
-                ],
-              );
-            },
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'AI helped shape some wording from the experiences '
+                  'you provided. It did not create new experiences or facts.',
+                  key: const ValueKey('story-builder-ai-assisted-note'),
+                  style: theme.textTheme.bodyMedium?.copyWith(height: 1.45),
+                ),
+              ],
+            ],
           ),
         ),
         const SizedBox(height: 8),
-        if (canImproveWithAi)
+        if (widget.canImproveWithAi)
           FilledButton(
             key: const ValueKey('story-builder-improve-with-ai'),
-            onPressed: isBusy ? null : onImproveWithAi,
-            child: Text(isBusy ? 'Creating AI story…' : 'Improve with AI'),
+            onPressed: widget.isBusy ? null : widget.onImproveWithAi,
+            child: Text(
+              widget.isBusy ? 'Creating AI story…' : 'Improve with AI',
+            ),
           ),
-        if (canImproveWithAi) const SizedBox(height: 8),
-        if (canCompare)
+        if (widget.canImproveWithAi) const SizedBox(height: 8),
+        if (widget.canCompare)
           OutlinedButton(
             key: const ValueKey('story-builder-proposal-compare'),
-            onPressed: onToggleCompare,
+            onPressed: widget.onToggleCompare,
             child: Text(
-              showingOriginal
+              widget.showingOriginal
                   ? 'Show AI-assisted version'
                   : 'Show your original material',
             ),
           ),
-        if (canCompare) const SizedBox(height: 8),
+        if (widget.canCompare) const SizedBox(height: 8),
+        if (_isEditable)
+          FilledButton.tonal(
+            key: const ValueKey('story-builder-review-save'),
+            onPressed: widget.isBusy ? null : _handleSave,
+            child: Text(widget.isBusy ? 'Saving…' : 'Save Changes'),
+          ),
+        if (_isEditable) const SizedBox(height: 8),
+        if (_isEditable)
+          OutlinedButton(
+            key: const ValueKey('story-builder-review-reject'),
+            onPressed: widget.isBusy ? null : () => widget.onReject(),
+            child: const Text('Reject'),
+          ),
+        if (_isEditable) const SizedBox(height: 8),
+        if (_isEditable)
+          FilledButton(
+            key: const ValueKey('story-builder-review-approve'),
+            onPressed: widget.isBusy ? null : _confirmApprove,
+            child: const Text('Approve Story'),
+          ),
+        if (_isEditable) const SizedBox(height: 8),
         OutlinedButton(
           key: const ValueKey('story-builder-proposal-back'),
-          onPressed: onBack,
+          onPressed: widget.onBack,
           child: const Text('Back'),
         ),
         const SizedBox(height: 8),
-        FilledButton(
+        OutlinedButton(
           key: const ValueKey('story-builder-proposal-done'),
-          onPressed: onDone,
+          onPressed: widget.onDone,
           child: const Text('Done'),
+        ),
+      ],
+    );
+  }
+}
+
+class _SectionReviewBlock extends StatelessWidget {
+  const _SectionReviewBlock({
+    required this.section,
+    required this.controller,
+    required this.editable,
+  });
+
+  final StoryProposalSection section;
+  final TextEditingController controller;
+  final bool editable;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDerived =
+        section.contentOrigin == StoryProposalContentOrigin.derived;
+    final originLabel = isDerived
+        ? (section.heroEdited ? 'AI-assisted · edited by you' : 'AI-assisted')
+        : (section.heroEdited ? 'Hero-authored · edited' : 'Hero-authored');
+    final originKey = isDerived
+        ? 'story-builder-section-origin-ai-${section.id.value}'
+        : 'story-builder-section-origin-hero-${section.id.value}';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                _roleLabel(section.narrativeRole),
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            Text(
+              originLabel,
+              key: ValueKey(originKey),
+              style: theme.textTheme.labelMedium?.copyWith(
+                color: isDerived
+                    ? theme.colorScheme.tertiary
+                    : theme.colorScheme.primary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        TextField(
+          key: ValueKey('story-builder-review-section-${section.id.value}'),
+          controller: controller,
+          enabled: editable,
+          maxLines: 5,
+          decoration: const InputDecoration(
+            border: OutlineInputBorder(),
+          ),
         ),
       ],
     );
@@ -589,6 +919,101 @@ class _ProposalPreviewBody extends StatelessWidget {
       StoryBuilderNarrativeRole.reflection => 'Reflection',
       StoryBuilderNarrativeRole.message => 'Message',
     };
+  }
+}
+
+class _ApprovedBody extends StatelessWidget {
+  const _ApprovedBody({
+    required this.onEdit,
+    required this.onDone,
+    required this.isBusy,
+  });
+
+  final VoidCallback? onEdit;
+  final VoidCallback onDone;
+  final bool isBusy;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          'Story Approved',
+          key: const ValueKey('story-builder-proposal-approved'),
+          style: theme.textTheme.headlineSmall?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Text(
+          'You approved this version of your story. '
+          'The next step is Story creation.',
+          key: const ValueKey('story-builder-proposal-approved-next'),
+          style: theme.textTheme.bodyLarge?.copyWith(height: 1.5),
+        ),
+        const Spacer(),
+        OutlinedButton(
+          key: const ValueKey('story-builder-proposal-edit-after-approve'),
+          onPressed: onEdit,
+          child: Text(isBusy ? 'Opening editor…' : 'Edit'),
+        ),
+        const SizedBox(height: 8),
+        FilledButton(
+          key: const ValueKey('story-builder-proposal-done'),
+          onPressed: onDone,
+          child: const Text('Done'),
+        ),
+      ],
+    );
+  }
+}
+
+class _RejectedBody extends StatelessWidget {
+  const _RejectedBody({
+    required this.onEdit,
+    required this.onDone,
+    required this.isBusy,
+  });
+
+  final VoidCallback? onEdit;
+  final VoidCallback onDone;
+  final bool isBusy;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          'Story Proposal Rejected',
+          key: const ValueKey('story-builder-proposal-rejected'),
+          style: theme.textTheme.headlineSmall?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Text(
+          'This proposal was rejected and remains saved. '
+          'You can edit it and approve a new version when you are ready.',
+          style: theme.textTheme.bodyLarge?.copyWith(height: 1.5),
+        ),
+        const Spacer(),
+        OutlinedButton(
+          key: const ValueKey('story-builder-proposal-edit-after-reject'),
+          onPressed: onEdit,
+          child: Text(isBusy ? 'Opening editor…' : 'Edit'),
+        ),
+        const SizedBox(height: 8),
+        FilledButton(
+          key: const ValueKey('story-builder-proposal-done'),
+          onPressed: onDone,
+          child: const Text('Done'),
+        ),
+      ],
+    );
   }
 }
 
