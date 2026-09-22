@@ -4,14 +4,21 @@ import 'package:everyonesheroes/core/eventing/event_providers.dart';
 import 'package:everyonesheroes/features/hero_story/application/providers/media/story_media_storage_port_provider.dart';
 import 'package:everyonesheroes/features/hero_story/application/providers/repositories/hero_repository_provider.dart';
 import 'package:everyonesheroes/features/hero_story/application/providers/repositories/story_repository_provider.dart';
+import 'package:everyonesheroes/features/hero_story/application/use_cases/approve_story_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/archive_story_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/get_owned_story_detail_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/list_hero_owned_stories_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/load_owned_story_media_use_case.dart';
+import 'package:everyonesheroes/features/hero_story/application/use_cases/publish_story_use_case.dart';
+import 'package:everyonesheroes/features/hero_story/application/use_cases/submit_story_use_case.dart';
+import 'package:everyonesheroes/features/hero_story/application/use_cases/update_story_consent_use_case.dart';
 
-/// Owner Story application providers (HS.10).
+/// Owner Story application providers (HS.10 / HS.FG.1).
 ///
 /// Separated from discoverability-gated experience providers.
+///
+/// HS.FG.1 wires existing Submit / Approve / Publish / Consent use cases for
+/// the owner publication path. Does not introduce a second lifecycle model.
 final listHeroOwnedStoriesUseCaseProvider =
     Provider<ListHeroOwnedStoriesUseCase>((ref) {
       return ListHeroOwnedStoriesUseCase(
@@ -41,6 +48,42 @@ final loadOwnedStoryMediaUseCaseProvider = Provider<LoadOwnedStoryMediaUseCase>(
 
 final archiveStoryUseCaseProvider = Provider<ArchiveStoryUseCase>((ref) {
   return ArchiveStoryUseCase(
+    storyRepository: ref.watch(storyRepositoryProvider),
+    eventBus: ref.watch(eventBusProvider),
+  );
+});
+
+/// Re-exported ownership composition of [SubmitStoryUseCase] (also available
+/// from capture providers). Prefer this provider from owned Story UI.
+final ownedSubmitStoryUseCaseProvider = Provider<SubmitStoryUseCase>((ref) {
+  return SubmitStoryUseCase(
+    storyRepository: ref.watch(storyRepositoryProvider),
+    eventBus: ref.watch(eventBusProvider),
+  );
+});
+
+final approveStoryUseCaseProvider = Provider<ApproveStoryUseCase>((ref) {
+  return ApproveStoryUseCase(
+    storyRepository: ref.watch(storyRepositoryProvider),
+    eventBus: ref.watch(eventBusProvider),
+  );
+});
+
+final publishStoryUseCaseProvider = Provider<PublishStoryUseCase>((ref) {
+  return PublishStoryUseCase(
+    storyRepository: ref.watch(storyRepositoryProvider),
+    heroRepository: ref.watch(heroRepositoryProvider),
+    eventBus: ref.watch(eventBusProvider),
+  );
+});
+
+/// Consent updates for owner publication composition (HS.FG.1).
+///
+/// Same use case as capture wiring; exposed here so owned UI does not depend
+/// on capture provider modules.
+final ownedUpdateStoryConsentUseCaseProvider =
+    Provider<UpdateStoryConsentUseCase>((ref) {
+  return UpdateStoryConsentUseCase(
     storyRepository: ref.watch(storyRepositoryProvider),
     eventBus: ref.watch(eventBusProvider),
   );

@@ -17,7 +17,9 @@ final class OwnedStoryLabels {
   static String lifecycleLabel(StoryLifecycleStatus status) {
     return switch (status) {
       StoryLifecycleStatus.draft => 'Draft',
-      StoryLifecycleStatus.processing => 'Processing',
+      // Domain status after Submit is `processing` (StorySubmitted event).
+      // Owner-facing copy uses Submitted (HS.FG.1).
+      StoryLifecycleStatus.processing => 'Submitted',
       StoryLifecycleStatus.review => 'Ready for Review',
       StoryLifecycleStatus.approved => 'Approved',
       StoryLifecycleStatus.published => 'Published',

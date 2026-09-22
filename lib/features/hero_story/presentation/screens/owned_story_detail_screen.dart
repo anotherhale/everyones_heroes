@@ -4,16 +4,21 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:everyonesheroes/core/ids/story_id.dart';
 import 'package:everyonesheroes/core/results/failure.dart';
 import 'package:everyonesheroes/core/results/success.dart';
+import 'package:everyonesheroes/features/hero_story/application/dto/requests/publish_story_request.dart';
 import 'package:everyonesheroes/features/hero_story/application/dto/requests/story_id_request.dart';
+import 'package:everyonesheroes/features/hero_story/application/dto/requests/update_story_consent_request.dart';
 import 'package:everyonesheroes/features/hero_story/application/providers/use_cases/owned_story_use_case_providers.dart';
 import 'package:everyonesheroes/features/hero_story/domain/aggregates/story.dart';
+import 'package:everyonesheroes/features/hero_story/domain/enums/story_lifecycle_status.dart';
+import 'package:everyonesheroes/features/hero_story/domain/enums/story_visibility.dart';
 import 'package:everyonesheroes/features/hero_story/presentation/models/owned_story_detail_view_model.dart';
 import 'package:everyonesheroes/features/hero_story/presentation/providers/owned_story_playback_controller.dart';
 import 'package:everyonesheroes/features/hero_story/presentation/providers/owned_story_providers.dart';
 import 'package:everyonesheroes/features/hero_story/presentation/widgets/owned_story_transcription_section.dart';
 
-/// Owner Story detail with original recording playback (HS.10).
-class OwnedStoryDetailScreen extends ConsumerWidget {
+/// Owner Story detail with original recording playback (HS.10)
+/// and publication composition (HS.FG.1).
+class OwnedStoryDetailScreen extends ConsumerStatefulWidget {
   const OwnedStoryDetailScreen({
     required this.storyId,
     super.key,
@@ -22,9 +27,19 @@ class OwnedStoryDetailScreen extends ConsumerWidget {
   final String storyId;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<OwnedStoryDetailScreen> createState() =>
+      _OwnedStoryDetailScreenState();
+}
+
+class _OwnedStoryDetailScreenState
+    extends ConsumerState<OwnedStoryDetailScreen> {
+  bool _actionBusy = false;
+  String? _actionError;
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final detailAsync = ref.watch(ownedStoryDetailProvider(storyId));
+    final detailAsync = ref.watch(ownedStoryDetailProvider(widget.storyId));
 
     return Scaffold(
       appBar: AppBar(
@@ -50,8 +65,9 @@ class OwnedStoryDetailScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 12),
                   TextButton(
-                    onPressed: () =>
-                        ref.invalidate(ownedStoryDetailProvider(storyId)),
+                    onPressed: () => ref.invalidate(
+                      ownedStoryDetailProvider(widget.storyId),
+                    ),
                     child: const Text('Retry'),
                   ),
                 ],
@@ -61,18 +77,20 @@ class OwnedStoryDetailScreen extends ConsumerWidget {
           data: (detail) => _OwnedStoryDetailBody(
             detail: detail,
             theme: theme,
-            onArchive: () => _confirmArchive(context, ref, detail),
+            actionBusy: _actionBusy,
+            actionError: _actionError,
+            onClearActionError: () => setState(() => _actionError = null),
+            onArchive: () => _confirmArchive(detail),
+            onSubmit: () => _submit(detail),
+            onApprove: () => _approve(detail),
+            onPublish: () => _publish(detail),
           ),
         ),
       ),
     );
   }
 
-  Future<void> _confirmArchive(
-    BuildContext context,
-    WidgetRef ref,
-    OwnedStoryDetailViewModel detail,
-  ) async {
+  Future<void> _confirmArchive(OwnedStoryDetailViewModel detail) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) {
@@ -96,14 +114,14 @@ class OwnedStoryDetailScreen extends ConsumerWidget {
         );
       },
     );
-    if (confirmed != true || !context.mounted) {
+    if (confirmed != true || !mounted) {
       return;
     }
 
     final result = await ref.read(archiveStoryUseCaseProvider).execute(
-          StoryIdRequest(storyId: StoryId(storyId)),
+          StoryIdRequest(storyId: StoryId(widget.storyId)),
         );
-    if (!context.mounted) {
+    if (!mounted) {
       return;
     }
     if (result is Failure<Story>) {
@@ -116,8 +134,127 @@ class OwnedStoryDetailScreen extends ConsumerWidget {
       return;
     }
     ref.invalidate(ownedStoriesProvider);
-    ref.invalidate(ownedStoryDetailProvider(storyId));
+    ref.invalidate(ownedStoryDetailProvider(widget.storyId));
     Navigator.of(context).pop();
+  }
+
+  Future<void> _submit(OwnedStoryDetailViewModel detail) async {
+    await _runLifecycleAction(() async {
+      if (!detail.isProcessingApproved) {
+        final consent = await ref
+            .read(ownedUpdateStoryConsentUseCaseProvider)
+            .execute(
+              UpdateStoryConsentRequest(
+                storyId: detail.storyId,
+                grantProcessing: true,
+              ),
+            );
+        if (consent is Failure<Story>) {
+          return consent.error;
+        }
+        if (consent is! Success<Story>) {
+          return 'Unable to grant processing consent.';
+        }
+      }
+
+      final result = await ref.read(ownedSubmitStoryUseCaseProvider).execute(
+            StoryIdRequest(storyId: detail.storyId),
+          );
+      if (result is Failure<Story>) {
+        return result.error;
+      }
+      if (result is! Success<Story>) {
+        return 'Unable to submit story.';
+      }
+      return null;
+    });
+  }
+
+  Future<void> _approve(OwnedStoryDetailViewModel detail) async {
+    await _runLifecycleAction(() async {
+      final result = await ref.read(approveStoryUseCaseProvider).execute(
+            StoryIdRequest(storyId: detail.storyId),
+          );
+      if (result is Failure<Story>) {
+        return result.error;
+      }
+      if (result is! Success<Story>) {
+        return 'Unable to approve story.';
+      }
+      return null;
+    });
+  }
+
+  Future<void> _publish(OwnedStoryDetailViewModel detail) async {
+    await _runLifecycleAction(() async {
+      if (!detail.isPublicationApproved) {
+        final consent = await ref
+            .read(ownedUpdateStoryConsentUseCaseProvider)
+            .execute(
+              UpdateStoryConsentRequest(
+                storyId: detail.storyId,
+                grantPublication: true,
+              ),
+            );
+        if (consent is Failure<Story>) {
+          return consent.error;
+        }
+        if (consent is! Success<Story>) {
+          return 'Unable to grant publication consent.';
+        }
+      }
+
+      final needsDiscoverableVisibility =
+          detail.visibility == StoryVisibility.private ||
+              detail.visibility == StoryVisibility.draft ||
+              detail.visibility == StoryVisibility.unlisted;
+
+      final result = await ref.read(publishStoryUseCaseProvider).execute(
+            PublishStoryRequest(
+              storyId: detail.storyId,
+              visibility: needsDiscoverableVisibility
+                  ? StoryVisibility.public
+                  : null,
+            ),
+          );
+      if (result is Failure<Story>) {
+        return result.error;
+      }
+      if (result is! Success<Story>) {
+        return 'Unable to publish story.';
+      }
+      return null;
+    });
+  }
+
+  /// Runs a lifecycle action; on failure preserves canonical Story state and
+  /// surfaces the error for retry.
+  Future<void> _runLifecycleAction(
+    Future<String?> Function() action,
+  ) async {
+    if (_actionBusy) {
+      return;
+    }
+    setState(() {
+      _actionBusy = true;
+      _actionError = null;
+    });
+    try {
+      final error = await action();
+      if (!mounted) {
+        return;
+      }
+      if (error != null) {
+        setState(() => _actionError = error);
+        return;
+      }
+      ref.invalidate(ownedStoriesProvider);
+      ref.invalidate(ownedStoryDetailProvider(widget.storyId));
+    } finally {
+      if (mounted) {
+        setState(() => _actionBusy = false);
+      }
+    }
   }
 }
 
@@ -125,12 +262,24 @@ class _OwnedStoryDetailBody extends ConsumerWidget {
   const _OwnedStoryDetailBody({
     required this.detail,
     required this.theme,
+    required this.actionBusy,
+    required this.actionError,
+    required this.onClearActionError,
     required this.onArchive,
+    required this.onSubmit,
+    required this.onApprove,
+    required this.onPublish,
   });
 
   final OwnedStoryDetailViewModel detail;
   final ThemeData theme;
+  final bool actionBusy;
+  final String? actionError;
+  final VoidCallback onClearActionError;
   final VoidCallback onArchive;
+  final VoidCallback onSubmit;
+  final VoidCallback onApprove;
+  final VoidCallback onPublish;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -191,6 +340,19 @@ class _OwnedStoryDetailBody extends ConsumerWidget {
               label: Text(detail.lifecycleLabel),
             ),
           ],
+        ),
+        const SizedBox(height: 24),
+        const Divider(),
+        const SizedBox(height: 16),
+        _PublicationSection(
+          detail: detail,
+          theme: theme,
+          actionBusy: actionBusy,
+          actionError: actionError,
+          onClearActionError: onClearActionError,
+          onSubmit: onSubmit,
+          onApprove: onApprove,
+          onPublish: onPublish,
         ),
         const SizedBox(height: 24),
         const Divider(),
@@ -300,11 +462,149 @@ class _OwnedStoryDetailBody extends ConsumerWidget {
         if (detail.canArchive)
           OutlinedButton.icon(
             key: const ValueKey('owned-story-archive-button'),
-            onPressed: onArchive,
+            onPressed: actionBusy ? null : onArchive,
             icon: const Icon(Icons.archive_outlined),
             label: const Text('Archive'),
           ),
       ],
     );
+  }
+}
+
+class _PublicationSection extends StatelessWidget {
+  const _PublicationSection({
+    required this.detail,
+    required this.theme,
+    required this.actionBusy,
+    required this.actionError,
+    required this.onClearActionError,
+    required this.onSubmit,
+    required this.onApprove,
+    required this.onPublish,
+  });
+
+  final OwnedStoryDetailViewModel detail;
+  final ThemeData theme;
+  final bool actionBusy;
+  final String? actionError;
+  final VoidCallback onClearActionError;
+  final VoidCallback onSubmit;
+  final VoidCallback onApprove;
+  final VoidCallback onPublish;
+
+  @override
+  Widget build(BuildContext context) {
+    final isTerminal = detail.lifecycleStatus == StoryLifecycleStatus.archived ||
+        detail.lifecycleStatus == StoryLifecycleStatus.removed ||
+        detail.lifecycleStatus == StoryLifecycleStatus.rejected ||
+        detail.lifecycleStatus == StoryLifecycleStatus.suspended;
+
+    return Column(
+      key: const ValueKey('owned-story-publication-section'),
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          'Publication',
+          key: const ValueKey('owned-story-publication-heading'),
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          _statusCopy(detail),
+          key: const ValueKey('owned-story-publication-status'),
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+            height: 1.4,
+          ),
+        ),
+        if (detail.hasProvisionalNarrative) ...[
+          const SizedBox(height: 8),
+          Text(
+            'A provisional capture narrative must be replaced before '
+            'approval or publication.',
+            key: const ValueKey('owned-story-provisional-warning'),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.error,
+              height: 1.4,
+            ),
+          ),
+        ],
+        if (actionError != null) ...[
+          const SizedBox(height: 12),
+          Text(
+            actionError!,
+            key: const ValueKey('owned-story-publication-error'),
+            style: TextStyle(color: theme.colorScheme.error),
+          ),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton(
+              key: const ValueKey('owned-story-publication-dismiss-error'),
+              onPressed: onClearActionError,
+              child: const Text('Dismiss'),
+            ),
+          ),
+        ],
+        if (!isTerminal) ...[
+          const SizedBox(height: 16),
+          if (detail.canSubmit)
+            FilledButton(
+              key: const ValueKey('owned-story-submit-button'),
+              onPressed: actionBusy ? null : onSubmit,
+              child: Text(actionBusy ? 'Submitting…' : 'Submit'),
+            ),
+          if (detail.canApprove) ...[
+            if (detail.canSubmit) const SizedBox(height: 8),
+            FilledButton(
+              key: const ValueKey('owned-story-approve-button'),
+              onPressed: actionBusy ? null : onApprove,
+              child: Text(actionBusy ? 'Approving…' : 'Approve'),
+            ),
+          ],
+          if (detail.canPublish) ...[
+            if (detail.canSubmit || detail.canApprove) const SizedBox(height: 8),
+            FilledButton(
+              key: const ValueKey('owned-story-publish-button'),
+              onPressed: actionBusy ? null : onPublish,
+              child: Text(actionBusy ? 'Publishing…' : 'Publish'),
+            ),
+          ],
+          if (detail.lifecycleStatus == StoryLifecycleStatus.published)
+            Text(
+              'This story is published. Catalog discovery remains gated by '
+              'Discovery eligibility (published + public/community visibility).',
+              key: const ValueKey('owned-story-published-note'),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+                height: 1.4,
+              ),
+            ),
+        ],
+      ],
+    );
+  }
+
+  static String _statusCopy(OwnedStoryDetailViewModel detail) {
+    return switch (detail.lifecycleStatus) {
+      StoryLifecycleStatus.draft =>
+        'This story is a draft. Materialization is not publication. '
+            'Submit when you are ready to begin the publication path.',
+      StoryLifecycleStatus.processing =>
+        'Submitted. Approve to mark this story ready for publication.',
+      StoryLifecycleStatus.review =>
+        'Ready for review. Approve to continue toward publication.',
+      StoryLifecycleStatus.approved =>
+        'Approved. Publish to make this story eligible for Discovery '
+            '(with public visibility).',
+      StoryLifecycleStatus.published =>
+        'Published. Seekers may discover this story when Hero and Story '
+            'eligibility are met.',
+      StoryLifecycleStatus.archived => 'This story is archived.',
+      StoryLifecycleStatus.rejected => 'This story was rejected.',
+      StoryLifecycleStatus.suspended => 'This story is suspended.',
+      StoryLifecycleStatus.removed => 'This story was removed.',
+    };
   }
 }
