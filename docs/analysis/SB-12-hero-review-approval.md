@@ -224,10 +224,12 @@ Story Builder proposal preview replaced with Hero review:
 
 | Check | Result |
 |-------|--------|
-| Focused SB.12 (domain + application + architecture + UI) | **29/29 passed** |
+| Focused SB.12 (domain + application + architecture + UI) | **32/32 passed** |
 | SB.9 / SB.10 / SB.11 regression | **62/62 passed** |
-| Full `flutter test` | **1038/1038 passed** |
+| Full `flutter test` | **1041/1041 passed** (baseline 1038 + 3 UI gap-closure tests) |
 | `flutter analyze` | **0 errors** (pre-existing infos/`prefer_initializing_formals` style notes remain elsewhere) |
+
+UI coverage includes: review open, authorship labels, edit/save, reject, approve confirmation, approved state, edit-after-approve, resume accepted, resume after edit, AI failure keeps proposal, deterministic offline review.
 
 ---
 

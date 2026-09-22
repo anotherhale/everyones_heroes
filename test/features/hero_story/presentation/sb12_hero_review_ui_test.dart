@@ -9,6 +9,7 @@ import 'package:everyonesheroes/core/ids/story_proposal_id.dart';
 import 'package:everyonesheroes/core/ids/story_proposal_section_id.dart';
 import 'package:everyonesheroes/core/shared_kernel/language_code.dart';
 import 'package:everyonesheroes/features/hero_story/application/providers/hero/active_local_hero_provider.dart';
+import 'package:everyonesheroes/features/hero_story/application/providers/ai/story_authoring_port_provider.dart';
 import 'package:everyonesheroes/features/hero_story/application/providers/repositories/hero_repository_provider.dart';
 import 'package:everyonesheroes/features/hero_story/application/providers/repositories/story_builder_session_repository_provider.dart';
 import 'package:everyonesheroes/features/hero_story/application/providers/repositories/story_proposal_repository_provider.dart';
@@ -27,7 +28,9 @@ import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_b
 import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_proposal.dart';
 import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_proposal_provenance.dart';
 import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_proposal_section.dart';
+import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_proposal_section_edit.dart';
 import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_title.dart';
+import 'package:everyonesheroes/features/hero_story/infrastructure/ai/in_memory_story_proposal_authoring_adapter.dart';
 import 'package:everyonesheroes/features/hero_story/infrastructure/repositories/in_memory_hero_repository.dart';
 import 'package:everyonesheroes/features/hero_story/infrastructure/repositories/in_memory_story_builder_session_repository.dart';
 import 'package:everyonesheroes/features/hero_story/infrastructure/repositories/in_memory_story_proposal_repository.dart';
@@ -324,6 +327,181 @@ void main() {
     expect(
       state.proposal!.lifecycle,
       StoryProposalLifecycleStatus.accepted,
+    );
+    expect(await stories.findAll(), isEmpty);
+  });
+
+  testWidgets('resume after edit restores edited proposal for review', (
+    tester,
+  ) async {
+    final existing = await proposals.findById(proposalId);
+    final edited = existing!.editHeroContent(
+      title: 'Saved Before Restart',
+      updateTitle: true,
+      summary: 'Edited summary survives restart',
+      updateSummary: true,
+      sectionEdits: [
+        StoryProposalSectionEdit(
+          sectionId: StoryProposalSectionId(aiSectionId),
+          content: 'Edited AI section survives restart',
+        ),
+      ],
+      editedAt: DateTime.utc(2026, 9, 22, 14),
+    );
+    await proposals.save(edited);
+
+    final container = buildContainer();
+    addTearDown(container.dispose);
+    await pumpReview(tester, container);
+
+    expect(find.text('Review Your Story'), findsOneWidget);
+    final titleField = tester.widget<TextField>(
+      find.byKey(const ValueKey('story-builder-review-title')),
+    );
+    expect(titleField.controller!.text, 'Saved Before Restart');
+    final summaryField = tester.widget<TextField>(
+      find.byKey(const ValueKey('story-builder-review-summary')),
+    );
+    expect(summaryField.controller!.text, 'Edited summary survives restart');
+    final sectionField = tester.widget<TextField>(
+      find.byKey(ValueKey('story-builder-review-section-$aiSectionId')),
+    );
+    expect(sectionField.controller!.text, 'Edited AI section survives restart');
+
+    final state = container.read(storyBuilderControllerProvider);
+    expect(state.proposal!.lifecycle, StoryProposalLifecycleStatus.readyForReview);
+    expect(
+      state.proposal!.sectionById(StoryProposalSectionId(aiSectionId))!
+          .contentOrigin,
+      StoryProposalContentOrigin.derived,
+    );
+    expect(await stories.findAll(), isEmpty);
+  });
+
+  testWidgets('AI failure keeps proposal and returns to review', (
+    tester,
+  ) async {
+    // Improve with AI is offered only for non-AI-shaped proposals.
+    final existing = await proposals.findById(proposalId);
+    await proposals.save(
+      StoryProposal(
+        id: existing!.id,
+        sessionId: existing.sessionId,
+        title: existing.title,
+        narrative: existing.narrative,
+        sections: existing.sections,
+        intent: existing.intent,
+        provenance: StoryProposalProvenance(
+          sessionId: existing.sessionId,
+          derivationKind: StoryProposalDerivationKind.deterministic,
+          processingVersion: StoryProposal.shapedProcessingVersion,
+        ),
+        lifecycle: StoryProposalLifecycleStatus.readyForReview,
+        createdAt: existing.createdAt,
+        updatedAt: existing.updatedAt,
+        derivedSummary: existing.derivedSummary,
+        review: existing.review,
+      ),
+    );
+
+    final container = ProviderContainer(
+      overrides: [
+        heroRepositoryProvider.overrideWithValue(heroes),
+        storyBuilderSessionRepositoryProvider.overrideWithValue(sessions),
+        storyProposalRepositoryProvider.overrideWithValue(proposals),
+        storyRepositoryProvider.overrideWithValue(stories),
+        eventBusProvider.overrideWithValue(
+          InMemoryEventBus(
+            eventStore: InMemoryEventStore(),
+            dispatcher: InMemoryEventDispatcher(),
+          ),
+        ),
+        activeLocalHeroStoreProvider.overrideWithValue(ActiveLocalHeroStore()),
+        storyAuthoringTransportProvider.overrideWithValue(
+          InMemoryStoryProposalAuthoringAdapter(
+            forcedFailureMessage: 'simulated AI authoring outage',
+          ),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+    await pumpReview(tester, container);
+
+    expect(find.text('Improve with AI'), findsOneWidget);
+    await tester.tap(
+      find.byKey(const ValueKey('story-builder-improve-with-ai')),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+
+    expect(
+      find.byKey(const ValueKey('story-builder-authoring-unavailable')),
+      findsOneWidget,
+    );
+    final mid = await proposals.findById(proposalId);
+    expect(mid, isNotNull);
+    expect(mid!.lifecycle, StoryProposalLifecycleStatus.readyForReview);
+
+    await tester.tap(
+      find.byKey(const ValueKey('story-builder-authoring-continue')),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+
+    expect(find.text('Review Your Story'), findsOneWidget);
+    expect(find.text('Approve Story'), findsOneWidget);
+    final restored = container.read(storyBuilderControllerProvider).proposal;
+    expect(restored!.id, proposalId);
+    expect(await stories.findAll(), isEmpty);
+  });
+
+  testWidgets('deterministic offline proposal opens review without AI', (
+    tester,
+  ) async {
+    final existing = await proposals.findById(proposalId);
+    await proposals.save(
+      StoryProposal(
+        id: existing!.id,
+        sessionId: existing.sessionId,
+        title: existing.title,
+        narrative: existing.narrative,
+        sections: [
+          for (final section in existing.sections)
+            StoryProposalSection(
+              id: section.id,
+              narrativeRole: section.narrativeRole,
+              order: section.order,
+              contentOrigin: StoryProposalContentOrigin.heroAuthored,
+              content: section.content,
+              sourceResponseIds: section.sourceResponseIds,
+              wasSkipped: section.wasSkipped,
+            ),
+        ],
+        intent: existing.intent,
+        provenance: StoryProposalProvenance(
+          sessionId: existing.sessionId,
+          derivationKind: StoryProposalDerivationKind.deterministic,
+          processingVersion: StoryProposal.shapedProcessingVersion,
+        ),
+        lifecycle: StoryProposalLifecycleStatus.readyForReview,
+        createdAt: existing.createdAt,
+        updatedAt: existing.updatedAt,
+        derivedSummary: existing.derivedSummary,
+      ),
+    );
+
+    final container = buildContainer();
+    addTearDown(container.dispose);
+    await pumpReview(tester, container);
+
+    expect(find.text('Review Your Story'), findsOneWidget);
+    expect(find.text('Hero-authored'), findsWidgets);
+    expect(find.text('Improve with AI'), findsOneWidget);
+    expect(find.text('Approve Story'), findsOneWidget);
+    final state = container.read(storyBuilderControllerProvider);
+    expect(
+      state.proposal!.provenance.derivationKind,
+      StoryProposalDerivationKind.deterministic,
     );
     expect(await stories.findAll(), isEmpty);
   });
