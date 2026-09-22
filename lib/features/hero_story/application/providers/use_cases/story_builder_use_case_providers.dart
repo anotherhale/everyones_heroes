@@ -10,7 +10,10 @@ import 'package:everyonesheroes/features/hero_story/application/use_cases/advanc
 import 'package:everyonesheroes/features/hero_story/application/use_cases/answer_story_builder_prompt_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/build_deterministic_story_structure_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/build_story_proposal_use_case.dart';
+import 'package:everyonesheroes/features/hero_story/application/use_cases/shape_story_proposal_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/complete_story_builder_session_use_case.dart';
+import 'package:everyonesheroes/features/hero_story/domain/services/deterministic_story_shaper.dart';
+import 'package:everyonesheroes/features/hero_story/domain/services/story_shaper_port.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/edit_story_builder_response_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/get_story_builder_session_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/list_resumable_story_builder_sessions_use_case.dart';
@@ -174,5 +177,19 @@ final buildStoryProposalUseCaseProvider =
       return BuildStoryProposalUseCase(
         sessionRepository: ref.watch(storyBuilderSessionRepositoryProvider),
         proposalRepository: ref.watch(storyProposalRepositoryProvider),
+      );
+    });
+
+/// Default SB.10 shaper — deterministic, offline, AI-agnostic.
+final storyShaperPortProvider = Provider<StoryShaperPort>((ref) {
+  return const DeterministicStoryShaper();
+});
+
+final shapeStoryProposalUseCaseProvider =
+    Provider<ShapeStoryProposalUseCase>((ref) {
+      return ShapeStoryProposalUseCase(
+        proposalRepository: ref.watch(storyProposalRepositoryProvider),
+        sessionRepository: ref.watch(storyBuilderSessionRepositoryProvider),
+        shaper: ref.watch(storyShaperPortProvider),
       );
     });

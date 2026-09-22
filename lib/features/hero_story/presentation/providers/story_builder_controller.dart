@@ -10,6 +10,7 @@ import 'package:everyonesheroes/features/hero_story/application/dto/requests/ans
 import 'package:everyonesheroes/features/hero_story/application/dto/requests/build_story_proposal_request.dart';
 import 'package:everyonesheroes/features/hero_story/application/dto/requests/edit_story_builder_response_request.dart';
 import 'package:everyonesheroes/features/hero_story/application/dto/requests/set_story_builder_mode_request.dart';
+import 'package:everyonesheroes/features/hero_story/application/dto/requests/shape_story_proposal_request.dart';
 import 'package:everyonesheroes/features/hero_story/application/dto/requests/skip_story_builder_prompt_request.dart';
 import 'package:everyonesheroes/features/hero_story/application/dto/requests/start_story_builder_session_request.dart';
 import 'package:everyonesheroes/features/hero_story/application/dto/requests/story_builder_session_id_request.dart';
@@ -526,24 +527,40 @@ final class StoryBuilderController extends Notifier<StoryBuilderUiState> {
     );
   }
 
-  /// Builds a reviewable Story Proposal from the completed session (SB.9).
+  /// Builds a Story Proposal then applies deterministic shaping (SB.9 → SB.10).
+  ///
+  /// UX: Build Story Proposal → shape → Review Story (proposal preview).
   Future<void> buildStoryProposal() async {
     final sessionId = state.sessionId;
     if (sessionId == null || state.isBusy) {
       return;
     }
     state = state.copyWith(isBusy: true, clearError: true);
-    final result = await ref.read(buildStoryProposalUseCaseProvider).execute(
-          BuildStoryProposalRequest(sessionId: sessionId),
-        );
-    if (result is Failure) {
+    final buildResult =
+        await ref.read(buildStoryProposalUseCaseProvider).execute(
+              BuildStoryProposalRequest(sessionId: sessionId),
+            );
+    if (buildResult is Failure) {
       state = state.copyWith(
         isBusy: false,
-        errorMessage: (result as Failure).error,
+        errorMessage: (buildResult as Failure).error,
       );
       return;
     }
-    final proposal = (result as Success<StoryProposal>).value;
+    final built = (buildResult as Success<StoryProposal>).value;
+
+    final shapeResult =
+        await ref.read(shapeStoryProposalUseCaseProvider).execute(
+              ShapeStoryProposalRequest(proposalId: built.id),
+            );
+    if (shapeResult is Failure) {
+      state = state.copyWith(
+        isBusy: false,
+        errorMessage: (shapeResult as Failure).error,
+      );
+      return;
+    }
+    final proposal = (shapeResult as Success<StoryProposal>).value;
     state = state.copyWith(
       phase: StoryBuilderUiPhase.proposalPreview,
       proposal: proposal,

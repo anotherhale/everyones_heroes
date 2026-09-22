@@ -5,6 +5,7 @@ import 'package:everyonesheroes/core/ids/story_builder_session_id.dart';
 import 'package:everyonesheroes/features/hero_story/domain/enums/story_builder_mode.dart';
 import 'package:everyonesheroes/features/hero_story/domain/enums/story_builder_narrative_role.dart';
 import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_proposal.dart';
+import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_proposal_section.dart';
 import 'package:everyonesheroes/features/hero_story/presentation/providers/resumable_story_builder_sessions_provider.dart';
 import 'package:everyonesheroes/features/hero_story/presentation/providers/story_builder_controller.dart';
 
@@ -427,14 +428,26 @@ class _ProposalPreviewBody extends StatelessWidget {
   final VoidCallback onBack;
   final VoidCallback onDone;
 
+  /// Presentation sections: meaningful content only (SB.10 shaped review).
+  List<StoryProposalSection> get _presentedSections {
+    return [
+      for (final section in proposal.sections)
+        if (!section.wasSkipped &&
+            section.content != null &&
+            section.content!.trim().isNotEmpty)
+          section,
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final presented = _presentedSections;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Story Proposal preview',
+          'Review your story',
           key: const ValueKey('story-builder-proposal-preview'),
           style: theme.textTheme.headlineSmall?.copyWith(
             fontWeight: FontWeight.w700,
@@ -442,20 +455,18 @@ class _ProposalPreviewBody extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Text(
-          'This is a proposed Story. Your original answers remain yours.',
+          'Shaping organizes your story using the material you provided. '
+          'It does not add facts to your story.',
           key: const ValueKey('story-builder-proposal-disclaimer'),
           style: theme.textTheme.bodyLarge?.copyWith(height: 1.5),
         ),
         const SizedBox(height: 16),
         Expanded(
           child: ListView.separated(
-            itemCount: proposal.sections.length,
+            itemCount: presented.length,
             separatorBuilder: (_, _) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
-              final section = proposal.sections[index];
-              final status = section.wasSkipped
-                  ? 'Skipped'
-                  : (section.hasContent ? null : 'Not answered');
+              final section = presented[index];
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -467,14 +478,9 @@ class _ProposalPreviewBody extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    status ?? section.content!,
+                    section.content!,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       height: 1.45,
-                      color: status == null
-                          ? null
-                          : theme.colorScheme.onSurfaceVariant,
-                      fontStyle:
-                          status == null ? FontStyle.normal : FontStyle.italic,
                     ),
                   ),
                 ],

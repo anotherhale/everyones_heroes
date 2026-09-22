@@ -63,6 +63,9 @@ final class StoryProposal extends ValueObject {
   /// Processing version for deterministic SB.9 construction.
   static const String deterministicProcessingVersion = 'sb9.deterministic.v1';
 
+  /// Processing version after deterministic SB.10 shaping.
+  static const String shapedProcessingVersion = 'sb10.deterministic.v1';
+
   final StoryProposalId id;
   final StoryBuilderSessionId sessionId;
 
