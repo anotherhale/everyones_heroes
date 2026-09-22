@@ -8,6 +8,7 @@ import 'package:everyonesheroes/core/results/success.dart';
 import 'package:everyonesheroes/features/hero_story/application/dto/requests/advance_story_builder_request.dart';
 import 'package:everyonesheroes/features/hero_story/application/dto/requests/answer_story_builder_prompt_request.dart';
 import 'package:everyonesheroes/features/hero_story/application/dto/requests/approve_story_proposal_request.dart';
+import 'package:everyonesheroes/features/hero_story/application/dto/requests/materialize_story_proposal_request.dart';
 import 'package:everyonesheroes/features/hero_story/application/dto/requests/begin_story_proposal_revision_request.dart';
 import 'package:everyonesheroes/features/hero_story/application/dto/requests/build_story_proposal_request.dart';
 import 'package:everyonesheroes/features/hero_story/application/dto/requests/edit_story_builder_response_request.dart';
@@ -21,7 +22,9 @@ import 'package:everyonesheroes/features/hero_story/application/dto/requests/sto
 import 'package:everyonesheroes/features/hero_story/application/dto/responses/advance_story_builder_result.dart';
 import 'package:everyonesheroes/features/hero_story/application/providers/hero/active_local_hero_provider.dart';
 import 'package:everyonesheroes/features/hero_story/application/providers/repositories/story_proposal_repository_provider.dart';
+import 'package:everyonesheroes/features/hero_story/application/providers/repositories/story_repository_provider.dart';
 import 'package:everyonesheroes/features/hero_story/application/providers/use_cases/story_builder_use_case_providers.dart';
+import 'package:everyonesheroes/features/hero_story/domain/aggregates/story.dart';
 import 'package:everyonesheroes/features/hero_story/domain/aggregates/story_builder_session.dart';
 import 'package:everyonesheroes/features/hero_story/domain/enums/story_builder_mode.dart';
 import 'package:everyonesheroes/features/hero_story/domain/enums/story_builder_session_status.dart';
@@ -41,6 +44,7 @@ enum StoryBuilderUiPhase {
   questioning,
   completed,
   proposalPreview,
+  storyCreated,
   error,
   coachUnavailable,
   authoringUnavailable,
@@ -63,6 +67,7 @@ final class StoryBuilderUiState {
     this.proposal,
     this.originalProposal,
     this.showingOriginalProposal = false,
+    this.materializedStory,
   });
 
   final StoryBuilderUiPhase phase;
@@ -82,6 +87,9 @@ final class StoryBuilderUiState {
 
   /// When true, review UI shows [originalProposal] instead of AI proposal.
   final bool showingOriginalProposal;
+
+  /// Canonical Story created after approval (SB.13).
+  final Story? materializedStory;
 
   int get displayStep => promptIndex + 1;
 
@@ -134,6 +142,8 @@ final class StoryBuilderUiState {
     StoryProposal? originalProposal,
     bool clearOriginalProposal = false,
     bool? showingOriginalProposal,
+    Story? materializedStory,
+    bool clearMaterializedStory = false,
   }) {
     return StoryBuilderUiState(
       phase: phase ?? this.phase,
@@ -154,6 +164,9 @@ final class StoryBuilderUiState {
           : (originalProposal ?? this.originalProposal),
       showingOriginalProposal:
           showingOriginalProposal ?? this.showingOriginalProposal,
+      materializedStory: clearMaterializedStory
+          ? null
+          : (materializedStory ?? this.materializedStory),
     );
   }
 }
@@ -236,6 +249,23 @@ final class StoryBuilderController extends Notifier<StoryBuilderUiState> {
     if (session.status == StoryBuilderSessionStatus.completed) {
       final resumedProposal = await _loadLatestProposal(sessionId);
       if (resumedProposal != null) {
+        if (resumedProposal.materializedStoryId != null) {
+          final story = await ref
+              .read(storyRepositoryProvider)
+              .findById(resumedProposal.materializedStoryId!);
+          if (story != null) {
+            state = state.copyWith(
+              phase: StoryBuilderUiPhase.storyCreated,
+              proposal: resumedProposal,
+              materializedStory: story,
+              isBusy: false,
+              clearPrompt: true,
+              clearOriginalProposal: true,
+              showingOriginalProposal: false,
+            );
+            return;
+          }
+        }
         state = state.copyWith(
           phase: StoryBuilderUiPhase.proposalPreview,
           proposal: resumedProposal,
@@ -759,6 +789,9 @@ final class StoryBuilderController extends Notifier<StoryBuilderUiState> {
   }
 
   /// Explicit Hero approval — only path to accepted (SB.12).
+  ///
+  /// On success, immediately materializes the canonical Story (SB.13).
+  /// Materialization failure leaves the proposal accepted for retry.
   Future<bool> approveProposal() async {
     final current = state.proposal;
     if (current == null || state.isBusy) {
@@ -780,6 +813,52 @@ final class StoryBuilderController extends Notifier<StoryBuilderUiState> {
     state = state.copyWith(
       phase: StoryBuilderUiPhase.proposalPreview,
       proposal: approved,
+      showingOriginalProposal: false,
+      clearError: true,
+    );
+    return materializeApprovedProposal();
+  }
+
+  /// Creates the canonical Story from an accepted proposal (SB.13).
+  ///
+  /// Safe to retry. Does not publish.
+  Future<bool> materializeApprovedProposal() async {
+    final current = state.proposal;
+    if (current == null) {
+      return false;
+    }
+    if (current.lifecycle != StoryProposalLifecycleStatus.accepted) {
+      state = state.copyWith(
+        isBusy: false,
+        errorMessage:
+            'Only an approved story proposal can be created as a Story.',
+      );
+      return false;
+    }
+    state = state.copyWith(isBusy: true, clearError: true);
+    final result =
+        await ref.read(materializeStoryProposalUseCaseProvider).execute(
+              MaterializeStoryProposalRequest(proposalId: current.id),
+            );
+    if (result is Failure) {
+      // Keep accepted proposal for retry — do not revoke approval.
+      final refreshed =
+          await ref.read(storyProposalRepositoryProvider).findById(current.id);
+      state = state.copyWith(
+        phase: StoryBuilderUiPhase.proposalPreview,
+        proposal: refreshed ?? current,
+        isBusy: false,
+        errorMessage: (result as Failure).error,
+      );
+      return false;
+    }
+    final story = (result as Success<Story>).value;
+    final refreshed =
+        await ref.read(storyProposalRepositoryProvider).findById(current.id);
+    state = state.copyWith(
+      phase: StoryBuilderUiPhase.storyCreated,
+      proposal: refreshed ?? current,
+      materializedStory: story,
       isBusy: false,
       clearError: true,
       showingOriginalProposal: false,
@@ -844,6 +923,7 @@ final class StoryBuilderController extends Notifier<StoryBuilderUiState> {
       isBusy: false,
       clearError: true,
       showingOriginalProposal: false,
+      clearMaterializedStory: true,
     );
     return true;
   }

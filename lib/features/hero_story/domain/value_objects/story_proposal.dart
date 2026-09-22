@@ -1,4 +1,5 @@
 import 'package:everyonesheroes/core/ids/story_builder_session_id.dart';
+import 'package:everyonesheroes/core/ids/story_id.dart';
 import 'package:everyonesheroes/core/ids/story_proposal_id.dart';
 import 'package:everyonesheroes/core/ids/story_proposal_section_id.dart';
 import 'package:everyonesheroes/core/shared_kernel/value_object.dart';
@@ -12,7 +13,7 @@ import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_p
 import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_proposal_section_edit.dart';
 import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_title.dart';
 
-/// Derived, reviewable candidate Story structure/content (SB.9 / SB.12).
+/// Derived, reviewable candidate Story structure/content (SB.9 / SB.12 / SB.13).
 ///
 /// Not a [Story]. Not a [StoryBuilderSession]. Not [StoryBuilderUnderstanding].
 ///
@@ -21,6 +22,10 @@ import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_t
 ///
 /// SB.12: only explicit [approve] / [reject] / [editHeroContent] operations
 /// may change review state. Shaping and generation never approve.
+///
+/// SB.13: [materializedStoryId] records the canonical Story created from an
+/// accepted proposal (idempotency relationship). The Story remains the source
+/// of truth; the proposal is not demoted to a Story subtype.
 final class StoryProposal extends ValueObject {
   StoryProposal({
     required this.id,
@@ -34,6 +39,7 @@ final class StoryProposal extends ValueObject {
     this.title,
     this.narrative,
     this.derivedSummary,
+    this.materializedStoryId,
     StoryProposalReview? review,
   })  : sections = List.unmodifiable(sections.toList()),
         review = review ?? StoryProposalReview.empty() {
@@ -64,6 +70,12 @@ final class StoryProposal extends ValueObject {
     final narrativeText = narrative?.trim();
     if (narrativeText != null && narrativeText.isEmpty) {
       throw ArgumentError('narrative cannot be blank when provided.');
+    }
+    if (materializedStoryId != null &&
+        lifecycle != StoryProposalLifecycleStatus.accepted) {
+      throw ArgumentError(
+        'materializedStoryId may only be set on an accepted proposal.',
+      );
     }
   }
 
@@ -105,6 +117,9 @@ final class StoryProposal extends ValueObject {
   /// Durable Hero review metadata (SB.12).
   final StoryProposalReview review;
 
+  /// Canonical Story created from this accepted proposal (SB.13), if any.
+  final StoryId? materializedStoryId;
+
   int get sectionCount => sections.length;
 
   int get populatedSectionCount =>
@@ -120,6 +135,8 @@ final class StoryProposal extends ValueObject {
 
   bool get isReadyForReview =>
       lifecycle == StoryProposalLifecycleStatus.readyForReview;
+
+  bool get isMaterialized => materializedStoryId != null;
 
   StoryProposalSection? sectionForRole(StoryBuilderNarrativeRole role) {
     for (final section in sections) {
@@ -170,6 +187,7 @@ final class StoryProposal extends ValueObject {
       createdAt: createdAt,
       updatedAt: decidedAt,
       derivedSummary: derivedSummary,
+      materializedStoryId: null,
       review: review.copyWith(
         decision: StoryProposalReviewDecision.approved,
         reviewedAt: decidedAt,
@@ -205,11 +223,50 @@ final class StoryProposal extends ValueObject {
       createdAt: createdAt,
       updatedAt: decidedAt,
       derivedSummary: derivedSummary,
+      materializedStoryId: null,
       review: review.copyWith(
         decision: StoryProposalReviewDecision.rejected,
         reviewedAt: decidedAt,
         editedAfterDecision: false,
       ),
+    );
+  }
+
+
+  /// Records the canonical Story created from this accepted proposal (SB.13).
+  ///
+  /// Idempotent when [storyId] matches an existing link. Does not change
+  /// lifecycle — failure to materialize must leave the proposal accepted.
+  StoryProposal recordMaterializedStory(StoryId storyId, {DateTime? at}) {
+    if (lifecycle != StoryProposalLifecycleStatus.accepted) {
+      throw StateError(
+        'Cannot record materialization unless proposal is accepted.',
+      );
+    }
+    if (materializedStoryId == storyId) {
+      return this;
+    }
+    if (materializedStoryId != null) {
+      throw StateError(
+        'Proposal ${id.value} is already linked to Story '
+        '${materializedStoryId!.value}.',
+      );
+    }
+    final recordedAt = at ?? DateTime.now();
+    return StoryProposal(
+      id: id,
+      sessionId: sessionId,
+      title: title,
+      narrative: narrative,
+      sections: sections,
+      intent: intent,
+      provenance: provenance,
+      lifecycle: lifecycle,
+      createdAt: createdAt,
+      updatedAt: recordedAt,
+      derivedSummary: derivedSummary,
+      materializedStoryId: storyId,
+      review: review,
     );
   }
 
@@ -364,6 +421,8 @@ final class StoryProposal extends ValueObject {
       createdAt: createdAt,
       updatedAt: at,
       derivedSummary: nextSummary,
+      // Re-approval required after content change; clear materialization link.
+      materializedStoryId: null,
       review: review.copyWith(
         revision: review.revision + 1,
         // Keep prior decision for stale-approval detection; lifecycle returns
@@ -405,6 +464,7 @@ final class StoryProposal extends ValueObject {
       createdAt: createdAt,
       updatedAt: revisedAt,
       derivedSummary: derivedSummary,
+      materializedStoryId: null,
       review: review.copyWith(
         editedAfterDecision: true,
         lastEditedAt: revisedAt,
@@ -436,6 +496,7 @@ final class StoryProposal extends ValueObject {
     if (intent != other.intent) return false;
     if (lifecycle != other.lifecycle) return false;
     if (derivedSummary != other.derivedSummary) return false;
+    if (materializedStoryId != other.materializedStoryId) return false;
     if (provenance.derivationKind != other.provenance.derivationKind) {
       return false;
     }
@@ -482,6 +543,7 @@ final class StoryProposal extends ValueObject {
     createdAt,
     updatedAt,
     derivedSummary,
+    materializedStoryId,
     review,
     ...sections,
   ];

@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:everyonesheroes/core/ids/hero_id.dart';
 import 'package:everyonesheroes/core/ids/story_id.dart';
+import 'package:everyonesheroes/core/ids/story_proposal_id.dart';
 import 'package:everyonesheroes/features/hero_story/domain/aggregates/story.dart';
 import 'package:everyonesheroes/features/hero_story/domain/enums/story_lifecycle_status.dart';
 import 'package:everyonesheroes/features/hero_story/domain/repositories/story_repository.dart';
@@ -99,5 +100,16 @@ final class FileStoryRepository implements StoryRepository {
           (story) => story.lifecycleStatus == StoryLifecycleStatus.published,
         )
         .toList();
+  }
+
+  @override
+  Future<Story?> findByStoryProposalId(StoryProposalId proposalId) async {
+    await _ensureLoaded();
+    for (final story in _cache.values) {
+      if (story.provenance.materializedFromProposalId == proposalId) {
+        return story;
+      }
+    }
+    return null;
   }
 }

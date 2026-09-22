@@ -39,6 +39,7 @@ final class CreateStoryUseCase implements UseCase<CreateStoryRequest, Story> {
         originalLanguage: request.originalLanguage,
         visibility: request.visibility,
         originalSourceDescription: request.originalSourceDescription,
+        provenance: request.provenance,
       );
 
       await _storyRepository.save(story);

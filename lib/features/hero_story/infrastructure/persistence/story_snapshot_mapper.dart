@@ -1,6 +1,8 @@
 import 'package:everyonesheroes/core/ids/hero_id.dart';
 import 'package:everyonesheroes/core/ids/narrative_theme_id.dart';
+import 'package:everyonesheroes/core/ids/story_builder_session_id.dart';
 import 'package:everyonesheroes/core/ids/story_id.dart';
+import 'package:everyonesheroes/core/ids/story_proposal_id.dart';
 import 'package:everyonesheroes/core/ids/story_representation_id.dart';
 import 'package:everyonesheroes/core/shared_kernel/language_code.dart';
 import 'package:everyonesheroes/features/hero_story/domain/aggregates/story.dart';
@@ -13,6 +15,7 @@ import 'package:everyonesheroes/features/hero_story/domain/enums/story_audience.
 import 'package:everyonesheroes/features/hero_story/domain/enums/story_challenge.dart';
 import 'package:everyonesheroes/features/hero_story/domain/enums/story_lifecycle_status.dart';
 import 'package:everyonesheroes/features/hero_story/domain/enums/story_outcome.dart';
+import 'package:everyonesheroes/features/hero_story/domain/enums/story_proposal_derivation_kind.dart';
 import 'package:everyonesheroes/features/hero_story/domain/enums/story_representation_format.dart';
 import 'package:everyonesheroes/features/hero_story/domain/enums/story_subject.dart';
 import 'package:everyonesheroes/features/hero_story/domain/enums/story_transformation_type.dart';
@@ -238,17 +241,38 @@ final class StorySnapshotMapper {
       'steps': [
         for (final step in provenance.steps) _provenanceStepToJson(step),
       ],
+      'materializedFromProposalId':
+          provenance.materializedFromProposalId?.value,
+      'sourceSessionId': provenance.sourceSessionId?.value,
+      'proposalDerivationKind': provenance.proposalDerivationKind?.name,
+      'proposalContainedDerivedContent':
+          provenance.proposalContainedDerivedContent,
     };
   }
 
   static StoryProvenance _provenanceFromJson(Map<String, dynamic> json) {
     final stepsRaw = json['steps'] as List? ?? const [];
+    final proposalIdRaw = json['materializedFromProposalId'];
+    final sessionIdRaw = json['sourceSessionId'];
+    final derivationRaw = json['proposalDerivationKind'];
+
     return StoryProvenance(
       originalSourceDescription: json['originalSourceDescription'] as String?,
       steps: [
         for (final step in stepsRaw)
           _provenanceStepFromJson(Map<String, dynamic>.from(step as Map)),
       ],
+      materializedFromProposalId: proposalIdRaw is String && proposalIdRaw.isNotEmpty
+          ? StoryProposalId(proposalIdRaw)
+          : null,
+      sourceSessionId: sessionIdRaw is String && sessionIdRaw.isNotEmpty
+          ? StoryBuilderSessionId(sessionIdRaw)
+          : null,
+      proposalDerivationKind: derivationRaw is String
+          ? StoryProposalDerivationKind.values.byName(derivationRaw)
+          : null,
+      proposalContainedDerivedContent:
+          json['proposalContainedDerivedContent'] as bool? ?? false,
     );
   }
 

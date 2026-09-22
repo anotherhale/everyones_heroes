@@ -1,11 +1,14 @@
 import 'package:everyonesheroes/core/ids/hero_id.dart';
 import 'package:everyonesheroes/core/ids/story_id.dart';
+import 'package:everyonesheroes/core/ids/story_proposal_id.dart';
 import 'package:everyonesheroes/features/hero_story/domain/aggregates/story.dart';
 import 'package:everyonesheroes/features/hero_story/domain/enums/story_lifecycle_status.dart';
 import 'package:everyonesheroes/features/hero_story/domain/repositories/story_repository.dart';
 
 class InMemoryStoryRepository implements StoryRepository {
   final Map<StoryId, Story> _store = {};
+
+  int get count => _store.length;
 
   @override
   Future<void> save(Story story) async {
@@ -44,5 +47,15 @@ class InMemoryStoryRepository implements StoryRepository {
           (story) => story.lifecycleStatus == StoryLifecycleStatus.published,
         )
         .toList();
+  }
+
+  @override
+  Future<Story?> findByStoryProposalId(StoryProposalId proposalId) async {
+    for (final story in _store.values) {
+      if (story.provenance.materializedFromProposalId == proposalId) {
+        return story;
+      }
+    }
+    return null;
   }
 }

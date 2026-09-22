@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:everyonesheroes/core/ids/story_builder_session_id.dart';
+import 'package:everyonesheroes/features/hero_story/domain/aggregates/story.dart';
 import 'package:everyonesheroes/features/hero_story/domain/enums/story_builder_mode.dart';
 import 'package:everyonesheroes/features/hero_story/domain/enums/story_builder_narrative_role.dart';
 import 'package:everyonesheroes/features/hero_story/domain/enums/story_proposal_content_origin.dart';
@@ -183,6 +184,17 @@ class _StoryBuilderScreenState extends ConsumerState<StoryBuilderScreen> {
                   Navigator.of(context).maybePop();
                 },
               ),
+              StoryBuilderUiPhase.storyCreated => _StoryCreatedBody(
+                story: state.materializedStory!,
+                isBusy: state.isBusy,
+                onEdit: state.isBusy
+                    ? null
+                    : () => controller.beginProposalRevision(),
+                onDone: () {
+                  ref.invalidate(resumableStoryBuilderSessionsProvider);
+                  Navigator.of(context).maybePop();
+                },
+              ),
               StoryBuilderUiPhase.proposalPreview => _ProposalReviewBody(
                 proposal: state.displayedProposal!,
                 isAiAssisted: state.isAiAssistedProposal &&
@@ -217,6 +229,7 @@ class _StoryBuilderScreenState extends ConsumerState<StoryBuilderScreen> {
                 onApprove: () => controller.approveProposal(),
                 onReject: () => controller.rejectProposal(),
                 onBeginRevision: () => controller.beginProposalRevision(),
+                onRetryMaterialize: () => controller.materializeApprovedProposal(),
                 onDone: () {
                   ref.invalidate(resumableStoryBuilderSessionsProvider);
                   Navigator.of(context).maybePop();
@@ -482,6 +495,7 @@ class _ProposalReviewBody extends StatefulWidget {
     required this.onApprove,
     required this.onReject,
     required this.onBeginRevision,
+    required this.onRetryMaterialize,
     required this.onDone,
   });
 
@@ -507,6 +521,7 @@ class _ProposalReviewBody extends StatefulWidget {
   final Future<bool> Function() onApprove;
   final Future<bool> Function() onReject;
   final Future<bool> Function() onBeginRevision;
+  final Future<bool> Function() onRetryMaterialize;
   final VoidCallback onDone;
 
   @override
@@ -651,8 +666,11 @@ class _ProposalReviewBodyState extends State<_ProposalReviewBody> {
     if (_isAccepted) {
       return _ApprovedBody(
         onEdit: widget.isBusy ? null : () => widget.onBeginRevision(),
+        onRetryMaterialize:
+            widget.isBusy ? null : () => widget.onRetryMaterialize(),
         onDone: widget.onDone,
         isBusy: widget.isBusy,
+        errorMessage: widget.errorMessage,
       );
     }
 
@@ -925,22 +943,27 @@ class _SectionReviewBlock extends StatelessWidget {
 class _ApprovedBody extends StatelessWidget {
   const _ApprovedBody({
     required this.onEdit,
+    required this.onRetryMaterialize,
     required this.onDone,
     required this.isBusy,
+    this.errorMessage,
   });
 
   final VoidCallback? onEdit;
+  final VoidCallback? onRetryMaterialize;
   final VoidCallback onDone;
   final bool isBusy;
+  final String? errorMessage;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final hasError = errorMessage != null && errorMessage!.trim().isNotEmpty;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Story Approved',
+          hasError ? 'Story Approved — Create Failed' : 'Story Approved',
           key: const ValueKey('story-builder-proposal-approved'),
           style: theme.textTheme.headlineSmall?.copyWith(
             fontWeight: FontWeight.w700,
@@ -948,9 +971,96 @@ class _ApprovedBody extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         Text(
-          'You approved this version of your story. '
-          'The next step is Story creation.',
+          hasError
+              ? 'Your approval is still saved. You can retry creating the Story. '
+                  'Creating a Story does not publish it.'
+              : isBusy
+                  ? 'You approved this version. Creating your Story… '
+                      'Creating a Story does not publish it.'
+                  : 'You approved this version of your story. '
+                      'Create the Story when you are ready. '
+                      'Creating a Story does not publish it.',
           key: const ValueKey('story-builder-proposal-approved-next'),
+          style: theme.textTheme.bodyLarge?.copyWith(height: 1.5),
+        ),
+        if (hasError) ...[
+          const SizedBox(height: 12),
+          Text(
+            errorMessage!,
+            key: const ValueKey('story-builder-materialize-error'),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.error,
+            ),
+          ),
+        ],
+        const Spacer(),
+        FilledButton(
+          key: const ValueKey('story-builder-materialize-retry'),
+          onPressed: onRetryMaterialize,
+          child: Text(
+            isBusy
+                ? 'Creating Story…'
+                : hasError
+                    ? 'Retry Create Story'
+                    : 'Create Story',
+          ),
+        ),
+        const SizedBox(height: 8),
+        OutlinedButton(
+          key: const ValueKey('story-builder-proposal-edit-after-approve'),
+          onPressed: onEdit,
+          child: Text(isBusy ? 'Opening editor…' : 'Edit'),
+        ),
+        const SizedBox(height: 8),
+        FilledButton(
+          key: const ValueKey('story-builder-proposal-done'),
+          onPressed: onDone,
+          child: const Text('Done'),
+        ),
+      ],
+    );
+  }
+}
+
+class _StoryCreatedBody extends StatelessWidget {
+  const _StoryCreatedBody({
+    required this.story,
+    required this.onDone,
+    required this.onEdit,
+    required this.isBusy,
+  });
+
+  final Story story;
+  final VoidCallback onDone;
+  final VoidCallback? onEdit;
+  final bool isBusy;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      key: const ValueKey('story-builder-story-created'),
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          'Your story has been created.',
+          key: const ValueKey('story-builder-story-created-title'),
+          style: theme.textTheme.headlineSmall?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Text(
+          story.title.value,
+          key: const ValueKey('story-builder-story-created-story-title'),
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Text(
+          'Story created. Not yet published.',
+          key: const ValueKey('story-builder-story-created-unpublished'),
           style: theme.textTheme.bodyLarge?.copyWith(height: 1.5),
         ),
         const Spacer(),
@@ -961,7 +1071,7 @@ class _ApprovedBody extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         FilledButton(
-          key: const ValueKey('story-builder-proposal-done'),
+          key: const ValueKey('story-builder-story-created-done'),
           onPressed: onDone,
           child: const Text('Done'),
         ),
