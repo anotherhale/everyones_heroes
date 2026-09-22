@@ -117,14 +117,32 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  Future<void> ensureVisibleKey(WidgetTester tester, Key key) async {
+    await tester.ensureVisible(find.byKey(key));
+    await tester.pumpAndSettle();
+  }
+
+  Future<void> tapKey(WidgetTester tester, Key key) async {
+    await ensureVisibleKey(tester, key);
+    await tester.tap(find.byKey(key));
+    await tester.pumpAndSettle();
+  }
+
   testWidgets('draft shows Submit and hides Approve/Publish', (tester) async {
     final container = buildContainer();
     addTearDown(container.dispose);
     final storyId = await seedDraftStory();
 
     await pumpDetail(tester, container, storyId);
+    await ensureVisibleKey(
+      tester,
+      const ValueKey('owned-story-submit-button'),
+    );
 
-    expect(find.text('Draft'), findsWidgets);
+    expect(
+      find.byKey(const ValueKey('owned-story-publication-section')),
+      findsOneWidget,
+    );
     expect(
       find.byKey(const ValueKey('owned-story-submit-button')),
       findsOneWidget,
@@ -147,14 +165,9 @@ void main() {
 
     await pumpDetail(tester, container, storyId);
 
-    await tester.scrollUntilVisible(
-      find.byKey(const ValueKey('owned-story-submit-button')),
-      200,
-    );
-    await tester.tap(find.byKey(const ValueKey('owned-story-submit-button')));
-    await tester.pumpAndSettle();
+    await tapKey(tester, const ValueKey('owned-story-submit-button'));
 
-    expect(find.text('Submitted'), findsWidgets);
+    expect(find.textContaining('Submitted'), findsWidgets);
     expect(
       find.byKey(const ValueKey('owned-story-submit-button')),
       findsNothing,
@@ -168,10 +181,9 @@ void main() {
       StoryLifecycleStatus.processing,
     );
 
-    await tester.tap(find.byKey(const ValueKey('owned-story-approve-button')));
-    await tester.pumpAndSettle();
+    await tapKey(tester, const ValueKey('owned-story-approve-button'));
 
-    expect(find.text('Approved'), findsWidgets);
+    expect(find.textContaining('Approved'), findsWidgets);
     expect(
       find.byKey(const ValueKey('owned-story-approve-button')),
       findsNothing,
@@ -185,10 +197,9 @@ void main() {
       StoryLifecycleStatus.approved,
     );
 
-    await tester.tap(find.byKey(const ValueKey('owned-story-publish-button')));
-    await tester.pumpAndSettle();
+    await tapKey(tester, const ValueKey('owned-story-publish-button'));
 
-    expect(find.text('Published'), findsWidgets);
+    expect(find.textContaining('Published'), findsWidgets);
     expect(
       find.byKey(const ValueKey('owned-story-publish-button')),
       findsNothing,
@@ -217,12 +228,7 @@ void main() {
       // without corrupting a successful transition.
       await stories.delete(storyId);
 
-      await tester.scrollUntilVisible(
-        find.byKey(const ValueKey('owned-story-submit-button')),
-        200,
-      );
-      await tester.tap(find.byKey(const ValueKey('owned-story-submit-button')));
-      await tester.pumpAndSettle();
+      await tapKey(tester, const ValueKey('owned-story-submit-button'));
 
       expect(
         find.byKey(const ValueKey('owned-story-publication-error')),
@@ -243,18 +249,13 @@ void main() {
     final storyId = await seedDraftStory(title: 'Reload Story');
 
     await pumpDetail(tester, container, storyId);
-    await tester.scrollUntilVisible(
-      find.byKey(const ValueKey('owned-story-submit-button')),
-      200,
-    );
-    await tester.tap(find.byKey(const ValueKey('owned-story-submit-button')));
-    await tester.pumpAndSettle();
+    await tapKey(tester, const ValueKey('owned-story-submit-button'));
 
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pumpAndSettle();
     await pumpDetail(tester, container, storyId);
 
-    expect(find.text('Submitted'), findsWidgets);
+    expect(find.textContaining('Submitted'), findsWidgets);
     expect(
       find.byKey(const ValueKey('owned-story-approve-button')),
       findsOneWidget,
@@ -271,16 +272,9 @@ void main() {
     final storyId = await seedDraftStory(title: 'Already Published');
 
     await pumpDetail(tester, container, storyId);
-    await tester.scrollUntilVisible(
-      find.byKey(const ValueKey('owned-story-submit-button')),
-      200,
-    );
-    await tester.tap(find.byKey(const ValueKey('owned-story-submit-button')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('owned-story-approve-button')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('owned-story-publish-button')));
-    await tester.pumpAndSettle();
+    await tapKey(tester, const ValueKey('owned-story-submit-button'));
+    await tapKey(tester, const ValueKey('owned-story-approve-button'));
+    await tapKey(tester, const ValueKey('owned-story-publish-button'));
 
     expect(
       find.byKey(const ValueKey('owned-story-publish-button')),

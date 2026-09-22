@@ -184,6 +184,10 @@ void main() {
 
     expect(find.byKey(const ValueKey('owned-story-title')), findsOneWidget);
     expect(find.text('Second Story'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('owned-story-play-button')),
+      200,
+    );
     expect(find.byKey(const ValueKey('owned-story-play-button')), findsOneWidget);
     expect(find.byKey(const ValueKey('owned-story-privacy-chip')), findsOneWidget);
     expect(find.byKey(const ValueKey('owned-story-lifecycle-chip')), findsOneWidget);
@@ -245,6 +249,7 @@ void main() {
 
     expect(find.text('Private Detail'), findsOneWidget);
     expect(find.byKey(const ValueKey('owned-story-original-heading')), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('Play'), 200);
     expect(find.text('Play'), findsOneWidget);
   });
 }

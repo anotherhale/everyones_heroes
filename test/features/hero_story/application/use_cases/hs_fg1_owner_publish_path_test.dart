@@ -282,11 +282,10 @@ void main() {
     await submitStory.execute(StoryIdRequest(storyId: storyId));
     await approveStory.execute(StoryIdRequest(storyId: storyId));
 
+    // Do not pass visibility: changeVisibility runs before publish in the
+    // use case; omitting it keeps the failure focused on consent.
     final result = await publishStory.execute(
-      PublishStoryRequest(
-        storyId: storyId,
-        visibility: StoryVisibility.public,
-      ),
+      PublishStoryRequest(storyId: storyId),
     );
     expect(result, isA<Failure<Story>>());
 
