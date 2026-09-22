@@ -380,6 +380,12 @@ void main() {
         answers: {
           StoryBuilderNarrativeRole.beginning: 'A',
           StoryBuilderNarrativeRole.challenge: 'B',
+          StoryBuilderNarrativeRole.importance: null,
+          StoryBuilderNarrativeRole.struggle: null,
+          StoryBuilderNarrativeRole.stakes: null,
+          StoryBuilderNarrativeRole.turningPoint: null,
+          StoryBuilderNarrativeRole.decision: null,
+          StoryBuilderNarrativeRole.action: null,
           StoryBuilderNarrativeRole.outcome: 'C',
         },
       );
