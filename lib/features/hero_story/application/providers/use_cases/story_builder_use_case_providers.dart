@@ -3,11 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:everyonesheroes/core/eventing/event_providers.dart';
 import 'package:everyonesheroes/features/hero_story/application/providers/ai/story_builder_understanding_port_provider.dart';
 import 'package:everyonesheroes/features/hero_story/application/providers/repositories/story_builder_session_repository_provider.dart';
+import 'package:everyonesheroes/features/hero_story/application/providers/repositories/story_proposal_repository_provider.dart';
 import 'package:everyonesheroes/features/hero_story/application/providers/story_builder/story_builder_question_strategy_provider.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/abandon_story_builder_session_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/advance_story_builder_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/answer_story_builder_prompt_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/build_deterministic_story_structure_use_case.dart';
+import 'package:everyonesheroes/features/hero_story/application/use_cases/build_story_proposal_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/complete_story_builder_session_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/edit_story_builder_response_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/get_story_builder_session_use_case.dart';
@@ -164,5 +166,13 @@ final understandStoryBuilderSessionUseCaseProvider =
       return UnderstandStoryBuilderSessionUseCase(
         sessionRepository: ref.watch(storyBuilderSessionRepositoryProvider),
         understandingPort: ref.watch(storyBuilderUnderstandingPortProvider),
+      );
+    });
+
+final buildStoryProposalUseCaseProvider =
+    Provider<BuildStoryProposalUseCase>((ref) {
+      return BuildStoryProposalUseCase(
+        sessionRepository: ref.watch(storyBuilderSessionRepositoryProvider),
+        proposalRepository: ref.watch(storyProposalRepositoryProvider),
       );
     });
