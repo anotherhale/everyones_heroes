@@ -271,6 +271,6 @@ Explicitly deferred beyond SB.13:
 
 | Check | Result |
 |-------|--------|
-| Focused SB.13 tests | See agent report |
-| Full `flutter test` | See agent report |
-| `dart analyze` / `flutter analyze` | See agent report |
+| Focused SB.13 tests | **PASS** (application + architecture + UI) |
+| Full `flutter test` | **1063/1063 passed** |
+| `flutter analyze` | **0 errors** (pre-existing infos/`prefer_initializing_formals` remain elsewhere) |
