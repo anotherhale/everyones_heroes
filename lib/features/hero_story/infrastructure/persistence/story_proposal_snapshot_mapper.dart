@@ -1,5 +1,6 @@
 import 'package:everyonesheroes/core/ids/story_builder_response_id.dart';
 import 'package:everyonesheroes/core/ids/story_builder_session_id.dart';
+import 'package:everyonesheroes/core/ids/story_id.dart';
 import 'package:everyonesheroes/core/ids/story_proposal_id.dart';
 import 'package:everyonesheroes/core/ids/story_proposal_section_id.dart';
 import 'package:everyonesheroes/features/hero_story/domain/enums/story_builder_narrative_role.dart';
@@ -17,12 +18,13 @@ import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_p
 import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_proposal_section.dart';
 import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_title.dart';
 
-/// JSON snapshot mapper for durable [StoryProposal] persistence (SB.9 / SB.12).
+/// JSON snapshot mapper for durable [StoryProposal] persistence (SB.9 / SB.12 / SB.13).
 ///
 /// Follows SB.5 / HS.9 conventions: enum `.name`, ISO-8601 dates, ID `.value`.
 /// Does not embed a duplicate Story Builder session.
 ///
 /// SB.12 extends snapshots with review metadata and section Hero-edit fields.
+/// SB.13 extends snapshots with optional [materializedStoryId].
 /// Older snapshots without those keys remain loadable (defaults applied).
 final class StoryProposalSnapshotMapper {
   const StoryProposalSnapshotMapper._();
@@ -42,6 +44,7 @@ final class StoryProposalSnapshotMapper {
       'createdAt': proposal.createdAt.toIso8601String(),
       'updatedAt': proposal.updatedAt.toIso8601String(),
       'derivedSummary': proposal.derivedSummary,
+      'materializedStoryId': proposal.materializedStoryId?.value,
       'review': _reviewToJson(proposal.review),
     };
   }
@@ -106,6 +109,12 @@ final class StoryProposalSnapshotMapper {
         throw const FormatException('Invalid review object.');
       }
 
+      final materializedRaw = json['materializedStoryId'];
+      if (materializedRaw != null && materializedRaw is! String) {
+        throw const FormatException('Invalid materializedStoryId.');
+      }
+      final materializedString = materializedRaw as String?;
+
       return StoryProposal(
         id: StoryProposalId(id),
         sessionId: StoryBuilderSessionId(sessionId),
@@ -129,6 +138,10 @@ final class StoryProposalSnapshotMapper {
         createdAt: DateTime.parse(createdAt),
         updatedAt: DateTime.parse(updatedAt),
         derivedSummary: derivedSummaryRaw as String?,
+        materializedStoryId:
+            materializedString == null || materializedString.isEmpty
+                ? null
+                : StoryId(materializedString),
         review: reviewRaw == null
             ? StoryProposalReview.empty()
             : _reviewFromJson(Map<String, dynamic>.from(reviewRaw as Map)),

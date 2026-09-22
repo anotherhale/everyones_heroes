@@ -17,9 +17,13 @@ import 'package:everyonesheroes/features/hero_story/application/use_cases/begin_
 import 'package:everyonesheroes/features/hero_story/application/use_cases/edit_story_proposal_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/reject_story_proposal_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/complete_story_builder_session_use_case.dart';
+import 'package:everyonesheroes/features/hero_story/application/use_cases/create_story_use_case.dart';
+import 'package:everyonesheroes/features/hero_story/application/use_cases/materialize_story_proposal_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/domain/services/deterministic_story_shaper.dart';
 import 'package:everyonesheroes/features/hero_story/domain/services/story_shaper_port.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/edit_story_builder_response_use_case.dart';
+import 'package:everyonesheroes/features/hero_story/application/providers/repositories/hero_repository_provider.dart';
+import 'package:everyonesheroes/features/hero_story/application/providers/repositories/story_repository_provider.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/get_story_builder_session_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/list_resumable_story_builder_sessions_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/pause_story_builder_session_use_case.dart';
@@ -225,5 +229,24 @@ final beginStoryProposalRevisionUseCaseProvider =
     Provider<BeginStoryProposalRevisionUseCase>((ref) {
       return BeginStoryProposalRevisionUseCase(
         proposalRepository: ref.watch(storyProposalRepositoryProvider),
+      );
+    });
+
+final createStoryUseCaseProvider = Provider<CreateStoryUseCase>((ref) {
+  return CreateStoryUseCase(
+    storyRepository: ref.watch(storyRepositoryProvider),
+    heroRepository: ref.watch(heroRepositoryProvider),
+    eventBus: ref.watch(eventBusProvider),
+  );
+});
+
+final materializeStoryProposalUseCaseProvider =
+    Provider<MaterializeStoryProposalUseCase>((ref) {
+      return MaterializeStoryProposalUseCase(
+        proposalRepository: ref.watch(storyProposalRepositoryProvider),
+        sessionRepository: ref.watch(storyBuilderSessionRepositoryProvider),
+        storyRepository: ref.watch(storyRepositoryProvider),
+        heroRepository: ref.watch(heroRepositoryProvider),
+        createStoryUseCase: ref.watch(createStoryUseCaseProvider),
       );
     });

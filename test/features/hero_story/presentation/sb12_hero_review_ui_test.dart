@@ -157,7 +157,8 @@ void main() {
     for (var i = 0; i < 40; i++) {
       await tester.pump(const Duration(milliseconds: 25));
       final phase = container.read(storyBuilderControllerProvider).phase;
-      if (phase == StoryBuilderUiPhase.proposalPreview) {
+      if (phase == StoryBuilderUiPhase.proposalPreview ||
+          phase == StoryBuilderUiPhase.storyCreated) {
         break;
       }
     }
@@ -256,14 +257,17 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Story Approved'), findsOneWidget);
     expect(
-      find.textContaining('Story creation'),
+      find.byKey(const ValueKey('story-builder-story-created')),
       findsOneWidget,
     );
+    expect(find.text('Your story has been created.'), findsOneWidget);
+    expect(find.textContaining('Not yet published'), findsOneWidget);
     stored = await proposals.findById(proposalId);
     expect(stored!.lifecycle, StoryProposalLifecycleStatus.accepted);
-    expect(await stories.findAll(), isEmpty);
+    expect(stored.materializedStoryId, isNotNull);
+    expect(await stories.findAll(), hasLength(1));
+    expect((await stories.findAll()).single.isPublished, isFalse);
   });
 
   testWidgets('reject persists rejection without creating a Story', (

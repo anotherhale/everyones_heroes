@@ -67,6 +67,7 @@ final class Story extends AggregateRoot<StoryId> {
     required LanguageCode originalLanguage,
     StoryVisibility visibility = StoryVisibility.draft,
     String? originalSourceDescription,
+    StoryProvenance? provenance,
     DateTime? createdAt,
   }) {
     final now = createdAt ?? DateTime.now();
@@ -77,9 +78,10 @@ final class Story extends AggregateRoot<StoryId> {
       narrative: narrative,
       originalLanguage: originalLanguage,
       visibility: visibility,
-      provenance: StoryProvenance(
-        originalSourceDescription: originalSourceDescription,
-      ),
+      provenance: provenance ??
+          StoryProvenance(
+            originalSourceDescription: originalSourceDescription,
+          ),
       createdAt: now,
       updatedAt: now,
     );
