@@ -3,8 +3,8 @@
 **Status:** Living execution plan (updated after HS architecture checkpoint)  
 **Companion:** `docs/architecture/Hero and Story Platform Roadmap.md`  
 **Primary bounded context:** Hero & Story  
-**Current checkpoint:** SB.13 complete; Phase B architecture checkpoint complete; HS.FG.1 complete; HS.FG.2 complete; Post-FG integration checkpoint complete  
-**Next slice:** HS.FG.3 — Owner Hero Discoverability Composition  
+**Current checkpoint:** SB.13 complete; Phase B architecture checkpoint complete; HS.FG.1 complete; HS.FG.2 complete; Post-FG integration checkpoint complete; HS.FG.3 complete  
+**Next slice:** Theme-aware catalog composition / owner→seeker handoff (as needed)
 
 **Related reports:**
 - `docs/analysis/SB-13-story-materialization.md`
@@ -13,6 +13,7 @@
 - `docs/analysis/HS-FG-1-owner-publish-path.md`
 - `docs/analysis/HS-FG-2-theme-discovery-bridge.md`
 - `docs/analysis/HS-post-FG-integration-checkpoint.md`
+- `docs/analysis/HS-FG-3-owner-hero-discoverability.md`
 
 ---
 
