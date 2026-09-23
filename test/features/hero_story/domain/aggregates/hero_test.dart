@@ -56,5 +56,38 @@ void main() {
         throwsStateError,
       );
     });
+
+    test('defaults to private visibility', () {
+      final hero = createHero();
+      expect(hero.visibility, HeroVisibility.private);
+    });
+
+    test('changeVisibility updates visibility while active', () {
+      final hero = createHero();
+      hero.pullDomainEvents();
+
+      hero.changeVisibility(HeroVisibility.public);
+      expect(hero.visibility, HeroVisibility.public);
+
+      hero.changeVisibility(HeroVisibility.community);
+      expect(hero.visibility, HeroVisibility.community);
+
+      hero.changeVisibility(HeroVisibility.private);
+      expect(hero.visibility, HeroVisibility.private);
+
+      // Visibility changes do not raise domain events today.
+      expect(hero.pullDomainEvents(), isEmpty);
+    });
+
+    test('cannot changeVisibility on archived hero', () {
+      final hero = createHero();
+      hero.archive();
+
+      expect(
+        () => hero.changeVisibility(HeroVisibility.public),
+        throwsStateError,
+      );
+      expect(hero.visibility, HeroVisibility.private);
+    });
   });
 }

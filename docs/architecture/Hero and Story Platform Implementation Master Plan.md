@@ -3,8 +3,8 @@
 **Status:** Living execution plan (updated after HS architecture checkpoint)  
 **Companion:** `docs/architecture/Hero and Story Platform Roadmap.md`  
 **Primary bounded context:** Hero & Story  
-**Current checkpoint:** SB.13 complete; Phase B architecture checkpoint complete; HS.FG.1 complete; HS.FG.2 complete; Post-FG integration checkpoint complete  
-**Next slice:** HS.FG.3 — Owner Hero Discoverability Composition  
+**Current checkpoint:** SB.13 complete; Phase B architecture checkpoint complete; HS.FG.1 complete; HS.FG.2 complete; Post-FG integration checkpoint complete; HS.FG.3 complete  
+**Next slice:** Theme-aware catalog composition / owner→seeker handoff (as needed)
 
 **Related reports:**
 - `docs/analysis/SB-13-story-materialization.md`
@@ -13,6 +13,7 @@
 - `docs/analysis/HS-FG-1-owner-publish-path.md`
 - `docs/analysis/HS-FG-2-theme-discovery-bridge.md`
 - `docs/analysis/HS-post-FG-integration-checkpoint.md`
+- `docs/analysis/HS-FG-3-owner-hero-discoverability.md`
 
 ---
 
@@ -86,7 +87,7 @@ Implementation Master Plan  (this document)
 | Story Builder SB.0–SB.12 | Implemented |
 | SB.13 Story Materialization | **Implemented** |
 | Phase B Architecture Checkpoint | **Complete** — `docs/analysis/HS-architecture-checkpoint.md` |
-| Phase C Foundation Gap Closure | **In progress** (HS.FG.1 ✓; HS.FG.2 ✓; Post-FG checkpoint ✓; next HS.FG.3 Owner Hero Discoverability) |
+| Phase C Foundation Gap Closure | **In progress** (HS.FG.1 ✓; HS.FG.2 ✓; Post-FG checkpoint ✓; HS.FG.3 ✓; next theme-aware catalog / owner→seeker handoff) |
 
 Historical HS.1→HS.8 numbering must **not** be read as “start from scratch.” Substantial capability already exists via HS.* and SB.* work. Audit first; implement only gaps.
 
@@ -199,9 +200,9 @@ HS.FG.2 Builder Theme → NarrativeThemeId Bridge    ✓
   ↓
 Post-FG Integration Checkpoint    ✓
   ↓
-HS.FG.3 Owner Hero Discoverability Composition    ← NEXT
+HS.FG.3 Owner Hero Discoverability Composition    ✓
   ↓
-Theme-aware catalog composition / owner→seeker handoff (as needed)
+Theme-aware catalog composition / owner→seeker handoff (as needed)    ← NEXT
   ↓
 Durable Story Understanding + apply wiring
   ↓
@@ -215,6 +216,8 @@ Reassess adaptive discovery quality
 ```
 
 This intentionally differs from historical HS.1→HS.8 greenfield order.
+
+**HS.FG.3:** Owner can explicitly set Hero visibility (`ChangeHeroVisibilityUseCase` + My Stories UI). Reuses `Hero.changeVisibility` / `HeroDiscoverabilityPolicy`. Publishing a Story does not change Hero visibility. See `docs/analysis/HS-FG-3-owner-hero-discoverability.md`.
 
 **Post-FG checkpoint revision:** former “next = Durable Story Understanding” was superseded by verified code. Default local Hero is `private`, so published Stories never appear in Discover\* until Hero discoverability is composed. See `docs/analysis/HS-post-FG-integration-checkpoint.md`.
 
@@ -271,7 +274,8 @@ Never: `Story → BehaviorPattern` directly.
 | 12. Update this master plan after HS.FG.1 | Complete |
 | HS.FG.2 Theme Bridge | Complete — `docs/analysis/HS-FG-2-theme-discovery-bridge.md` |
 | Post-FG Integration Checkpoint | Complete — `docs/analysis/HS-post-FG-integration-checkpoint.md` |
-| Next | HS.FG.3 — Owner Hero Discoverability Composition |
+| HS.FG.3 Owner Hero Discoverability | Complete — `docs/analysis/HS-FG-3-owner-hero-discoverability.md` |
+| Next | Theme-aware catalog composition / owner→seeker handoff (as needed) |
 
 ---
 
