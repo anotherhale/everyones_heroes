@@ -173,6 +173,14 @@ Explicitly out of scope for FG.3:
 | Integration | private ↔ discoverable Discovery closed loop; publish independence |
 | UI | My Stories status display; Make Discoverable / Make Private; reload |
 
+### Validation (this branch)
+
+```text
+Focused FG.3 tests: 22/22 passed
+Full Flutter:       1111/1111 passed
+flutter analyze (touched paths): No issues found
+```
+
 ---
 
 ## Architectural invariants
