@@ -1,0 +1,60 @@
+library;
+
+// Aggregate Roots
+export 'aggregates/journey.dart';
+export 'aggregates/reflection.dart';
+
+// Value Objects
+export 'value_objects/strength.dart';
+export 'value_objects/journey_vision.dart';
+export 'value_objects/behavioral_evidence.dart';
+export 'value_objects/evidence_source.dart';
+export 'value_objects/insight.dart';
+export 'enums/behavioral_evidence_type.dart';
+
+// Reflection Entities
+export 'entities/reflection/reflection_response.dart';
+export 'entities/reflection/journal_response.dart';
+export 'entities/reflection/prompt_response.dart';
+export 'entities/reflection/choice_response.dart';
+export 'entities/reflection/emoji_response.dart';
+export 'entities/reflection/scale_response.dart';
+export 'entities/reflection/voice_response.dart';
+export 'entities/reflection/photo_response.dart';
+
+// Domain Patterns
+export 'patterns/behavior_pattern.dart';
+export 'patterns/behavior_pattern_type.dart';
+export 'patterns/base_pattern_rule.dart';
+export 'patterns/pattern_rule.dart';
+
+// Domain Events
+export 'events/journey_created.dart';
+export 'events/chapter_advanced.dart';
+export 'events/reflection_submitted.dart';
+export 'events/insights_generated.dart';
+export 'events/behavioral_evidence_detected.dart';
+export 'events/narrative_themes_added.dart';
+export 'events/behavior_patterns_detected.dart';
+
+// Domain Services (Ports)
+export 'services/insight_extraction_service.dart';
+export 'services/behavioral_evidence_analyzer.dart';
+export 'services/narrative_theme_resolver.dart';
+export 'services/pattern_detector.dart';
+export 'services/behavioral_analyzer_capability.dart';
+export 'services/behavioral_analyzer_descriptor.dart';
+export 'services/behavioral_evidence_analysis_context.dart';
+export 'services/behavioral_evidence_analyzer_registry.dart';
+
+// Repository Ports
+export 'repositories/journey_repository.dart';
+export 'repositories/reflection_repository.dart';
+
+// Domain Rules
+export 'patterns/rules/consistency_pattern_rule.dart';
+export 'patterns/rules/courage_pattern_rule.dart';
+export 'patterns/rules/leadership_pattern_rule.dart';
+export 'patterns/rules/recovery_pattern_rule.dart';
+export 'patterns/rules/responsibility_pattern_rule.dart';
+export 'patterns/rules/service_pattern_rule.dart';

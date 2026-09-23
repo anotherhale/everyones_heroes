@@ -1,0 +1,20 @@
+import 'package:eh_platform/src/eventing/domain_event_reactor.dart';
+import 'package:eh_platform/src/life_journey/application/providers/use_cases/detect_pattern_use_case.dart';
+import 'package:eh_platform/src/life_journey/domain/events/behavioral_evidence_detected.dart';
+
+final class BehavioralEvidenceDetectedReactor
+    implements DomainEventReactor<BehavioralEvidenceDetected> {
+  const BehavioralEvidenceDetectedReactor({
+    required DetectPatternUseCase detectPattern,
+  }) : _detectPattern = detectPattern;
+
+  final DetectPatternUseCase _detectPattern;
+
+  @override
+  Type get eventType => BehavioralEvidenceDetected;
+
+  @override
+  Future<void> react(BehavioralEvidenceDetected event) async {
+    await _detectPattern.execute(event.journeyId);
+  }
+}

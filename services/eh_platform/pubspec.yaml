@@ -1,0 +1,21 @@
+name: eh_platform
+description: Everyone's Heroes Platform — modular monolith (PF.3 + H.2 migration).
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ^3.9.0
+
+dependencies:
+  collection: ^1.19.1
+  crypto: ^3.0.6
+  http: ^1.6.0
+  meta: ^1.16.0
+  postgres: ^3.5.6
+  shelf: ^1.4.2
+  shelf_router: ^1.1.4
+  uuid: ^4.5.1
+
+dev_dependencies:
+  lints: ^6.0.0
+  test: ^1.25.6
