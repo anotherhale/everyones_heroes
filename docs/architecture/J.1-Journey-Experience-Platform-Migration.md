@@ -134,7 +134,7 @@ Reuses existing H.2 `findCurrentByUserId` (latest `updated_at`). Documented as t
 ### 0.10 Known limitations / deferred
 
 * Live HS.8 Story candidates on platform require Discovery/HS candidate wiring.
-* Emoji analyzer may not produce discipline evidence for live consistency flip (known H.2 gap; Slice 4 proves selection against H.2 Journey pattern state).
+* Emoji analyzer may not produce discipline evidence for live consistency flip (known H.2 gap). Slice 4 seeds discipline evidence on submitted reflections, then runs platform `DetectPatternUseCase` before `GET /v1/experiences/today`.
 * Multi-Journey “current” still latest `updated_at`.
 * Flutter local selector deletion deferred until platform URL is mandatory.
 * No Begin Experience platform command (reuse reflection create).
