@@ -46,4 +46,28 @@ void main() {
       expect(imports(file, 'package:postgres/'), isFalse, reason: file.path);
     }
   });
+
+  test('experience application does not import Flutter or Riverpod', () {
+    for (final file in dartFilesUnder('experience')) {
+      expect(imports(file, 'package:flutter/'), isFalse, reason: file.path);
+      expect(imports(file, 'package:flutter_riverpod/'), isFalse,
+          reason: file.path);
+      expect(imports(file, 'package:openai'), isFalse, reason: file.path);
+    }
+  });
+
+  test('experience selection does not live in H.2 detectors', () {
+    for (final file in dartFilesUnder('life_journey/domain')) {
+      expect(
+        imports(file, 'deterministic_experience_selection_service.dart'),
+        isFalse,
+        reason: file.path,
+      );
+      expect(
+        imports(file, 'experience_application_service.dart'),
+        isFalse,
+        reason: file.path,
+      );
+    }
+  });
 }

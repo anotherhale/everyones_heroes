@@ -149,6 +149,16 @@ class _ExperienceCard extends StatelessWidget {
                 ),
               ),
             ],
+            if (experience.isStale) ...[
+              const SizedBox(height: 12),
+              Text(
+                'Showing last known experience — offline or unreachable.',
+                key: const ValueKey('today-experience-stale'),
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
             const SizedBox(height: 24),
             FilledButton.icon(
               key: const ValueKey('today-experience-begin'),

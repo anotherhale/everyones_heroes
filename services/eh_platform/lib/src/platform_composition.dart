@@ -22,6 +22,7 @@ import 'package:eh_platform/src/identity/infrastructure/bearer_token_authenticat
 import 'package:eh_platform/src/identity/infrastructure/identity_repository.dart';
 import 'package:eh_platform/src/identity/infrastructure/postgres_identity_repository.dart';
 import 'package:eh_platform/src/logging/platform_logger.dart';
+import 'package:eh_platform/src/modules/experience/experience_module.dart';
 import 'package:eh_platform/src/modules/life_journey/life_journey_module.dart';
 import 'package:eh_platform/src/persistence/database.dart';
 import 'package:eh_platform/src/persistence/migration_runner.dart';
@@ -48,6 +49,7 @@ final class PlatformComposition {
     required this.issueDevSessionHandler,
     required this.aiOrchestration,
     required this.lifeJourney,
+    required this.experience,
     required this.handler,
     required this.migrationsDirectory,
   });
@@ -66,6 +68,7 @@ final class PlatformComposition {
   final IssueDevSessionHandler issueDevSessionHandler;
   final AiOrchestrationPort aiOrchestration;
   final LifeJourneyComponents lifeJourney;
+  final ExperienceComponents experience;
   final Handler handler;
   final String migrationsDirectory;
 
@@ -152,6 +155,11 @@ final class PlatformComposition {
       eventDispatcher: eventDispatcher,
     );
 
+    final experience = ExperienceModule.compose(
+      transactions: lifeJourney.transactions,
+      journeyRepository: lifeJourney.journeyRepository,
+    );
+
     final openApiDocument = File(openApiPath).existsSync()
         ? await File(openApiPath).readAsString()
         : '';
@@ -162,6 +170,7 @@ final class PlatformComposition {
       clock: effectiveClock,
       openApiDocument: openApiDocument,
       lifeJourneyApi: lifeJourney.api,
+      experienceApi: experience.api,
     );
 
     final handler = const Pipeline()
@@ -192,6 +201,7 @@ final class PlatformComposition {
           IssueDevSessionHandler(identityRepository: identityRepository),
       aiOrchestration: aiOrchestration,
       lifeJourney: lifeJourney,
+      experience: experience,
       handler: handler,
       migrationsDirectory: migrationsDir,
     );
