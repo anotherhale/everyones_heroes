@@ -14,8 +14,8 @@ import 'package:everyonesheroes/features/hero_story/domain/repositories/hero_rep
 final class ChangeHeroVisibilityUseCase
     implements UseCase<ChangeHeroVisibilityRequest, Hero> {
   const ChangeHeroVisibilityUseCase({
-    required HeroRepository heroRepository,
-  }) : _heroRepository = heroRepository;
+    required this._heroRepository,
+  });
 
   final HeroRepository _heroRepository;
 

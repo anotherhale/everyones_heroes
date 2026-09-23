@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:everyonesheroes/core/results/failure.dart';
-import 'package:everyonesheroes/core/results/success.dart';
 import 'package:everyonesheroes/features/hero_story/application/dto/requests/change_hero_visibility_request.dart';
 import 'package:everyonesheroes/features/hero_story/application/providers/hero/active_local_hero_provider.dart';
 import 'package:everyonesheroes/features/hero_story/application/providers/use_cases/owned_story_use_case_providers.dart';
@@ -48,7 +47,7 @@ final ownerHeroDiscoverabilityControllerProvider = NotifierProvider.autoDispose<
 );
 
 final class OwnerHeroDiscoverabilityController
-    extends AutoDisposeNotifier<OwnerHeroDiscoverabilityActionState> {
+    extends Notifier<OwnerHeroDiscoverabilityActionState> {
   @override
   OwnerHeroDiscoverabilityActionState build() {
     return const OwnerHeroDiscoverabilityActionState();

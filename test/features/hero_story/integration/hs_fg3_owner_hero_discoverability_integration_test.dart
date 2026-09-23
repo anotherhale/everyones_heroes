@@ -110,7 +110,7 @@ void main() {
         storyId: storyId,
         heroId: heroId,
         title: StoryTitle('FG.3 Eligible Story'),
-        narrative: 'A complete eligible narrative for discovery.',
+        narrative: StoryNarrative('A complete eligible narrative for discovery.'),
         originalLanguage: LanguageCode('en'),
         visibility: StoryVisibility.draft,
       ),
