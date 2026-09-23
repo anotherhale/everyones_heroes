@@ -1,7 +1,7 @@
 import 'package:eh_platform/src/life_journey/domain/aggregates/journey.dart';
 import 'package:eh_platform/src/life_journey/domain/repositories/journey_repository.dart';
 import 'package:eh_platform/src/shared_kernel/ids/journey_id.dart';
-import 'package:eh_platform/src/shared_kernel/ids/user_id.dart';
+import 'package:eh_platform/src/shared_kernel/user_id.dart';
 
 /// In-memory Journey repository with user ownership (test / non-Postgres).
 final class OwnedInMemoryJourneyRepository implements JourneyRepository {

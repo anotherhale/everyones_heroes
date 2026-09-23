@@ -33,6 +33,12 @@ migrate_working_dir/
 /build/
 /coverage/
 
+# Local secrets / env (never commit)
+.env
+**/.env
+!**/.env.example
+
+
 # Symbolication related
 app.*.symbols
 
@@ -43,3 +49,4 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+.dart_tool/

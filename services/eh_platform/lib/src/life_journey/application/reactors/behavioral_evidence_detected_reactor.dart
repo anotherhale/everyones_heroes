@@ -1,4 +1,4 @@
-import 'package:eh_platform/src/eventing/domain_event_reactor.dart';
+import 'package:eh_platform/src/events/domain_event_reactor.dart';
 import 'package:eh_platform/src/life_journey/application/providers/use_cases/detect_pattern_use_case.dart';
 import 'package:eh_platform/src/life_journey/domain/events/behavioral_evidence_detected.dart';
 

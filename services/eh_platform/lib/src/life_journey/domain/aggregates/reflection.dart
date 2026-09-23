@@ -106,7 +106,6 @@ final class Reflection extends AggregateRoot<ReflectionId> {
     _submittedAt = DateTime.now();
     raise(
       ReflectionSubmitted(
-        aggregateId: id,
         reflectionId: id,
         journeyId: journeyId,
         questId: questId,
@@ -123,7 +122,7 @@ final class Reflection extends AggregateRoot<ReflectionId> {
     }
     _insights.addAll(items);
     raise(
-      InsightsGenerated(aggregateId: id, reflectionId: id, insights: items),
+      InsightsGenerated(reflectionId: id, insights: items),
     );
   }
 
@@ -157,7 +156,6 @@ final class Reflection extends AggregateRoot<ReflectionId> {
     }
     raise(
       NarrativeThemesAdded(
-        aggregateId: id,
         reflectionId: id,
         narrativeThemeIds: addedThemes,
       ),

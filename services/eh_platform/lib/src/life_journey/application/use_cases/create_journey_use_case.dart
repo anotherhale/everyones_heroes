@@ -1,9 +1,7 @@
 import 'package:eh_platform/src/life_journey/application/dto/requests/create_journey_request.dart';
 import 'package:eh_platform/src/life_journey/application/use_cases/use_case.dart';
-import 'package:eh_platform/src/eventing/event_bus.dart';
+import 'package:eh_platform/src/events/event_bus.dart';
 import 'package:eh_platform/src/shared_kernel/result.dart';
-import 'package:eh_platform/src/shared_kernel/success.dart';
-import 'package:eh_platform/src/shared_kernel/failure.dart';
 import 'package:eh_platform/src/life_journey/domain/aggregates/journey.dart';
 import 'package:eh_platform/src/life_journey/domain/repositories/journey_repository.dart';
 
@@ -36,7 +34,7 @@ final class CreateJourneyUseCase
 
       return Success(journey);
     } catch (e) {
-      return Failure('Failed to create journey: $e');
+      return Failure(code: 'operation_failed', message: 'Failed to create journey: $e');
     }
   }
 }

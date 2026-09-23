@@ -1,6 +1,4 @@
-import 'package:eh_platform/src/shared_kernel/failure.dart';
 import 'package:eh_platform/src/shared_kernel/result.dart';
-import 'package:eh_platform/src/shared_kernel/success.dart';
 import 'package:eh_platform/src/life_journey/application/use_cases/use_case.dart';
 import 'package:eh_platform/src/life_journey/domain/aggregates/reflection.dart';
 import 'package:eh_platform/src/life_journey/domain/repositories/reflection_repository.dart';
@@ -29,7 +27,7 @@ final class CreateReflectionUseCase
 
       return Success(reflection);
     } catch (e) {
-      return Failure('Failed to create reflection: $e');
+      return Failure(code: 'operation_failed', message: 'Failed to create reflection: $e');
     }
   }
 }

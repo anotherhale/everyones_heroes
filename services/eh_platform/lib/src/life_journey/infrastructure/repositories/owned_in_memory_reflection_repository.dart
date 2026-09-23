@@ -2,7 +2,7 @@ import 'package:eh_platform/src/life_journey/domain/aggregates/reflection.dart';
 import 'package:eh_platform/src/life_journey/domain/repositories/reflection_repository.dart';
 import 'package:eh_platform/src/shared_kernel/ids/journey_id.dart';
 import 'package:eh_platform/src/shared_kernel/ids/reflection_id.dart';
-import 'package:eh_platform/src/shared_kernel/ids/user_id.dart';
+import 'package:eh_platform/src/shared_kernel/user_id.dart';
 
 /// In-memory Reflection repository with user ownership.
 final class OwnedInMemoryReflectionRepository implements ReflectionRepository {

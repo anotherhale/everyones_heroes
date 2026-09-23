@@ -1,69 +1,22 @@
+import 'package:eh_platform/src/persistence/database.dart';
 import 'package:postgres/postgres.dart';
 
-/// Transactional unit of work for EH Platform persistence (PF.3 / H.2).
+/// Transaction boundary convention for application use cases.
 ///
-/// All aggregate saves that participate in a command must use the same
-/// [UnitOfWork] session. Commit publishes nothing; callers publish domain
-/// events after a successful commit (or run reactors inside the transaction
-/// when the H.2 chain requires atomic multi-aggregate updates).
-abstract interface class UnitOfWork {
-  /// Runs [action] inside a database transaction when a connection is bound.
-  Future<T> runInTransaction<T>(Future<T> Function() action);
+/// Single-aggregate commands: one transaction.
+/// Cross-aggregate workflows: orchestrated by application use cases
+/// (PF.2 §8.3) — avoid distributed transactions.
+final class UnitOfWork {
+  UnitOfWork(this._database);
 
-  /// Active SQL session for repositories (null when using in-memory adapters).
-  Session? get session;
+  final PlatformDatabase _database;
 
-  bool get isInTransaction;
-}
-
-/// No-op unit of work for in-memory tests.
-final class InMemoryUnitOfWork implements UnitOfWork {
-  bool _inTx = false;
-
-  @override
-  Session? get session => null;
-
-  @override
-  bool get isInTransaction => _inTx;
-
-  @override
-  Future<T> runInTransaction<T>(Future<T> Function() action) async {
-    _inTx = true;
-    try {
-      return await action();
-    } finally {
-      _inTx = false;
-    }
+  Future<T> execute<T>(Future<T> Function(TxSession session) work) {
+    return _database.runInTransaction(work);
   }
 }
 
-/// PostgreSQL-backed unit of work.
-final class PostgresUnitOfWork implements UnitOfWork {
-  PostgresUnitOfWork(this._connection);
-
-  final Connection _connection;
-  TxSession? _tx;
-
-  @override
-  Session? get session => _tx ?? _connection;
-
-  @override
-  bool get isInTransaction => _tx != null;
-
-  @override
-  Future<T> runInTransaction<T>(Future<T> Function() action) async {
-    if (_tx != null) {
-      // Nested: reuse existing transaction.
-      return action();
-    }
-
-    return _connection.runTx((tx) async {
-      _tx = tx;
-      try {
-        return await action();
-      } finally {
-        _tx = null;
-      }
-    });
-  }
-}
+/// Marker interface for aggregate repository ports (domain-facing).
+///
+/// Implementations live in infrastructure and must not leak into domain models.
+abstract interface class Repository {}

@@ -3,27 +3,27 @@ import 'dart:convert';
 import 'package:eh_platform/src/life_journey/domain/aggregates/reflection.dart';
 import 'package:eh_platform/src/life_journey/domain/repositories/reflection_repository.dart';
 import 'package:eh_platform/src/life_journey/infrastructure/persistence/h2_json_codec.dart';
-import 'package:eh_platform/src/persistence/unit_of_work.dart';
+import 'package:eh_platform/src/life_journey/infrastructure/persistence/session_holder.dart';
 import 'package:eh_platform/src/shared_kernel/ids/journey_id.dart';
 import 'package:eh_platform/src/shared_kernel/ids/mission_id.dart';
 import 'package:eh_platform/src/shared_kernel/ids/quest_id.dart';
 import 'package:eh_platform/src/shared_kernel/ids/reflection_id.dart';
-import 'package:eh_platform/src/shared_kernel/ids/user_id.dart';
+import 'package:eh_platform/src/shared_kernel/user_id.dart';
 import 'package:postgres/postgres.dart';
 
 /// PostgreSQL Reflection repository — embeds Behavioral Evidence.
 final class PostgresReflectionRepository implements ReflectionRepository {
   PostgresReflectionRepository({
-    required UnitOfWork unitOfWork,
+    required SessionHolder sessionHolder,
     H2JsonCodec codec = const H2JsonCodec(),
-  }) : _uow = unitOfWork,
-       _codec = codec;
+  })  : _sessions = sessionHolder,
+        _codec = codec;
 
-  final UnitOfWork _uow;
+  final SessionHolder _sessions;
   final H2JsonCodec _codec;
 
   Session get _session {
-    final session = _uow.session;
+    final session = _sessions.session;
     if (session == null) {
       throw StateError(
         'PostgresReflectionRepository requires an active session.',
@@ -40,9 +40,9 @@ final class PostgresReflectionRepository implements ReflectionRepository {
           created_at, submitted_at, responses, insights,
           behavioral_evidence, narrative_themes, version, updated_at
         ) VALUES (
-          @id, @userId, @journeyId, @questId, @missionId,
-          @createdAt, @submittedAt, @responses, @insights,
-          @evidence, @themes, 0, NOW()
+          @id, @userId::uuid, @journeyId, @questId, @missionId,
+          @createdAt, @submittedAt, @responses::jsonb, @insights::jsonb,
+          @evidence::jsonb, @themes::jsonb, 0, NOW()
         )
         ON CONFLICT (id) DO UPDATE SET
           submitted_at = EXCLUDED.submitted_at,
@@ -74,7 +74,7 @@ final class PostgresReflectionRepository implements ReflectionRepository {
   @override
   Future<void> save(Reflection reflection) async {
     final existing = await _session.execute(
-      Sql.named('SELECT user_id FROM reflections WHERE id = @id'),
+      Sql.named('SELECT user_id::text FROM reflections WHERE id = @id'),
       parameters: {'id': reflection.id.value},
     );
     if (existing.isEmpty) {
@@ -118,7 +118,7 @@ final class PostgresReflectionRepository implements ReflectionRepository {
 
   Future<UserId?> ownerOf(ReflectionId id) async {
     final rows = await _session.execute(
-      Sql.named('SELECT user_id FROM reflections WHERE id = @id'),
+      Sql.named('SELECT user_id::text FROM reflections WHERE id = @id'),
       parameters: {'id': id.value},
     );
     if (rows.isEmpty) {

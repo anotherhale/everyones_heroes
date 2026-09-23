@@ -1,22 +1,25 @@
-import 'package:eh_platform/src/eventing/event_base.dart';
+import 'package:eh_platform/src/life_journey/domain/events/life_journey_event.dart';
+import 'package:eh_platform/src/life_journey/domain/value_objects/behavioral_evidence.dart';
 import 'package:eh_platform/src/shared_kernel/ids/journey_id.dart';
 import 'package:eh_platform/src/shared_kernel/ids/reflection_id.dart';
-import 'package:eh_platform/src/life_journey/domain/domain.dart';
-import 'package:eh_platform/src/eventing/aggregate_type.dart';
 
-final class BehavioralEvidenceDetected extends EventBase {
+final class BehavioralEvidenceDetected extends LifeJourneyEvent {
   BehavioralEvidenceDetected({
-    required ReflectionId reflectionId,
+    required this.reflectionId,
     required this.journeyId,
-    required this.evidence,
+    required List<BehavioralEvidence> evidence,
+    super.eventId,
+    super.occurredAt,
     super.correlationId,
     super.causationId,
-  }) : super(
-         aggregateId: reflectionId,
-         aggregateType: AggregateType.reflection,
-       );
+  })  : evidence = List.unmodifiable(evidence),
+        super(
+          aggregateId: reflectionId.value,
+          aggregateType: 'reflection',
+          eventName: 'BehavioralEvidenceDetected',
+        );
 
+  final ReflectionId reflectionId;
   final JourneyId journeyId;
-
   final List<BehavioralEvidence> evidence;
 }

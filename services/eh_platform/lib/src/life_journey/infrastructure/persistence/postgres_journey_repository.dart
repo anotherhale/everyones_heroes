@@ -5,48 +5,39 @@ import 'package:eh_platform/src/life_journey/domain/enums/journey_chapter.dart';
 import 'package:eh_platform/src/life_journey/domain/repositories/journey_repository.dart';
 import 'package:eh_platform/src/life_journey/domain/value_objects/journey_vision.dart';
 import 'package:eh_platform/src/life_journey/infrastructure/persistence/h2_json_codec.dart';
-import 'package:eh_platform/src/persistence/unit_of_work.dart';
+import 'package:eh_platform/src/life_journey/infrastructure/persistence/session_holder.dart';
 import 'package:eh_platform/src/shared_kernel/ids/journey_id.dart';
-import 'package:eh_platform/src/shared_kernel/ids/user_id.dart';
+import 'package:eh_platform/src/shared_kernel/user_id.dart';
 import 'package:postgres/postgres.dart';
 
 /// PostgreSQL Journey repository — authoritative H.2 persistence.
 final class PostgresJourneyRepository implements JourneyRepository {
   PostgresJourneyRepository({
-    required UnitOfWork unitOfWork,
+    required SessionHolder sessionHolder,
     H2JsonCodec codec = const H2JsonCodec(),
-  }) : _uow = unitOfWork,
-       _codec = codec;
+  })  : _sessions = sessionHolder,
+        _codec = codec;
 
-  final UnitOfWork _uow;
+  final SessionHolder _sessions;
   final H2JsonCodec _codec;
 
   Session get _session {
-    final session = _uow.session;
+    final session = _sessions.session;
     if (session == null) {
       throw StateError('PostgresJourneyRepository requires an active session.');
     }
     return session;
   }
 
-  Future<void> ensureUser(UserId userId) async {
-    await _session.execute(
-      Sql.named(
-        'INSERT INTO users (id) VALUES (@id) ON CONFLICT (id) DO NOTHING',
-      ),
-      parameters: {'id': userId.value},
-    );
-  }
-
   Future<void> saveForUser(Journey journey, UserId userId) async {
-    await ensureUser(userId);
     await _session.execute(
       Sql.named('''
         INSERT INTO journeys (
           id, user_id, vision, current_chapter, active_quest_ids,
           behavior_patterns, version, updated_at
         ) VALUES (
-          @id, @userId, @vision, @chapter, @quests, @patterns, 0, NOW()
+          @id, @userId::uuid, @vision, @chapter, @quests::jsonb,
+          @patterns::jsonb, 0, NOW()
         )
         ON CONFLICT (id) DO UPDATE SET
           vision = EXCLUDED.vision,
@@ -69,10 +60,8 @@ final class PostgresJourneyRepository implements JourneyRepository {
 
   @override
   Future<void> save(Journey journey) async {
-    // Ownership must be established via [saveForUser] for inserts.
-    // Updates reuse existing user_id.
     final existing = await _session.execute(
-      Sql.named('SELECT user_id FROM journeys WHERE id = @id'),
+      Sql.named('SELECT user_id::text FROM journeys WHERE id = @id'),
       parameters: {'id': journey.id.value},
     );
     if (existing.isEmpty) {
@@ -104,7 +93,7 @@ final class PostgresJourneyRepository implements JourneyRepository {
       Sql.named('''
         SELECT id, vision, current_chapter, active_quest_ids, behavior_patterns
         FROM journeys
-        WHERE user_id = @userId
+        WHERE user_id = @userId::uuid
         ORDER BY updated_at DESC
         LIMIT 1
         '''),
@@ -118,7 +107,7 @@ final class PostgresJourneyRepository implements JourneyRepository {
 
   Future<UserId?> ownerOf(JourneyId id) async {
     final rows = await _session.execute(
-      Sql.named('SELECT user_id FROM journeys WHERE id = @id'),
+      Sql.named('SELECT user_id::text FROM journeys WHERE id = @id'),
       parameters: {'id': id.value},
     );
     if (rows.isEmpty) {

@@ -107,8 +107,8 @@ final class EhPlatformClient {
 
   Map<String, String> _headers() => {
         'content-type': 'application/json',
+        // PF.3 Identity: bearer session token only (no X-User-Id).
         'authorization': 'Bearer $_authToken',
-        'x-user-id': EhPlatformConfig.userId,
       };
 
   Map<String, dynamic> _decode(http.Response response) {

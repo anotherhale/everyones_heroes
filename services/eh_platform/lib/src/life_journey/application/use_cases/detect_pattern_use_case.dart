@@ -1,10 +1,8 @@
 import 'package:eh_platform/src/shared_kernel/ids/journey_id.dart';
-import 'package:eh_platform/src/shared_kernel/failure.dart';
 import 'package:eh_platform/src/shared_kernel/result.dart';
-import 'package:eh_platform/src/shared_kernel/success.dart';
 import 'package:eh_platform/src/life_journey/application/providers/use_cases/detect_pattern_use_case.dart';
 import 'package:eh_platform/src/life_journey/domain/domain.dart';
-import 'package:eh_platform/src/eventing/event_bus.dart';
+import 'package:eh_platform/src/events/event_bus.dart';
 
 final class DefaultDetectPatternUseCase implements DetectPatternUseCase {
   const DefaultDetectPatternUseCase({
@@ -28,7 +26,7 @@ final class DefaultDetectPatternUseCase implements DetectPatternUseCase {
       final journey = await _journeyRepository.findById(journeyId);
 
       if (journey == null) {
-        return Failure('Journey not found: ${journeyId.value}');
+        return Failure(code: 'operation_failed', message: 'Journey not found: ${journeyId.value}');
       }
 
       final reflections = await _reflectionRepository.findByJourneyId(
@@ -53,7 +51,7 @@ final class DefaultDetectPatternUseCase implements DetectPatternUseCase {
 
       return Success(patterns);
     } catch (e) {
-      return Failure('Failed to detect behavior patterns: $e');
+      return Failure(code: 'operation_failed', message: 'Failed to detect behavior patterns: $e');
     }
   }
 }

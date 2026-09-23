@@ -1,11 +1,11 @@
 # H.2 Platform Migration
 
-**Document type:** Architecture / Implementation Report  
-**Status:** Implemented (PF.3 foundation + H.2 Behavioral Understanding on EH Platform)  
-**Phase:** PF.3 / H.2 Platform Migration  
-**Date:** 2026-09-23  
-**Platform location:** `services/eh_platform` (Dart modular monolith per PF.2 ADR-003)  
-**Related:** `docs/architecture/PF.2-Platform-Architecture-Decisions.md`, `docs/architecture/Everyone's-Heroes-H2-Architecture-Updated.md`, `AGENTS.md` §10
+- **Document type:** Architecture / Implementation Report
+- **Status:** Implemented — H.2 integrated onto the PF.3 platform foundation
+- **Phase:** PF.3 foundation + H.2 Life Journey module
+- **Date:** 2026-09-23
+- **Platform location:** `services/eh_platform` (Dart modular monolith per PF.2 ADR-003)
+- **Related:** `docs/architecture/PF.2-Platform-Architecture-Decisions.md`, `docs/architecture/PF.3-Platform-Foundation.md`, `docs/architecture/Everyone's-Heroes-H2-Architecture-Updated.md`, `AGENTS.md` §10
 
 ---
 
@@ -24,18 +24,19 @@ It is the source-of-truth description of:
 
 PF.2 (`PF.2-Platform-Architecture-Decisions.md`) planned:
 
-* **Phase 2** — Platform foundation + Identity lite + PostgreSQL  
-* **Phase 3** — Reflection / H.2 migration  
+* **Phase 2** — Platform foundation + Identity lite + PostgreSQL
+* **Phase 3** — Reflection / H.2 migration
 
-**PF.3 was not previously present as a separate implemented phase.** This migration **combined** the minimum Phase 2 foundation essentials with Phase 3 H.2 hosting:
+**PF.3** (`PF.3-Platform-Foundation.md`, PR `#55`) landed on `main` as the authoritative platform foundation while H.2 had independently scaffolded `services/eh_platform`. Those branches were **merged by rehoming H.2 onto PF.3** — not by keeping two parallel runtimes.
 
-| PF.2 intent | Delivered in this phase |
-|-------------|-------------------------|
-| Dart modular monolith (PF-ADR-003) | `services/eh_platform` |
-| UnitOfWork + Postgres | `lib/src/persistence/unit_of_work.dart`, Postgres repos |
-| Command idempotency | `command_idempotency` table + store |
-| Identity lite | Bearer / `X-User-Id` principal resolution |
-| H.2 Reflection + patterns (Phase 3) | Full in-process reactor chain on platform EventBus |
+| Concern | Owner after integration |
+|---------|-------------------------|
+| Platform composition / server startup | **PF.3** `PlatformComposition` / `runPlatformServer` |
+| API router, Identity, shared Result/Clock | **PF.3** |
+| UnitOfWork, migrations, command_idempotency | **PF.3** |
+| EventBus / EventStore / EventDispatcher | **PF.3** `lib/src/events/` |
+| Life Journey domain + H.2 application behavior | **H.2** under `modules/life_journey` + `life_journey/` |
+| Flutter | **Client only** (`EhPlatformClient`) |
 
 ### Non-goals honored
 
@@ -171,14 +172,14 @@ Disposition legend:
 | `DefaultSubmitReflectionUseCase` | **REIMPLEMENT** on platform; Flutter **ADAPT** via `PlatformSubmitReflectionUseCase` | Local default remains **TRANSITIONAL** |
 | `AnalyzeReflectionUseCase` | **MOVE** / **REIMPLEMENT** | Platform-only when `usePlatformAuthority` |
 | `DetectPatternUseCase` / `PatternDetector` / pattern rules | **MOVE** / **REIMPLEMENT** | Same naming as Flutter code |
-| `ReflectionSubmittedReactor` / `BehavioralEvidenceDetectedReactor` | **MOVE** / **REIMPLEMENT** | Platform `PlatformRuntime`; Flutter registration **skipped** under platform authority |
+| `ReflectionSubmittedReactor` / `BehavioralEvidenceDetectedReactor` | **MOVE** / **REIMPLEMENT** | Registered by `LifeJourneyModule` on PF.3 `EventDispatcher`; Flutter registration **skipped** under platform authority |
 | `EmojiBehavioralEvidenceAnalyzer` + orchestrator/registry | **REIMPLEMENT** | Platform infrastructure services |
 | `FakeNarrativeThemeResolver` | **REIMPLEMENT** (still fake) | Discovery ownership deferred; port preserved |
 | In-memory EventBus / EventStore / Dispatcher | **REIMPLEMENT** on platform | Platform-owned events; not HTTP-exposed |
 | Journey / Reflection persistence | **MOVE** to Postgres | `PostgresJourneyRepository`, `PostgresReflectionRepository` |
 | UnitOfWork | **MOVE** (new) | Wraps H.2 submit chain |
 | Command idempotency | **MOVE** (new) | `command_idempotency` + `Idempotency-Key` on submit |
-| Identity lite (principal) | **MOVE** (new, minimal) | Bearer / `X-User-Id` |
+| Identity lite (principal) | **MOVE** onto PF.3 Identity | Bearer session → `AuthenticatedPrincipal` |
 | HTTP API (`LifeJourneyApi`) | **MOVE** (new) | Thin adapter over application service |
 | `EhPlatformClient` / `EhPlatformConfig` | **ADAPT** (new) | Flutter infrastructure |
 | Local Flutter H.2 reactors + local submit | **DELETE AFTER MIGRATION** | Kept for tests/offline without `EH_PLATFORM_URL` |
@@ -199,28 +200,34 @@ Flutter (presentation + thin client)
         │  HTTP JSON (commands / queries)
         ▼
 services/eh_platform  (Dart modular monolith)
-├── api/                 LifeJourneyApi (thin HTTP)
+├── platform_composition.dart / platform_server.dart   PF.3 runtime
+├── api/                 ApiRouter + LifeJourneyApi (thin HTTP)
+├── modules/life_journey LifeJourneyModule (composition boundary)
 ├── life_journey/
 │   ├── application/     LifeJourneyApplicationService, use cases, reactors, DTOs
 │   ├── domain/          aggregates, events, PatternDetector, rules
-│   └── infrastructure/  Postgres + in-memory repos, analyzers, detector
-├── eventing/            EventBus, EventStore, EventDispatcher (in-process)
-├── persistence/         UnitOfWork, CommandIdempotencyStore
-└── shared_kernel/       ids, Result, AggregateRoot, …
+│   └── infrastructure/  Postgres + in-memory repos, SessionHolder, analyzers
+├── events/              PF.3 EventBus, EventStore, EventDispatcher (in-process)
+├── identity/            PF.3 Identity lite (BearerTokenAuthenticator)
+├── persistence/         PF.3 UnitOfWork, MigrationRunner, CommandIdempotencyStore
+└── shared_kernel/       PF.3 Result, Clock, UserId, …
 ```
 
-Composition root: `services/eh_platform/lib/src/platform_runtime.dart`  
-Entry: `services/eh_platform/bin/server.dart`
+Composition root: `services/eh_platform/lib/src/platform_composition.dart`
+
+Entry: `services/eh_platform/bin/server.dart` → `runPlatformServer()`
 
 ### Authoritative command path (platform)
 
 ```text
 HTTP POST /v1/reflections/{id}/submit
     ↓
-LifeJourneyApi  (auth, idempotency replay, DTO mapping)
+PF.3 authenticationMiddleware → requireAuth → AuthenticatedPrincipal
     ↓
-LifeJourneyApplicationService.submitReflection
-    ↓  UnitOfWork.runInTransaction
+LifeJourneyApi  (idempotency replay, DTO mapping)
+    ↓
+LifeJourneyApplicationService.submitReflection(userId: …)
+    ↓  PlatformTransactionBoundary → PF.3 UnitOfWork.execute
 DefaultSubmitReflectionUseCase
     ↓ ReflectionSubmitted
 ReflectionSubmittedReactor → AnalyzeReflectionUseCase
@@ -288,15 +295,16 @@ Experience Selection continues to read the **local Journey cache** (non-authorit
 
 Base URL: `EH_PLATFORM_URL` (Flutter) / server bind via `EH_PLATFORM_PORT` (default 8080).
 
-### Identity lite
+### Identity (PF.3)
 
 | Mechanism | Behavior |
 |-----------|----------|
-| `Authorization: Bearer <token>` | Token treated as opaque user id (Identity lite) |
-| `X-User-Id: <userId>` | Preferred explicit principal header |
-| Missing identity on non-health routes | Forbidden |
+| `Authorization: Bearer <token>` | Resolved by `BearerTokenAuthenticator` to `AuthenticatedPrincipal` |
+| Development token | `EH_DEV_AUTH_TOKEN` maps to configured `EH_DEV_USER_ID` session |
+| Missing identity on protected routes | `401 unauthenticated` |
+| `X-User-Id` | **Removed** — not used for production API authentication |
 
-Flutter sets both Bearer (`EH_PLATFORM_AUTH_TOKEN` or fallback `EH_PLATFORM_USER_ID`) and `X-User-Id`.
+Flutter sends `Authorization: Bearer <EH_PLATFORM_AUTH_TOKEN>` only.
 
 ### Endpoints
 
@@ -415,18 +423,19 @@ DefaultSubmitReflectionUseCase
                             → BehaviorPatternsDetected
 ```
 
-Wiring: `PlatformRuntime._compose` registers the two reactors on `InMemoryEventDispatcher`.
+Wiring: `LifeJourneyModule` registers the two reactors on the PF.3 `InMemoryEventDispatcher` during `PlatformComposition.bootstrap`.
 
 ### Transactional boundary
 
-`LifeJourneyApplicationService.submitReflection` runs the **entire** use-case + reactor chain inside `UnitOfWork.runInTransaction` so Reflection evidence writes and Journey pattern updates commit or roll back together (Postgres).
+`LifeJourneyApplicationService.submitReflection` runs the **entire** use-case + reactor chain inside `PlatformTransactionBoundary` → PF.3 `UnitOfWork.execute` so Reflection evidence writes and Journey pattern updates commit or roll back together (PostgreSQL). Repositories bind to the active `TxSession` via `SessionHolder` (no second UnitOfWork type).
 
 ### Event storage / dispatch
 
 | Concern | Implementation |
 |---------|----------------|
-| Dispatch | In-process `InMemoryEventBus` → `InMemoryEventStore` → `InMemoryEventDispatcher` |
-| Durable `domain_event_log` table | **Created** in `001_h2_foundation.sql`; **not yet** wired as the live EventStore |
+| Dispatch | PF.3 in-process `InMemoryEventBus` → `InMemoryEventStore` → `InMemoryEventDispatcher` |
+| Separate H.2 `eventing/` stack | **Removed** — migrated onto `lib/src/events/` |
+| Durable platform event log table | Not introduced (in-memory EventStore for PF.3/H.2) |
 | Outbox / Kafka | Not introduced |
 
 ### Events migrated vs not
@@ -566,9 +575,9 @@ Defines:
 
 PF.2 allows temporary duplication only with:
 
-1. Named dual path  
-2. Platform designated future sole authority  
-3. Exit criterion  
+1. Named dual path
+2. Platform designated future sole authority
+3. Exit criterion
 
 This phase keeps a **local TRANSITIONAL** H.2 path so:
 
@@ -750,11 +759,11 @@ This H.2 Platform Migration is **complete** when all of the following are true:
 
 ### Explicitly **not** required for completion
 
-* Experience Selection migration  
-* Discovery / real NarrativeTheme resolver  
-* Durable event outbox consumers  
-* Deletion of transitional Flutter H.2 code (tracked as deferred cleanup)  
-* Production IdP  
+* Experience Selection migration
+* Discovery / real NarrativeTheme resolver
+* Durable event outbox consumers
+* Deletion of transitional Flutter H.2 code (tracked as deferred cleanup)
+* Production IdP
 
 ---
 

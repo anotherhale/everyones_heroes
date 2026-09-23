@@ -1,4 +1,4 @@
-import 'package:eh_platform/src/eventing/domain_event.dart';
+import 'package:eh_platform/src/events/domain_event.dart';
 import 'package:eh_platform/src/shared_kernel/entity.dart';
 
 abstract base class AggregateRoot<TId> extends Entity<TId> {

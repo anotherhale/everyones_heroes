@@ -1,7 +1,5 @@
-import 'package:eh_platform/src/eventing/event_bus.dart';
-import 'package:eh_platform/src/shared_kernel/failure.dart';
+import 'package:eh_platform/src/events/event_bus.dart';
 import 'package:eh_platform/src/shared_kernel/result.dart';
-import 'package:eh_platform/src/shared_kernel/success.dart';
 import 'package:eh_platform/src/life_journey/application/services/behavioral_evidence_analysis_orchestrator.dart';
 import 'package:eh_platform/src/life_journey/application/use_cases/use_case.dart';
 import 'package:eh_platform/src/life_journey/domain/services/insight_extraction_service.dart';
@@ -17,20 +15,20 @@ final class AnalyzeReflectionUseCase
     required ReflectionRepository reflectionRepository,
     required InsightExtractionService insightExtractionService,
     required BehavioralEvidenceAnalysisOrchestrator
-    behavioralEvidenceAnalysisOrchestrator,
+        behavioralEvidenceAnalysisOrchestrator,
     required NarrativeThemeResolver narrativeThemeResolver,
     required EventBus eventBus,
-  }) : _reflectionRepository = reflectionRepository,
-       _insightExtractionService = insightExtractionService,
-       _behavioralEvidenceAnalysisOrchestrator =
-           behavioralEvidenceAnalysisOrchestrator,
-       _narrativeThemeResolver = narrativeThemeResolver,
-       _eventBus = eventBus;
+  })  : _reflectionRepository = reflectionRepository,
+        _insightExtractionService = insightExtractionService,
+        _behavioralEvidenceAnalysisOrchestrator =
+            behavioralEvidenceAnalysisOrchestrator,
+        _narrativeThemeResolver = narrativeThemeResolver,
+        _eventBus = eventBus;
 
   final ReflectionRepository _reflectionRepository;
   final InsightExtractionService _insightExtractionService;
   final BehavioralEvidenceAnalysisOrchestrator
-  _behavioralEvidenceAnalysisOrchestrator;
+      _behavioralEvidenceAnalysisOrchestrator;
   final NarrativeThemeResolver _narrativeThemeResolver;
   final EventBus _eventBus;
 
@@ -43,8 +41,8 @@ final class AnalyzeReflectionUseCase
 
       if (reflection == null) {
         return Failure(
-          'Reflection not found: '
-          '${request.reflectionId.value}',
+          code: 'not_found',
+          message: 'Reflection not found: ${request.reflectionId.value}',
         );
       }
 
@@ -75,8 +73,8 @@ final class AnalyzeReflectionUseCase
       return Success(reflection);
     } catch (e) {
       return Failure(
-        'Failed to analyze reflection: '
-        '$e',
+        code: 'analyze_reflection_failed',
+        message: 'Failed to analyze reflection: $e',
       );
     }
   }

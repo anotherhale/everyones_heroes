@@ -1,4 +1,4 @@
-import 'package:eh_platform/src/eventing/domain_event_reactor.dart';
+import 'package:eh_platform/src/events/domain_event_reactor.dart';
 import 'package:eh_platform/src/life_journey/application/dto/requests/analyze_reflection_request.dart';
 import 'package:eh_platform/src/life_journey/application/use_cases/analyze_reflection_use_case.dart';
 import 'package:eh_platform/src/life_journey/domain/events/reflection_submitted.dart';

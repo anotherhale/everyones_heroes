@@ -1,7 +1,6 @@
 import 'package:eh_platform/src/life_journey/domain/domain.dart';
 import 'package:eh_platform/src/shared_kernel/ids/journey_id.dart';
 import 'package:eh_platform/src/shared_kernel/ids/reflection_id.dart';
-import 'package:eh_platform/src/shared_kernel/ids/user_id.dart';
 
 /// API / query DTOs — never expose raw aggregates across the HTTP boundary.
 final class JourneySummaryDto {
@@ -193,13 +192,6 @@ final class SubmitReflectionResultDto {
     'reflection': reflection.toJson(),
     'understanding': understanding.toJson(),
   };
-}
-
-/// Authenticated caller context (Identity lite).
-final class PlatformPrincipal {
-  const PlatformPrincipal({required this.userId});
-
-  final UserId userId;
 }
 
 typedef JourneyIdWire = JourneyId;

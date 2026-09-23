@@ -1,7 +1,5 @@
-import 'package:eh_platform/src/eventing/event_bus.dart';
-import 'package:eh_platform/src/shared_kernel/failure.dart';
+import 'package:eh_platform/src/events/event_bus.dart';
 import 'package:eh_platform/src/shared_kernel/result.dart';
-import 'package:eh_platform/src/shared_kernel/success.dart';
 import 'package:eh_platform/src/life_journey/application/use_cases/use_case.dart';
 import 'package:eh_platform/src/life_journey/domain/aggregates/reflection.dart';
 import 'package:eh_platform/src/life_journey/domain/repositories/reflection_repository.dart';
@@ -29,7 +27,7 @@ final class DefaultSubmitReflectionUseCase implements SubmitReflectionUseCase {
       );
 
       if (reflection == null) {
-        return Failure('Reflection not found: ${request.reflectionId.value}');
+        return Failure(code: 'operation_failed', message: 'Reflection not found: ${request.reflectionId.value}');
       }
 
       reflection.submit();
@@ -44,7 +42,7 @@ final class DefaultSubmitReflectionUseCase implements SubmitReflectionUseCase {
 
       return Success(reflection);
     } catch (e) {
-      return Failure('Failed to submit reflection: $e');
+      return Failure(code: 'operation_failed', message: 'Failed to submit reflection: $e');
     }
   }
 }

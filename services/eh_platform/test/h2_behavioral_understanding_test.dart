@@ -1,25 +1,49 @@
 import 'dart:convert';
 
 import 'package:eh_platform/eh_platform.dart';
+import 'package:eh_platform/src/api/middleware/correlation_middleware.dart';
 import 'package:eh_platform/src/life_journey/application/dto/requests/create_journey_request.dart';
 import 'package:eh_platform/src/life_journey/application/dto/requests/create_reflection_request.dart';
 import 'package:eh_platform/src/life_journey/application/dto/requests/submit_reflection_request.dart';
+import 'package:eh_platform/src/life_journey/application/dto/view_models.dart';
 import 'package:eh_platform/src/life_journey/domain/entities/reflection/emoji_response.dart';
+import 'package:eh_platform/src/life_journey/domain/enums/behavioral_evidence_type.dart';
 import 'package:eh_platform/src/life_journey/domain/enums/reflection_emotion.dart';
+import 'package:eh_platform/src/life_journey/domain/patterns/behavior_pattern.dart';
 import 'package:eh_platform/src/life_journey/domain/patterns/behavior_pattern_type.dart';
-import 'package:eh_platform/src/life_journey/domain/value_objects/journey_vision.dart';
+import 'package:eh_platform/src/life_journey/domain/patterns/rules/consistency_pattern_rule.dart';
 import 'package:eh_platform/src/life_journey/domain/value_objects/behavioral_evidence.dart';
 import 'package:eh_platform/src/life_journey/domain/value_objects/evidence_source.dart';
+import 'package:eh_platform/src/life_journey/domain/value_objects/journey_vision.dart';
 import 'package:eh_platform/src/life_journey/domain/value_objects/strength.dart';
-import 'package:eh_platform/src/life_journey/domain/enums/behavioral_evidence_type.dart';
-import 'package:eh_platform/src/life_journey/domain/patterns/behavior_pattern.dart';
-import 'package:eh_platform/src/life_journey/domain/patterns/rules/consistency_pattern_rule.dart';
 import 'package:eh_platform/src/shared_kernel/ids/journey_id.dart';
 import 'package:eh_platform/src/shared_kernel/ids/reflection_id.dart';
-import 'package:eh_platform/src/shared_kernel/ids/user_id.dart';
+import 'package:http/http.dart' as http;
+import 'package:shelf/shelf.dart';
 import 'package:shelf/shelf_io.dart' as shelf_io;
 import 'package:test/test.dart';
-import 'package:http/http.dart' as http;
+
+/// Builds an HTTP handler for H.2 in-memory tests with a fixed principal.
+Handler lifeJourneyTestHandler({
+  required LifeJourneyComponents components,
+  required AuthenticatedPrincipal principal,
+}) {
+  return const Pipeline()
+      .addMiddleware(correlationMiddleware())
+      .addMiddleware((inner) {
+        return (request) {
+          return inner(
+            request.change(
+              context: {
+                ...request.context,
+                principalContextKey: principal,
+              },
+            ),
+          );
+        };
+      })
+      .addHandler(components.handler);
+}
 
 void main() {
   group('H.2 domain', () {
@@ -65,26 +89,29 @@ void main() {
   });
 
   group('H.2 application (in-memory)', () {
-    late PlatformRuntime runtime;
-    final userId = UserId('user-1');
+    late LifeJourneyComponents lifeJourney;
+    late EventStore eventStore;
+    final userId = UserId('00000000-0000-4000-8000-000000000001');
 
-    setUp(() async {
-      runtime = await PlatformRuntime.inMemory(
-        resolveUserId: (_) => userId.value,
+    setUp(() {
+      eventStore = InMemoryEventStore();
+      final dispatcher = InMemoryEventDispatcher();
+      final eventBus = InMemoryEventBus(
+        eventStore: eventStore,
+        dispatcher: dispatcher,
       );
-    });
-
-    tearDown(() async {
-      await runtime.close();
+      lifeJourney = LifeJourneyModule.composeInMemory(
+        eventBus: eventBus,
+        eventDispatcher: dispatcher,
+      );
     });
 
     test('SubmitReflection runs analysis and pattern detection', () async {
       final journeyId = JourneyId.generate();
       final reflectionId = ReflectionId.generate();
-      final principal = PlatformPrincipal(userId: userId);
 
-      final journeyResult = await runtime.application.createJourney(
-        principal: principal,
+      final journeyResult = await lifeJourney.application.createJourney(
+        userId: userId,
         request: CreateJourneyRequest(
           journeyId: journeyId,
           vision: JourneyVision('Grow with courage every day'),
@@ -92,8 +119,8 @@ void main() {
       );
       expect(journeyResult.isSuccess, isTrue);
 
-      final reflectionResult = await runtime.application.createReflection(
-        principal: principal,
+      final reflectionResult = await lifeJourney.application.createReflection(
+        userId: userId,
         request: CreateReflectionRequest(
           reflectionId: reflectionId,
           journeyId: journeyId,
@@ -101,28 +128,29 @@ void main() {
       );
       expect(reflectionResult.isSuccess, isTrue);
 
-      // Seed discipline evidence pathway via emoji won't create consistency;
-      // add three discipline-bearing reflections by submitting proud? No —
-      // emoji maps proud→confidence. Use direct evidence via multiple
-      // discipline pattern inputs through repository for pattern assertion.
-      await runtime.application.addReflectionResponse(
-        principal: principal,
+      await lifeJourney.application.addReflectionResponse(
+        userId: userId,
         reflectionId: reflectionId,
         response: const EmojiResponse(emotion: ReflectionEmotion.proud),
       );
 
-      final submit = await runtime.application.submitReflection(
-        principal: principal,
+      final submit = await lifeJourney.application.submitReflection(
+        userId: userId,
         request: SubmitReflectionRequest(reflectionId: reflectionId),
       );
-      expect(submit.isSuccess, isTrue);
+      expect(submit.isSuccess, isTrue, reason: submit.isFailure
+          ? submit.fold(onSuccess: (_) => '', onFailure: (f) => f.message)
+          : null);
 
       late final SubmitReflectionResultDto dto;
-      submit.fold(onSuccess: (v) => dto = v, onFailure: (e) => fail(e));
+      submit.fold(
+        onSuccess: (v) => dto = v,
+        onFailure: (f) => fail(f.message),
+      );
       expect(dto.reflection.submittedAt, isNotNull);
       expect(dto.reflection.evidenceCount, greaterThan(0));
 
-      final events = await runtime.eventStore.allEvents();
+      final events = await eventStore.readAll();
       final types = events.map((e) => e.event.runtimeType.toString()).toList();
       expect(types, contains('ReflectionSubmitted'));
       expect(types, contains('BehavioralEvidenceDetected'));
@@ -132,61 +160,75 @@ void main() {
     test('duplicate submit fails with already submitted', () async {
       final journeyId = JourneyId.generate();
       final reflectionId = ReflectionId.generate();
-      final principal = PlatformPrincipal(userId: userId);
 
-      await runtime.application.createJourney(
-        principal: principal,
+      await lifeJourney.application.createJourney(
+        userId: userId,
         request: CreateJourneyRequest(
           journeyId: journeyId,
           vision: JourneyVision('Grow with courage every day'),
         ),
       );
-      await runtime.application.createReflection(
-        principal: principal,
+      await lifeJourney.application.createReflection(
+        userId: userId,
         request: CreateReflectionRequest(
           reflectionId: reflectionId,
           journeyId: journeyId,
         ),
       );
-      await runtime.application.addReflectionResponse(
-        principal: principal,
+      await lifeJourney.application.addReflectionResponse(
+        userId: userId,
         reflectionId: reflectionId,
         response: const EmojiResponse(emotion: ReflectionEmotion.grateful),
       );
-      final first = await runtime.application.submitReflection(
-        principal: principal,
+      final first = await lifeJourney.application.submitReflection(
+        userId: userId,
         request: SubmitReflectionRequest(reflectionId: reflectionId),
       );
       expect(first.isSuccess, isTrue);
 
-      final second = await runtime.application.submitReflection(
-        principal: principal,
+      final second = await lifeJourney.application.submitReflection(
+        userId: userId,
         request: SubmitReflectionRequest(reflectionId: reflectionId),
       );
       expect(second.isFailure, isTrue);
       second.fold(
         onSuccess: (_) => fail('expected failure'),
-        onFailure: (e) => expect(e.toLowerCase(), contains('already')),
+        onFailure: (f) =>
+            expect(f.message.toLowerCase(), contains('already')),
       );
     });
   });
 
   group('H.2 HTTP API (in-memory)', () {
-    late PlatformRuntime runtime;
+    late LifeJourneyComponents lifeJourney;
     late http.Client client;
     late Uri base;
+    final principal = AuthenticatedPrincipal(
+      userId: UserId('00000000-0000-4000-8000-0000000000aa'),
+      displayName: 'API User',
+    );
 
     setUp(() async {
-      runtime = await PlatformRuntime.inMemory(
-        resolveUserId: (_) => 'api-user',
+      final eventStore = InMemoryEventStore();
+      final dispatcher = InMemoryEventDispatcher();
+      final eventBus = InMemoryEventBus(
+        eventStore: eventStore,
+        dispatcher: dispatcher,
       );
-      final server = await shelf_io.serve(runtime.handler, 'localhost', 0);
+      lifeJourney = LifeJourneyModule.composeInMemory(
+        eventBus: eventBus,
+        eventDispatcher: dispatcher,
+      );
+      final handler = lifeJourneyTestHandler(
+        components: lifeJourney,
+        principal: principal,
+      );
+      final server = await shelf_io.serve(handler, 'localhost', 0);
       base = Uri.parse('http://localhost:${server.port}');
       client = http.Client();
       addTearDown(() async {
         client.close();
         await server.close(force: true);
-        await runtime.close();
       });
     });
 
@@ -199,7 +241,7 @@ void main() {
         base.replace(path: path),
         headers: {
           'content-type': 'application/json',
-          'authorization': 'Bearer api-user',
+          'authorization': 'Bearer test-token',
           ...?headers,
         },
         body: jsonEncode(body),
@@ -209,7 +251,7 @@ void main() {
     Future<http.Response> get(String path) {
       return client.get(
         base.replace(path: path),
-        headers: {'authorization': 'Bearer api-user'},
+        headers: {'authorization': 'Bearer test-token'},
       );
     }
 
@@ -217,14 +259,14 @@ void main() {
       final journey = await post('/v1/journeys', {
         'vision': 'Become more consistent',
       });
-      expect(journey.statusCode, 201);
+      expect(journey.statusCode, 201, reason: journey.body);
       final journeyId =
           (jsonDecode(journey.body) as Map)['journeyId'] as String;
 
       final reflection = await post('/v1/reflections', {
         'journeyId': journeyId,
       });
-      expect(reflection.statusCode, 201);
+      expect(reflection.statusCode, 201, reason: reflection.body);
       final reflectionId =
           (jsonDecode(reflection.body) as Map)['reflectionId'] as String;
 
@@ -232,7 +274,7 @@ void main() {
         'type': 'emoji',
         'emotion': 'hopeful',
       });
-      expect(response.statusCode, 200);
+      expect(response.statusCode, 200, reason: response.body);
 
       final submit = await post(
         '/v1/reflections/$reflectionId/submit',

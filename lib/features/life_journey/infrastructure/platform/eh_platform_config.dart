@@ -3,7 +3,8 @@
 /// Production authority requires `--dart-define=EH_PLATFORM_URL=...`.
 /// Optional: `--dart-define=EH_H2_MODE=platform|local` (default: platform when
 /// URL is set, otherwise local transitional path for offline tests).
-/// Optional: `--dart-define=EH_PLATFORM_AUTH_TOKEN=...` (Identity lite bearer).
+/// Optional: `--dart-define=EH_PLATFORM_AUTH_TOKEN=...` (PF.3 Identity bearer).
+/// Optional: `--dart-define=EH_PLATFORM_USER_ID=...` (fallback token when AUTH_TOKEN unset).
 final class EhPlatformConfig {
   static const String platformUrlDefine = String.fromEnvironment(
     'EH_PLATFORM_URL',

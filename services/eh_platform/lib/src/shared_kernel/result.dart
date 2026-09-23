@@ -1,22 +1,42 @@
-abstract base class Result<T> {
+/// Functional result type for application/domain outcomes.
+sealed class Result<T> {
   const Result();
 
-  bool get isSuccess;
-
-  bool get isFailure => !isSuccess;
+  bool get isSuccess => this is Success<T>;
+  bool get isFailure => this is Failure<T>;
 
   TResult fold<TResult>({
     required TResult Function(T value) onSuccess,
-    required TResult Function(String error) onFailure,
+    required TResult Function(Failure<T> failure) onFailure,
+  }) {
+    final self = this;
+    return switch (self) {
+      Success<T>(:final value) => onSuccess(value),
+      Failure<T>() => onFailure(self),
+    };
+  }
+
+  T getOrThrow() {
+    return fold(
+      onSuccess: (value) => value,
+      onFailure: (failure) => throw StateError(failure.message),
+    );
+  }
+}
+
+final class Success<T> extends Result<T> {
+  const Success(this.value);
+  final T value;
+}
+
+final class Failure<T> extends Result<T> {
+  const Failure({
+    required this.code,
+    required this.message,
+    this.details = const <String, Object?>{},
   });
 
-  Result<R> map<R>(R Function(T value) mapper);
-
-  Result<R> flatMap<R>(Result<R> Function(T value) mapper);
-
-  Result<T> onSuccess(void Function(T value) callback);
-
-  Result<T> onFailure(void Function(String error) callback);
-
-  T getOrElse(T fallback);
+  final String code;
+  final String message;
+  final Map<String, Object?> details;
 }
