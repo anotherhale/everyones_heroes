@@ -4,13 +4,18 @@ import 'package:eh_platform/eh_platform.dart';
 import 'package:eh_platform/src/api/middleware/auth_middleware.dart';
 import 'package:eh_platform/src/api/middleware/correlation_middleware.dart';
 import 'package:eh_platform/src/life_journey/application/dto/requests/create_journey_request.dart';
+import 'package:eh_platform/src/life_journey/application/dto/requests/create_reflection_request.dart';
+import 'package:eh_platform/src/life_journey/application/dto/requests/submit_reflection_request.dart';
+import 'package:eh_platform/src/life_journey/application/use_cases/detect_pattern_use_case.dart';
+import 'package:eh_platform/src/life_journey/domain/entities/reflection/emoji_response.dart';
 import 'package:eh_platform/src/life_journey/domain/enums/behavioral_evidence_type.dart';
-import 'package:eh_platform/src/life_journey/domain/patterns/behavior_pattern.dart';
-import 'package:eh_platform/src/life_journey/domain/patterns/behavior_pattern_type.dart';
+import 'package:eh_platform/src/life_journey/domain/enums/reflection_emotion.dart';
+import 'package:eh_platform/src/life_journey/domain/patterns/rules/consistency_pattern_rule.dart';
 import 'package:eh_platform/src/life_journey/domain/value_objects/behavioral_evidence.dart';
 import 'package:eh_platform/src/life_journey/domain/value_objects/evidence_source.dart';
 import 'package:eh_platform/src/life_journey/domain/value_objects/journey_vision.dart';
 import 'package:eh_platform/src/life_journey/domain/value_objects/strength.dart';
+import 'package:eh_platform/src/life_journey/infrastructure/services/behavioral_analysis/rule_based_pattern_detector.dart';
 import 'package:eh_platform/src/shared_kernel/ids/journey_id.dart';
 import 'package:eh_platform/src/shared_kernel/ids/reflection_id.dart';
 import 'package:http/http.dart' as http;
@@ -43,6 +48,61 @@ Handler j1TestHandler({
         };
       })
       .addHandler(modules);
+}
+
+/// Seeds ≥3 discipline evidence on submitted reflections, then runs H.2
+/// [DefaultDetectPatternUseCase] — the same path BehavioralEvidenceDetected
+/// reactors use — so Today's Experience consumes updated Journey understanding.
+Future<void> seedConsistencyViaH2({
+  required LifeJourneyComponents lifeJourney,
+  required UserId userId,
+  required JourneyId journeyId,
+}) async {
+  final now = DateTime.utc(2026, 2, 1);
+  for (var i = 0; i < 3; i++) {
+    final reflectionId = ReflectionId('r-h2-$i-${journeyId.value}');
+    await lifeJourney.application.createReflection(
+      userId: userId,
+      request: CreateReflectionRequest(
+        reflectionId: reflectionId,
+        journeyId: journeyId,
+      ),
+    );
+    await lifeJourney.application.addReflectionResponse(
+      userId: userId,
+      reflectionId: reflectionId,
+      response: const EmojiResponse(emotion: ReflectionEmotion.proud),
+    );
+    await lifeJourney.application.submitReflection(
+      userId: userId,
+      request: SubmitReflectionRequest(reflectionId: reflectionId),
+    );
+
+    // Simulate Insight/Evidence analysis producing discipline observations
+    // (emoji analyzer does not guarantee discipline — known H.2 gap).
+    final reflection =
+        await lifeJourney.reflectionRepository.findById(reflectionId);
+    reflection!.addBehavioralEvidence([
+      BehavioralEvidence(
+        type: BehavioralEvidenceType.discipline,
+        source: ReflectionEvidenceSource(reflectionId: reflectionId),
+        strength: const Strength(0.9),
+        observedAt: now.add(Duration(hours: i)),
+      ),
+    ]);
+    await lifeJourney.reflectionRepository.save(reflection);
+  }
+
+  final detect = DefaultDetectPatternUseCase(
+    journeyRepository: lifeJourney.journeyRepository,
+    reflectionRepository: lifeJourney.reflectionRepository,
+    detector: RuleBasedPatternDetector(rules: [ConsistencyPatternRule()]),
+    eventBus: lifeJourney.application.eventBus,
+  );
+  final patterns = await detect.execute(journeyId);
+  expect(patterns.isSuccess, isTrue, reason: 'H.2 DetectPatternUseCase failed');
+  final detected = patterns.getOrThrow();
+  expect(detected.any((p) => p.type.name == 'consistency'), isTrue);
 }
 
 void main() {
@@ -99,49 +159,39 @@ void main() {
       expect(dto.explanation.sources, isEmpty);
     });
 
-    test('consistency pattern → consistency-next-step', () async {
-      await lifeJourney.application.createJourney(
-        userId: userId,
-        request: CreateJourneyRequest(
-          journeyId: JourneyId('j-consistency'),
-          vision: JourneyVision('Grow with courage'),
-        ),
-      );
-
-      final journey =
-          await lifeJourney.journeyRepository.findById(JourneyId('j-consistency'));
-      expect(journey, isNotNull);
-
-      final now = DateTime.utc(2026, 1, 1);
-      journey!.updateBehaviorPatterns([
-        BehaviorPattern(
-          type: BehaviorPatternType.consistency,
-          strength: const Strength(0.8),
-          supportingEvidence: List.generate(
-            3,
-            (i) => BehavioralEvidence(
-              type: BehavioralEvidenceType.discipline,
-              source:
-                  ReflectionEvidenceSource(reflectionId: ReflectionId('r$i')),
-              strength: const Strength(0.8),
-              observedAt: now.add(Duration(days: i)),
-            ),
+    test(
+      'H.2 DetectPatternUseCase → consistency → consistency-next-step',
+      () async {
+        final journeyId = JourneyId('j-consistency');
+        await lifeJourney.application.createJourney(
+          userId: userId,
+          request: CreateJourneyRequest(
+            journeyId: journeyId,
+            vision: JourneyVision('Grow with courage'),
           ),
-          firstObservedAt: now,
-          lastObservedAt: now.add(const Duration(days: 2)),
-        ),
-      ]);
-      await lifeJourney.journeyRepository.save(journey);
+        );
 
-      final result = await experience.application.getTodayExperience(
-        userId: userId,
-      );
-      final dto = result.getOrThrow();
-      expect(dto.experienceId, 'consistency-next-step');
-      expect(dto.title, 'Keep Showing Up');
-      expect(dto.rationale, isNotNull);
-      expect(dto.explanation.sources.first.value, 'consistency');
-    });
+        final before = await experience.application.getTodayExperience(
+          userId: userId,
+        );
+        expect(before.getOrThrow().experienceId, 'default-reflection');
+
+        await seedConsistencyViaH2(
+          lifeJourney: lifeJourney,
+          userId: userId,
+          journeyId: journeyId,
+        );
+
+        final result = await experience.application.getTodayExperience(
+          userId: userId,
+        );
+        final dto = result.getOrThrow();
+        expect(dto.experienceId, 'consistency-next-step');
+        expect(dto.title, 'Keep Showing Up');
+        expect(dto.rationale, isNotNull);
+        expect(dto.explanation.sources.first.value, 'consistency');
+      },
+    );
   });
 
   group('J.1 GET /v1/experiences/today API', () {
@@ -222,7 +272,7 @@ void main() {
       expect(body.containsKey('target'), isTrue);
     });
 
-    test('Slice 4: Reflection → H.2 → consistency Today experience', () async {
+    test('Slice 4: Reflection → H.2 DetectPattern → Today experience', () async {
       await post('/v1/journeys', {
         'vision': 'Grow with discipline',
         'journeyId': 'j-slice4',
@@ -231,50 +281,11 @@ void main() {
       final before = await get('/v1/experiences/today');
       expect(jsonDecode(before.body)['experienceId'], 'default-reflection');
 
-      // Inject discipline evidence via reflections + direct pattern update
-      // matching UI.3 Slice 4: ≥3 discipline evidence → consistency pattern.
-      // Live emoji analyzer may not produce discipline; prove selection against
-      // H.2 Journey understanding the same way Flutter Slice 4 injects evidence.
-      for (var i = 0; i < 3; i++) {
-        final reflectionId = 'r-slice4-$i';
-        final created = await post('/v1/reflections', {
-          'journeyId': 'j-slice4',
-          'reflectionId': reflectionId,
-        });
-        expect(created.statusCode, 201);
-        await post('/v1/reflections/$reflectionId/responses', {
-          'type': 'emoji',
-          'emotion': 'proud',
-        });
-        await post('/v1/reflections/$reflectionId/submit', {});
-      }
-
-      // Ensure Journey has consistency understanding (H.2 path may or may not
-      // detect from emoji alone — inject authoritative pattern state as H.2
-      // repository update equivalent to DetectPatternUseCase result).
-      final journey =
-          await lifeJourney.journeyRepository.findById(JourneyId('j-slice4'));
-      final now = DateTime.utc(2026, 2, 1);
-      journey!.updateBehaviorPatterns([
-        BehaviorPattern(
-          type: BehaviorPatternType.consistency,
-          strength: const Strength(0.9),
-          supportingEvidence: List.generate(
-            3,
-            (i) => BehavioralEvidence(
-              type: BehavioralEvidenceType.discipline,
-              source: ReflectionEvidenceSource(
-                reflectionId: ReflectionId('r-slice4-$i'),
-              ),
-              strength: const Strength(0.9),
-              observedAt: now.add(Duration(hours: i)),
-            ),
-          ),
-          firstObservedAt: now,
-          lastObservedAt: now.add(const Duration(hours: 2)),
-        ),
-      ]);
-      await lifeJourney.journeyRepository.save(journey);
+      await seedConsistencyViaH2(
+        lifeJourney: lifeJourney,
+        userId: userId,
+        journeyId: JourneyId('j-slice4'),
+      );
 
       final after = await get('/v1/experiences/today');
       expect(after.statusCode, 200);
@@ -330,7 +341,6 @@ void main() {
         journeyRepository: lifeJourney.journeyRepository,
       );
 
-      // Same auth gate ApiRouter uses for module routes — no principal.
       final handler = const Pipeline()
           .addMiddleware(correlationMiddleware())
           .addMiddleware(requireAuth())
