@@ -157,6 +157,7 @@ final class LifeJourneyModule {
       journeyRepository: journeys,
       reflectionRepository: reflections,
       idempotencyStore: idempotency,
+      transactions: transactions,
     );
   }
 }
@@ -169,6 +170,7 @@ final class LifeJourneyComponents {
     required this.journeyRepository,
     required this.reflectionRepository,
     required this.idempotencyStore,
+    required this.transactions,
   });
 
   final LifeJourneyApplicationService application;
@@ -176,6 +178,7 @@ final class LifeJourneyComponents {
   final JourneyRepository journeyRepository;
   final ReflectionRepository reflectionRepository;
   final CommandIdempotencyStore idempotencyStore;
+  final TransactionBoundary transactions;
 
   Handler get handler => api.router.call;
 }

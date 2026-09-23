@@ -1,11 +1,157 @@
 # J.1 — Journey & Experience Platform Migration
 
-- **Document type:** Architecture Planning (implementation deferred)
-- **Status:** Planning complete — do not implement from this pass alone without an authorized implementation task
-- **Phase:** J.1 — next architectural migration after PF.3 + H.2
-- **Baseline (code):** `d54106e` — *Reflection architecture migration (#56)* (PF.3 foundation + H.2 Life Journey on EH Platform)
+- **Document type:** Architecture + Implementation Report
+- **Status:** Implementation complete (authorized J.1 task)
+- **Phase:** J.1 — Experience Selection / Today's Experience authority on EH Platform
+- **Baseline (code):** `cc37e08` — J.1 planning (#57) on PF.3 + H.2 (`d54106e`)
 - **Related:** `PF.2-Platform-Architecture-Decisions.md`, `PF.3-Platform-Foundation.md`, `H.2-Platform-Migration.md`, `docs/ui/Everyone's-Heroes-UI.3-Adaptive-Experience-Foundation.md`, `AGENTS.md` §10–11
 - **Date:** 2026-09-23
+
+---
+
+## 0. Implementation Results (2026-09-23)
+
+Planning sections below remain the historical design record. This section documents
+what was actually implemented.
+
+### 0.1 What changed
+
+| Area | Result |
+|------|--------|
+| Platform Experience module | Activated — selection, composer, DTO, API |
+| `GET /v1/experiences/today` | Implemented under PF.3 Bearer auth |
+| Persistence | **No new tables/columns** (on-read selection) |
+| Flutter platform mode | `PlatformGetTodayExperienceUseCase` via `EhPlatformClient` |
+| Local selector | Retained for transitional local mode only |
+| Begin Experience command | **Not added** — existing reflection create path preserved |
+| HS.8 Story | Composer seam on platform; candidates default empty |
+
+### 0.2 Final API contract
+
+```text
+GET /v1/experiences/today
+Authorization: Bearer <token>
+```
+
+**200** presentation DTO:
+
+```json
+{
+  "experienceId": "consistency-next-step",
+  "experienceType": "reflection",
+  "title": "Keep Showing Up",
+  "description": "Take one small step today...",
+  "action": "begin",
+  "rationale": "You have been building consistency across your recent journey.",
+  "journeyId": "<id>",
+  "explanation": {
+    "sources": [
+      { "kind": "behavior_pattern", "value": "consistency" }
+    ]
+  },
+  "target": null
+}
+```
+
+| Case | HTTP |
+|------|------|
+| Success | `200` |
+| No current Journey | `404` `not_found` |
+| Unauthenticated | `401` |
+
+### 0.3 Final Experience Selection behavior
+
+Mapped from Flutter → platform:
+
+| Flutter | Platform |
+|---------|----------|
+| `DeterministicExperienceSelectionService` | `services/eh_platform/.../deterministic_experience_selection_service.dart` |
+| `AdaptiveExperienceComposer` | `services/eh_platform/.../adaptive_experience_composer.dart` |
+| consistency pattern → `consistency-next-step` | **Preserved** |
+| otherwise → `default-reflection` | **Preserved** |
+| Stable catalog ids | **Preserved** (no per-request UUID) |
+
+### 0.4 HS.8 handling
+
+* Platform includes `AdaptiveExperienceComposer` + `DiscoverableStoryCandidatePort`.
+* Default port: `EmptyDiscoverableStoryCandidatePort` (fail-closed → UI.3 reflection).
+* Story selection is covered by unit tests when candidates with `themeOverlapCount > 0` are injected.
+* Flutter local mode retains full HS.8 Discover* wiring for tests/demos.
+* Platform mode does **not** override a successful platform Today result with local composer.
+* Transitional adapter: empty candidate port until Discovery/HS platform wiring (documented; not silent regression of the composition seam).
+
+### 0.5 Current Journey behavior
+
+Reuses existing H.2 `findCurrentByUserId` (latest `updated_at`). Documented as transitional for multi-Journey product risk.
+
+### 0.6 Flutter authority / offline
+
+| Mode | Behavior |
+|------|----------|
+| `EhPlatformConfig.usePlatformAuthority` | Platform DTO only; no local re-selection |
+| Local / no URL | Existing UI.3 + HS.8 selection |
+| Platform fetch fails + cache | Serve last successful DTO; UI `isStale` |
+| Platform fetch fails + no cache | Unavailable / error (no invented experience) |
+
+### 0.7 Key files
+
+**Platform**
+
+* `services/eh_platform/lib/src/modules/experience/experience_module.dart`
+* `services/eh_platform/lib/src/experience/application/**`
+* `services/eh_platform/lib/src/api/experience_api.dart`
+* `services/eh_platform/lib/src/api/api_router.dart`
+* `services/eh_platform/lib/src/platform_composition.dart`
+* `services/eh_platform/openapi/openapi.v1.json`
+
+**Flutter**
+
+* `lib/.../platform/eh_platform_client.dart` (`getTodayExperience`)
+* `lib/.../platform/today_experience_dto.dart` / `today_experience_cache.dart`
+* `lib/.../use_cases/platform_get_today_experience_use_case.dart`
+* `lib/.../providers/use_cases/get_today_experience_use_case_provider.dart`
+* `lib/.../presentation/providers/today_experience_provider.dart`
+* `lib/.../presentation/models/today_experience_view_model.dart`
+
+### 0.8 Tests / verification
+
+| Suite | Result |
+|-------|--------|
+| `cd services/eh_platform && dart analyze` | Clean of errors (1 pre-existing info) |
+| `cd services/eh_platform && dart test` | **54/54 passed** |
+| Clean Postgres migrate smoke | `001` + `002` applied; no new J.1 migration |
+| `flutter analyze` | No errors (pre-existing infos/warnings) |
+| `flutter test` | **1122/1122 passed** |
+
+### 0.9 Architecture validation
+
+* Experience Selection owned by platform Experience module (not H.2 detectors).
+* Flutter presentation does not import selection services / detectors.
+* Platform Today use case does not import/call local selector or JourneyRepository.
+* Understanding vs recommendation remain separate endpoints.
+* No prohibited J.1 scope (Discovery platform, ML, AI personalization, Quest/Mission APIs, Kafka, etc.).
+
+### 0.10 Known limitations / deferred
+
+* Live HS.8 Story candidates on platform require Discovery/HS candidate wiring.
+* Emoji analyzer may not produce discipline evidence for live consistency flip (known H.2 gap). Slice 4 seeds discipline evidence on submitted reflections, then runs platform `DetectPatternUseCase` before `GET /v1/experiences/today`.
+* Multi-Journey “current” still latest `updated_at`.
+* Flutter local selector deletion deferred until platform URL is mandatory.
+* No Begin Experience platform command (reuse reflection create).
+
+### 0.11 Implementation acceptance checklist
+
+- [x] Platform Experience module owns deterministic selection
+- [x] Existing deterministic selection behavior preserved
+- [x] HS.8 Story selection seam preserved (not silent reflection-only deletion of composer)
+- [x] `GET /v1/experiences/today` exists with PF.3 Bearer auth
+- [x] Resolves current Journey + platform Understanding inputs
+- [x] Stable presentation DTO; no unnecessary persistence
+- [x] Flutter consumes platform Today in platform mode without override
+- [x] Offline cached / unavailable behavior defined
+- [x] Reflection → H.2 → Today integration tested
+- [x] Platform + Flutter tests green; architecture regression checks green
+- [x] Documentation updated
 
 ---
 
@@ -1079,13 +1225,13 @@ Separated from settled planning decisions.
 - [x] Non-goals / risks / open decisions explicit
 - [x] No production implementation code changed in this planning pass
 
-### Future implementation phase (not this pass)
+### Future implementation phase (completed 2026-09-23 — see §0)
 
-- [ ] `GET /v1/experiences/today` returns UI.3-equivalent decisions
-- [ ] Platform Slice 4 integration green
-- [ ] Flutter platform mode Home uses platform DTO only for Today decision
-- [ ] `dart analyze` clean; focused + relevant suites green
-- [ ] Architecture regression checks green
+- [x] `GET /v1/experiences/today` returns UI.3-equivalent decisions
+- [x] Platform Slice 4 integration green
+- [x] Flutter platform mode Home uses platform DTO only for Today decision
+- [x] `dart analyze` clean of errors; focused + relevant suites green
+- [x] Architecture regression checks green
 
 ---
 

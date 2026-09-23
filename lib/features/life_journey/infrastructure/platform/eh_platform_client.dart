@@ -81,6 +81,11 @@ final class EhPlatformClient {
     return _get('/v1/understanding/current');
   }
 
+  /// J.1 — platform-authoritative Today's Experience.
+  Future<Map<String, dynamic>> getTodayExperience() async {
+    return _get('/v1/experiences/today');
+  }
+
   Future<Map<String, dynamic>> _get(String path) async {
     final response = await _http.get(
       _baseUrl.resolve(path),

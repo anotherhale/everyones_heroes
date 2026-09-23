@@ -71,10 +71,20 @@ curl -s -H "Authorization: Bearer dev-platform-token" localhost:8080/v1/me
 | `POST` | `/v1/reflections/{id}/submit` | **SubmitReflection** (H.2 command) |
 | `GET` | `/v1/understanding/current` | Patterns + recent evidence |
 
+## J.1 Experience Selection endpoints
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| `GET` | `/v1/experiences/today` | **Today's Experience** (platform selection) |
+
 Identity: `Authorization: Bearer <token>` resolved by PF.3 Identity
 (`BearerTokenAuthenticator` / sessions) to an `AuthenticatedPrincipal`.
 
 Idempotency: `Idempotency-Key` on submit (PF.3 `command_idempotency` table).
+
+Experience Selection is on-read from Journey understanding — no experience
+table. HS.8 Story composition seam exists via
+`DiscoverableStoryCandidatePort` (defaults empty until Discovery/HS wiring).
 
 ## Tests
 
@@ -86,7 +96,8 @@ dart test
 
 ## Intentionally deferred / follow-ups
 
-- Journey / Experience / Discovery / Hero & Story authority beyond H.2
+- Discovery / Hero & Story candidate authority on platform (HS.8 live candidates)
+- Quest / Mission platform lifecycle
 - Login provider product choice (PF-ADR-008 open)
 - Absorbing `ai_proxy` (Phase 8)
 - Kafka, microservices, Rust

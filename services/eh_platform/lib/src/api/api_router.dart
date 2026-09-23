@@ -1,6 +1,7 @@
 import 'package:eh_platform/src/api/handlers/health_handlers.dart';
 import 'package:eh_platform/src/api/handlers/identity_handlers.dart';
 import 'package:eh_platform/src/api/api_errors.dart';
+import 'package:eh_platform/src/api/experience_api.dart';
 import 'package:eh_platform/src/api/life_journey_api.dart';
 import 'package:eh_platform/src/api/middleware/auth_middleware.dart';
 import 'package:eh_platform/src/api/middleware/correlation_middleware.dart';
@@ -19,14 +20,17 @@ final class ApiRouter {
     required this._clock,
     String openApiDocument = '',
     LifeJourneyApi? lifeJourneyApi,
+    ExperienceApi? experienceApi,
   })  : _openApiDocument = openApiDocument,
-        _lifeJourneyApi = lifeJourneyApi;
+        _lifeJourneyApi = lifeJourneyApi,
+        _experienceApi = experienceApi;
 
   final PlatformDatabase _database;
   final GetCurrentPrincipalHandler _getCurrentPrincipalHandler;
   final Clock _clock;
   final String _openApiDocument;
   final LifeJourneyApi? _lifeJourneyApi;
+  final ExperienceApi? _experienceApi;
 
   Handler build() {
     final router = Router();
@@ -67,12 +71,11 @@ final class ApiRouter {
       }),
     );
 
-    final lifeJourney = _lifeJourneyApi;
-    if (lifeJourney != null) {
-      // H.2 routes require PF.3 Identity; mount under authenticated pipeline.
+    final moduleHandler = _authenticatedModuleHandler();
+    if (moduleHandler != null) {
       final protected = const Pipeline()
           .addMiddleware(requireAuth())
-          .addHandler(lifeJourney.router.call);
+          .addHandler(moduleHandler);
       router.mount('/', protected);
     }
 
@@ -81,6 +84,22 @@ final class ApiRouter {
     });
 
     return router.call;
+  }
+
+  /// Cascades Life Journey + Experience routers under a single auth pipeline.
+  Handler? _authenticatedModuleHandler() {
+    final lifeJourney = _lifeJourneyApi;
+    final experience = _experienceApi;
+    if (lifeJourney == null && experience == null) {
+      return null;
+    }
+    if (lifeJourney != null && experience != null) {
+      return Cascade()
+          .add(lifeJourney.router.call)
+          .add(experience.router.call)
+          .handler;
+    }
+    return lifeJourney?.router.call ?? experience!.router.call;
   }
 }
 

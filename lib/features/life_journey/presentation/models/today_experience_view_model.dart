@@ -1,6 +1,7 @@
 import 'package:everyonesheroes/features/life_journey/application/models/adaptive_experience.dart';
 import 'package:everyonesheroes/features/life_journey/application/models/experience_action.dart';
 import 'package:everyonesheroes/features/life_journey/application/models/experience_target.dart';
+import 'package:everyonesheroes/features/life_journey/infrastructure/platform/today_experience_dto.dart';
 
 final class TodayExperienceViewModel {
   const TodayExperienceViewModel({
@@ -12,6 +13,7 @@ final class TodayExperienceViewModel {
     required this.callToAction,
     this.rationale,
     this.storyTargetId,
+    this.isStale = false,
   });
 
   final String id;
@@ -25,6 +27,9 @@ final class TodayExperienceViewModel {
   /// Story id string when [experienceType] is [ExperienceType.story].
   final String? storyTargetId;
 
+  /// True when showing a cached DTO after platform fetch failure (J.1 offline).
+  final bool isStale;
+
   static String _callToActionFor(ExperienceAction action) {
     return switch (action) {
       ExperienceAction.begin => 'Begin Experience',
@@ -32,8 +37,9 @@ final class TodayExperienceViewModel {
   }
 
   factory TodayExperienceViewModel.fromExperience(
-    AdaptiveExperience experience,
-  ) {
+    AdaptiveExperience experience, {
+    bool isStale = false,
+  }) {
     final target = experience.target;
     final storyTargetId = switch (target) {
       StoryExperienceTarget(:final storyId) => storyId.value,
@@ -49,6 +55,17 @@ final class TodayExperienceViewModel {
       callToAction: _callToActionFor(experience.action),
       rationale: experience.rationale,
       storyTargetId: storyTargetId,
+      isStale: isStale,
+    );
+  }
+
+  factory TodayExperienceViewModel.fromDto(
+    TodayExperienceDto dto, {
+    bool isStale = false,
+  }) {
+    return TodayExperienceViewModel.fromExperience(
+      dto.toAdaptiveExperience(),
+      isStale: isStale,
     );
   }
 }

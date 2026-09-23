@@ -2,8 +2,8 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Everyone's Heroes Platform API",
-    "version": "0.1.0",
-    "description": "PF.3 foundation contracts. Domain verticals arrive in later phases."
+    "version": "0.2.0",
+    "description": "PF.3 foundation + H.2 Life Journey + J.1 Experience Selection contracts."
   },
   "servers": [
     {
@@ -75,6 +75,32 @@
         }
       }
     },
+    "/v1/experiences/today": {
+      "get": {
+        "summary": "Today's Experience (J.1 Experience Selection)",
+        "description": "Resolves the authenticated principal's current Journey and returns a presentation DTO from platform-owned deterministic Experience Selection. Selection is on-read; no experience row is persisted.",
+        "operationId": "getTodayExperience",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Selected Today's Experience",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TodayExperience"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid bearer token"
+          },
+          "404": {
+            "description": "No current Journey for principal"
+          }
+        }
+      }
+    },
     "/v1/openapi.json": {
       "get": {
         "summary": "OpenAPI document",
@@ -93,6 +119,60 @@
         "type": "http",
         "scheme": "bearer",
         "bearerFormat": "opaque"
+      }
+    },
+    "schemas": {
+      "TodayExperience": {
+        "type": "object",
+        "required": [
+          "experienceId",
+          "experienceType",
+          "title",
+          "description",
+          "action",
+          "journeyId",
+          "explanation"
+        ],
+        "properties": {
+          "experienceId": {
+            "type": "string",
+            "description": "Stable catalog identity (e.g. default-reflection, consistency-next-step)"
+          },
+          "experienceType": {
+            "type": "string",
+            "enum": ["reflection", "story", "mission", "coaching", "discovery"]
+          },
+          "title": { "type": "string" },
+          "description": { "type": "string" },
+          "action": { "type": "string", "enum": ["begin"] },
+          "rationale": { "type": "string", "nullable": true },
+          "journeyId": { "type": "string" },
+          "explanation": {
+            "type": "object",
+            "required": ["sources"],
+            "properties": {
+              "sources": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["kind", "value"],
+                  "properties": {
+                    "kind": { "type": "string" },
+                    "value": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "target": {
+            "nullable": true,
+            "type": "object",
+            "properties": {
+              "kind": { "type": "string" },
+              "storyId": { "type": "string" }
+            }
+          }
+        }
       }
     }
   }
