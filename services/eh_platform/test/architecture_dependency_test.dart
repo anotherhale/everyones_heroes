@@ -70,4 +70,76 @@ void main() {
       );
     }
   });
+
+  test('discovery domain does not import HTTP, PostgreSQL, or AI SDKs', () {
+    for (final file in dartFilesUnder('discovery/domain')) {
+      expect(imports(file, 'package:shelf/'), isFalse, reason: file.path);
+      expect(imports(file, 'package:postgres/'), isFalse, reason: file.path);
+      expect(imports(file, 'package:openai'), isFalse, reason: file.path);
+      expect(imports(file, 'package:flutter/'), isFalse, reason: file.path);
+    }
+  });
+
+  test('experience does not own NarrativeTheme catalog taxonomy', () {
+    for (final file in dartFilesUnder('experience')) {
+      expect(
+        imports(file, 'narrative_theme_reference_catalog.dart'),
+        isFalse,
+        reason: file.path,
+      );
+    }
+  });
+
+  test('experience does not import concrete Hero & Story candidate persistence',
+      () {
+    for (final file in dartFilesUnder('experience')) {
+      expect(
+        imports(file, 'seeded_story_candidate_catalog.dart'),
+        isFalse,
+        reason: file.path,
+      );
+      expect(
+        imports(file, 'story_candidate_record.dart'),
+        isFalse,
+        reason: file.path,
+      );
+      expect(
+        imports(file, 'package:postgres/'),
+        isFalse,
+        reason: file.path,
+      );
+    }
+  });
+
+  test('discovery owns canonical theme vocabulary; HS does not redefine it', () {
+    final discoveryCatalog = File(
+      '${libRoot.path}/discovery/domain/catalog/narrative_theme_reference_catalog.dart',
+    );
+    expect(discoveryCatalog.existsSync(), isTrue);
+
+    for (final file in dartFilesUnder('hero_story')) {
+      expect(
+        imports(file, 'narrative_theme_reference_catalog.dart'),
+        isFalse,
+        reason:
+            'Hero & Story must reference NarrativeThemeReferenceIds, '
+            'not redefine Discovery catalog: ${file.path}',
+      );
+      // HS may validate against shared-kernel ID constants, not invent themes.
+      final source = file.readAsStringSync();
+      expect(
+        source.contains("NarrativeThemeId('invented"),
+        isFalse,
+        reason: file.path,
+      );
+    }
+  });
+
+  test('hero_story candidate adapter depends on Experience port, not SQL', () {
+    for (final file in dartFilesUnder('hero_story')) {
+      expect(imports(file, 'package:postgres/'), isFalse, reason: file.path);
+      expect(imports(file, 'package:shelf/'), isFalse, reason: file.path);
+      expect(imports(file, 'package:flutter/'), isFalse, reason: file.path);
+    }
+  });
 }

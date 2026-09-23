@@ -2,7 +2,7 @@ import 'package:eh_platform/src/api/life_journey_api.dart';
 import 'package:eh_platform/src/events/event_bus.dart';
 import 'package:eh_platform/src/events/event_dispatcher.dart';
 import 'package:eh_platform/src/life_journey/application/life_journey_application_service.dart';
-import 'package:eh_platform/src/life_journey/application/providers/fake/fake_narrative_theme_resolver.dart';
+import 'package:eh_platform/src/discovery/application/services/catalog_aligned_narrative_theme_resolver.dart';
 import 'package:eh_platform/src/life_journey/application/reactors/behavioral_evidence_detected_reactor.dart';
 import 'package:eh_platform/src/life_journey/application/reactors/reflection/reflection_submitted_reactor.dart';
 import 'package:eh_platform/src/life_journey/application/services/behavioral_evidence_analysis_orchestrator.dart';
@@ -99,7 +99,8 @@ final class LifeJourneyModule {
       registry: analyzers,
     );
     final insightService = RuleBasedInsightExtractionService();
-    final themeResolver = FakeNarrativeThemeResolver();
+    // J.2: Discovery catalog-aligned resolver (replaces Fake self-discovery).
+    const themeResolver = CatalogAlignedNarrativeThemeResolver();
     final detector = RuleBasedPatternDetector(
       rules: [
         ConsistencyPatternRule(),

@@ -3,9 +3,12 @@ import 'package:eh_platform/src/experience/application/models/discoverable_story
 
 /// Replaceable HS.8 Story candidate seam for Experience composition.
 ///
-/// J.1 default is [EmptyDiscoverableStoryCandidatePort] (fail-closed to UI.3
-/// reflection). Injected implementations enable Story selection without
-/// migrating Hero & Story authority into this module.
+/// Default for unwired tests: [EmptyDiscoverableStoryCandidatePort]
+/// (fail-closed to UI.3 reflection).
+///
+/// Platform composition (J.2 Slice 3) injects
+/// [SeededDiscoverableStoryCandidateAdapter] backed by a transitional
+/// Hero & Story seed catalog — replaceable by real HS persistence later.
 abstract interface class DiscoverableStoryCandidatePort {
   Future<List<DiscoverableStoryCandidate>> findRelevant(
     AdaptiveDiscoverySignals signals, {

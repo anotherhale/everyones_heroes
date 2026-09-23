@@ -1,5 +1,5 @@
 import 'package:eh_platform/src/experience/application/dto/today_experience_dto.dart';
-import 'package:eh_platform/src/experience/application/models/adaptive_discovery_signals.dart';
+import 'package:eh_platform/src/experience/application/ports/adaptive_discovery_signal_port.dart';
 import 'package:eh_platform/src/experience/application/ports/discoverable_story_candidate_port.dart';
 import 'package:eh_platform/src/experience/application/services/adaptive_experience_composer.dart';
 import 'package:eh_platform/src/experience/application/services/experience_selection_service.dart';
@@ -11,25 +11,30 @@ import 'package:eh_platform/src/life_journey/infrastructure/transactions/transac
 import 'package:eh_platform/src/shared_kernel/result.dart';
 import 'package:eh_platform/src/shared_kernel/user_id.dart';
 
-/// GetTodayExperience application query (J.1).
+/// GetTodayExperience application query (J.1 / J.2).
 ///
 /// ```text
 /// Authenticated principal
 ///   → Current Journey (existing findCurrentByUserId)
-///   → Understanding inputs (behaviorPatterns)
-///   → Experience Selection / HS.8 composition
+///   → AdaptiveDiscoverySignalPort (Discovery: catalog-aligned themes ∪ patterns)
+///   → DiscoverableStoryCandidatePort (HS.8; default empty)
+///   → AdaptiveExperienceComposer
 ///   → TodayExperienceDto
 /// ```
 ///
 /// Read-only. Does not mutate Journey or persist Today's Experience.
+/// Does not interpret raw Reflection themes — Discovery resolves signals.
 final class ExperienceApplicationService {
   ExperienceApplicationService({
     required this.transactions,
     required this.journeyRepository,
     required ExperienceSelectionService experienceSelectionService,
+    AdaptiveDiscoverySignalPort? discoverySignalPort,
     DiscoverableStoryCandidatePort? storyCandidatePort,
     AdaptiveExperienceComposer? composer,
-  })  : _storyCandidatePort =
+  })  : _discoverySignalPort =
+            discoverySignalPort ?? const PatternsOnlyAdaptiveDiscoverySignalPort(),
+        _storyCandidatePort =
             storyCandidatePort ?? const EmptyDiscoverableStoryCandidatePort(),
         _composer = composer ??
             AdaptiveExperienceComposer(
@@ -38,6 +43,7 @@ final class ExperienceApplicationService {
 
   final TransactionBoundary transactions;
   final JourneyRepository journeyRepository;
+  final AdaptiveDiscoverySignalPort _discoverySignalPort;
   final DiscoverableStoryCandidatePort _storyCandidatePort;
   final AdaptiveExperienceComposer _composer;
 
@@ -54,9 +60,7 @@ final class ExperienceApplicationService {
           );
         }
 
-        final signals = AdaptiveDiscoverySignals(
-          behaviorPatterns: journey.behaviorPatterns,
-        );
+        final signals = await _discoverySignalPort.resolve(journey);
         final candidates = await _storyCandidatePort.findRelevant(signals);
         final selected = _composer.compose(
           journey: journey,
