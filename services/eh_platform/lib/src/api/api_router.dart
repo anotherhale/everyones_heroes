@@ -1,6 +1,7 @@
 import 'package:eh_platform/src/api/handlers/health_handlers.dart';
 import 'package:eh_platform/src/api/handlers/identity_handlers.dart';
 import 'package:eh_platform/src/api/api_errors.dart';
+import 'package:eh_platform/src/api/life_journey_api.dart';
 import 'package:eh_platform/src/api/middleware/auth_middleware.dart';
 import 'package:eh_platform/src/api/middleware/correlation_middleware.dart';
 import 'package:eh_platform/src/identity/application/get_current_principal_query.dart';
@@ -10,19 +11,22 @@ import 'package:shelf/shelf.dart';
 import 'package:shelf_router/shelf_router.dart';
 import 'dart:convert';
 
-/// Assembles the thin HTTP surface for the platform foundation.
+/// Assembles the thin HTTP surface for the platform foundation + modules.
 final class ApiRouter {
   const ApiRouter({
     required this._database,
     required this._getCurrentPrincipalHandler,
     required this._clock,
     String openApiDocument = '',
-  }) : _openApiDocument = openApiDocument;
+    LifeJourneyApi? lifeJourneyApi,
+  })  : _openApiDocument = openApiDocument,
+        _lifeJourneyApi = lifeJourneyApi;
 
   final PlatformDatabase _database;
   final GetCurrentPrincipalHandler _getCurrentPrincipalHandler;
   final Clock _clock;
   final String _openApiDocument;
+  final LifeJourneyApi? _lifeJourneyApi;
 
   Handler build() {
     final router = Router();
@@ -62,6 +66,15 @@ final class ApiRouter {
         );
       }),
     );
+
+    final lifeJourney = _lifeJourneyApi;
+    if (lifeJourney != null) {
+      // H.2 routes require PF.3 Identity; mount under authenticated pipeline.
+      final protected = const Pipeline()
+          .addMiddleware(requireAuth())
+          .addHandler(lifeJourney.router.call);
+      router.mount('/', protected);
+    }
 
     router.all('/<ignored|.*>', (Request request) {
       return ApiError.notFound(correlationIdOf(request)).toResponse();

@@ -1,8 +1,9 @@
 name: eh_platform
 description: >
-  Everyone's Heroes Platform — Dart modular monolith foundation (PF.3 / Phase 2).
-  Authoritative owner of domain state, use cases, events, persistence, and AI
-  orchestration seams. Flutter remains the presentation client.
+  Everyone's Heroes Platform — Dart modular monolith (PF.3 foundation + H.2
+  Behavioral Understanding). Authoritative owner of domain state, use cases,
+  events, persistence, and AI orchestration seams. Flutter remains the
+  presentation client.
 version: 0.1.0
 publish_to: none
 
@@ -12,6 +13,7 @@ environment:
 dependencies:
   collection: ^1.19.1
   crypto: ^3.0.6
+  http: ^1.6.0
   meta: ^1.16.0
   postgres: ^3.5.6
   shelf: ^1.4.2

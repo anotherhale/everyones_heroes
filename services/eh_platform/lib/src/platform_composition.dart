@@ -22,6 +22,7 @@ import 'package:eh_platform/src/identity/infrastructure/bearer_token_authenticat
 import 'package:eh_platform/src/identity/infrastructure/identity_repository.dart';
 import 'package:eh_platform/src/identity/infrastructure/postgres_identity_repository.dart';
 import 'package:eh_platform/src/logging/platform_logger.dart';
+import 'package:eh_platform/src/modules/life_journey/life_journey_module.dart';
 import 'package:eh_platform/src/persistence/database.dart';
 import 'package:eh_platform/src/persistence/migration_runner.dart';
 import 'package:eh_platform/src/persistence/unit_of_work.dart';
@@ -46,6 +47,7 @@ final class PlatformComposition {
     required this.getCurrentPrincipalHandler,
     required this.issueDevSessionHandler,
     required this.aiOrchestration,
+    required this.lifeJourney,
     required this.handler,
     required this.migrationsDirectory,
   });
@@ -63,6 +65,7 @@ final class PlatformComposition {
   final GetCurrentPrincipalHandler getCurrentPrincipalHandler;
   final IssueDevSessionHandler issueDevSessionHandler;
   final AiOrchestrationPort aiOrchestration;
+  final LifeJourneyComponents lifeJourney;
   final Handler handler;
   final String migrationsDirectory;
 
@@ -142,6 +145,13 @@ final class PlatformComposition {
 
     const aiOrchestration = StubAiProviderAdapter();
 
+    final lifeJourney = LifeJourneyModule.composePostgres(
+      database: database,
+      unitOfWork: unitOfWork,
+      eventBus: eventBus,
+      eventDispatcher: eventDispatcher,
+    );
+
     final openApiDocument = File(openApiPath).existsSync()
         ? await File(openApiPath).readAsString()
         : '';
@@ -151,6 +161,7 @@ final class PlatformComposition {
       getCurrentPrincipalHandler: const GetCurrentPrincipalHandler(),
       clock: effectiveClock,
       openApiDocument: openApiDocument,
+      lifeJourneyApi: lifeJourney.api,
     );
 
     final handler = const Pipeline()
@@ -180,6 +191,7 @@ final class PlatformComposition {
       issueDevSessionHandler:
           IssueDevSessionHandler(identityRepository: identityRepository),
       aiOrchestration: aiOrchestration,
+      lifeJourney: lifeJourney,
       handler: handler,
       migrationsDirectory: migrationsDir,
     );

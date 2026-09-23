@@ -1,0 +1,35 @@
+import 'package:eh_platform/src/shared_kernel/ids/journey_id.dart';
+import 'package:eh_platform/src/shared_kernel/ids/reflection_id.dart';
+import 'package:eh_platform/src/life_journey/domain/aggregates/reflection.dart';
+import 'package:eh_platform/src/life_journey/domain/repositories/reflection_repository.dart';
+
+final class InMemoryReflectionRepository implements ReflectionRepository {
+  final Map<ReflectionId, Reflection> _storage = {};
+
+  @override
+  Future<void> save(Reflection reflection) async {
+    _storage[reflection.id] = reflection;
+  }
+
+  @override
+  Future<Reflection?> findById(ReflectionId id) async {
+    return _storage[id];
+  }
+
+  @override
+  Future<List<Reflection>> findByJourneyId(JourneyId journeyId) async {
+    return _storage.values
+        .where((reflection) => reflection.journeyId == journeyId)
+        .toList(growable: false);
+  }
+
+  @override
+  Future<bool> exists(ReflectionId id) async {
+    return _storage.containsKey(id);
+  }
+
+  @override
+  Future<void> delete(ReflectionId id) async {
+    _storage.remove(id);
+  }
+}

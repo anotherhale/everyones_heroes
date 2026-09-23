@@ -1,10 +1,10 @@
 # PF.3 — EH Platform Foundation
 
-**Document type:** Platform Foundation Implementation Report (PF.3)  
-**Status:** Foundation implemented  
-**Date:** 2026-09-23  
-**Baseline:** PF.1 Overall Architecture + PF.2 Platform Architecture Decisions  
-**Code location:** `services/eh_platform`
+- **Document type:** Platform Foundation Implementation Report (PF.3)
+- **Status:** Foundation implemented
+- **Date:** 2026-09-23
+- **Baseline:** PF.1 Overall Architecture + PF.2 Platform Architecture Decisions
+- **Code location:** `services/eh_platform`
 
 ---
 
@@ -125,7 +125,8 @@ Durable outbox: **PLANNED** when a second process consumer appears.
 | Transactions | `UnitOfWork` → `runInTransaction` |
 | Schema in PF.3 | `identity_users`, `identity_sessions`, `command_idempotency`, `schema_migrations` |
 
-Object storage / media: **PLANNED** (Phase 7 / PF-ADR-009).  
+Object storage / media: **PLANNED** (Phase 7 / PF-ADR-009).
+
 LJ/HS aggregate schemas: **PLANNED** (Phases 3–7).
 
 ---
@@ -139,7 +140,8 @@ Identity lite (PF-ADR-008 architecture Ready; providers open):
 * Development token bootstrap via config (`EH_DEV_AUTH_TOKEN`)
 * `GET /v1/me` authenticated hello path (Phase 2 exit criterion)
 
-**Not decided / not hard-coded:** email vs OAuth login providers.  
+**Not decided / not hard-coded:** email vs OAuth login providers.
+
 **Not merged:** Hero remains a future Hero & Story aggregate linked by `UserId`, never equated to User.
 
 ---
@@ -234,7 +236,8 @@ Flutter application suite must remain green; PF.3 does not migrate or delete Flu
 
 **H.2 Platform Migration** (PF.2 Phase 3) — do not begin automatically from PF.3.
 
-Exit criterion for that phase (from PF.2):  
+Exit criterion for that phase (from PF.2):
+
 `SubmitReflection` → patterns visible via understanding query; Flutter stops competing reactors when API flag is on.
 
 ---

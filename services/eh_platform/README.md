@@ -1,19 +1,30 @@
 # EH Platform (`services/eh_platform`)
 
-Dart modular monolith foundation for Everyone's Heroes (PF.3 / Phase 2).
+Dart modular monolith for Everyone's Heroes.
+
+**PF.3** is the authoritative platform foundation (composition, Identity, shared
+kernel, persistence, events, API router). **H.2** Life Journey / Behavioral
+Understanding is a platform module on that foundation — not a second runtime.
 
 ## Boundaries
 
 ```text
 Flutter Client
-    │ REST/JSON (/v1)
+    │ HTTP/JSON
     ▼
-EH Platform
-    ├── Application
-    ├── Domain (module boundaries)
-    ├── Events (in-process)
-    ├── Persistence (PostgreSQL)
-    └── AI Orchestration (ports + adapters)
+EH Platform API (ApiRouter)
+    │
+    ▼
+PlatformComposition / PlatformServer
+    ├── Identity
+    ├── Life Journey / H.2
+    ├── Discovery (boundary)
+    ├── Hero & Story (boundary)
+    ├── Experience (boundary)
+    ├── AI (ports)
+    ├── Shared Kernel
+    ├── Persistence (PostgreSQL + UnitOfWork)
+    └── Events (in-process EventBus / EventStore)
 ```
 
 `services/ai_proxy` remains a separate deployable until Phase 8 (PF-ADR-010).
@@ -29,7 +40,12 @@ export EH_DEV_AUTH_TOKEN=dev-platform-token
 dart run bin/server.dart
 ```
 
-## Foundation endpoints
+Migrations (ordered):
+
+1. `001_platform_foundation.sql` — identity, sessions, command_idempotency
+2. `002_h2_life_journey.sql` — journeys, reflections (FK → identity_users)
+
+## Foundation endpoints (PF.3)
 
 | Method | Path | Purpose |
 |--------|------|---------|
@@ -44,17 +60,33 @@ curl -s localhost:8080/ready
 curl -s -H "Authorization: Bearer dev-platform-token" localhost:8080/v1/me
 ```
 
+## H.2 Behavioral Understanding endpoints
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| `POST` | `/v1/journeys` | Create journey |
+| `GET` | `/v1/journeys/current` | Current journey summary |
+| `POST` | `/v1/reflections` | Create reflection draft |
+| `POST` | `/v1/reflections/{id}/responses` | Add emoji response |
+| `POST` | `/v1/reflections/{id}/submit` | **SubmitReflection** (H.2 command) |
+| `GET` | `/v1/understanding/current` | Patterns + recent evidence |
+
+Identity: `Authorization: Bearer <token>` resolved by PF.3 Identity
+(`BearerTokenAuthenticator` / sessions) to an `AuthenticatedPrincipal`.
+
+Idempotency: `Idempotency-Key` on submit (PF.3 `command_idempotency` table).
+
 ## Tests
 
 ```bash
 cd services/eh_platform
+dart analyze
 dart test
 ```
 
-## Intentionally deferred
+## Intentionally deferred / follow-ups
 
-- H.2 Reflection / Behavioral Evidence migration (Phase 3)
-- Journey / Experience / Discovery / Hero & Story authority
+- Journey / Experience / Discovery / Hero & Story authority beyond H.2
 - Login provider product choice (PF-ADR-008 open)
 - Absorbing `ai_proxy` (Phase 8)
 - Kafka, microservices, Rust

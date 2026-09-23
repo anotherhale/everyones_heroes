@@ -9,4 +9,5 @@ linter:
     prefer_const_constructors: false
     prefer_initializing_formals: false
     prefer_final_locals: true
-    avoid_print: true
+    # Server entrypoints and temporary diagnostics may log to stdout.
+    avoid_print: false
