@@ -6,9 +6,11 @@ final class UpdateStoryConsentRequest {
     this.grantProcessing = false,
     this.grantPublication = false,
     this.grantAiTransformation = false,
+    this.grantVoiceRendering = false,
     this.revokeProcessing = false,
     this.revokePublication = false,
     this.revokeAiTransformation = false,
+    this.revokeVoiceRendering = false,
     this.at,
   });
 
@@ -16,8 +18,10 @@ final class UpdateStoryConsentRequest {
   final bool grantProcessing;
   final bool grantPublication;
   final bool grantAiTransformation;
+  final bool grantVoiceRendering;
   final bool revokeProcessing;
   final bool revokePublication;
   final bool revokeAiTransformation;
+  final bool revokeVoiceRendering;
   final DateTime? at;
 }

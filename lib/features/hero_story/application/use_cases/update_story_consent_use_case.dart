@@ -37,6 +37,9 @@ final class UpdateStoryConsentUseCase
       if (request.grantAiTransformation) {
         consent = consent.grantAiTransformation(at);
       }
+      if (request.grantVoiceRendering) {
+        consent = consent.grantVoiceRendering(at);
+      }
       if (request.revokeProcessing) {
         consent = consent.revokeProcessing();
       }
@@ -45,6 +48,9 @@ final class UpdateStoryConsentUseCase
       }
       if (request.revokeAiTransformation) {
         consent = consent.revokeAiTransformation();
+      }
+      if (request.revokeVoiceRendering) {
+        consent = consent.revokeVoiceRendering();
       }
 
       story.updateConsent(consent, at: at);

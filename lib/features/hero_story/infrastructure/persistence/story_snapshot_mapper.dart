@@ -311,6 +311,8 @@ final class StorySnapshotMapper {
       'publicationApprovedAt': consent.publicationApprovedAt?.toIso8601String(),
       'aiTransformationApprovedAt':
           consent.aiTransformationApprovedAt?.toIso8601String(),
+      'voiceRenderingApprovedAt':
+          consent.voiceRenderingApprovedAt?.toIso8601String(),
     };
   }
 
@@ -325,6 +327,7 @@ final class StorySnapshotMapper {
       processingApprovedAt: parseOptional('processingApprovedAt'),
       publicationApprovedAt: parseOptional('publicationApprovedAt'),
       aiTransformationApprovedAt: parseOptional('aiTransformationApprovedAt'),
+      voiceRenderingApprovedAt: parseOptional('voiceRenderingApprovedAt'),
     );
   }
 

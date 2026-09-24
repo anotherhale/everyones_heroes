@@ -62,6 +62,7 @@ final class OwnedStoryMapper {
       isProcessingApproved: story.consent.isProcessingApproved,
       isPublicationApproved: story.consent.isPublicationApproved,
       isAiTransformationApproved: story.consent.isAiTransformationApproved,
+      isVoiceRenderingApproved: story.consent.isVoiceRenderingApproved,
       representations: List.unmodifiable(representations),
       primaryOriginalAudioId: originalAudio?.id,
       primaryOriginalAudioDuration: originalAudio?.duration,

@@ -13,6 +13,7 @@ import 'package:everyonesheroes/features/hero_story/domain/repositories/story_bu
 import 'package:everyonesheroes/features/hero_story/domain/repositories/story_experience_plan_repository.dart';
 import 'package:everyonesheroes/features/hero_story/domain/repositories/story_proposal_repository.dart';
 import 'package:everyonesheroes/features/hero_story/domain/repositories/story_repository.dart';
+import 'package:everyonesheroes/features/hero_story/domain/repositories/story_voice_rendering_repository.dart';
 import 'package:everyonesheroes/features/hero_story/domain/services/story_media_storage_port.dart';
 import 'package:everyonesheroes/features/hero_story/infrastructure/capture/file_capture_completion_store.dart';
 import 'package:everyonesheroes/features/hero_story/infrastructure/media/local_file_story_media_storage_adapter.dart';
@@ -22,6 +23,7 @@ import 'package:everyonesheroes/features/hero_story/infrastructure/repositories/
 import 'package:everyonesheroes/features/hero_story/infrastructure/repositories/file_story_experience_plan_repository.dart';
 import 'package:everyonesheroes/features/hero_story/infrastructure/repositories/file_story_proposal_repository.dart';
 import 'package:everyonesheroes/features/hero_story/infrastructure/repositories/file_story_repository.dart';
+import 'package:everyonesheroes/features/hero_story/infrastructure/repositories/file_story_voice_rendering_repository.dart';
 import 'package:everyonesheroes/features/hero_story/infrastructure/transcription/file_story_transcription_job_store.dart';
 import 'package:everyonesheroes/features/hero_story/infrastructure/transcription/file_transcription_completion_store.dart';
 
@@ -77,6 +79,9 @@ final class HeroStoryDurablePersistence {
       storyExperiencePlanRepository = FileStoryExperiencePlanRepository(
         rootDirectory: rootDirectory,
       ),
+      storyVoiceRenderingRepository = FileStoryVoiceRenderingRepository(
+        rootDirectory: rootDirectory,
+      ),
       mediaStorage = LocalFileStoryMediaStorageAdapter(
         rootDirectory: rootDirectory,
       ),
@@ -100,6 +105,7 @@ final class HeroStoryDurablePersistence {
   final StoryProposalRepository storyProposalRepository;
   final CapturedStoryReadingRepository capturedStoryReadingRepository;
   final StoryExperiencePlanRepository storyExperiencePlanRepository;
+  final StoryVoiceRenderingRepository storyVoiceRenderingRepository;
   final StoryMediaStoragePort mediaStorage;
   late final CaptureCompletionStore captureCompletionStore;
   late final TranscriptionCompletionStore transcriptionCompletionStore;

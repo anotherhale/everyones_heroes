@@ -4,19 +4,21 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:everyonesheroes/features/hero_story/presentation/models/captured_story_reading_view_data.dart';
 import 'package:everyonesheroes/features/hero_story/presentation/models/hero_story_view_data.dart';
 import 'package:everyonesheroes/features/hero_story/presentation/models/story_experience_plan_view_data.dart';
+import 'package:everyonesheroes/features/hero_story/presentation/models/story_voice_rendering_view_data.dart';
 import 'package:everyonesheroes/features/hero_story/presentation/providers/hero_story_experience_plan_controller.dart';
 import 'package:everyonesheroes/features/hero_story/presentation/providers/hero_story_experience_playback_controller.dart';
 import 'package:everyonesheroes/features/hero_story/presentation/providers/hero_story_playback_controller.dart';
 import 'package:everyonesheroes/features/hero_story/presentation/providers/hero_story_provider.dart';
 import 'package:everyonesheroes/features/hero_story/presentation/providers/hero_story_understanding_controller.dart';
+import 'package:everyonesheroes/features/hero_story/presentation/providers/hero_story_voice_rendering_controller.dart';
 import 'package:everyonesheroes/features/hero_story/presentation/screens/owned_story_detail_screen.dart';
 
 /// Hero-owned presentation of a saved Story.
 ///
 /// The canonical Story is unchanged. This screen plays the original recording
 /// and optionally surfaces a grounded captured-story reading (HS.12.3), a
-/// derived Story Experience Plan (HS.12.4), and playable experience
-/// presentation (HS.12.5).
+/// derived Story Experience Plan (HS.12.4), playable experience presentation
+/// (HS.12.5), and an explicitly authorized derived voice rendering (HS.12.6).
 class HeroStoryScreen extends ConsumerWidget {
   const HeroStoryScreen({required this.storyId, super.key});
 
@@ -83,6 +85,9 @@ class _HeroStoryBody extends ConsumerWidget {
     final experiencePlayback = hasExperiencePlan
         ? ref.watch(heroStoryExperiencePlaybackProvider(storyId))
         : const HeroStoryExperiencePlaybackState();
+    final voiceRendering = hasExperiencePlan
+        ? ref.watch(heroStoryVoiceRenderingProvider(storyId))
+        : const HeroStoryVoiceRenderingState();
     final recordingId = story.originalRecordingId;
 
     Future<void> stopExperienceIfBound() async {
@@ -92,6 +97,13 @@ class _HeroStoryBody extends ConsumerWidget {
       await ref
           .read(heroStoryExperiencePlaybackProvider(storyId).notifier)
           .stop();
+    }
+
+    Future<void> stopNarratedIfBound() async {
+      if (!hasExperiencePlan) {
+        return;
+      }
+      await ref.read(heroStoryVoiceRenderingProvider(storyId).notifier).stop();
     }
 
     return ListView(
@@ -170,6 +182,7 @@ class _HeroStoryBody extends ConsumerWidget {
                 ? null
                 : () async {
                     await stopExperienceIfBound();
+                    await stopNarratedIfBound();
                     if (playback.phase == HeroStoryPlaybackPhase.playing) {
                       await playbackController.pause();
                     } else {
@@ -308,6 +321,7 @@ class _HeroStoryBody extends ConsumerWidget {
                         final controller = ref.read(
                           heroStoryExperiencePlaybackProvider(storyId).notifier,
                         );
+                        await stopNarratedIfBound();
                         if (experiencePlayback.phase ==
                             HeroStoryExperiencePlaybackPhase.playing) {
                           await controller.pause();
@@ -410,6 +424,12 @@ class _HeroStoryBody extends ConsumerWidget {
             const SizedBox(height: 28),
             _StoryExperiencePlanSection(
               plan: experiencePlan.plan!,
+              theme: theme,
+            ),
+            const SizedBox(height: 28),
+            _StoryVoiceRenderingSection(
+              storyId: storyId,
+              state: voiceRendering,
               theme: theme,
             ),
           ],
@@ -698,6 +718,203 @@ class _StoryExperiencePlanSection extends StatelessWidget {
               '${plan.musicMood} · ${plan.musicEnergy} · ${plan.musicStyle}\n'
               '${plan.musicRationale}',
           theme: theme,
+        ),
+      ],
+    );
+  }
+}
+
+class _StoryVoiceRenderingSection extends ConsumerWidget {
+  const _StoryVoiceRenderingSection({
+    required this.storyId,
+    required this.state,
+    required this.theme,
+  });
+
+  final String storyId;
+  final HeroStoryVoiceRenderingState state;
+  final ThemeData theme;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final controller =
+        ref.read(heroStoryVoiceRenderingProvider(storyId).notifier);
+
+    return Column(
+      key: const ValueKey('hero-story-voice-section'),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Narrated version',
+          key: const ValueKey('hero-story-voice-title'),
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'A derived synthetic narration of your experience — not your '
+          'original recording, and not a rewrite of your story.',
+          key: const ValueKey('hero-story-voice-subtitle'),
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: 12),
+        if (!state.hasVoiceRenderingConsent) ...[
+          Text(
+            HeroStoryVoiceRenderingController.consentRequiredMessage,
+            key: const ValueKey('hero-story-voice-consent-needed'),
+            style: theme.textTheme.bodyMedium,
+          ),
+          const SizedBox(height: 12),
+          OutlinedButton.icon(
+            key: const ValueKey('hero-story-voice-grant-consent-button'),
+            onPressed: state.isRendering
+                ? null
+                : () => controller.grantVoiceRenderingConsent(),
+            icon: const Icon(Icons.verified_user_outlined),
+            label: const Text('Authorize AI voice narration'),
+          ),
+          const SizedBox(height: 12),
+        ],
+        OutlinedButton.icon(
+          key: const ValueKey('hero-story-create-narrated-button'),
+          onPressed: !state.canCreate || !state.hasVoiceRenderingConsent
+              ? null
+              : () => controller.createNarratedVersion(
+                    isRetry: state.phase == HeroStoryVoiceRenderingPhase.failed,
+                  ),
+          icon: state.isRendering
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Icon(Icons.record_voice_over_outlined),
+          label: Text(
+            state.phase == HeroStoryVoiceRenderingPhase.failed
+                ? 'Retry narrated version'
+                : state.hasArtifact
+                    ? 'Recreate narrated version'
+                    : 'Create narrated version',
+          ),
+        ),
+        if (state.isRendering) ...[
+          const SizedBox(height: 16),
+          Text(
+            HeroStoryVoiceRenderingController.renderingMessage,
+            key: const ValueKey('hero-story-voice-rendering'),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
+        if (state.errorMessage != null) ...[
+          const SizedBox(height: 16),
+          Text(
+            state.errorMessage!,
+            key: const ValueKey('hero-story-voice-error'),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.error,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Your original recording is still available.',
+            key: const ValueKey('hero-story-voice-error-recording'),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
+        if (state.rendering != null) ...[
+          const SizedBox(height: 16),
+          _NarratedArtifactSummary(
+            rendering: state.rendering!,
+            theme: theme,
+          ),
+          const SizedBox(height: 12),
+          FilledButton.tonalIcon(
+            key: const ValueKey('hero-story-play-narrated-button'),
+            onPressed: state.isRendering
+                ? null
+                : () async {
+                    if (state.phase == HeroStoryVoiceRenderingPhase.playing) {
+                      await controller.pause();
+                    } else if (state.phase ==
+                        HeroStoryVoiceRenderingPhase.paused) {
+                      await controller.resume();
+                    } else {
+                      await controller.playNarratedVersion();
+                    }
+                  },
+            icon: Icon(
+              state.phase == HeroStoryVoiceRenderingPhase.playing
+                  ? Icons.pause
+                  : Icons.play_circle_outline,
+            ),
+            label: Text(_narratedPlayLabel(state.phase)),
+          ),
+          if (state.phase == HeroStoryVoiceRenderingPhase.playing ||
+              state.phase == HeroStoryVoiceRenderingPhase.paused) ...[
+            const SizedBox(height: 8),
+            TextButton(
+              key: const ValueKey('hero-story-narrated-stop-button'),
+              onPressed: state.isRendering ? null : controller.stop,
+              child: const Text('Stop narrated version'),
+            ),
+          ],
+        ],
+      ],
+    );
+  }
+
+  static String _narratedPlayLabel(HeroStoryVoiceRenderingPhase phase) {
+    return switch (phase) {
+      HeroStoryVoiceRenderingPhase.playing => 'Pause narrated version',
+      HeroStoryVoiceRenderingPhase.paused => 'Resume narrated version',
+      HeroStoryVoiceRenderingPhase.rendering => 'Creating…',
+      HeroStoryVoiceRenderingPhase.idle ||
+      HeroStoryVoiceRenderingPhase.consentNeeded ||
+      HeroStoryVoiceRenderingPhase.ready ||
+      HeroStoryVoiceRenderingPhase.failed =>
+        'Play narrated version',
+    };
+  }
+}
+
+class _NarratedArtifactSummary extends StatelessWidget {
+  const _NarratedArtifactSummary({
+    required this.rendering,
+    required this.theme,
+  });
+
+  final StoryVoiceRenderingViewData rendering;
+  final ThemeData theme;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      key: const ValueKey('hero-story-voice-artifact'),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          rendering.modeLabel,
+          key: const ValueKey('hero-story-voice-mode'),
+          style: theme.textTheme.bodyMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Derived from experience plan ${rendering.experiencePlanId} '
+          '(${rendering.experiencePlanProcessingVersion}). '
+          'Generated audio — not the original recording.',
+          key: const ValueKey('hero-story-voice-provenance'),
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
         ),
       ],
     );

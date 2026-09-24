@@ -2633,3 +2633,99 @@ Rejected:
 - Collapsing original-recording play into experience play
 
 See: `docs/architecture/HS.12-AI-Hero-Story-Demo-Plan.md`
+
+# HS-ADR-076 Voice Rendering Is a Derived Presentation Artifact
+
+Status: Accepted
+
+Date: 2026-09-24
+
+Phase: HS.12.6 — Voice Rendering / AI Voice
+
+Decision:
+
+Introduce an explicitly authorized **derived voice rendering** of an owned Story
+experience. Generated voice audio is a presentation artifact. It is **not** the
+canonical Story, not the original recording, and not a rewrite of
+`CapturedStoryReading` or `StoryExperiencePlan`.
+
+## Architectural rule
+
+> The Hero owns the story. AI owns the presentation.
+
+Voice rendering must therefore:
+
+- produce a separately persisted derived artifact (`StoryVoiceRendering`)
+- retain provenance to Story, experience-plan id/version, and source transcript
+  representation
+- occur only after an **explicit user action**
+- require **explicit voice-rendering consent**
+  (`StoryConsent.voiceRenderingApprovedAt`)
+
+Voice-rendering consent is independent of:
+
+- recording consent
+- processing consent
+- publication consent
+- AI transformation consent
+- existence of an original recording or transcript
+
+Recording or AI-transformation consent alone must never unlock voice rendering.
+
+## Modes
+
+`VoiceRenderingMode` keeps ordinary synthetic narration distinct from future
+Hero-owned voice transformation and voice cloning. HS.12.6 v1 supports only:
+
+- `syntheticNarration` (ordinary TTS via the EH AI proxy)
+
+Unsupported modes are rejected at the application and proxy boundaries. This
+slice does not implement a voice marketplace, celebrity voices, or impersonation.
+
+## Architecture
+
+```text
+HeroStoryScreen (Create narrated version)
+  → RenderStoryVoiceUseCase
+      (ownership + voiceRendering consent + plan + transcript)
+  → VoiceRenderingPort
+  → ProxyVoiceRenderingAdapter
+  → EH AI proxy POST /story-voice-renderings
+  → OpenAI TTS (server-side only)
+  → StoryVoiceRendering + media bytes (durable local persistence)
+  → Play narrated version (persisted bytes only — no AI on Play)
+```
+
+The Flutter app never holds vendor credentials. There is no second AI gateway.
+
+`StoryExperiencePlayer` may optionally accept previously persisted presentation
+voice bytes for the voice track, but must never invoke AI or regenerate audio.
+HS.12.5 **Play my experience** continues to use the original recording by
+default. **Play my recording** remains unchanged.
+
+## Failure / fallback
+
+If consent is absent, the proxy/provider fails, audio is empty/malformed, or
+persistence fails:
+
+- do not persist a fake/partial artifact
+- keep the original recording playable
+- surface a recoverable error
+
+AI voice generation is never a prerequisite for playing the Hero's story.
+
+## Rejected
+
+- Mutating the canonical Story narrative or original recording
+- Rewriting CapturedStoryReading / StoryExperiencePlan
+- Inferring psychological traits, personality, motivation, trauma, or
+  mental-health conditions
+- Creating behavioral evidence from voice rendering
+- Discovery / personalization / recommendation logic
+- Automatic generation on open, save, plan generation, or Play
+- Regenerating audio on every Play
+- Treating AI transformation consent as voice-rendering consent
+- Vendor SDKs or credentials in Flutter / domain / application layers
+- Broad voice cloning / marketplace / celebrity impersonation in this slice
+
+See: `docs/architecture/HS.12-AI-Hero-Story-Demo-Plan.md`

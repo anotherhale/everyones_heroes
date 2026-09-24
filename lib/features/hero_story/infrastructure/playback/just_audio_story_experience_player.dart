@@ -64,10 +64,16 @@ final class JustAudioStoryExperiencePlayer implements StoryExperiencePlayer {
     required Uint8List originalRecordingBytes,
     required StoryExperiencePlan plan,
     int? transcriptLength,
+    Uint8List? presentationVoiceBytes,
   }) async {
     if (originalRecordingBytes.isEmpty) {
       throw StateError('Original recording is empty.');
     }
+
+    final voiceBytes = presentationVoiceBytes == null ||
+            presentationVoiceBytes.isEmpty
+        ? originalRecordingBytes
+        : presentationVoiceBytes;
 
     await _cancelSilence();
     await _positionSub?.cancel();
@@ -80,8 +86,8 @@ final class JustAudioStoryExperiencePlayer implements StoryExperiencePlayer {
     await _voice.setAudioSource(
       AudioSource.uri(
         Uri.dataFromBytes(
-          originalRecordingBytes,
-          mimeType: mimeTypeForOriginalRecordingBytes(originalRecordingBytes),
+          voiceBytes,
+          mimeType: mimeTypeForOriginalRecordingBytes(voiceBytes),
         ),
       ),
     );

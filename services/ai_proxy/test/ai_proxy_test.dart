@@ -858,6 +858,131 @@ void main() {
     );
     expect(config.chatModel, 'gpt-test');
   });
+
+  test('ProxyConfig reads speech model and voice', () {
+    final config = ProxyConfig.fromEnvironment(
+      environment: {
+        'OPENAI_API_KEY': 'k',
+        'OPENAI_SPEECH_MODEL': 'tts-1-hd',
+        'OPENAI_SPEECH_VOICE': 'nova',
+      },
+    );
+    expect(config.speechModel, 'tts-1-hd');
+    expect(config.speechVoice, 'nova');
+  });
+
+  group('StoryVoiceRenderingHandler', () {
+    late StoryVoiceRenderingHandler handler;
+    late _FakeSpeechClient speech;
+
+    Map<String, dynamic> requestBody({
+      String mode = 'syntheticNarration',
+      String sourceText = 'A grounded hero story transcript.',
+    }) {
+      return {
+        'storyId': 'story-1',
+        'experiencePlanId': 'plan-1',
+        'experiencePlanProcessingVersion': 'hs12.4.v1',
+        'sourceRepresentationId': 'transcript-1',
+        'sourceText': sourceText,
+        'renderingMode': mode,
+        'processingVersion': 'hs12.6.v1',
+      };
+    }
+
+    setUp(() {
+      speech = _FakeSpeechClient();
+      handler = StoryVoiceRenderingHandler(
+        config: const ProxyConfig(openAiApiKey: 'k', authToken: 'secret'),
+        client: speech,
+      );
+    });
+
+    test('rejects unauthorized requests', () async {
+      final middleware = handler.authMiddleware;
+      final inner = middleware((request) async => Response.ok('ok'));
+      final response = await inner(
+        Request(
+          'POST',
+          Uri.parse('http://localhost/story-voice-renderings'),
+        ),
+      );
+      expect(response.statusCode, 401);
+    });
+
+    test('rejects missing sourceText', () async {
+      final body = requestBody(sourceText: '  ');
+      final response = await handler.handleRender(
+        Request(
+          'POST',
+          Uri.parse('http://localhost/story-voice-renderings'),
+          body: jsonEncode(body),
+        ),
+      );
+      expect(response.statusCode, 400);
+    });
+
+    test('rejects unsupported renderingMode (voice cloning)', () async {
+      final response = await handler.handleRender(
+        Request(
+          'POST',
+          Uri.parse('http://localhost/story-voice-renderings'),
+          body: jsonEncode(requestBody(mode: 'voiceClone')),
+        ),
+      );
+      expect(response.statusCode, 400);
+      final decoded = jsonDecode(await response.readAsString()) as Map;
+      expect(decoded['error'], contains('syntheticNarration'));
+      expect(decoded['error'], contains('not voice cloning'));
+    });
+
+    test('returns base64 audio for synthetic narration', () async {
+      speech.audioBytes = utf8.encode('fake-mp3-bytes');
+      final response = await handler.handleRender(
+        Request(
+          'POST',
+          Uri.parse('http://localhost/story-voice-renderings'),
+          body: jsonEncode(requestBody()),
+        ),
+      );
+      expect(response.statusCode, 200);
+      final decoded =
+          jsonDecode(await response.readAsString()) as Map<String, dynamic>;
+      expect(decoded['renderingMode'], 'syntheticNarration');
+      expect(decoded['contentType'], 'audio/mpeg');
+      expect(decoded['providerLabel'], 'openai_tts_via_eh_proxy');
+      expect(decoded['processingVersion'], 'hs12.6.v1');
+      expect(decoded['audioBase64'], isNotEmpty);
+      expect(
+        utf8.decode(base64Decode(decoded['audioBase64'] as String)),
+        'fake-mp3-bytes',
+      );
+    });
+
+    test('maps provider failure to 502', () async {
+      speech.throwOnCall = true;
+      final response = await handler.handleRender(
+        Request(
+          'POST',
+          Uri.parse('http://localhost/story-voice-renderings'),
+          body: jsonEncode(requestBody()),
+        ),
+      );
+      expect(response.statusCode, 502);
+    });
+
+    test('rejects empty provider audio', () async {
+      speech.audioBytes = <int>[];
+      final response = await handler.handleRender(
+        Request(
+          'POST',
+          Uri.parse('http://localhost/story-voice-renderings'),
+          body: jsonEncode(requestBody()),
+        ),
+      );
+      expect(response.statusCode, 502);
+    });
+  });
 }
 
 final class _FakeOpenAiClient extends OpenAiTranscriptionClient {
@@ -906,5 +1031,33 @@ final class _FakeChatClient extends OpenAiChatClient {
       throw const OpenAiChatException('provider down');
     }
     return OpenAiChatResult(content: content);
+  }
+}
+
+final class _FakeSpeechClient extends OpenAiSpeechClient {
+  _FakeSpeechClient()
+      : super(
+          apiKey: 'x',
+          baseUrl: 'http://example.com',
+          model: 'tts-1',
+        );
+
+  List<int> audioBytes = utf8.encode('fake-mp3');
+  bool throwOnCall = false;
+
+  @override
+  Future<OpenAiSpeechResult> synthesize({
+    required String text,
+    String responseFormat = 'mp3',
+  }) async {
+    if (throwOnCall) {
+      throw const OpenAiSpeechException('provider down');
+    }
+    return OpenAiSpeechResult(
+      audioBytes: audioBytes,
+      contentType: 'audio/mpeg',
+      model: 'tts-1',
+      voice: 'alloy',
+    );
   }
 }

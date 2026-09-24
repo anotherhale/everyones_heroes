@@ -9,6 +9,8 @@ final class ProxyConfig {
     this.openAiBaseUrl = 'https://api.openai.com/v1',
     this.transcriptionModel = 'gpt-4o-mini-transcribe',
     this.chatModel = 'gpt-4o-mini',
+    this.speechModel = 'tts-1',
+    this.speechVoice = 'alloy',
     this.host = '0.0.0.0',
     this.port = 8787,
     this.authToken,
@@ -35,6 +37,12 @@ final class ProxyConfig {
       chatModel: env['OPENAI_CHAT_MODEL']?.trim().isNotEmpty == true
           ? env['OPENAI_CHAT_MODEL']!.trim()
           : 'gpt-4o-mini',
+      speechModel: env['OPENAI_SPEECH_MODEL']?.trim().isNotEmpty == true
+          ? env['OPENAI_SPEECH_MODEL']!.trim()
+          : 'tts-1',
+      speechVoice: env['OPENAI_SPEECH_VOICE']?.trim().isNotEmpty == true
+          ? env['OPENAI_SPEECH_VOICE']!.trim()
+          : 'alloy',
       host: env['EH_AI_PROXY_HOST']?.trim().isNotEmpty == true
           ? env['EH_AI_PROXY_HOST']!.trim()
           : '0.0.0.0',
@@ -49,6 +57,8 @@ final class ProxyConfig {
   final String openAiBaseUrl;
   final String transcriptionModel;
   final String chatModel;
+  final String speechModel;
+  final String speechVoice;
   final String host;
   final int port;
   final String? authToken;
