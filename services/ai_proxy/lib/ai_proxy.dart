@@ -1,4 +1,4 @@
-/// Everyone's Heroes AI proxy library (HS.11 / SB.7 / SB.8 / SB.11 / HS.12.3).
+/// Everyone's Heroes AI proxy library (HS.11 / SB.7 / SB.8 / SB.11 / HS.12.3 / HS.12.4).
 library;
 
 export 'src/captured_story_reading_handler.dart';
@@ -10,6 +10,8 @@ export 'src/story_authoring_handler.dart';
 export 'src/story_authoring_instructions.dart';
 export 'src/story_builder_coach_handler.dart';
 export 'src/story_builder_coach_instructions.dart';
+export 'src/story_experience_plan_handler.dart';
+export 'src/story_experience_plan_instructions.dart';
 export 'src/story_transcription_handler.dart';
 export 'src/story_understanding_handler.dart';
 export 'src/story_understanding_instructions.dart';

@@ -628,6 +628,220 @@ void main() {
     });
   });
 
+  group('StoryExperiencePlanHandler', () {
+    late StoryExperiencePlanHandler handler;
+    late _FakeChatClient chat;
+
+    const transcript =
+        'I was unsure at first. The challenge was hard. '
+        'Then I knew I had to step forward. And that is what I did.';
+
+    Map<String, dynamic> validPlan() => {
+          'intention': 'inspire',
+          'coreMessage': 'Step forward through uncertainty.',
+          'emotionalArc': 'perseverance',
+          'keyMoments': [
+            {
+              'id': 'km-1',
+              'description': 'Unsure at first',
+              'sourceSpan': {'startOffset': 0, 'endOffset': 22},
+            },
+            {
+              'id': 'km-2',
+              'description': 'Step forward',
+              'sourceSpan': {'startOffset': 47, 'endOffset': 80},
+            },
+          ],
+          'musicDirection': {
+            'mood': 'hopeful',
+            'energy': 'steady',
+            'style': 'acoustic',
+            'rationale': 'Supports the movement from challenge to action.',
+          },
+          'reflectionPrompt': 'Where are you being asked to step forward?',
+          'sequence': [
+            {'type': 'story'},
+            {'type': 'keyMoment', 'referenceId': 'km-1'},
+            {'type': 'keyMoment', 'referenceId': 'km-2'},
+            {'type': 'music'},
+            {'type': 'reflection'},
+          ],
+        };
+
+    Map<String, dynamic> requestBody() => {
+          'storyId': 's1',
+          'transcriptRepresentationId': 't1',
+          'transcriptText': transcript,
+          'processingVersion': 'hs12.4.v1',
+          'reading': {
+            'movement': {'text': 'Uncertainty to action'},
+          },
+        };
+
+    setUp(() {
+      chat = _FakeChatClient();
+      handler = StoryExperiencePlanHandler(
+        config: const ProxyConfig(
+          openAiApiKey: 'test-key',
+          authToken: 'secret',
+        ),
+        client: chat,
+      );
+    });
+
+    test('rejects unauthorized requests when auth token configured', () async {
+      final middleware = handler.authMiddleware;
+      final inner = middleware((request) async => Response.ok('ok'));
+      final response = await inner(
+        Request(
+          'POST',
+          Uri.parse('http://localhost/story-experience-plans'),
+        ),
+      );
+      expect(response.statusCode, 401);
+      final json = jsonDecode(await response.readAsString()) as Map;
+      expect(json['error'], 'unauthorized');
+    });
+
+    test('returns typed plan for valid request', () async {
+      chat.content = jsonEncode(validPlan());
+      final response = await handler.handleGenerate(
+        Request(
+          'POST',
+          Uri.parse('http://localhost/story-experience-plans'),
+          body: jsonEncode(requestBody()),
+        ),
+      );
+      expect(response.statusCode, 200);
+      final json = jsonDecode(await response.readAsString()) as Map;
+      expect(json['intention'], 'inspire');
+      expect(json['emotionalArc'], 'perseverance');
+      expect(json['keyMoments'], isA<List>());
+      expect(json['musicDirection'], isA<Map>());
+      expect(json['providerLabel'], 'openai_via_eh_proxy');
+      expect(json['storyId'], 's1');
+      expect(chat.lastSystemPrompt, contains('Do NOT diagnose'));
+      expect(chat.lastUserPrompt, contains('---BEGIN_TRANSCRIPT---'));
+    });
+
+    test('maps malformed body to 400', () async {
+      final response = await handler.handleGenerate(
+        Request(
+          'POST',
+          Uri.parse('http://localhost/story-experience-plans'),
+          body: 'not-json',
+        ),
+      );
+      expect(response.statusCode, 400);
+      final json = jsonDecode(await response.readAsString()) as Map;
+      expect(json['error'], contains('Malformed'));
+    });
+
+    test('maps provider failure to 502', () async {
+      chat.throwOnCall = true;
+      final response = await handler.handleGenerate(
+        Request(
+          'POST',
+          Uri.parse('http://localhost/story-experience-plans'),
+          body: jsonEncode(requestBody()),
+        ),
+      );
+      expect(response.statusCode, 502);
+      final json = jsonDecode(await response.readAsString()) as Map;
+      expect(json['error'], isNotEmpty);
+    });
+
+    test('rejects invalid enum', () async {
+      final bad = validPlan();
+      bad['intention'] = 'diagnosePersonality';
+      chat.content = jsonEncode(bad);
+      final response = await handler.handleGenerate(
+        Request(
+          'POST',
+          Uri.parse('http://localhost/story-experience-plans'),
+          body: jsonEncode(requestBody()),
+        ),
+      );
+      expect(response.statusCode, 502);
+    });
+
+    test('rejects invalid source span / out-of-range offsets', () async {
+      final bad = validPlan();
+      bad['keyMoments'] = [
+        {
+          'id': 'km-1',
+          'description': 'out of range',
+          'sourceSpan': {'startOffset': 0, 'endOffset': 9999},
+        },
+      ];
+      bad['sequence'] = [
+        {'type': 'keyMoment', 'referenceId': 'km-1'},
+      ];
+      chat.content = jsonEncode(bad);
+      final response = await handler.handleGenerate(
+        Request(
+          'POST',
+          Uri.parse('http://localhost/story-experience-plans'),
+          body: jsonEncode(requestBody()),
+        ),
+      );
+      expect(response.statusCode, 502);
+    });
+
+    test('rejects unsupported sequence type', () async {
+      final bad = validPlan();
+      bad['sequence'] = [
+        {'type': 'story'},
+        {'type': 'aiVoice'},
+      ];
+      chat.content = jsonEncode(bad);
+      final response = await handler.handleGenerate(
+        Request(
+          'POST',
+          Uri.parse('http://localhost/story-experience-plans'),
+          body: jsonEncode(requestBody()),
+        ),
+      );
+      expect(response.statusCode, 502);
+    });
+
+    test('rejects psychological claim fields', () async {
+      final bad = validPlan();
+      bad['traumaLevel'] = 'high';
+      chat.content = jsonEncode(bad);
+      final response = await handler.handleGenerate(
+        Request(
+          'POST',
+          Uri.parse('http://localhost/story-experience-plans'),
+          body: jsonEncode(requestBody()),
+        ),
+      );
+      expect(response.statusCode, 502);
+    });
+  });
+
+  group('StoryExperiencePlanInstructions', () {
+    test('prompt invariants', () {
+      const prompt = StoryExperiencePlanInstructions.systemPrompt;
+      expect(
+        StoryExperiencePlanInstructions.prohibitsPsychologicalClaims(prompt),
+        isTrue,
+      );
+      expect(
+        StoryExperiencePlanInstructions.requiresSourceSpans(prompt),
+        isTrue,
+      );
+      expect(
+        StoryExperiencePlanInstructions.prohibitsAudioGeneration(prompt),
+        isTrue,
+      );
+      expect(
+        StoryExperiencePlanInstructions.usesClosedVocabularies(prompt),
+        isTrue,
+      );
+    });
+  });
+
   test('ProxyConfig requires OPENAI_API_KEY', () {
     expect(
       () => ProxyConfig.fromEnvironment(environment: {}),
