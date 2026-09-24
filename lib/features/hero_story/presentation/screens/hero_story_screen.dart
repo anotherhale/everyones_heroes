@@ -77,12 +77,22 @@ class _HeroStoryBody extends ConsumerWidget {
     final experiencePlanController = ref.read(
       heroStoryExperiencePlanProvider(storyId).notifier,
     );
-    final experiencePlayback =
-        ref.watch(heroStoryExperiencePlaybackProvider(storyId));
-    final experiencePlaybackController = ref.read(
-      heroStoryExperiencePlaybackProvider(storyId).notifier,
-    );
+    // Only bind the experience player when a plan exists so earlier Hero Story
+    // surfaces (HS.12.2 / HS.12.3) do not construct just_audio experience players.
+    final hasExperiencePlan = experiencePlan.plan != null;
+    final experiencePlayback = hasExperiencePlan
+        ? ref.watch(heroStoryExperiencePlaybackProvider(storyId))
+        : const HeroStoryExperiencePlaybackState();
     final recordingId = story.originalRecordingId;
+
+    Future<void> stopExperienceIfBound() async {
+      if (!hasExperiencePlan) {
+        return;
+      }
+      await ref
+          .read(heroStoryExperiencePlaybackProvider(storyId).notifier)
+          .stop();
+    }
 
     return ListView(
       key: const ValueKey('hero-story-screen'),
@@ -159,7 +169,7 @@ class _HeroStoryBody extends ConsumerWidget {
             onPressed: playback.isBusy
                 ? null
                 : () async {
-                    await experiencePlaybackController.stop();
+                    await stopExperienceIfBound();
                     if (playback.phase == HeroStoryPlaybackPhase.playing) {
                       await playbackController.pause();
                     } else {
@@ -295,16 +305,19 @@ class _HeroStoryBody extends ConsumerWidget {
                         experiencePlan.isGenerating
                     ? null
                     : () async {
+                        final controller = ref.read(
+                          heroStoryExperiencePlaybackProvider(storyId).notifier,
+                        );
                         if (experiencePlayback.phase ==
                             HeroStoryExperiencePlaybackPhase.playing) {
-                          await experiencePlaybackController.pause();
+                          await controller.pause();
                         } else if (experiencePlayback.phase ==
                             HeroStoryExperiencePlaybackPhase.paused) {
-                          await experiencePlaybackController.resume(
+                          await controller.resume(
                             originalRecordingId: recordingId,
                           );
                         } else {
-                          await experiencePlaybackController.playExperience(
+                          await controller.playExperience(
                             originalRecordingId: recordingId,
                           );
                         }
@@ -323,7 +336,12 @@ class _HeroStoryBody extends ConsumerWidget {
                   key: const ValueKey('hero-story-experience-stop-button'),
                   onPressed: experiencePlayback.isBusy
                       ? null
-                      : experiencePlaybackController.stop,
+                      : () => ref
+                          .read(
+                            heroStoryExperiencePlaybackProvider(storyId)
+                                .notifier,
+                          )
+                          .stop(),
                   child: const Text('Stop experience'),
                 ),
               ],

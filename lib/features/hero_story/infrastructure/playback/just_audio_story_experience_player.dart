@@ -19,16 +19,23 @@ final class JustAudioStoryExperiencePlayer implements StoryExperiencePlayer {
     AudioPlayer? musicPlayer,
     StoryExperienceTimelineBuilder? timelineBuilder,
     this.assetLoader,
-  })  : _voice = voicePlayer ?? AudioPlayer(),
-        _music = musicPlayer ?? AudioPlayer(),
+  })  : _voiceOverride = voicePlayer,
+        _musicOverride = musicPlayer,
         _timelineBuilder =
             timelineBuilder ?? const StoryExperienceTimelineBuilder();
 
-  final AudioPlayer _voice;
-  final AudioPlayer _music;
+  final AudioPlayer? _voiceOverride;
+  final AudioPlayer? _musicOverride;
+  AudioPlayer? _voiceLazy;
+  AudioPlayer? _musicLazy;
   final StoryExperienceTimelineBuilder _timelineBuilder;
 
-  /// Optional override for loading stem bytes (tests). Defaults to rootBundle.
+  AudioPlayer get _voice =>
+      _voiceOverride ?? (_voiceLazy ??= AudioPlayer());
+  AudioPlayer get _music =>
+      _musicOverride ?? (_musicLazy ??= AudioPlayer());
+
+  /// Optional override for loading stem bytes (tests). Defaults to asset source.
   final Future<ByteData> Function(String assetPath)? assetLoader;
 
   final StreamController<StoryExperiencePlaybackSnapshot> _snapshots =
@@ -136,8 +143,12 @@ final class JustAudioStoryExperiencePlayer implements StoryExperiencePlayer {
   Future<void> pause() async {
     _userPaused = true;
     await _cancelSilence();
-    await _voice.pause();
-    await _music.pause();
+    try {
+      await _voice.pause();
+    } catch (_) {}
+    try {
+      await _music.pause();
+    } catch (_) {}
     _emit(
       StoryExperiencePlaybackSnapshot(
         phase: StoryExperiencePlaybackPhase.paused,
@@ -153,9 +164,13 @@ final class JustAudioStoryExperiencePlayer implements StoryExperiencePlayer {
     await _cancelSilence();
     await _positionSub?.cancel();
     _positionSub = null;
-    await _voice.stop();
-    await _voice.seek(Duration.zero);
-    await _music.stop();
+    try {
+      await _voice.stop();
+      await _voice.seek(Duration.zero);
+    } catch (_) {}
+    try {
+      await _music.stop();
+    } catch (_) {}
     _nextCueIndex = 0;
     _currentStem = null;
     _currentPurpose = null;
@@ -172,8 +187,16 @@ final class JustAudioStoryExperiencePlayer implements StoryExperiencePlayer {
     await _cancelSilence();
     await _positionSub?.cancel();
     await _voiceStateSub?.cancel();
-    await _voice.dispose();
-    await _music.dispose();
+    if (_voiceOverride != null || _voiceLazy != null) {
+      try {
+        await _voice.dispose();
+      } catch (_) {}
+    }
+    if (_musicOverride != null || _musicLazy != null) {
+      try {
+        await _music.dispose();
+      } catch (_) {}
+    }
     await _snapshots.close();
   }
 

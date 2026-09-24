@@ -14,6 +14,7 @@ import 'package:everyonesheroes/features/hero_story/application/providers/ai/sto
 import 'package:everyonesheroes/features/hero_story/application/providers/hero/active_local_hero_provider.dart';
 import 'package:everyonesheroes/features/hero_story/application/providers/media/story_media_storage_port_provider.dart';
 import 'package:everyonesheroes/features/hero_story/application/providers/playback/original_recording_player_provider.dart';
+import 'package:everyonesheroes/features/hero_story/application/providers/playback/story_experience_player_provider.dart';
 import 'package:everyonesheroes/features/hero_story/application/providers/recording/recording_providers.dart';
 import 'package:everyonesheroes/features/hero_story/application/providers/repositories/captured_story_reading_repository_provider.dart';
 import 'package:everyonesheroes/features/hero_story/application/providers/repositories/hero_repository_provider.dart';
@@ -37,6 +38,7 @@ import 'package:everyonesheroes/features/hero_story/infrastructure/ai/in_memory_
 import 'package:everyonesheroes/features/hero_story/infrastructure/ai/in_memory_story_transcription_adapter.dart';
 import 'package:everyonesheroes/features/hero_story/infrastructure/media/in_memory_story_media_storage_adapter.dart';
 import 'package:everyonesheroes/features/hero_story/infrastructure/playback/fake_original_recording_player.dart';
+import 'package:everyonesheroes/features/hero_story/infrastructure/playback/fake_story_experience_player.dart';
 import 'package:everyonesheroes/features/hero_story/infrastructure/recording/fake_device_recording_adapter.dart';
 import 'package:everyonesheroes/features/hero_story/infrastructure/repositories/in_memory_captured_story_reading_repository.dart';
 import 'package:everyonesheroes/features/hero_story/infrastructure/repositories/in_memory_hero_repository.dart';
@@ -64,6 +66,7 @@ void main() {
   late StoryExperiencePlannerPort plannerAdapter;
   late FakeDeviceRecordingAdapter recorder;
   late FakeOriginalRecordingPlayer player;
+  late FakeStoryExperiencePlayer experiencePlayer;
   late Directory tempDir;
   late HeroId heroId;
 
@@ -89,6 +92,7 @@ void main() {
       fakeBytes: 'original-captured-recording',
     );
     player = FakeOriginalRecordingPlayer();
+    experiencePlayer = FakeStoryExperiencePlayer();
     heroId = HeroId.generate();
 
     await heroes.save(
@@ -103,7 +107,8 @@ void main() {
     );
   });
 
-  tearDown(() {
+  tearDown(() async {
+    await experiencePlayer.dispose();
     if (tempDir.existsSync()) {
       tempDir.deleteSync(recursive: true);
     }
@@ -136,6 +141,9 @@ void main() {
         activeLocalHeroStoreProvider.overrideWithValue(ActiveLocalHeroStore()),
         originalRecordingPlayerFactoryProvider.overrideWithValue(
           FakeOriginalRecordingPlayerFactory(player),
+        ),
+        storyExperiencePlayerFactoryProvider.overrideWithValue(
+          FakeStoryExperiencePlayerFactory(experiencePlayer),
         ),
       ],
     );
