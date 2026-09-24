@@ -92,10 +92,18 @@ flutter analyze
 flutter test test/features/hero_story/application/use_cases/hs12_6_voice_rendering_use_case_test.dart
 flutter test test/features/hero_story/presentation/hs12_6_voice_rendering_ui_test.dart
 flutter test test/features/hero_story/domain/value_objects/story_consent_test.dart
-flutter test test/features/hero_story # HS.12.1–12.5 + related
-flutter test
+flutter test # full suite
 cd services/ai_proxy && dart test
 ```
+
+## Actual test results
+
+| Suite | Result |
+|-------|--------|
+| `flutter analyze` | No errors (79 pre-existing info-level lints) |
+| HS.12.1–HS.12.6 focused suites | **84/84 passed** |
+| Full `flutter test` | **1258/1258 passed** |
+| `services/ai_proxy` `dart test` | **43/43 passed** |
 
 ## Device validation status
 
