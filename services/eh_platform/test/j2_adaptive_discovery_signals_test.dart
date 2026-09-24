@@ -91,6 +91,63 @@ void main() {
       }
     });
 
+    test(
+      'matches catalog description phrase without theme name',
+      () async {
+        final reflection = Reflection.create(
+          id: ReflectionId('r-desc'),
+          journeyId: JourneyId('j1'),
+        );
+        reflection.addResponse(
+          const JournalResponse(
+            response:
+                'Lately I keep returning to helping others through lived '
+                'experience as what matters most.',
+          ),
+        );
+
+        final themes = await resolver.resolveThemes(reflection);
+
+        expect(themes, [NarrativeThemeReferenceIds.service]);
+      },
+    );
+
+    test(
+      'matches catalog alias phrase without theme name',
+      () async {
+        final reflection = Reflection.create(
+          id: ReflectionId('r-alias'),
+          journeyId: JourneyId('j1'),
+        );
+        reflection.addResponse(
+          const JournalResponse(
+            response:
+                'This week I have been taking responsibility for others '
+                'in ways I used to avoid.',
+          ),
+        );
+
+        final themes = await resolver.resolveThemes(reflection);
+
+        expect(themes, [NarrativeThemeReferenceIds.leadership]);
+      },
+    );
+
+    test('does not match partial-word false positives', () async {
+      final reflection = Reflection.create(
+        id: ReflectionId('r-partial'),
+        journeyId: JourneyId('j1'),
+      );
+      reflection.addResponse(
+        const JournalResponse(response: 'The car was serviced yesterday.'),
+      );
+
+      final themes = await resolver.resolveThemes(reflection);
+
+      expect(themes, [NarrativeThemeReferenceIds.discovery]);
+      expect(themes, isNot(contains(NarrativeThemeReferenceIds.service)));
+    });
+
     test('resolution is deterministic for identical inputs', () async {
       final reflection = Reflection.create(
         id: ReflectionId('r1'),

@@ -20,6 +20,7 @@ void main() {
         expect(theme.name, isNotEmpty);
         expect(theme.name, isNot(theme.id.value));
         expect(theme.description, isNotEmpty);
+        expect(theme.aliases, isNotEmpty);
         expect(ids.add(theme.id.value), isTrue, reason: 'duplicate ${theme.id}');
       }
     });

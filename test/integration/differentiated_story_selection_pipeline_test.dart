@@ -36,6 +36,9 @@ import '../features/life_journey/application/services/fake_behaviorial_evidence_
 
 /// Slice B DoD: Reflection → analysis (production theme resolver) → Today
 /// selects a different adaptive-story-* Story identity.
+///
+/// Slice C DoD: same pipeline with natural-language description/alias phrases
+/// (no literal catalog theme names required).
 void main() {
   late InMemoryJourneyRepository journeyRepository;
   late InMemoryReflectionRepository reflectionRepository;
@@ -172,6 +175,97 @@ void main() {
       expect(second.id, isNot(first.id));
     },
   );
+
+  test(
+    'natural-language description phrases differentiate Story identity',
+    () async {
+      final journey = Journey.create(
+        id: JourneyId.generate(),
+        vision: JourneyVision('Become someone who shows up.'),
+      );
+      await journeyRepository.save(journey);
+      currentJourneyContext.setCurrentJourney(journey.id);
+
+      final hero = Hero.create(
+        id: HeroId.generate(),
+        profile: HeroProfile(
+          displayName: 'Ada',
+          biography: 'Lived experience.',
+          experienceAreas: const ['Service'],
+          languages: [LanguageCode('en')],
+        ),
+        visibility: HeroVisibility.public,
+      );
+      await heroes.save(hero);
+
+      final storyA = await _seedPublishedStory(
+        stories,
+        hero: hero,
+        title: 'Story A Courage',
+        themes: [NarrativeThemeReferenceIds.courage],
+        createdAt: DateTime.utc(2026, 1, 1),
+      );
+      final storyB = await _seedPublishedStory(
+        stories,
+        hero: hero,
+        title: 'Story B Service',
+        themes: [NarrativeThemeReferenceIds.service],
+        createdAt: DateTime.utc(2026, 1, 2),
+      );
+
+      // Natural language uses catalog description for Courage
+      // ("Acting despite fear.") — not the theme name.
+      await _submitAndAnalyze(
+        analyzeReflectionUseCase,
+        reflectionRepository,
+        journeyId: journey.id,
+        journalText:
+            'Lately I notice myself acting despite fear in small moments.',
+        expectedTheme: NarrativeThemeReferenceIds.courage,
+      );
+
+      final first = (await getTodayExperienceUseCase.execute()).fold(
+        onSuccess: (value) => value,
+        onFailure: (error) => throw StateError(error),
+      );
+
+      expect(first.type, ExperienceType.story);
+      expect(first.id, 'adaptive-story-${storyA.id.value}');
+      expect(
+        (first.target as StoryExperienceTarget).storyId,
+        storyA.id,
+      );
+
+      // Natural language uses catalog description for Service
+      // ("Helping others through lived experience.") — not the theme name.
+      await _submitAndAnalyze(
+        analyzeReflectionUseCase,
+        reflectionRepository,
+        journeyId: journey.id,
+        journalText:
+            'I keep returning to helping others through lived experience '
+            'as my real direction.',
+        expectedTheme: NarrativeThemeReferenceIds.service,
+      );
+
+      final second = (await getTodayExperienceUseCase.execute()).fold(
+        onSuccess: (value) => value,
+        onFailure: (error) => throw StateError(error),
+      );
+
+      expect(second.type, ExperienceType.story);
+      expect(second.id, 'adaptive-story-${storyB.id.value}');
+      expect(
+        (second.target as StoryExperienceTarget).storyId,
+        storyB.id,
+      );
+      expect(second.id, isNot(first.id));
+      expect(
+        (second.target as StoryExperienceTarget).storyId,
+        isNot((first.target as StoryExperienceTarget).storyId),
+      );
+    },
+  );
 }
 
 Future<void> _submitAndAnalyze(
@@ -179,6 +273,7 @@ Future<void> _submitAndAnalyze(
   InMemoryReflectionRepository repository, {
   required JourneyId journeyId,
   required String journalText,
+  NarrativeThemeId? expectedTheme,
 }) async {
   final reflection = Reflection.create(
     id: ReflectionId.generate(),
@@ -200,6 +295,9 @@ Future<void> _submitAndAnalyze(
   final analyzed = await repository.findById(reflection.id);
   expect(analyzed, isNotNull);
   expect(analyzed!.narrativeThemes, isNotEmpty);
+  if (expectedTheme != null) {
+    expect(analyzed.narrativeThemes, contains(expectedTheme));
+  }
 }
 
 Future<Story> _seedPublishedStory(

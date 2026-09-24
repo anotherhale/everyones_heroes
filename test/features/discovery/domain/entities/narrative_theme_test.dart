@@ -48,5 +48,26 @@ void main() {
 
       expect(theme.id, id);
     });
+
+    test('exposes optional aliases', () {
+      final theme = NarrativeTheme(
+        id: NarrativeThemeId.generate(),
+        name: 'Leadership',
+        description: 'Guiding or taking responsibility for others.',
+        aliases: const ['taking responsibility for others', '  '],
+      );
+
+      expect(theme.aliases, ['taking responsibility for others']);
+    });
+
+    test('defaults aliases to empty', () {
+      final theme = NarrativeTheme(
+        id: NarrativeThemeId.generate(),
+        name: 'Courage',
+        description: 'Acting despite fear.',
+      );
+
+      expect(theme.aliases, isEmpty);
+    });
   });
 }
