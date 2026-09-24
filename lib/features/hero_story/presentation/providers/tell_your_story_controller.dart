@@ -320,14 +320,46 @@ final class TellYourStoryController extends Notifier<TellYourStoryUiState> {
   }
 
   Future<void> discard() async {
+    _elapsedTimer?.cancel();
     await stopReviewPlayback();
+    // Capture identity before discard clears it so Prepare can re-begin
+    // without another ensureActiveLocalHero round-trip.
+    final heroId = _session.heroId;
+    final language = _session.originalLanguage;
     await _session.discard();
-    _setState(state.copyWith(
-      step: TellYourStoryStep.prepare,
-      phase: _session.phase,
-      clearError: true,
-      isPlayingReview: false,
-    ));
+    // discard() clears session identity back to idle. continueToRecord() does
+    // not call beginSession(), so Prepare would otherwise look ready while
+    // startRecording() throws "Recording session has not been begun."
+    // Re-begin session identity for Prepare → Record (HS.12.1).
+    try {
+      if (heroId == null || language == null) {
+        await startFlow();
+        return;
+      }
+      await _session.beginSession(
+        heroId: heroId,
+        originalLanguage: language,
+      );
+      final permission = await _session.prepare();
+      _setState(state.copyWith(
+        step: TellYourStoryStep.prepare,
+        phase: _session.phase,
+        permissionStatus: permission,
+        elapsed: Duration.zero,
+        title: '',
+        clearError: true,
+        isPlayingReview: false,
+        isBusy: false,
+      ));
+    } catch (e) {
+      _setState(state.copyWith(
+        step: TellYourStoryStep.prepare,
+        phase: RecordingSessionPhase.failed,
+        isBusy: false,
+        errorMessage: e.toString(),
+        isPlayingReview: false,
+      ));
+    }
   }
 
   Future<void> acceptRecording() async {
