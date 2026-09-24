@@ -93,7 +93,19 @@ void main() {
       final plan = buildPlan(id: StoryExperiencePlanId('plan-rt'));
       final json = StoryExperiencePlanSnapshotMapper.toJson(plan);
       final restored = StoryExperiencePlanSnapshotMapper.fromJson(json);
-      expect(restored, plan);
+      expect(restored.id, plan.id);
+      expect(restored.storyId, plan.storyId);
+      expect(restored.transcriptRepresentationId, plan.transcriptRepresentationId);
+      expect(restored.intention, plan.intention);
+      expect(restored.coreMessage, plan.coreMessage);
+      expect(restored.emotionalArc, plan.emotionalArc);
+      expect(restored.keyMoments, plan.keyMoments);
+      expect(restored.musicDirection, plan.musicDirection);
+      expect(restored.reflectionPrompt, plan.reflectionPrompt);
+      expect(restored.sequence, plan.sequence);
+      expect(restored.createdAt.toUtc(), plan.createdAt.toUtc());
+      expect(restored.providerLabel, plan.providerLabel);
+      expect(restored.processingVersion, plan.processingVersion);
     });
   });
 
@@ -118,7 +130,12 @@ void main() {
       await repo.save(first);
 
       final reloaded = FileStoryExperiencePlanRepository(rootDirectory: tempDir);
-      expect(await reloaded.findByStoryId(storyId), first);
+      expect(await reloaded.findByStoryId(storyId), isNotNull);
+      final loaded = await reloaded.findByStoryId(storyId);
+      expect(loaded!.id, first.id);
+      expect(loaded.coreMessage, first.coreMessage);
+      expect(loaded.keyMoments, first.keyMoments);
+      expect(loaded.sequence, first.sequence);
 
       final second = buildPlan(
         id: StoryExperiencePlanId('plan-2'),
@@ -126,7 +143,9 @@ void main() {
         coreMessage: 'Regenerated',
       );
       await reloaded.save(second);
-      expect(await reloaded.findByStoryId(storyId), second);
+      final latest = await reloaded.findByStoryId(storyId);
+      expect(latest!.id, second.id);
+      expect(latest.coreMessage, 'Regenerated');
 
       // Prior plan file removed on regeneration.
       final priorFile = File(

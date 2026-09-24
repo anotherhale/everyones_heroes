@@ -1,6 +1,5 @@
 import 'package:everyonesheroes/core/ids/story_experience_plan_id.dart';
 import 'package:everyonesheroes/core/ids/story_id.dart';
-import 'package:everyonesheroes/features/hero_story/domain/repositories/story_experience_plan_repository.dart';
 import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_experience_plan.dart';
 
 /// Persistence boundary for derived [StoryExperiencePlan] artifacts (HS.12.4).

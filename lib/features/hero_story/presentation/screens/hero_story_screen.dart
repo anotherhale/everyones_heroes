@@ -235,6 +235,8 @@ class _HeroStoryBody extends ConsumerWidget {
             reading: understanding.reading!,
             theme: theme,
           ),
+        ],
+        if (understanding.reading != null) ...[
           const SizedBox(height: 20),
           OutlinedButton.icon(
             key: const ValueKey('hero-story-create-experience-button'),
@@ -250,7 +252,7 @@ class _HeroStoryBody extends ConsumerWidget {
                     height: 16,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : const Icon(Icons.auto_fix_outlined),
+                : const Icon(Icons.auto_awesome),
             label: Text(
               experiencePlan.phase == HeroStoryExperiencePlanPhase.failed
                   ? 'Retry experience plan'

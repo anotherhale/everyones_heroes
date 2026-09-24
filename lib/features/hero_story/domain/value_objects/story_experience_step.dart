@@ -5,12 +5,10 @@ import 'package:everyonesheroes/features/hero_story/domain/enums/story_experienc
 ///
 /// [referenceId] points at a plan element when needed (e.g. a key moment id).
 final class StoryExperienceStep extends ValueObject {
-  StoryExperienceStep({
+  const StoryExperienceStep({
     required this.type,
-    String? referenceId,
-  }) : referenceId = referenceId?.trim().isEmpty == true
-            ? null
-            : referenceId?.trim();
+    this.referenceId,
+  });
 
   final StoryExperienceStepType type;
   final String? referenceId;

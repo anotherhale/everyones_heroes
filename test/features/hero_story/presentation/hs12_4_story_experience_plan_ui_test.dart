@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:everyonesheroes/app/presentation/theme/app_theme.dart';
 import 'package:everyonesheroes/core/eventing/event_providers.dart';
@@ -213,9 +212,23 @@ void main() {
     expect(find.text('Play my recording'), findsOneWidget);
 
     final storyId = await understandStory(tester, container);
+    final understanding =
+        container.read(heroStoryUnderstandingProvider(storyId));
+    expect(understanding.phase, HeroStoryUnderstandingPhase.ready);
+    expect(understanding.reading, isNotNull);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('hero-story-reading-section')), findsOneWidget);
+
+    // ListView lazily builds below-the-fold children; scroll to surface the CTA.
+    await tester.drag(
+      find.byKey(const ValueKey('hero-story-screen')),
+      const Offset(0, -800),
+    );
+    await tester.pumpAndSettle();
+
     expect(
-      container.read(heroStoryUnderstandingProvider(storyId)).phase,
-      HeroStoryUnderstandingPhase.ready,
+      find.byKey(const ValueKey('hero-story-create-experience-button')),
+      findsOneWidget,
     );
     expect(find.text('Create my experience'), findsOneWidget);
     expect(
@@ -231,6 +244,11 @@ void main() {
     await captureThroughHeroStory(tester, container);
     final storyId = await understandStory(tester, container);
 
+    await tester.drag(
+      find.byKey(const ValueKey('hero-story-screen')),
+      const Offset(0, -800),
+    );
+    await tester.pumpAndSettle();
     await tester.ensureVisible(
       find.byKey(const ValueKey('hero-story-create-experience-button')),
     );
@@ -254,6 +272,15 @@ void main() {
       container.read(heroStoryExperiencePlanProvider(storyId)).phase,
       HeroStoryExperiencePlanPhase.success,
     );
+
+    await tester.drag(
+      find.byKey(const ValueKey('hero-story-screen')),
+      const Offset(0, -600),
+    );
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(
+      find.byKey(const ValueKey('hero-story-experience-section')),
+    );
     expect(
       find.byKey(const ValueKey('hero-story-experience-section')),
       findsOneWidget,
@@ -274,9 +301,14 @@ void main() {
       find.byKey(const ValueKey('hero-story-experience-music')),
       findsOneWidget,
     );
-    expect(find.text('Play my recording'), findsOneWidget);
 
+    await tester.drag(
+      find.byKey(const ValueKey('hero-story-screen')),
+      const Offset(0, 1200),
+    );
+    await tester.pumpAndSettle();
     await tester.ensureVisible(find.byKey(const ValueKey('hero-story-play-button')));
+    expect(find.text('Play my recording'), findsOneWidget);
     await tester.tap(find.byKey(const ValueKey('hero-story-play-button')));
     await tester.pumpAndSettle();
     expect(player.calls, containsAllInOrder(<String>['load', 'play']));
@@ -293,6 +325,11 @@ void main() {
     await captureThroughHeroStory(tester, container);
     final storyId = await understandStory(tester, container);
 
+    await tester.drag(
+      find.byKey(const ValueKey('hero-story-screen')),
+      const Offset(0, -800),
+    );
+    await tester.pumpAndSettle();
     await tester.ensureVisible(
       find.byKey(const ValueKey('hero-story-create-experience-button')),
     );
@@ -311,23 +348,39 @@ void main() {
     });
     await tester.pumpAndSettle();
 
+    await tester.ensureVisible(
+      find.byKey(const ValueKey('hero-story-experience-error')),
+    );
     expect(
       find.byKey(const ValueKey('hero-story-experience-error')),
       findsOneWidget,
     );
     expect(find.text('Retry experience plan'), findsOneWidget);
-    expect(find.text('Play my recording'), findsOneWidget);
     expect(
       find.byKey(const ValueKey('hero-story-experience-section')),
       findsNothing,
     );
 
+    await tester.drag(
+      find.byKey(const ValueKey('hero-story-screen')),
+      const Offset(0, 1200),
+    );
+    await tester.pumpAndSettle();
     await tester.ensureVisible(find.byKey(const ValueKey('hero-story-play-button')));
+    expect(find.text('Play my recording'), findsOneWidget);
     await tester.tap(find.byKey(const ValueKey('hero-story-play-button')));
     await tester.pumpAndSettle();
     expect(player.calls, containsAllInOrder(<String>['load', 'play']));
 
     toggle.fail = false;
+    await tester.drag(
+      find.byKey(const ValueKey('hero-story-screen')),
+      const Offset(0, -800),
+    );
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(
+      find.byKey(const ValueKey('hero-story-create-experience-button')),
+    );
     await tester.tap(
       find.byKey(const ValueKey('hero-story-create-experience-button')),
     );
@@ -343,11 +396,26 @@ void main() {
     });
     await tester.pumpAndSettle();
 
+    await tester.drag(
+      find.byKey(const ValueKey('hero-story-screen')),
+      const Offset(0, -600),
+    );
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(
+      find.byKey(const ValueKey('hero-story-experience-section')),
+    );
     expect(
       find.byKey(const ValueKey('hero-story-experience-section')),
       findsOneWidget,
     );
-    expect(find.text('Play my recording'), findsOneWidget);
+
+    await tester.drag(
+      find.byKey(const ValueKey('hero-story-screen')),
+      const Offset(0, 1200),
+    );
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(const ValueKey('hero-story-play-button')));
+    expect(find.byKey(const ValueKey('hero-story-play-button')), findsOneWidget);
   });
 }
 

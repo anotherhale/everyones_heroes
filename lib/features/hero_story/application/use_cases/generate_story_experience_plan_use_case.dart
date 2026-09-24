@@ -160,7 +160,9 @@ final class GenerateStoryExperiencePlanUseCase
         for (final step in draft.sequence)
           StoryExperienceStep(
             type: step.type,
-            referenceId: step.referenceId,
+            referenceId: step.referenceId?.trim().isEmpty == true
+                ? null
+                : step.referenceId?.trim(),
           ),
       ],
       createdAt: at,
