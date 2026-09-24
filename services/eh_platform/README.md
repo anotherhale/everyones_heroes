@@ -84,9 +84,10 @@ Idempotency: `Idempotency-Key` on submit (PF.3 `command_idempotency` table).
 
 Experience Selection is on-read from Journey understanding — no experience
 table. HS.8 Story composition uses `DiscoverableStoryCandidatePort`; platform
-bootstrap wires a J.2 Slice 3 transitional seeded Hero & Story adapter
-(replaceable by real HS persistence later). Unwired tests may still use the
-Empty fail-closed default.
+bootstrap wires a J.2 Slice 3 transitional seeded Hero & Story adapter.
+J.2 Slice 4 (live candidate projection) is planned — see
+`docs/architecture/J.2-Slice-4-Live-Story-Candidate-Discovery-Plan.md`.
+Unwired tests may still use the Empty fail-closed default.
 
 ## Tests
 
@@ -98,7 +99,8 @@ dart test
 
 ## Intentionally deferred / follow-ups
 
-- Replace transitional Story candidate seed with live Hero & Story persistence (J.2 Slice 4+)
+- Replace transitional Story candidate seed with live Hero & Story candidate
+  projection (J.2 Slice 4 — planned; see architecture doc)
 - DiscoveryProfile / Influence / public Discovery API (D.1 / J.2 Slices 5–6)
 - Content-aware theme classification beyond catalog-aligned `discovery`
 - Quest / Mission platform lifecycle
