@@ -1,7 +1,7 @@
 import 'package:test/test.dart';
 import 'dart:io';
 
-/// Architecture dependency direction tests for EH Platform H.2.
+/// Architecture dependency direction tests for EH Platform H.2 / J.1 / J.2.
 void main() {
   final libRoot = Directory('lib/src');
 
@@ -90,8 +90,7 @@ void main() {
     }
   });
 
-  test('experience does not import concrete Hero & Story candidate persistence',
-      () {
+  test('experience does not import Hero & Story candidate persistence', () {
     for (final file in dartFilesUnder('experience')) {
       expect(
         imports(file, 'seeded_story_candidate_catalog.dart'),
@@ -104,7 +103,33 @@ void main() {
         reason: file.path,
       );
       expect(
+        imports(file, 'postgres_story_candidate_source.dart'),
+        isFalse,
+        reason: file.path,
+      );
+      expect(
+        imports(file, 'discoverable_story_candidates'),
+        isFalse,
+        reason: file.path,
+      );
+      expect(
         imports(file, 'package:postgres/'),
+        isFalse,
+        reason: file.path,
+      );
+      expect(
+        imports(file, 'package:flutter/'),
+        isFalse,
+        reason: file.path,
+      );
+      // Experience must not reach into Flutter Story repositories.
+      expect(
+        imports(file, 'file_story_repository'),
+        isFalse,
+        reason: file.path,
+      );
+      expect(
+        imports(file, 'in_memory_story_repository'),
         isFalse,
         reason: file.path,
       );
@@ -135,11 +160,47 @@ void main() {
     }
   });
 
-  test('hero_story candidate adapter depends on Experience port, not SQL', () {
-    for (final file in dartFilesUnder('hero_story')) {
+  test('hero_story domain/application do not import SQL or Flutter', () {
+    for (final file in [
+      ...dartFilesUnder('hero_story/domain'),
+      ...dartFilesUnder('hero_story/application'),
+    ]) {
       expect(imports(file, 'package:postgres/'), isFalse, reason: file.path);
       expect(imports(file, 'package:shelf/'), isFalse, reason: file.path);
       expect(imports(file, 'package:flutter/'), isFalse, reason: file.path);
     }
+  });
+
+  test('hero_story infrastructure may use postgres but not Flutter/shelf', () {
+    for (final file in dartFilesUnder('hero_story/infrastructure')) {
+      expect(imports(file, 'package:shelf/'), isFalse, reason: file.path);
+      expect(imports(file, 'package:flutter/'), isFalse, reason: file.path);
+    }
+    final postgresSource = File(
+      '${libRoot.path}/hero_story/infrastructure/postgres_story_candidate_source.dart',
+    );
+    expect(postgresSource.existsSync(), isTrue);
+  });
+
+  test('production composition does not default to architectural seed', () {
+    final composition = File('${libRoot.path}/platform_composition.dart');
+    final source = composition.readAsStringSync();
+    expect(source.contains('composePostgres'), isTrue);
+    expect(source.contains('architecturalSeed()'), isFalse);
+    expect(
+      source.contains('SeededStoryCandidateCatalog.architecturalSeed'),
+      isFalse,
+    );
+
+    final module = File('${libRoot.path}/modules/hero_story/hero_story_module.dart');
+    final moduleSource = module.readAsStringSync();
+    // compose() must not silently default to architectural seed.
+    expect(
+      moduleSource.contains(
+        'candidateSource ?? SeededStoryCandidateCatalog.architecturalSeed()',
+      ),
+      isFalse,
+    );
+    expect(moduleSource.contains('composePostgres'), isTrue);
   });
 }

@@ -6,9 +6,9 @@ import 'package:eh_platform/src/experience/application/models/discoverable_story
 /// Default for unwired tests: [EmptyDiscoverableStoryCandidatePort]
 /// (fail-closed to UI.3 reflection).
 ///
-/// Platform composition (J.2 Slice 3) injects
-/// [SeededDiscoverableStoryCandidateAdapter] backed by a transitional
-/// Hero & Story seed catalog — replaceable by real HS persistence later.
+/// Platform composition (J.2 Slice 4) injects
+/// [DiscoverableStoryCandidateAdapter] backed by live
+/// [PostgresStoryCandidateSource] — Experience never sees projection SQL.
 abstract interface class DiscoverableStoryCandidatePort {
   Future<List<DiscoverableStoryCandidate>> findRelevant(
     AdaptiveDiscoverySignals signals, {
@@ -16,7 +16,7 @@ abstract interface class DiscoverableStoryCandidatePort {
   });
 }
 
-/// Transitional default — no platform Discovery/HS catalog yet.
+/// Fail-closed default when no Story candidate port is wired.
 final class EmptyDiscoverableStoryCandidatePort
     implements DiscoverableStoryCandidatePort {
   const EmptyDiscoverableStoryCandidatePort();

@@ -3,8 +3,8 @@ import 'package:eh_platform/src/shared_kernel/ids/narrative_theme_reference_ids.
 
 /// Minimal discoverable Story projection for adaptive Experience composition.
 ///
-/// This is **not** a second Story aggregate. Platform Hero & Story persistence
-/// is not yet migrated; J.2 Slice 3 uses this thin record so
+/// This is **not** a second Story aggregate. J.2 Slice 4 stores this shape in
+/// the `discoverable_story_candidates` Postgres table (derived data) so
 /// [DiscoverableStoryCandidatePort] can supply HS.8 candidates without
 /// inventing a parallel Story model.
 ///

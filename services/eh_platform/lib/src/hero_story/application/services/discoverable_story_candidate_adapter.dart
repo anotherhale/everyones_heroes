@@ -4,21 +4,26 @@ import 'package:eh_platform/src/experience/application/ports/discoverable_story_
 import 'package:eh_platform/src/hero_story/application/ports/story_candidate_source.dart';
 import 'package:eh_platform/src/hero_story/application/services/deterministic_story_relevance_ranker.dart';
 
-/// J.2 Slice 3 adapter: Hero & Story candidate source → Experience port.
+/// Hero & Story adapter: [StoryCandidateSource] → Experience port (J.2 Slice 4).
 ///
 /// ```text
 /// Experience
 ///     ↓
 /// DiscoverableStoryCandidatePort  (this adapter)
 ///     ↓
-/// StoryCandidateSource            (seed / future Postgres)
+/// StoryCandidateSource            (live Postgres projection / test double)
+///     ↓
+/// DeterministicStoryRelevanceRanker
 /// ```
+///
+/// Source-agnostic: production wires [PostgresStoryCandidateSource]; tests may
+/// inject [SeededStoryCandidateCatalog] or an in-memory projection.
 ///
 /// Does not move theme classification into Experience.
 /// Does not invent Stories when signals lack themes or overlap.
-final class SeededDiscoverableStoryCandidateAdapter
+final class DiscoverableStoryCandidateAdapter
     implements DiscoverableStoryCandidatePort {
-  const SeededDiscoverableStoryCandidateAdapter({
+  const DiscoverableStoryCandidateAdapter({
     required StoryCandidateSource candidateSource,
     DeterministicStoryRelevanceRanker ranker =
         const DeterministicStoryRelevanceRanker(),
@@ -48,3 +53,8 @@ final class SeededDiscoverableStoryCandidateAdapter
     return List.unmodifiable(ranked.take(limit));
   }
 }
+
+/// @Deprecated('Use DiscoverableStoryCandidateAdapter')
+/// Kept as a typedef so Slice 3 test imports keep compiling during rename.
+typedef SeededDiscoverableStoryCandidateAdapter
+    = DiscoverableStoryCandidateAdapter;

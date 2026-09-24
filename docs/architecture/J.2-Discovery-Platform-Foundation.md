@@ -1,10 +1,10 @@
 # J.2 — Discovery Platform Foundation
 
 - **Document type:** Architecture + Implementation Report
-- **Status:** Slices 1–3 implemented; Slice 4 planned (not implemented); Slices 5–6 not implemented
-- **Phase:** J.2 — Platform Narrative Theme Foundation + Story candidate seed
-- **Baseline:** J.1 complete (`a8d92ad` / PR #58); planning baseline after D.1 plan (`56db481` / PR #59); Slices 1–3 at `5a0a279` / PR #60
-- **Date:** 2026-09-23 (Slice 4 plan added 2026-09-24)
+- **Status:** Slices 1–4 implemented; Slices 5–6 not implemented
+- **Phase:** J.2 — Platform Narrative Theme Foundation + Live Story candidate discovery
+- **Baseline:** J.1 complete (`a8d92ad` / PR #58); planning baseline after D.1 plan (`56db481` / PR #59); Slices 1–3 at `5a0a279` / PR #60; Slice 4 plan at `db1225d` / PR #61
+- **Date:** 2026-09-24 (Slice 4 implementation)
 
 ---
 
@@ -15,7 +15,7 @@
 | **J.2 Slice 1** | Platform NarrativeTheme reference catalog | **COMPLETE** |
 | **J.2 Slice 2** | Resolve themes → AdaptiveDiscoverySignals (catalog-aligned) | **COMPLETE** |
 | **J.2 Slice 3** | Story candidate persistence / seeding | **COMPLETE** |
-| **J.2 Slice 4** | Live candidate discovery / ranking refinement | **PLANNED** — see [`J.2-Slice-4-Live-Story-Candidate-Discovery-Plan.md`](./J.2-Slice-4-Live-Story-Candidate-Discovery-Plan.md) |
+| **J.2 Slice 4** | Live candidate discovery / ranking refinement | **COMPLETE** — see [`J.2-Slice-4-Live-Story-Candidate-Discovery-Plan.md`](./J.2-Slice-4-Live-Story-Candidate-Discovery-Plan.md) |
 | **J.2 Slice 5** | DiscoveryProfile / Influence productization | **NOT IMPLEMENTED** (see D.1) |
 | **J.2 Slice 6** | Public Discovery REST / full personalization | **NOT IMPLEMENTED** |
 
@@ -274,9 +274,11 @@ Experience
     ↓
 DiscoverableStoryCandidatePort
     ↓
-SeededDiscoverableStoryCandidateAdapter
+DiscoverableStoryCandidateAdapter  (Slice 4 rename; was Seeded*)
     ↓
-StoryCandidateSource (SeededStoryCandidateCatalog)
+StoryCandidateSource
+  production: PostgresStoryCandidateSource
+  tests: SeededStoryCandidateCatalog / in-memory projection
 ```
 
 Adapter behavior:
@@ -289,12 +291,16 @@ Adapter behavior:
 Composition root (`PlatformComposition.bootstrap`) wires:
 
 ```dart
-HeroStoryModule.compose()  // architectural seed
+HeroStoryModule.composePostgres(database: database)  // live projection
 → ExperienceModule.compose(storyCandidatePort: heroStory.storyCandidatePort)
 ```
 
-Tests may omit the port (Empty fail-closed) or inject `SeededStoryCandidateCatalog.empty()`.
+Tests may omit the port (Empty fail-closed), inject
+`SeededStoryCandidateCatalog.architecturalSeed()` explicitly, or use an
+in-memory / Postgres projection via `ProjectDiscoverableStoryCandidateUseCase`.
 
+> **Slice 4 note:** Section 7 describes the Slice 3 seed path historically.
+> Production no longer defaults to the architectural seed — see §9b.
 ### 7.5 Deterministic relevance rule
 
 Ported from Flutter HS.8 `DeterministicStoryRelevanceRanker`:
@@ -391,8 +397,37 @@ No new SQL migrations were added for Slice 3 (transitional code-defined seed). E
 
 Also deferred to later slices:
 
-* Slice 4 — live candidate discovery / ranking refinement (replace seed with real HS store; refine without ML). **Planning complete:** [`J.2-Slice-4-Live-Story-Candidate-Discovery-Plan.md`](./J.2-Slice-4-Live-Story-Candidate-Discovery-Plan.md). Implementation not started.
+* Slice 4 — live candidate discovery / ranking refinement — **COMPLETE** (see Slice 4 plan + implementation notes below).
 * Slice 5/6 — DiscoveryProfile / broader Discovery capabilities (see D.1)
+
+---
+
+## 9b. Slice 4 — Live Story candidate discovery (summary)
+
+```text
+Story + Hero facts (Flutter authority today)
+        ↓
+AdaptiveStoryCandidateEligibilityPolicy (HS.6 + themes + authoritative rep)
+        ↓
+discoverable_story_candidates (Postgres projection)
+        ↓
+PostgresStoryCandidateSource
+        ↓
+DiscoverableStoryCandidateAdapter + DeterministicStoryRelevanceRanker
+        ↓
+DiscoverableStoryCandidatePort → AdaptiveExperienceComposer → Today
+```
+
+| Concern | Decision |
+|---------|----------|
+| Projection table | `discoverable_story_candidates` (`003_j2_discoverable_story_candidates.sql`) |
+| Production source | `PostgresStoryCandidateSource` via `HeroStoryModule.composePostgres` |
+| Seed | Test fixture only (`SeededStoryCandidateCatalog`) — not production default |
+| Sync | Transitional `ProjectDiscoverableStoryCandidateUseCase` (Phase 7 replaces) |
+| Ranking | Unchanged: themeOverlap → patternBoost → updatedAt DESC → storyId ASC |
+| Fail-closed | Empty / no overlap → default reflection |
+
+Full detail: [`J.2-Slice-4-Live-Story-Candidate-Discovery-Plan.md`](./J.2-Slice-4-Live-Story-Candidate-Discovery-Plan.md).
 
 ---
 
@@ -426,3 +461,18 @@ Also deferred to later slices:
 * [x] No J.1 API contract change
 * [x] No Flutter redesign / dual-catalog consolidation
 * [x] No SQL migration required for Slice 3 seed
+
+### Slice 4
+
+* [x] `DiscoverableStoryCandidatePort` unchanged as Experience seam
+* [x] Live Postgres projection replaces seed as platform production default
+* [x] No second Story aggregate on platform
+* [x] Eligibility mirrors HS.6 Story + Hero (+ catalog themes + authoritative rep)
+* [x] No new discoverable lifecycle flag as source of truth
+* [x] Ranking remains deterministic (no ML)
+* [x] Fail-closed reflection behavior preserved
+* [x] Narrative themes remain Discovery-owned
+* [x] AdaptiveDiscoverySignals remain the only user-understanding input to candidates
+* [x] DiscoveryProfile not required
+* [x] Architecture + integration + regression suites updated
+* [x] Phase 7 full HS migration not dragged into Slice 4

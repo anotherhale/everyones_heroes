@@ -44,6 +44,7 @@ Migrations (ordered):
 
 1. `001_platform_foundation.sql` — identity, sessions, command_idempotency
 2. `002_h2_life_journey.sql` — journeys, reflections (FK → identity_users)
+3. `003_j2_discoverable_story_candidates.sql` — live Story candidate projection (J.2 Slice 4)
 
 ## Foundation endpoints (PF.3)
 
@@ -84,9 +85,11 @@ Idempotency: `Idempotency-Key` on submit (PF.3 `command_idempotency` table).
 
 Experience Selection is on-read from Journey understanding — no experience
 table. HS.8 Story composition uses `DiscoverableStoryCandidatePort`; platform
-bootstrap wires a J.2 Slice 3 transitional seeded Hero & Story adapter.
-J.2 Slice 4 (live candidate projection) is planned — see
-`docs/architecture/J.2-Slice-4-Live-Story-Candidate-Discovery-Plan.md`.
+bootstrap wires a **live** Hero & Story Postgres candidate projection
+(`PostgresStoryCandidateSource` / `discoverable_story_candidates`).
+The Slice 3 architectural seed remains a test fixture only — never the
+production default. Fail-closed reflection remains the only Today Experience
+fallback when no eligible/relevant Story exists.
 Unwired tests may still use the Empty fail-closed default.
 
 ## Tests
@@ -99,8 +102,8 @@ dart test
 
 ## Intentionally deferred / follow-ups
 
-- Replace transitional Story candidate seed with live Hero & Story candidate
-  projection (J.2 Slice 4 — planned; see architecture doc)
+- Full Hero & Story platform migration (Phase 7) — replace transitional
+  `ProjectDiscoverableStoryCandidateUseCase` with Story/Hero event reactors
 - DiscoveryProfile / Influence / public Discovery API (D.1 / J.2 Slices 5–6)
 - Content-aware theme classification beyond catalog-aligned `discovery`
 - Quest / Mission platform lifecycle

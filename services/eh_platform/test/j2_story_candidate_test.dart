@@ -44,12 +44,15 @@ Handler _j2Handler({
       .addHandler(modules);
 }
 
-/// Compose Life Journey + Discovery + Hero & Story seed + Experience.
+/// Compose Life Journey + Discovery + Hero & Story + Experience.
+///
+/// Slice 3 regression tests still use the architectural seed as an **explicit**
+/// fixture. Production composition uses the live Postgres projection (Slice 4).
 ({
   LifeJourneyComponents lifeJourney,
   ExperienceComponents experience,
   HeroStoryComponents heroStory,
-}) _composeSlice3({
+}) _composeWithCandidates({
   StoryCandidateSource? candidateSource,
 }) {
   final eventStore = InMemoryEventStore();
@@ -66,7 +69,8 @@ Handler _j2Handler({
     reflectionRepository: lifeJourney.reflectionRepository,
   );
   final heroStory = HeroStoryModule.compose(
-    candidateSource: candidateSource,
+    candidateSource:
+        candidateSource ?? SeededStoryCandidateCatalog.architecturalSeed(),
   );
   final experience = ExperienceModule.compose(
     transactions: lifeJourney.transactions,
@@ -242,10 +246,12 @@ void main() {
     });
   });
 
-  group('SeededDiscoverableStoryCandidateAdapter', () {
+  group('DiscoverableStoryCandidateAdapter', () {
     test('no signal themes → empty candidates (patterns alone insufficient)',
         () async {
-      final heroStory = HeroStoryModule.compose();
+      final heroStory = HeroStoryModule.compose(
+        candidateSource: SeededStoryCandidateCatalog.architecturalSeed(),
+      );
       final result = await heroStory.storyCandidatePort.findRelevant(
         AdaptiveDiscoverySignals(),
       );
@@ -254,7 +260,9 @@ void main() {
 
     test('matching themes return ranked DiscoverableStoryCandidate list',
         () async {
-      final heroStory = HeroStoryModule.compose();
+      final heroStory = HeroStoryModule.compose(
+        candidateSource: SeededStoryCandidateCatalog.architecturalSeed(),
+      );
       final result = await heroStory.storyCandidatePort.findRelevant(
         AdaptiveDiscoverySignals(
           narrativeThemeIds: const ['discovery'],
@@ -265,15 +273,26 @@ void main() {
       expect(result.first.themeOverlapCount, greaterThan(0));
       expect(result.first.matchedThemeIds, contains('discovery'));
     });
+
+    test('HeroStoryModule.compose() defaults to empty (not architectural seed)',
+        () async {
+      final heroStory = HeroStoryModule.compose();
+      final result = await heroStory.storyCandidatePort.findRelevant(
+        AdaptiveDiscoverySignals(
+          narrativeThemeIds: const ['discovery'],
+        ),
+      );
+      expect(result, isEmpty);
+    });
   });
 
-  group('J.2 Slice 3 vertical integration', () {
+  group('J.2 Slice 3 vertical integration (seed fixture)', () {
     late LifeJourneyComponents lifeJourney;
     late ExperienceComponents experience;
     final userId = UserId('00000000-0000-4000-8000-0000000000s3');
 
     setUp(() {
-      final composed = _composeSlice3();
+      final composed = _composeWithCandidates();
       lifeJourney = composed.lifeJourney;
       experience = composed.experience;
     });
@@ -325,7 +344,7 @@ void main() {
     test(
       'Case B: signals present but empty candidate source → default-reflection',
       () async {
-        final composed = _composeSlice3(
+        final composed = _composeWithCandidates(
           candidateSource: SeededStoryCandidateCatalog.empty(),
         );
         final lj = composed.lifeJourney;
@@ -435,7 +454,7 @@ void main() {
 
   group('J.2 Slice 3 HTTP GET /v1/experiences/today', () {
     test('Case A over HTTP returns adaptive Story DTO', () async {
-      final composed = _composeSlice3();
+      final composed = _composeWithCandidates();
       final userId = UserId('00000000-0000-4000-8000-0000000000s3');
       final principal = AuthenticatedPrincipal(
         userId: userId,
@@ -486,7 +505,7 @@ void main() {
   group('J.1 regression with Slice 3 wiring (Case E)', () {
     test('no Reflection themes → fail-closed reflection (not arbitrary Story)',
         () async {
-      final composed = _composeSlice3();
+      final composed = _composeWithCandidates();
       final userId = UserId('00000000-0000-4000-8000-0000000000s3');
       await composed.lifeJourney.application.createJourney(
         userId: userId,

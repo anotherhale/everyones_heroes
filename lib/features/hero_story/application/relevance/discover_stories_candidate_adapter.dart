@@ -9,6 +9,15 @@ import 'package:everyonesheroes/features/life_journey/application/ports/discover
 /// HS.8 candidate adapter: Discover* eligibility + deterministic relevance.
 ///
 /// Never uses Search* or raw repositories for seeker-facing candidates.
+///
+/// ## Dual-stack parity (J.2 Slice 4)
+///
+/// Flutter remains authoritative for local Story/Hero aggregates and uses this
+/// live Discover* path. EH Platform Today Experience uses a derived
+/// `discoverable_story_candidates` projection with the same HS.6 eligibility
+/// semantics (+ catalog themes + authoritative representation) — not this
+/// adapter. Temporary difference: platform candidates are projection-synced
+/// (transitional upsert), not queried from Flutter File/InMemory repos.
 final class DiscoverStoriesCandidateAdapter
     implements DiscoverableStoryCandidatePort {
   const DiscoverStoriesCandidateAdapter({
