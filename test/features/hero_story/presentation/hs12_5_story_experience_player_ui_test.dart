@@ -6,6 +6,9 @@ import 'package:everyonesheroes/core/eventing/in_memory_event_bus.dart';
 import 'package:everyonesheroes/core/eventing/in_memory_event_dispatcher.dart';
 import 'package:everyonesheroes/core/eventing/in_memory_event_store.dart';
 import 'package:everyonesheroes/core/ids/hero_id.dart';
+import 'package:everyonesheroes/core/ids/story_experience_plan_id.dart';
+import 'package:everyonesheroes/core/ids/story_id.dart';
+import 'package:everyonesheroes/core/ids/story_representation_id.dart';
 import 'package:everyonesheroes/core/shared_kernel/language_code.dart';
 import 'package:everyonesheroes/features/hero_story/application/capture/capture_completion_store.dart';
 import 'package:everyonesheroes/features/hero_story/application/providers/ai/captured_story_reading_port_provider.dart';
@@ -27,12 +30,18 @@ import 'package:everyonesheroes/features/hero_story/application/transcription/st
 import 'package:everyonesheroes/features/hero_story/application/understanding/transcription_completion_store.dart';
 import 'package:everyonesheroes/features/hero_story/domain/aggregates/hero.dart'
     as hs;
-import 'package:everyonesheroes/features/hero_story/domain/aggregates/story.dart';
 import 'package:everyonesheroes/features/hero_story/domain/enums/hero_visibility.dart';
+import 'package:everyonesheroes/features/hero_story/domain/enums/story_experience_arc.dart';
+import 'package:everyonesheroes/features/hero_story/domain/enums/story_experience_intention.dart';
+import 'package:everyonesheroes/features/hero_story/domain/enums/story_experience_step_type.dart';
 import 'package:everyonesheroes/features/hero_story/domain/services/captured_story_reading_port.dart';
 import 'package:everyonesheroes/features/hero_story/domain/services/story_experience_planner_port.dart';
-import 'package:everyonesheroes/features/hero_story/domain/value_objects/captured_story_reading.dart';
 import 'package:everyonesheroes/features/hero_story/domain/value_objects/hero_profile.dart';
+import 'package:everyonesheroes/features/hero_story/domain/value_objects/source_span_reference.dart';
+import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_experience_moment.dart';
+import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_experience_music_direction.dart';
+import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_experience_plan.dart';
+import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_experience_step.dart';
 import 'package:everyonesheroes/features/hero_story/infrastructure/ai/in_memory_captured_story_reading_adapter.dart';
 import 'package:everyonesheroes/features/hero_story/infrastructure/ai/in_memory_story_experience_planner_adapter.dart';
 import 'package:everyonesheroes/features/hero_story/infrastructure/ai/in_memory_story_transcription_adapter.dart';
@@ -65,12 +74,11 @@ void main() {
   late CapturedStoryReadingPort readingAdapter;
   late StoryExperiencePlannerPort plannerAdapter;
   late FakeDeviceRecordingAdapter recorder;
-  late FakeOriginalRecordingPlayer player;
+  late FakeOriginalRecordingPlayer originalPlayer;
   late FakeStoryExperiencePlayer experiencePlayer;
   late Directory tempDir;
   late HeroId heroId;
 
-  const heroName = 'Local Hero';
   const storyTitle = 'Stepping Forward';
 
   setUp(() async {
@@ -85,13 +93,13 @@ void main() {
     transcriptionAdapter = InMemoryStoryTranscriptionAdapter();
     readingAdapter = InMemoryCapturedStoryReadingAdapter();
     plannerAdapter = InMemoryStoryExperiencePlannerAdapter();
-    tempDir = Directory.systemTemp.createTempSync('hs12-4-ui-');
+    tempDir = Directory.systemTemp.createTempSync('hs12-5-ui-');
     recorder = FakeDeviceRecordingAdapter(
       outputDirectory: tempDir,
       initialPermission: DevicePermissionStatus.granted,
       fakeBytes: 'original-captured-recording',
     );
-    player = FakeOriginalRecordingPlayer();
+    originalPlayer = FakeOriginalRecordingPlayer();
     experiencePlayer = FakeStoryExperiencePlayer();
     heroId = HeroId.generate();
 
@@ -99,7 +107,7 @@ void main() {
       hs.Hero.create(
         id: heroId,
         profile: HeroProfile(
-          displayName: heroName,
+          displayName: 'Local Hero',
           languages: [LanguageCode('en')],
         ),
         visibility: HeroVisibility.private,
@@ -140,7 +148,7 @@ void main() {
         deviceRecordingPortProvider.overrideWithValue(recorder),
         activeLocalHeroStoreProvider.overrideWithValue(ActiveLocalHeroStore()),
         originalRecordingPlayerFactoryProvider.overrideWithValue(
-          FakeOriginalRecordingPlayerFactory(player),
+          FakeOriginalRecordingPlayerFactory(originalPlayer),
         ),
         storyExperiencePlayerFactoryProvider.overrideWithValue(
           FakeStoryExperiencePlayerFactory(experiencePlayer),
@@ -194,7 +202,9 @@ void main() {
     ProviderContainer container,
   ) async {
     final storyId = (await stories.findAll()).single.id.value;
-    await tester.tap(find.byKey(const ValueKey('hero-story-understand-button')));
+    await tester.tap(
+      find.byKey(const ValueKey('hero-story-understand-button')),
+    );
     await tester.runAsync(() async {
       for (var i = 0; i < 60; i++) {
         final phase =
@@ -210,48 +220,11 @@ void main() {
     return storyId;
   }
 
-  testWidgets('idle: Create my experience appears only after reading',
-      (tester) async {
-    final container = buildContainer();
-    addTearDown(container.dispose);
-
-    await captureThroughHeroStory(tester, container);
-    expect(find.text('Create my experience'), findsNothing);
-    expect(find.text('Play my recording'), findsOneWidget);
-
-    final storyId = await understandStory(tester, container);
-    final understanding =
-        container.read(heroStoryUnderstandingProvider(storyId));
-    expect(understanding.phase, HeroStoryUnderstandingPhase.ready);
-    expect(understanding.reading, isNotNull);
-    await tester.pumpAndSettle();
-    expect(find.byKey(const ValueKey('hero-story-reading-section')), findsOneWidget);
-
-    // ListView lazily builds below-the-fold children; scroll to surface the CTA.
-    await tester.drag(
-      find.byKey(const ValueKey('hero-story-screen')),
-      const Offset(0, -800),
-    );
-    await tester.pumpAndSettle();
-
-    expect(
-      find.byKey(const ValueKey('hero-story-create-experience-button')),
-      findsOneWidget,
-    );
-    expect(find.text('Create my experience'), findsOneWidget);
-    expect(
-      container.read(heroStoryExperiencePlanProvider(storyId)).phase,
-      HeroStoryExperiencePlanPhase.idle,
-    );
-  });
-
-  testWidgets('success state shows grounded plan summary', (tester) async {
-    final container = buildContainer();
-    addTearDown(container.dispose);
-
-    await captureThroughHeroStory(tester, container);
-    final storyId = await understandStory(tester, container);
-
+  Future<void> createExperience(
+    WidgetTester tester,
+    ProviderContainer container,
+    String storyId,
+  ) async {
     await tester.drag(
       find.byKey(const ValueKey('hero-story-screen')),
       const Offset(0, -800),
@@ -275,98 +248,148 @@ void main() {
       }
     });
     await tester.pumpAndSettle();
+  }
 
-    expect(
-      container.read(heroStoryExperiencePlanProvider(storyId)).phase,
-      HeroStoryExperiencePlanPhase.success,
-    );
+  testWidgets(
+    'Create my experience when no plan; Play my experience when plan exists',
+    (tester) async {
+      final container = buildContainer();
+      addTearDown(container.dispose);
 
-    await tester.drag(
-      find.byKey(const ValueKey('hero-story-screen')),
-      const Offset(0, -600),
-    );
-    await tester.pumpAndSettle();
-    await tester.ensureVisible(
-      find.byKey(const ValueKey('hero-story-experience-section')),
-    );
-    expect(
-      find.byKey(const ValueKey('hero-story-experience-section')),
-      findsOneWidget,
-    );
-    expect(
-      find.byKey(const ValueKey('hero-story-experience-intention')),
-      findsOneWidget,
-    );
-    expect(
-      find.byKey(const ValueKey('hero-story-experience-core-message')),
-      findsOneWidget,
-    );
-    expect(
-      find.byKey(const ValueKey('hero-story-experience-reflection')),
-      findsOneWidget,
-    );
-    expect(
-      find.byKey(const ValueKey('hero-story-experience-music')),
-      findsOneWidget,
-    );
+      await captureThroughHeroStory(tester, container);
+      final storyId = await understandStory(tester, container);
 
-    await tester.drag(
-      find.byKey(const ValueKey('hero-story-screen')),
-      const Offset(0, 1200),
-    );
-    await tester.pumpAndSettle();
-    await tester.ensureVisible(find.byKey(const ValueKey('hero-story-play-button')));
-    expect(find.text('Play my recording'), findsOneWidget);
-    await tester.tap(find.byKey(const ValueKey('hero-story-play-button')));
-    await tester.pumpAndSettle();
-    expect(player.calls, containsAllInOrder(<String>['load', 'play']));
-  });
+      await tester.drag(
+        find.byKey(const ValueKey('hero-story-screen')),
+        const Offset(0, -800),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Create my experience'), findsOneWidget);
+      expect(find.text('Play my experience'), findsNothing);
 
-  testWidgets('failure keeps recording playable and supports retry', (
+      await createExperience(tester, container, storyId);
+      expect(
+        container.read(heroStoryExperiencePlanProvider(storyId)).phase,
+        HeroStoryExperiencePlanPhase.success,
+      );
+
+      await tester.ensureVisible(
+        find.byKey(const ValueKey('hero-story-play-experience-button')),
+      );
+      expect(find.text('Play my experience'), findsOneWidget);
+      expect(find.text('Refresh experience plan'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'Play my experience loads persisted plan without regenerating',
+    (tester) async {
+      final container = buildContainer();
+      addTearDown(container.dispose);
+
+      await captureThroughHeroStory(tester, container);
+      final storyId = await understandStory(tester, container);
+      await createExperience(tester, container, storyId);
+
+      final planBefore = await plans.findByStoryId(StoryId(storyId));
+      expect(planBefore, isNotNull);
+      final planIdBefore = planBefore!.id;
+
+      await tester.ensureVisible(
+        find.byKey(const ValueKey('hero-story-play-experience-button')),
+      );
+      await tester.tap(
+        find.byKey(const ValueKey('hero-story-play-experience-button')),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        experiencePlayer.calls,
+        containsAllInOrder(<String>['load', 'play']),
+      );
+      expect(experiencePlayer.loadedPlan?.id, planIdBefore);
+      expect(experiencePlayer.invokedAi, isFalse);
+      expect(experiencePlayer.regeneratedPlan, isFalse);
+
+      final planAfter = await plans.findByStoryId(StoryId(storyId));
+      expect(planAfter?.id, planIdBefore);
+
+      expect(find.text('Stop experience'), findsOneWidget);
+      expect(find.text('Pause experience'), findsOneWidget);
+
+      await tester.tap(
+        find.byKey(const ValueKey('hero-story-experience-stop-button')),
+      );
+      await tester.pumpAndSettle();
+      expect(experiencePlayer.calls, contains('stop'));
+    },
+  );
+
+  testWidgets(
+    'original recording remains available during and after experience',
+    (tester) async {
+      final container = buildContainer();
+      addTearDown(container.dispose);
+
+      await captureThroughHeroStory(tester, container);
+      final storyId = await understandStory(tester, container);
+      await createExperience(tester, container, storyId);
+
+      await tester.ensureVisible(
+        find.byKey(const ValueKey('hero-story-play-experience-button')),
+      );
+      await tester.tap(
+        find.byKey(const ValueKey('hero-story-play-experience-button')),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.drag(
+        find.byKey(const ValueKey('hero-story-screen')),
+        const Offset(0, 1200),
+      );
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(
+        find.byKey(const ValueKey('hero-story-play-button')),
+      );
+
+      await tester.tap(find.byKey(const ValueKey('hero-story-play-button')));
+      await tester.pumpAndSettle();
+      expect(
+        originalPlayer.calls,
+        containsAllInOrder(<String>['load', 'play']),
+      );
+      expect(experiencePlayer.calls, contains('stop'));
+    },
+  );
+
+  testWidgets('experience error leaves original playback available', (
     tester,
   ) async {
-    final toggle = _TogglePlannerPort();
-    plannerAdapter = toggle;
+    experiencePlayer.failOnPlay = true;
     final container = buildContainer();
     addTearDown(container.dispose);
 
     await captureThroughHeroStory(tester, container);
     final storyId = await understandStory(tester, container);
+    await createExperience(tester, container, storyId);
 
-    await tester.drag(
-      find.byKey(const ValueKey('hero-story-screen')),
-      const Offset(0, -800),
-    );
-    await tester.pumpAndSettle();
     await tester.ensureVisible(
-      find.byKey(const ValueKey('hero-story-create-experience-button')),
+      find.byKey(const ValueKey('hero-story-play-experience-button')),
     );
     await tester.tap(
-      find.byKey(const ValueKey('hero-story-create-experience-button')),
+      find.byKey(const ValueKey('hero-story-play-experience-button')),
     );
-    await tester.runAsync(() async {
-      for (var i = 0; i < 40; i++) {
-        final phase =
-            container.read(heroStoryExperiencePlanProvider(storyId)).phase;
-        if (phase == HeroStoryExperiencePlanPhase.failed) {
-          break;
-        }
-        await Future<void>.delayed(const Duration(milliseconds: 25));
-      }
-    });
     await tester.pumpAndSettle();
 
-    await tester.ensureVisible(
-      find.byKey(const ValueKey('hero-story-experience-error')),
-    );
     expect(
-      find.byKey(const ValueKey('hero-story-experience-error')),
+      find.byKey(const ValueKey('hero-story-experience-playback-error')),
       findsOneWidget,
     );
-    expect(find.text('Retry experience plan'), findsOneWidget);
     expect(
-      find.byKey(const ValueKey('hero-story-experience-section')),
-      findsNothing,
+      find.byKey(
+        const ValueKey('hero-story-experience-playback-error-recording'),
+      ),
+      findsOneWidget,
     );
 
     await tester.drag(
@@ -374,46 +397,38 @@ void main() {
       const Offset(0, 1200),
     );
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.byKey(const ValueKey('hero-story-play-button')));
-    expect(find.text('Play my recording'), findsOneWidget);
+    await tester.ensureVisible(
+      find.byKey(const ValueKey('hero-story-play-button')),
+    );
     await tester.tap(find.byKey(const ValueKey('hero-story-play-button')));
     await tester.pumpAndSettle();
-    expect(player.calls, containsAllInOrder(<String>['load', 'play']));
+    expect(originalPlayer.calls, contains('play'));
+  });
 
-    toggle.fail = false;
-    await tester.drag(
-      find.byKey(const ValueKey('hero-story-screen')),
-      const Offset(0, -800),
-    );
-    await tester.pumpAndSettle();
+  testWidgets('missing plan fails safely and keeps original recording', (
+    tester,
+  ) async {
+    final container = buildContainer();
+    addTearDown(container.dispose);
+
+    await captureThroughHeroStory(tester, container);
+    final storyId = await understandStory(tester, container);
+    await createExperience(tester, container, storyId);
+
+    final existing = await plans.findByStoryId(StoryId(storyId));
+    expect(existing, isNotNull);
+    await plans.delete(existing!.id);
+
     await tester.ensureVisible(
-      find.byKey(const ValueKey('hero-story-create-experience-button')),
+      find.byKey(const ValueKey('hero-story-play-experience-button')),
     );
     await tester.tap(
-      find.byKey(const ValueKey('hero-story-create-experience-button')),
+      find.byKey(const ValueKey('hero-story-play-experience-button')),
     );
-    await tester.runAsync(() async {
-      for (var i = 0; i < 40; i++) {
-        final phase =
-            container.read(heroStoryExperiencePlanProvider(storyId)).phase;
-        if (phase == HeroStoryExperiencePlanPhase.success) {
-          break;
-        }
-        await Future<void>.delayed(const Duration(milliseconds: 25));
-      }
-    });
     await tester.pumpAndSettle();
 
-    await tester.drag(
-      find.byKey(const ValueKey('hero-story-screen')),
-      const Offset(0, -600),
-    );
-    await tester.pumpAndSettle();
-    await tester.ensureVisible(
-      find.byKey(const ValueKey('hero-story-experience-section')),
-    );
     expect(
-      find.byKey(const ValueKey('hero-story-experience-section')),
+      find.byKey(const ValueKey('hero-story-experience-playback-error')),
       findsOneWidget,
     );
 
@@ -422,31 +437,99 @@ void main() {
       const Offset(0, 1200),
     );
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.byKey(const ValueKey('hero-story-play-button')));
-    expect(find.byKey(const ValueKey('hero-story-play-button')), findsOneWidget);
-  });
-}
-
-final class _TogglePlannerPort implements StoryExperiencePlannerPort {
-  bool fail = true;
-  final InMemoryStoryExperiencePlannerAdapter _ok =
-      InMemoryStoryExperiencePlannerAdapter();
-
-  @override
-  Future<StoryExperiencePlanDraft> generate({
-    required Story story,
-    required CapturedStoryReading reading,
-    required String transcriptText,
-  }) {
-    if (fail) {
-      throw const StoryExperiencePlannerException('temporary');
-    }
-    return _ok.generate(
-      story: story,
-      reading: reading,
-      transcriptText: transcriptText,
+    await tester.ensureVisible(
+      find.byKey(const ValueKey('hero-story-play-button')),
     );
-  }
+    await tester.tap(find.byKey(const ValueKey('hero-story-play-button')));
+    await tester.pumpAndSettle();
+    expect(originalPlayer.calls, contains('play'));
+  });
+
+  testWidgets('Story remains unchanged after experience play', (tester) async {
+    final container = buildContainer();
+    addTearDown(container.dispose);
+
+    await captureThroughHeroStory(tester, container);
+    final storyId = await understandStory(tester, container);
+    await createExperience(tester, container, storyId);
+
+    final storyBefore = await stories.findById(StoryId(storyId));
+    expect(storyBefore, isNotNull);
+    final titleBefore = storyBefore!.title.value;
+    final narrativeBefore = storyBefore.narrative.value;
+    final representationsBefore = storyBefore.representations.length;
+    final readingBefore = await readings.findByStoryId(StoryId(storyId));
+
+    await tester.ensureVisible(
+      find.byKey(const ValueKey('hero-story-play-experience-button')),
+    );
+    await tester.tap(
+      find.byKey(const ValueKey('hero-story-play-experience-button')),
+    );
+    await tester.pumpAndSettle();
+
+    final storyAfter = await stories.findById(StoryId(storyId));
+    expect(storyAfter?.title.value, titleBefore);
+    expect(storyAfter?.narrative.value, narrativeBefore);
+    expect(storyAfter?.representations.length, representationsBefore);
+    final readingAfter = await readings.findByStoryId(StoryId(storyId));
+    expect(readingAfter?.id, readingBefore?.id);
+    expect(experiencePlayer.loadedBytes, isNotNull);
+  });
+
+  testWidgets('back navigation remains functional from Hero Story', (
+    tester,
+  ) async {
+    final container = buildContainer();
+    addTearDown(container.dispose);
+
+    await captureThroughHeroStory(tester, container);
+    expect(find.byKey(const ValueKey('hero-story-screen')), findsOneWidget);
+    expect(find.byKey(const ValueKey('hero-story-app-bar')), findsOneWidget);
+
+    final navigator = Navigator.of(
+      tester.element(find.byKey(const ValueKey('hero-story-screen'))),
+    );
+    // Capture pushes Hero Story onto the stack; back must remain available.
+    expect(navigator.canPop(), isTrue);
+  });
+
+  test('invalid plan is rejected at domain boundary, not silently repaired', () {
+    final transcriptId = StoryRepresentationId('t1');
+    expect(
+      () => StoryExperiencePlan(
+        id: StoryExperiencePlanId('bad'),
+        storyId: StoryId('s1'),
+        transcriptRepresentationId: transcriptId,
+        intention: StoryExperienceIntention.inspire,
+        coreMessage: 'x',
+        emotionalArc: StoryExperienceArc.challenge,
+        keyMoments: [
+          StoryExperienceMoment(
+            id: 'km-1',
+            description: 'ok',
+            sourceSpan: SourceSpanReference(
+              representationId: transcriptId,
+              startOffset: 0,
+              endOffset: 1,
+            ),
+          ),
+        ],
+        musicDirection: StoryExperienceMusicDirection(
+          mood: 'm',
+          energy: 'e',
+          style: 's',
+          rationale: 'r',
+        ),
+        reflectionPrompt: 'p',
+        sequence: const [
+          StoryExperienceStep(type: StoryExperienceStepType.music),
+        ],
+        createdAt: DateTime.utc(2026, 9, 24),
+      ),
+      throwsArgumentError,
+    );
+  });
 }
 
 class _PreviousScreen extends StatelessWidget {
