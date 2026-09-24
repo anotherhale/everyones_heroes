@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:everyonesheroes/features/life_journey/application/models/adaptive_experience.dart';
 import 'package:everyonesheroes/features/life_journey/presentation/models/today_experience_view_model.dart';
 import 'package:everyonesheroes/features/life_journey/presentation/providers/today_experience_provider.dart';
 import 'package:everyonesheroes/features/life_journey/presentation/screens/experience_screen.dart';
@@ -140,6 +141,16 @@ class _ExperienceCard extends StatelessWidget {
             ),
             if (experience.rationale != null) ...[
               const SizedBox(height: 16),
+              if (experience.experienceType == ExperienceType.story) ...[
+                Text(
+                  'Why this Story?',
+                  key: const ValueKey('today-why-this-story'),
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 6),
+              ],
               Text(
                 experience.rationale!,
                 key: const ValueKey('today-experience-rationale'),
