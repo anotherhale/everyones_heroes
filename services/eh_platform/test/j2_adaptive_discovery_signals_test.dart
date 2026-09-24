@@ -55,7 +55,7 @@ void main() {
   group('CatalogAlignedNarrativeThemeResolver', () {
     const resolver = CatalogAlignedNarrativeThemeResolver();
 
-    test('emits only catalog-valid IDs (never self-discovery)', () async {
+    test('unrecognized content falls back to catalog discovery', () async {
       final reflection = Reflection.create(
         id: ReflectionId('r1'),
         journeyId: JourneyId('j1'),
@@ -72,15 +72,41 @@ void main() {
       expect(themes, [NarrativeThemeReferenceIds.discovery]);
     });
 
+    test('matches catalog theme names from reflection content', () async {
+      final reflection = Reflection.create(
+        id: ReflectionId('r-content'),
+        journeyId: JourneyId('j1'),
+      );
+      reflection.addResponse(
+        const JournalResponse(
+          response: 'Today I found courage when I spoke up.',
+        ),
+      );
+
+      final themes = await resolver.resolveThemes(reflection);
+
+      expect(themes, [NarrativeThemeReferenceIds.courage]);
+      for (final theme in themes) {
+        expect(NarrativeThemeReferenceIds.contains(theme), isTrue);
+      }
+    });
+
     test('resolution is deterministic for identical inputs', () async {
       final reflection = Reflection.create(
         id: ReflectionId('r1'),
         journeyId: JourneyId('j1'),
       );
+      reflection.addResponse(
+        const JournalResponse(response: 'Service and purpose matter.'),
+      );
 
       final a = await resolver.resolveThemes(reflection);
       final b = await resolver.resolveThemes(reflection);
       expect(a.map((e) => e.value).toList(), b.map((e) => e.value).toList());
+      expect(a, [
+        NarrativeThemeReferenceIds.service,
+        NarrativeThemeReferenceIds.purpose,
+      ]);
     });
   });
 
