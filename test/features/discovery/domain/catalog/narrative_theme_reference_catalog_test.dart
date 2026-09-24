@@ -15,6 +15,8 @@ void main() {
         expect(byId.containsKey(id), isTrue, reason: 'Missing catalog entry $id');
         expect(byId[id]!.name, isNotEmpty);
         expect(byId[id]!.name, isNot(id.value));
+        expect(byId[id]!.description, isNotEmpty);
+        expect(byId[id]!.aliases, isNotEmpty);
       }
     });
 

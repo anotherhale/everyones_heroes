@@ -1,6 +1,7 @@
 import 'package:everyonesheroes/core/ids/narrative_theme_id.dart';
 import 'package:everyonesheroes/core/ids/narrative_theme_reference_ids.dart';
 import 'package:everyonesheroes/features/discovery/domain/catalog/narrative_theme_reference_catalog.dart';
+import 'package:everyonesheroes/features/discovery/domain/entities/narrative_theme.dart';
 import 'package:everyonesheroes/features/life_journey/domain/aggregates/reflection.dart';
 import 'package:everyonesheroes/features/life_journey/domain/entities/reflection/choice_response.dart';
 import 'package:everyonesheroes/features/life_journey/domain/entities/reflection/journal_response.dart';
@@ -8,18 +9,29 @@ import 'package:everyonesheroes/features/life_journey/domain/entities/reflection
 import 'package:everyonesheroes/features/life_journey/domain/entities/reflection/reflection_response.dart';
 import 'package:everyonesheroes/features/life_journey/domain/services/narrative_theme_resolver.dart';
 
-/// Discovery catalog-aligned [NarrativeThemeResolver] (J.2 Slice 2 + Slice B).
+/// Discovery catalog-aligned [NarrativeThemeResolver] (J.2 + Slice B + Slice C).
 ///
 /// Emits only IDs from [NarrativeThemeReferenceIds].
 ///
 /// ## Mapping (deterministic, content-aware)
 ///
-/// Resolves themes by matching reflection response text against catalog theme
-/// **names** (case-insensitive whole-phrase). Multiple matches are preserved
-/// in catalog order. When no catalog name matches, falls back to
-/// [NarrativeThemeReferenceIds.discovery] (prior always-emit behavior).
+/// Resolves themes by matching normalized reflection response text against
+/// catalog phrases in this per-theme order:
 ///
-/// Does not use AI. Does not invent non-catalog IDs.
+/// 1. Whole catalog **name** phrase
+/// 2. Whole catalog **description** phrase
+/// 3. Whole catalog **alias** phrase
+///
+/// Matching is case-insensitive and punctuation-tolerant (punctuation becomes
+/// whitespace; whitespace is collapsed). Phrases must match as whole phrases
+/// (`\b…\b`) so `"courage"` does not match `"discourage"` and `"service"` does
+/// not match `"serviced"`.
+///
+/// Multiple matching themes are preserved in **catalog order** (existing
+/// Slice B tie rule). When no phrase matches, falls back to
+/// [NarrativeThemeReferenceIds.discovery].
+///
+/// Does not use AI. Does not invent non-catalog IDs. Does not select Stories.
 final class CatalogAlignedNarrativeThemeResolver
     implements NarrativeThemeResolver {
   const CatalogAlignedNarrativeThemeResolver();
@@ -36,7 +48,7 @@ final class CatalogAlignedNarrativeThemeResolver
 
     final matched = <NarrativeThemeId>[];
     for (final theme in NarrativeThemeReferenceCatalog.themes) {
-      if (_containsPhrase(haystack, theme.name)) {
+      if (_themeMatches(haystack, theme)) {
         matched.add(theme.id);
       }
     }
@@ -48,12 +60,27 @@ final class CatalogAlignedNarrativeThemeResolver
     return List.unmodifiable(matched);
   }
 
+  static bool _themeMatches(String haystack, NarrativeTheme theme) {
+    if (_containsPhrase(haystack, theme.name)) {
+      return true;
+    }
+    if (_containsPhrase(haystack, theme.description)) {
+      return true;
+    }
+    for (final alias in theme.aliases) {
+      if (_containsPhrase(haystack, alias)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   static String _collectResponseText(Reflection reflection) {
     final parts = <String>[];
     for (final response in reflection.responses) {
       parts.addAll(_textParts(response));
     }
-    return parts.join(' ').toLowerCase();
+    return _normalize(parts.join(' '));
   }
 
   static Iterable<String> _textParts(ReflectionResponse response) {
@@ -71,9 +98,18 @@ final class CatalogAlignedNarrativeThemeResolver
     };
   }
 
+  /// Lowercase; strip punctuation to spaces; collapse whitespace.
+  static String _normalize(String text) {
+    return text
+        .toLowerCase()
+        .replaceAll(RegExp(r"[^\w\s']+"), ' ')
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
+  }
+
   /// Whole-phrase match so "courage" does not match "discourage".
   static bool _containsPhrase(String haystack, String phrase) {
-    final needle = phrase.trim().toLowerCase();
+    final needle = _normalize(phrase);
     if (needle.isEmpty) {
       return false;
     }
