@@ -2,8 +2,11 @@ import 'package:eh_platform/src/life_journey/domain/patterns/behavior_pattern.da
 
 /// Signals that may strengthen HS.8 Story composition rationale.
 ///
-/// Built from Journey understanding inputs. Theme ids default empty until a
-/// later Discovery/HS platform wiring phase supplies them.
+/// Consumption DTO for Experience Selection / [AdaptiveExperienceComposer].
+/// Theme IDs are resolved by Discovery ([AdaptiveDiscoverySignalPort]) and
+/// must be catalog-valid NarrativeTheme reference IDs (J.2).
+///
+/// Patterns remain Journey understanding inputs (Life Journey authority).
 final class AdaptiveDiscoverySignals {
   AdaptiveDiscoverySignals({
     List<String> narrativeThemeIds = const [],

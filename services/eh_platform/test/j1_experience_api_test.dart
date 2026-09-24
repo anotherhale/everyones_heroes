@@ -122,9 +122,13 @@ void main() {
         eventBus: eventBus,
         eventDispatcher: dispatcher,
       );
+      final discovery = DiscoveryModule.compose(
+        reflectionRepository: lifeJourney.reflectionRepository,
+      );
       experience = ExperienceModule.compose(
         transactions: lifeJourney.transactions,
         journeyRepository: lifeJourney.journeyRepository,
+        discoverySignalPort: discovery.adaptiveDiscoverySignalPort,
       );
     });
 
@@ -216,9 +220,13 @@ void main() {
         eventBus: eventBus,
         eventDispatcher: dispatcher,
       );
+      final discovery = DiscoveryModule.compose(
+        reflectionRepository: lifeJourney.reflectionRepository,
+      );
       experience = ExperienceModule.compose(
         transactions: lifeJourney.transactions,
         journeyRepository: lifeJourney.journeyRepository,
+        discoverySignalPort: discovery.adaptiveDiscoverySignalPort,
       );
 
       final handler = j1TestHandler(
@@ -336,9 +344,13 @@ void main() {
         eventBus: eventBus,
         eventDispatcher: dispatcher,
       );
+      final discovery = DiscoveryModule.compose(
+        reflectionRepository: lifeJourney.reflectionRepository,
+      );
       final experience = ExperienceModule.compose(
         transactions: lifeJourney.transactions,
         journeyRepository: lifeJourney.journeyRepository,
+        discoverySignalPort: discovery.adaptiveDiscoverySignalPort,
       );
 
       final handler = const Pipeline()

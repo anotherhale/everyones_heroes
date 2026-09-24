@@ -22,7 +22,9 @@ import 'package:eh_platform/src/identity/infrastructure/bearer_token_authenticat
 import 'package:eh_platform/src/identity/infrastructure/identity_repository.dart';
 import 'package:eh_platform/src/identity/infrastructure/postgres_identity_repository.dart';
 import 'package:eh_platform/src/logging/platform_logger.dart';
+import 'package:eh_platform/src/modules/discovery/discovery_module.dart';
 import 'package:eh_platform/src/modules/experience/experience_module.dart';
+import 'package:eh_platform/src/modules/hero_story/hero_story_module.dart';
 import 'package:eh_platform/src/modules/life_journey/life_journey_module.dart';
 import 'package:eh_platform/src/persistence/database.dart';
 import 'package:eh_platform/src/persistence/migration_runner.dart';
@@ -49,6 +51,8 @@ final class PlatformComposition {
     required this.issueDevSessionHandler,
     required this.aiOrchestration,
     required this.lifeJourney,
+    required this.discovery,
+    required this.heroStory,
     required this.experience,
     required this.handler,
     required this.migrationsDirectory,
@@ -68,6 +72,8 @@ final class PlatformComposition {
   final IssueDevSessionHandler issueDevSessionHandler;
   final AiOrchestrationPort aiOrchestration;
   final LifeJourneyComponents lifeJourney;
+  final DiscoveryComponents discovery;
+  final HeroStoryComponents heroStory;
   final ExperienceComponents experience;
   final Handler handler;
   final String migrationsDirectory;
@@ -155,9 +161,18 @@ final class PlatformComposition {
       eventDispatcher: eventDispatcher,
     );
 
+    final discovery = DiscoveryModule.compose(
+      reflectionRepository: lifeJourney.reflectionRepository,
+    );
+
+    // J.2 Slice 3: transitional seeded Story candidates → HS.8 seam.
+    final heroStory = HeroStoryModule.compose();
+
     final experience = ExperienceModule.compose(
       transactions: lifeJourney.transactions,
       journeyRepository: lifeJourney.journeyRepository,
+      discoverySignalPort: discovery.adaptiveDiscoverySignalPort,
+      storyCandidatePort: heroStory.storyCandidatePort,
     );
 
     final openApiDocument = File(openApiPath).existsSync()
@@ -201,6 +216,8 @@ final class PlatformComposition {
           IssueDevSessionHandler(identityRepository: identityRepository),
       aiOrchestration: aiOrchestration,
       lifeJourney: lifeJourney,
+      discovery: discovery,
+      heroStory: heroStory,
       experience: experience,
       handler: handler,
       migrationsDirectory: migrationsDir,

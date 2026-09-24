@@ -83,8 +83,10 @@ Identity: `Authorization: Bearer <token>` resolved by PF.3 Identity
 Idempotency: `Idempotency-Key` on submit (PF.3 `command_idempotency` table).
 
 Experience Selection is on-read from Journey understanding — no experience
-table. HS.8 Story composition seam exists via
-`DiscoverableStoryCandidatePort` (defaults empty until Discovery/HS wiring).
+table. HS.8 Story composition uses `DiscoverableStoryCandidatePort`; platform
+bootstrap wires a J.2 Slice 3 transitional seeded Hero & Story adapter
+(replaceable by real HS persistence later). Unwired tests may still use the
+Empty fail-closed default.
 
 ## Tests
 
@@ -96,7 +98,9 @@ dart test
 
 ## Intentionally deferred / follow-ups
 
-- Discovery / Hero & Story candidate authority on platform (HS.8 live candidates)
+- Replace transitional Story candidate seed with live Hero & Story persistence (J.2 Slice 4+)
+- DiscoveryProfile / Influence / public Discovery API (D.1 / J.2 Slices 5–6)
+- Content-aware theme classification beyond catalog-aligned `discovery`
 - Quest / Mission platform lifecycle
 - Login provider product choice (PF-ADR-008 open)
 - Absorbing `ai_proxy` (Phase 8)
