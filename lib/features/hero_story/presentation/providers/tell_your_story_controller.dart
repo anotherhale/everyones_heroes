@@ -322,12 +322,11 @@ final class TellYourStoryController extends Notifier<TellYourStoryUiState> {
   Future<void> discard() async {
     await stopReviewPlayback();
     await _session.discard();
-    _setState(state.copyWith(
-      step: TellYourStoryStep.prepare,
-      phase: _session.phase,
-      clearError: true,
-      isPlayingReview: false,
-    ));
+    // discard() clears session identity back to idle. continueToRecord() does
+    // not call beginSession(), so Prepare would otherwise look ready while
+    // startRecording() throws "Recording session has not been begun."
+    // Re-begin the same way the screen bootstraps (HS.12.1).
+    await startFlow();
   }
 
   Future<void> acceptRecording() async {

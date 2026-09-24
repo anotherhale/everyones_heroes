@@ -339,4 +339,97 @@ void main() {
       'Not enough storage to continue recording.',
     );
   });
+
+  test('Discard re-begins session so a new recording can start (HS.12.1)',
+      () async {
+    final container = buildContainer();
+    addTearDown(container.dispose);
+    final controller = container.read(tellYourStoryControllerProvider.notifier);
+    final session = container.read(recordingSessionServiceProvider);
+
+    await controller.startFlow();
+    controller.continueToRecord();
+    await controller.startRecording();
+    await controller.stopRecording();
+
+    expect(container.read(tellYourStoryControllerProvider).step,
+        TellYourStoryStep.review);
+
+    await controller.discard();
+
+    final afterDiscard = container.read(tellYourStoryControllerProvider);
+    expect(afterDiscard.step, TellYourStoryStep.prepare);
+    expect(afterDiscard.errorMessage, isNull);
+    // Session must be begun again — not idle with null identity.
+    expect(session.sessionId, isNotNull);
+    expect(
+      session.phase,
+      anyOf(RecordingSessionPhase.preparing, RecordingSessionPhase.ready),
+    );
+
+    controller.continueToRecord();
+    await controller.startRecording();
+
+    final recordingAgain = container.read(tellYourStoryControllerProvider);
+    expect(recordingAgain.step, TellYourStoryStep.record);
+    expect(recordingAgain.phase, RecordingSessionPhase.recording);
+    expect(recordingAgain.errorMessage, isNull);
+
+    await controller.stopRecording();
+    expect(
+      container.read(tellYourStoryControllerProvider).step,
+      TellYourStoryStep.review,
+    );
+  });
+
+  test('Discard does not persist an accepted Story', () async {
+    final container = buildContainer();
+    addTearDown(container.dispose);
+    final controller = container.read(tellYourStoryControllerProvider.notifier);
+
+    await controller.startFlow();
+    controller.continueToRecord();
+    await controller.startRecording();
+    await controller.stopRecording();
+    await controller.discard();
+
+    expect(await stories.findAll(), isEmpty);
+    expect(media.objectCount, 0);
+    expect(
+      container.read(tellYourStoryControllerProvider).capturedStoryId,
+      isNull,
+    );
+  });
+
+  test('Retake still returns to record and allows another take', () async {
+    final container = buildContainer();
+    addTearDown(container.dispose);
+    final controller = container.read(tellYourStoryControllerProvider.notifier);
+    final session = container.read(recordingSessionServiceProvider);
+
+    await controller.startFlow();
+    controller.continueToRecord();
+    await controller.startRecording();
+    await controller.stopRecording();
+
+    final sessionBeforeRetake = session.sessionId;
+    await controller.retake();
+
+    final afterRetake = container.read(tellYourStoryControllerProvider);
+    expect(afterRetake.step, TellYourStoryStep.record);
+    expect(afterRetake.phase, RecordingSessionPhase.ready);
+    expect(afterRetake.errorMessage, isNull);
+    expect(session.sessionId, isNot(sessionBeforeRetake));
+
+    await controller.startRecording();
+    expect(
+      container.read(tellYourStoryControllerProvider).phase,
+      RecordingSessionPhase.recording,
+    );
+    await controller.stopRecording();
+    expect(
+      container.read(tellYourStoryControllerProvider).step,
+      TellYourStoryStep.review,
+    );
+  });
 }
