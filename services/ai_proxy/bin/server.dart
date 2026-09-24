@@ -5,7 +5,7 @@ import 'package:shelf/shelf.dart';
 import 'package:shelf/shelf_io.dart' as shelf_io;
 import 'package:shelf_router/shelf_router.dart';
 
-/// Everyone's Heroes AI proxy entrypoint (HS.11 / SB.7 / SB.8 / SB.11 / HS.12.3).
+/// Everyone's Heroes AI proxy entrypoint (HS.11 / SB.7 / SB.8 / SB.11 / HS.12.3 / HS.12.4).
 ///
 /// Environment:
 /// - `OPENAI_API_KEY` (required)
@@ -21,6 +21,7 @@ Future<void> main(List<String> args) async {
   final understanding = StoryUnderstandingHandler(config: config);
   final authoring = StoryAuthoringHandler(config: config);
   final capturedReading = CapturedStoryReadingHandler(config: config);
+  final experiencePlan = StoryExperiencePlanHandler(config: config);
 
   final router = Router();
   router.post('/story-transcriptions', transcription.handleTranscribe);
@@ -28,6 +29,7 @@ Future<void> main(List<String> args) async {
   router.post('/story-understanding', understanding.handleUnderstand);
   router.post('/story-authoring', authoring.handleAuthor);
   router.post('/captured-story-readings', capturedReading.handleGenerate);
+  router.post('/story-experience-plans', experiencePlan.handleGenerate);
   router.get('/health', (_) => Response.ok('ok'));
 
   final pipeline = const Pipeline()

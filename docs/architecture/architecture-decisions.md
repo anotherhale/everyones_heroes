@@ -2491,3 +2491,73 @@ Rejected:
 - Implementing Story Experience Plan / music in this slice (HS.12.4+)
 
 See: `docs/architecture/HS.12-AI-Hero-Story-Demo-Plan.md`
+
+---
+
+# HS-ADR-073 Story Experience Plan Is a Derived Presentation Artifact
+
+Status: Accepted
+
+Date: 2026-09-24
+
+Phase: HS.12.4 — Story Experience Plan
+
+Decision:
+
+Introduce `StoryExperiencePlan` as a derived presentation artifact keyed by
+`StoryId`. It is produced from an owned `Story` and an existing
+`CapturedStoryReading`, and is **not** stored on the canonical `Story`
+aggregate.
+
+A Story Experience Plan contains only typed presentation structure:
+
+- intention (closed vocabulary)
+- core message
+- emotional arc (story-structure vocabulary)
+- transcript-grounded key moments (`SourceSpanReference`)
+- music direction (descriptive guidance only)
+- reflection prompt
+- typed experience sequence
+
+Every story-derived key moment must carry a `SourceSpanReference` into the
+transcript associated with the Story. Spans outside the transcript are
+rejected at the proxy and application boundary. Invalid AI output is rejected
+rather than silently repaired.
+
+`StoryExperiencePlan` is distinct from:
+
+- the canonical `Story`
+- `CapturedStoryReading` (HS.12.3 grounded reading)
+- HS.4 `StoryUnderstanding`
+- Experience runtime / playback orchestration (later slices)
+
+Generation does not regenerate transcription or Captured Story Reading.
+Regenerating a plan replaces only the derived plan artifact.
+
+Music direction is guidance (`mood` / `energy` / `style` / `rationale`). This
+slice does not generate music, AI voice, narration, mixes, or automatic
+playback/publishing.
+
+The schema must not carry psychological claims (personality, attachment style,
+trauma, traumaLevel, mental health diagnosis, resilience scores,
+emotionalHealth, psychologicalState, inferred motivation, or behavioral
+profiling).
+
+Rationale:
+
+The Experience Plan sits between grounded understanding and a future Experience
+runtime. Keeping it typed, separately persisted, and transcript-grounded
+preserves Story ownership while enabling later presentation without collapsing
+cataloging, discovery, personalization, or evidence into one AI blob.
+
+Rejected:
+
+- Storing the plan on the `Story` aggregate
+- Untyped `Map<String, dynamic>` as the persisted domain model
+- Psychological / diagnostic schema fields
+- Music generation, AI voice, narration, or audio mixing in this slice
+- Automatic publishing / sharing
+- Implicit transcription or Story Understanding as part of plan generation
+- Experience runtime playback in this slice
+
+See: `docs/architecture/HS.12-AI-Hero-Story-Demo-Plan.md`

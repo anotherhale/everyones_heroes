@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:everyonesheroes/features/hero_story/presentation/models/captured_story_reading_view_data.dart';
 import 'package:everyonesheroes/features/hero_story/presentation/models/hero_story_view_data.dart';
+import 'package:everyonesheroes/features/hero_story/presentation/models/story_experience_plan_view_data.dart';
+import 'package:everyonesheroes/features/hero_story/presentation/providers/hero_story_experience_plan_controller.dart';
 import 'package:everyonesheroes/features/hero_story/presentation/providers/hero_story_playback_controller.dart';
 import 'package:everyonesheroes/features/hero_story/presentation/providers/hero_story_provider.dart';
 import 'package:everyonesheroes/features/hero_story/presentation/providers/hero_story_understanding_controller.dart';
@@ -11,7 +13,8 @@ import 'package:everyonesheroes/features/hero_story/presentation/screens/owned_s
 /// Hero-owned presentation of a saved Story.
 ///
 /// The canonical Story is unchanged. This screen plays the original recording
-/// and optionally surfaces a grounded captured-story reading (HS.12.3).
+/// and optionally surfaces a grounded captured-story reading (HS.12.3) plus a
+/// derived Story Experience Plan (HS.12.4).
 class HeroStoryScreen extends ConsumerWidget {
   const HeroStoryScreen({required this.storyId, super.key});
 
@@ -67,6 +70,10 @@ class _HeroStoryBody extends ConsumerWidget {
     final understanding = ref.watch(heroStoryUnderstandingProvider(storyId));
     final understandingController = ref.read(
       heroStoryUnderstandingProvider(storyId).notifier,
+    );
+    final experiencePlan = ref.watch(heroStoryExperiencePlanProvider(storyId));
+    final experiencePlanController = ref.read(
+      heroStoryExperiencePlanProvider(storyId).notifier,
     );
     final recordingId = story.originalRecordingId;
 
@@ -228,6 +235,65 @@ class _HeroStoryBody extends ConsumerWidget {
             reading: understanding.reading!,
             theme: theme,
           ),
+          const SizedBox(height: 20),
+          OutlinedButton.icon(
+            key: const ValueKey('hero-story-create-experience-button'),
+            onPressed: experiencePlan.canCreate
+                ? () => experiencePlanController.create(
+                      isRetry: experiencePlan.phase ==
+                          HeroStoryExperiencePlanPhase.failed,
+                    )
+                : null,
+            icon: experiencePlan.isGenerating
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.auto_fix_outlined),
+            label: Text(
+              experiencePlan.phase == HeroStoryExperiencePlanPhase.failed
+                  ? 'Retry experience plan'
+                  : experiencePlan.phase == HeroStoryExperiencePlanPhase.success
+                      ? 'Refresh experience plan'
+                      : 'Create my experience',
+            ),
+          ),
+          if (experiencePlan.isGenerating) ...[
+            const SizedBox(height: 16),
+            Text(
+              HeroStoryExperiencePlanController.generatingMessage,
+              key: const ValueKey('hero-story-experience-generating'),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+          if (experiencePlan.errorMessage != null) ...[
+            const SizedBox(height: 16),
+            Text(
+              experiencePlan.errorMessage!,
+              key: const ValueKey('hero-story-experience-error'),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.error,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Your original recording is still available.',
+              key: const ValueKey('hero-story-experience-error-recording'),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+          if (experiencePlan.plan != null) ...[
+            const SizedBox(height: 28),
+            _StoryExperiencePlanSection(
+              plan: experiencePlan.plan!,
+              theme: theme,
+            ),
+          ],
         ],
         const SizedBox(height: 28),
         Text(
@@ -410,6 +476,129 @@ class _ReadingThemesTile extends StatelessWidget {
             ),
             const SizedBox(height: 4),
           ],
+        ],
+      ),
+    );
+  }
+}
+
+class _StoryExperiencePlanSection extends StatelessWidget {
+  const _StoryExperiencePlanSection({
+    required this.plan,
+    required this.theme,
+  });
+
+  final StoryExperiencePlanViewData plan;
+  final ThemeData theme;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      key: const ValueKey('hero-story-experience-section'),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Experience Plan',
+          key: const ValueKey('hero-story-experience-title'),
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Derived guidance for a future experience — not generated audio or '
+          'a rewrite of your story.',
+          key: const ValueKey('hero-story-experience-subtitle'),
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: 16),
+        _PlanLabeledText(
+          key: const ValueKey('hero-story-experience-intention'),
+          label: 'Intention',
+          value: plan.intentionLabel,
+          theme: theme,
+        ),
+        _PlanLabeledText(
+          key: const ValueKey('hero-story-experience-arc'),
+          label: 'Arc',
+          value: plan.arcLabel,
+          theme: theme,
+        ),
+        _PlanLabeledText(
+          key: const ValueKey('hero-story-experience-core-message'),
+          label: 'Core message',
+          value: plan.coreMessage,
+          theme: theme,
+        ),
+        Text(
+          'Key moments',
+          style: theme.textTheme.labelLarge?.copyWith(
+            color: theme.colorScheme.primary,
+          ),
+        ),
+        const SizedBox(height: 4),
+        for (var i = 0; i < plan.keyMoments.length; i++) ...[
+          Text(
+            plan.keyMoments[i].description,
+            key: ValueKey('hero-story-experience-moment-$i'),
+            style: theme.textTheme.bodyLarge,
+          ),
+          Text(
+            'Source ${plan.keyMoments[i].spanLabel}',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 8),
+        ],
+        _PlanLabeledText(
+          key: const ValueKey('hero-story-experience-reflection'),
+          label: 'Reflection prompt',
+          value: plan.reflectionPrompt,
+          theme: theme,
+        ),
+        _PlanLabeledText(
+          key: const ValueKey('hero-story-experience-music'),
+          label: 'Music direction',
+          value:
+              '${plan.musicMood} · ${plan.musicEnergy} · ${plan.musicStyle}\n'
+              '${plan.musicRationale}',
+          theme: theme,
+        ),
+      ],
+    );
+  }
+}
+
+class _PlanLabeledText extends StatelessWidget {
+  const _PlanLabeledText({
+    required this.label,
+    required this.value,
+    required this.theme,
+    super.key,
+  });
+
+  final String label;
+  final String value;
+  final ThemeData theme;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: theme.textTheme.labelLarge?.copyWith(
+              color: theme.colorScheme.primary,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(value, style: theme.textTheme.bodyLarge),
         ],
       ),
     );
