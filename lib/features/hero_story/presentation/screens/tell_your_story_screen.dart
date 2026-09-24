@@ -5,8 +5,8 @@ import 'package:everyonesheroes/features/hero_story/application/recording/device
 import 'package:everyonesheroes/features/hero_story/application/recording/recording_session_state.dart';
 import 'package:everyonesheroes/features/hero_story/presentation/providers/owned_story_providers.dart';
 import 'package:everyonesheroes/features/hero_story/presentation/providers/tell_your_story_controller.dart';
+import 'package:everyonesheroes/features/hero_story/presentation/screens/hero_story_screen.dart';
 import 'package:everyonesheroes/features/hero_story/presentation/screens/my_stories_screen.dart';
-import 'package:everyonesheroes/features/hero_story/presentation/screens/owned_story_detail_screen.dart';
 
 /// HS.9 Tell Your Story vertical slice entry screen.
 class TellYourStoryScreen extends ConsumerStatefulWidget {
@@ -88,9 +88,9 @@ class _TellYourStoryScreenState extends ConsumerState<TellYourStoryScreen> {
                           ? null
                           : () {
                               ref.invalidate(ownedStoriesProvider);
-                              Navigator.of(context).pushReplacement(
+                              Navigator.of(context).push(
                                 MaterialPageRoute<void>(
-                                  builder: (_) => OwnedStoryDetailScreen(
+                                  builder: (_) => HeroStoryScreen(
                                     storyId: state.capturedStoryId!.value,
                                   ),
                                 ),
@@ -221,7 +221,8 @@ class _PrepareStep extends StatelessWidget {
             onPressed: state.isBusy ? null : onContinue,
             child: const Text('Continue to record'),
           ),
-        if (state.permissionStatus == DevicePermissionStatus.permanentlyDenied ||
+        if (state.permissionStatus ==
+                DevicePermissionStatus.permanentlyDenied ||
             state.permissionStatus == DevicePermissionStatus.unavailable) ...[
           const SizedBox(height: 12),
           Text(
@@ -378,9 +379,7 @@ class _ReviewStep extends StatelessWidget {
             FilledButton.tonalIcon(
               key: const ValueKey('review-play-button'),
               onPressed: state.isPlayingReview ? onStopPlay : onPlay,
-              icon: Icon(
-                state.isPlayingReview ? Icons.stop : Icons.play_arrow,
-              ),
+              icon: Icon(state.isPlayingReview ? Icons.stop : Icons.play_arrow),
               label: Text(state.isPlayingReview ? 'Stop' : 'Play'),
             ),
           ],
@@ -534,7 +533,7 @@ class _CompletedStep extends StatelessWidget {
             key: const ValueKey('capture-view-story-button'),
             onPressed: onViewStory,
             icon: const Icon(Icons.play_circle_outline),
-            label: const Text('View Story'),
+            label: const Text('Hero Story'),
           ),
           const SizedBox(height: 12),
         ],
