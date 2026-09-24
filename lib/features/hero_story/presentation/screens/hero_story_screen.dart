@@ -5,6 +5,7 @@ import 'package:everyonesheroes/features/hero_story/presentation/models/captured
 import 'package:everyonesheroes/features/hero_story/presentation/models/hero_story_view_data.dart';
 import 'package:everyonesheroes/features/hero_story/presentation/models/story_experience_plan_view_data.dart';
 import 'package:everyonesheroes/features/hero_story/presentation/providers/hero_story_experience_plan_controller.dart';
+import 'package:everyonesheroes/features/hero_story/presentation/providers/hero_story_experience_playback_controller.dart';
 import 'package:everyonesheroes/features/hero_story/presentation/providers/hero_story_playback_controller.dart';
 import 'package:everyonesheroes/features/hero_story/presentation/providers/hero_story_provider.dart';
 import 'package:everyonesheroes/features/hero_story/presentation/providers/hero_story_understanding_controller.dart';
@@ -13,8 +14,9 @@ import 'package:everyonesheroes/features/hero_story/presentation/screens/owned_s
 /// Hero-owned presentation of a saved Story.
 ///
 /// The canonical Story is unchanged. This screen plays the original recording
-/// and optionally surfaces a grounded captured-story reading (HS.12.3) plus a
-/// derived Story Experience Plan (HS.12.4).
+/// and optionally surfaces a grounded captured-story reading (HS.12.3), a
+/// derived Story Experience Plan (HS.12.4), and playable experience
+/// presentation (HS.12.5).
 class HeroStoryScreen extends ConsumerWidget {
   const HeroStoryScreen({required this.storyId, super.key});
 
@@ -74,6 +76,11 @@ class _HeroStoryBody extends ConsumerWidget {
     final experiencePlan = ref.watch(heroStoryExperiencePlanProvider(storyId));
     final experiencePlanController = ref.read(
       heroStoryExperiencePlanProvider(storyId).notifier,
+    );
+    final experiencePlayback =
+        ref.watch(heroStoryExperiencePlaybackProvider(storyId));
+    final experiencePlaybackController = ref.read(
+      heroStoryExperiencePlaybackProvider(storyId).notifier,
     );
     final recordingId = story.originalRecordingId;
 
@@ -152,6 +159,7 @@ class _HeroStoryBody extends ConsumerWidget {
             onPressed: playback.isBusy
                 ? null
                 : () async {
+                    await experiencePlaybackController.stop();
                     if (playback.phase == HeroStoryPlaybackPhase.playing) {
                       await playbackController.pause();
                     } else {
@@ -238,29 +246,100 @@ class _HeroStoryBody extends ConsumerWidget {
         ],
         if (understanding.reading != null) ...[
           const SizedBox(height: 20),
-          OutlinedButton.icon(
-            key: const ValueKey('hero-story-create-experience-button'),
-            onPressed: experiencePlan.canCreate
-                ? () => experiencePlanController.create(
-                      isRetry: experiencePlan.phase ==
-                          HeroStoryExperiencePlanPhase.failed,
+          if (experiencePlan.plan == null)
+            OutlinedButton.icon(
+              key: const ValueKey('hero-story-create-experience-button'),
+              onPressed: experiencePlan.canCreate
+                  ? () => experiencePlanController.create(
+                        isRetry: experiencePlan.phase ==
+                            HeroStoryExperiencePlanPhase.failed,
+                      )
+                  : null,
+              icon: experiencePlan.isGenerating
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                : null,
-            icon: experiencePlan.isGenerating
-                ? const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.auto_awesome),
-            label: Text(
-              experiencePlan.phase == HeroStoryExperiencePlanPhase.failed
-                  ? 'Retry experience plan'
-                  : experiencePlan.phase == HeroStoryExperiencePlanPhase.success
-                      ? 'Refresh experience plan'
-                      : 'Create my experience',
+                  : const Icon(Icons.auto_awesome),
+              label: Text(
+                experiencePlan.phase == HeroStoryExperiencePlanPhase.failed
+                    ? 'Retry experience plan'
+                    : 'Create my experience',
+              ),
+            )
+          else ...[
+            OutlinedButton.icon(
+              key: const ValueKey('hero-story-create-experience-button'),
+              onPressed: experiencePlan.canCreate
+                  ? () => experiencePlanController.create(isRetry: false)
+                  : null,
+              icon: experiencePlan.isGenerating
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.refresh),
+              label: Text(
+                experiencePlan.isGenerating
+                    ? 'Refreshing experience plan'
+                    : 'Refresh experience plan',
+              ),
             ),
-          ),
+            if (recordingId != null) ...[
+              const SizedBox(height: 12),
+              FilledButton.tonalIcon(
+                key: const ValueKey('hero-story-play-experience-button'),
+                onPressed: experiencePlayback.isBusy ||
+                        experiencePlan.isGenerating
+                    ? null
+                    : () async {
+                        if (experiencePlayback.phase ==
+                            HeroStoryExperiencePlaybackPhase.playing) {
+                          await experiencePlaybackController.pause();
+                        } else if (experiencePlayback.phase ==
+                            HeroStoryExperiencePlaybackPhase.paused) {
+                          await experiencePlaybackController.resume(
+                            originalRecordingId: recordingId,
+                          );
+                        } else {
+                          await experiencePlaybackController.playExperience(
+                            originalRecordingId: recordingId,
+                          );
+                        }
+                      },
+                icon: Icon(
+                  experiencePlayback.phase ==
+                          HeroStoryExperiencePlaybackPhase.playing
+                      ? Icons.pause
+                      : Icons.headphones,
+                ),
+                label: Text(_experiencePlayLabel(experiencePlayback.phase)),
+              ),
+              if (experiencePlayback.isActive) ...[
+                const SizedBox(height: 8),
+                TextButton(
+                  key: const ValueKey('hero-story-experience-stop-button'),
+                  onPressed: experiencePlayback.isBusy
+                      ? null
+                      : experiencePlaybackController.stop,
+                  child: const Text('Stop experience'),
+                ),
+              ],
+              if (experiencePlayback.purposeLabel != null &&
+                  experiencePlayback.isActive) ...[
+                const SizedBox(height: 8),
+                Text(
+                  experiencePlayback.purposeLabel!,
+                  key: const ValueKey('hero-story-experience-playback-purpose'),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ],
+          ],
           if (experiencePlan.isGenerating) ...[
             const SizedBox(height: 16),
             Text(
@@ -284,6 +363,26 @@ class _HeroStoryBody extends ConsumerWidget {
             Text(
               'Your original recording is still available.',
               key: const ValueKey('hero-story-experience-error-recording'),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+          if (experiencePlayback.errorMessage != null) ...[
+            const SizedBox(height: 16),
+            Text(
+              experiencePlayback.errorMessage!,
+              key: const ValueKey('hero-story-experience-playback-error'),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.error,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Your original recording is still available.',
+              key: const ValueKey(
+                'hero-story-experience-playback-error-recording',
+              ),
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -335,6 +434,19 @@ class _HeroStoryBody extends ConsumerWidget {
       HeroStoryPlaybackPhase.completed ||
       HeroStoryPlaybackPhase.failed =>
         'Play my recording',
+    };
+  }
+
+  static String _experiencePlayLabel(HeroStoryExperiencePlaybackPhase phase) {
+    return switch (phase) {
+      HeroStoryExperiencePlaybackPhase.playing => 'Pause experience',
+      HeroStoryExperiencePlaybackPhase.paused => 'Resume experience',
+      HeroStoryExperiencePlaybackPhase.silenced => 'Pause experience',
+      HeroStoryExperiencePlaybackPhase.loading => 'Loading experience…',
+      HeroStoryExperiencePlaybackPhase.idle ||
+      HeroStoryExperiencePlaybackPhase.completed ||
+      HeroStoryExperiencePlaybackPhase.failed =>
+        'Play my experience',
     };
   }
 }
@@ -508,8 +620,8 @@ class _StoryExperiencePlanSection extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         Text(
-          'Derived guidance for a future experience — not generated audio or '
-          'a rewrite of your story.',
+          'Derived presentation guidance — Play my experience renders this '
+          'plan over your original recording. Your story is not rewritten.',
           key: const ValueKey('hero-story-experience-subtitle'),
           style: theme.textTheme.bodySmall?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,

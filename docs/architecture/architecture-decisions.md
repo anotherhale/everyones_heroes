@@ -2561,3 +2561,75 @@ Rejected:
 - Experience runtime playback in this slice
 
 See: `docs/architecture/HS.12-AI-Hero-Story-Demo-Plan.md`
+
+# HS-ADR-075 Story Experience Playback Renders a Persisted Plan
+
+Status: Accepted
+
+Date: 2026-09-24
+
+Phase: HS.12.5 — Story Experience Demo Player
+
+Decision:
+
+Experience playback is a **presentation renderer** of an already-persisted
+`StoryExperiencePlan`. It layers the Hero's original recording with local demo
+stems and intentional silence. It does not author, regenerate, or mutate:
+
+- the canonical `Story`
+- the original recording bytes
+- the transcript
+- `CapturedStoryReading`
+- the `StoryExperiencePlan` itself during playback
+
+## Player-layer presentation vocabulary
+
+HS.12.4's plan stores typed sequence steps (`story` / `keyMoment` /
+`reflection` / `music`), grounded key moments, and descriptive music direction.
+It does **not** store audio filenames or stem ids.
+
+HS.12.5 introduces a closed **player-layer** vocabulary:
+
+- presentation purposes: `opening` | `challenge` | `uncertainty` |
+  `turningPoint` | `decision` | `resolution` | `closing`
+- demo stems: `quiet` | `tension` | `build` | `expansive` | `resolve`
+
+A pure `StoryExperienceTimelineBuilder` derives a timeline from the persisted
+plan + recording duration (character offsets mapped proportionally; recording
+timestamps used when present). Intentional silence is a playback gap — the
+stored recording is never rewritten.
+
+Deterministic purpose → stem mapping lives only in the player/presentation
+layer. The model never chooses concrete audio files. Missing stems fall back to
+silence; experience failure never removes **Play my recording**.
+
+## Architecture
+
+```text
+HeroStoryScreen
+  → HeroStoryExperiencePlaybackController
+  → StoryExperiencePlayer (port)
+  → JustAudioStoryExperiencePlayer (Player A = original, Player B = stem)
+  → bundled demo stems under assets/audio/demo_stems/
+```
+
+Playback loads the plan via `StoryExperiencePlanRepository.findByStoryId`.
+It must not call `StoryExperiencePlannerPort` or
+`GenerateStoryExperiencePlanUseCase`.
+
+Rationale:
+
+HS-ADR-073 deferred experience runtime. This decision locks the runtime as a
+renderer of the typed plan without expanding the domain schema for demo stems
+or forcing AI to emit filenames.
+
+Rejected:
+
+- Regenerating the plan on every Play
+- Asking AI which audio file to play
+- Inserting silence into stored Story media
+- Music generation / vendor music catalogs
+- AI voice / TTS / voice cloning (later slice)
+- Collapsing original-recording play into experience play
+
+See: `docs/architecture/HS.12-AI-Hero-Story-Demo-Plan.md`
