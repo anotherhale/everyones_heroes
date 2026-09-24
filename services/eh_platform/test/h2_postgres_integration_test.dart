@@ -163,7 +163,8 @@ FROM information_schema.tables
 WHERE table_schema = 'public'
   AND table_name IN (
     'identity_users', 'identity_sessions', 'command_idempotency',
-    'schema_migrations', 'journeys', 'reflections'
+    'schema_migrations', 'journeys', 'reflections',
+    'discoverable_story_candidates'
   )
 ORDER BY table_name
 ''');
@@ -172,6 +173,7 @@ ORDER BY table_name
         names,
         containsAll([
           'command_idempotency',
+          'discoverable_story_candidates',
           'identity_sessions',
           'identity_users',
           'journeys',
@@ -186,6 +188,7 @@ ORDER BY table_name
       final versionNames = versions.map((r) => r[0] as String).toList();
       expect(versionNames, contains('001_platform_foundation.sql'));
       expect(versionNames, contains('002_h2_life_journey.sql'));
+      expect(versionNames, contains('003_j2_discoverable_story_candidates.sql'));
     });
   });
 }

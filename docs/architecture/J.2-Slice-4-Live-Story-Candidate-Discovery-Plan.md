@@ -1,11 +1,53 @@
 # J.2 Slice 4 — Live Hero & Story Candidate Discovery and Ranking
 
-- **Document type:** Architecture + Implementation Plan (planning only)
-- **Status:** Planning complete — implementation not started
+- **Document type:** Architecture + Implementation Plan / Report
+- **Status:** Implementation COMPLETE (J.2 Slice 4)
 - **Phase:** J.2 Slice 4 — Live Story candidate discovery / ranking refinement
-- **Baseline (code):** `5a0a279` — J.2 Discovery and Story candidate foundation (#60); Slices 1–3 COMPLETE
+- **Baseline (code):** `5a0a279` — J.2 Discovery and Story candidate foundation (#60); Slices 1–3 COMPLETE; plan `db1225d` (#61)
 - **Related:** `J.2-Discovery-Platform-Foundation.md`, `HS.6-Hero-Story-Discovery-Implementation-Plan.md`, `HS.8-Adaptive-Hero-Discovery-Implementation-Report.md`, `PF.2-Platform-Architecture-Decisions.md` (Phase 7), `D.1-Discovery-Profile-Platform-Plan.md` (planning-only)
 - **Date:** 2026-09-24
+
+---
+
+## Implementation status (Slice 4 landed)
+
+| Concern | Implementation |
+|---------|----------------|
+| Eligibility | `AdaptiveStoryCandidateEligibilityPolicy` + `StoryCandidateEligibilityFacts` |
+| Projection schema | `migrations/003_j2_discoverable_story_candidates.sql` |
+| Projection ownership | Hero & Story (`PostgresStoryCandidateSource`) |
+| Transitional sync | `ProjectDiscoverableStoryCandidateUseCase` (**transitional** — Phase 7 replaces) |
+| Live source | `PostgresStoryCandidateSource implements StoryCandidateSource` |
+| Adapter | `DiscoverableStoryCandidateAdapter` (renamed from Seeded*) |
+| Ranking | `DeterministicStoryRelevanceRanker` unchanged |
+| Production wiring | `HeroStoryModule.composePostgres` ← `PlatformComposition.bootstrap` |
+| Seed retirement | `SeededStoryCandidateCatalog` retained for **explicit test fixtures only** |
+
+### Dual-stack (post-Slice 4)
+
+| Surface | Candidate source | Notes |
+|---------|------------------|-------|
+| **Flutter** | Live: `DiscoverStoriesUseCase` → `DiscoverStoriesCandidateAdapter` | Authoritative Story/Hero aggregates; Discover* + HS.6 policies |
+| **EH Platform** | Live: Postgres `discoverable_story_candidates` | Derived projection; transitional upsert from eligibility facts |
+
+**Temporary differences (acceptable until Phase 7):**
+
+* Platform does not query Flutter File/InMemory Story repositories.
+* Platform candidates enter via `ProjectDiscoverableStoryCandidateUseCase` (controlled ingest), not Story domain events yet.
+* Flutter Discover* may apply optional suitability preference filters; platform adaptive projection does not store suitability (seeker filters deferred).
+* Ranking comparator is intentionally identical on both stacks.
+
+### Phase 7 replacement path
+
+```text
+Platform Story/Hero aggregates + StoryPublished / visibility reactors
+        ↓
+Refresh / delete discoverable_story_candidates rows
+        ↓
+Same StoryCandidateSource → DiscoverableStoryCandidatePort → Experience
+```
+
+Remove transitional upsert once platform Story authority exists. Do **not** widen the Experience port.
 
 ---
 
@@ -656,28 +698,28 @@ Slice 4.3+
 
 Deprecation checklist:
 
-* [ ] Production composition uses live `StoryCandidateSource`
-* [ ] Architecture test fails if compose defaults to architectural seed
-* [ ] Slice 3 Cases A–E re-proven with projected rows
-* [ ] README notes seed as test fixture only
-* [ ] J.2 foundation doc marks Slice 4 complete when implementation lands
+* [x] Production composition uses live `StoryCandidateSource`
+* [x] Architecture test fails if compose defaults to architectural seed
+* [x] Slice 3 Cases A–E re-proven with projected rows
+* [x] README notes seed as test fixture only
+* [x] J.2 foundation doc marks Slice 4 complete when implementation lands
 
 ---
 
 ## 20. Acceptance checklist (for future implementation)
 
-* [ ] `DiscoverableStoryCandidatePort` unchanged as Experience seam
-* [ ] Live source replaces seed as platform default
-* [ ] No second Story aggregate on platform
-* [ ] Eligibility mirrors HS.6 Story + Hero policies (+ theme requirement)
-* [ ] No new discoverable lifecycle flag as source of truth
-* [ ] Ranking remains deterministic (no ML)
-* [ ] Fail-closed reflection behavior preserved
-* [ ] Narrative themes remain Discovery-owned
-* [ ] AdaptiveDiscoverySignals remain the only user-understanding input to candidates
-* [ ] DiscoveryProfile not required
-* [ ] Architecture + integration + regression suites green
-* [ ] Phase 7 full HS migration not dragged into Slice 4
+* [x] `DiscoverableStoryCandidatePort` unchanged as Experience seam
+* [x] Live source replaces seed as platform default
+* [x] No second Story aggregate on platform
+* [x] Eligibility mirrors HS.6 Story + Hero policies (+ theme requirement)
+* [x] No new discoverable lifecycle flag as source of truth
+* [x] Ranking remains deterministic (no ML)
+* [x] Fail-closed reflection behavior preserved
+* [x] Narrative themes remain Discovery-owned
+* [x] AdaptiveDiscoverySignals remain the only user-understanding input to candidates
+* [x] DiscoveryProfile not required
+* [x] Architecture + integration + regression suites green
+* [x] Phase 7 full HS migration not dragged into Slice 4
 
 ---
 

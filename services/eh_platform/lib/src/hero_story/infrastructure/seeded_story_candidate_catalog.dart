@@ -3,18 +3,11 @@ import 'package:eh_platform/src/hero_story/domain/models/story_candidate_record.
 import 'package:eh_platform/src/shared_kernel/exceptions/validation_exception.dart';
 import 'package:eh_platform/src/shared_kernel/ids/narrative_theme_reference_ids.dart';
 
-/// Transitional deterministic Story candidate seed (J.2 Slice 3).
+/// Deterministic Story candidate **test fixture** (J.2 Slice 3 → Slice 4).
 ///
-/// **Not** production content and **not** permanent architecture.
-/// Platform Hero & Story persistence has not been migrated; this fixture
-/// establishes the vertical path:
-///
-/// ```text
-/// AdaptiveDiscoverySignals → DiscoverableStoryCandidatePort → seed → composer
-/// ```
-///
-/// Replacement by real Hero & Story persistence should implement
-/// [StoryCandidateSource] without changing the Experience port.
+/// **Not** production content. Production uses [PostgresStoryCandidateSource].
+/// Retained only for isolated unit/integration fixtures that need stable
+/// in-memory candidates without PostgreSQL.
 ///
 /// Unknown theme IDs fail validation at load time ([ValidationException]).
 final class SeededStoryCandidateCatalog implements StoryCandidateSource {
@@ -23,9 +16,8 @@ final class SeededStoryCandidateCatalog implements StoryCandidateSource {
 
   /// Architectural seed overlapping the canonical 14-theme catalog.
   ///
-  /// At least one candidate includes `discovery` so Slice 2 analyzer signals
-  /// (`CatalogAlignedNarrativeThemeResolver` → `discovery`) can demonstrate
-  /// adaptive Story selection.
+  /// Explicit test fixture only — never the [HeroStoryModule] production
+  /// default after J.2 Slice 4.
   factory SeededStoryCandidateCatalog.architecturalSeed() {
     return SeededStoryCandidateCatalog([
       StoryCandidateRecord(

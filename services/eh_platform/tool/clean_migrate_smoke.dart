@@ -21,7 +21,8 @@ SELECT table_name FROM information_schema.tables
 WHERE table_schema = 'public'
   AND table_name IN (
     'identity_users', 'identity_sessions', 'command_idempotency',
-    'schema_migrations', 'journeys', 'reflections'
+    'schema_migrations', 'journeys', 'reflections',
+    'discoverable_story_candidates'
   )
 ORDER BY 1
 ''');

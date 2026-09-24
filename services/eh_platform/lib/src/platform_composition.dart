@@ -165,8 +165,9 @@ final class PlatformComposition {
       reflectionRepository: lifeJourney.reflectionRepository,
     );
 
-    // J.2 Slice 3: transitional seeded Story candidates → HS.8 seam.
-    final heroStory = HeroStoryModule.compose();
+    // J.2 Slice 4: live Postgres Story candidate projection → HS.8 seam.
+    // Architectural seed is NOT the production default.
+    final heroStory = HeroStoryModule.composePostgres(database: database);
 
     final experience = ExperienceModule.compose(
       transactions: lifeJourney.transactions,

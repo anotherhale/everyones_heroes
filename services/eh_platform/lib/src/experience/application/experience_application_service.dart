@@ -51,30 +51,40 @@ final class ExperienceApplicationService {
     required UserId userId,
   }) async {
     try {
-      return await transactions.run(() async {
+      // Load Journey + Discovery signals inside the Life Journey UnitOfWork.
+      // Query the Hero & Story candidate projection *outside* that transaction:
+      // the projection is separate derived data, and the shared PostgreSQL
+      // connection cannot run extra queries while inside `runTx`.
+      final loaded = await transactions.run(() async {
         final journey = await _currentJourney(userId);
         if (journey == null) {
-          return const Failure(
-            code: 'not_found',
-            message: 'No current journey',
-          );
+          return null;
         }
-
         final signals = await _discoverySignalPort.resolve(journey);
-        final candidates = await _storyCandidatePort.findRelevant(signals);
-        final selected = _composer.compose(
-          journey: journey,
-          signals: signals,
-          candidates: candidates,
-        );
-
-        return Success(
-          TodayExperienceDto.fromSelection(
-            experience: selected,
-            journeyId: journey.id.value,
-          ),
-        );
+        return (journey: journey, signals: signals);
       });
+
+      if (loaded == null) {
+        return const Failure(
+          code: 'not_found',
+          message: 'No current journey',
+        );
+      }
+
+      final candidates =
+          await _storyCandidatePort.findRelevant(loaded.signals);
+      final selected = _composer.compose(
+        journey: loaded.journey,
+        signals: loaded.signals,
+        candidates: candidates,
+      );
+
+      return Success(
+        TodayExperienceDto.fromSelection(
+          experience: selected,
+          journeyId: loaded.journey.id.value,
+        ),
+      );
     } catch (e) {
       return Failure(
         code: 'get_today_experience_failed',
