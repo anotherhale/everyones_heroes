@@ -23,6 +23,7 @@ import 'package:everyonesheroes/features/hero_story/application/use_cases/materi
 import 'package:everyonesheroes/features/hero_story/domain/services/deterministic_story_shaper.dart';
 import 'package:everyonesheroes/features/hero_story/domain/services/story_shaper_port.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/edit_story_builder_response_use_case.dart';
+import 'package:everyonesheroes/features/hero_story/application/providers/use_cases/owned_story_use_case_providers.dart';
 import 'package:everyonesheroes/features/hero_story/application/providers/repositories/hero_repository_provider.dart';
 import 'package:everyonesheroes/features/hero_story/application/providers/repositories/story_repository_provider.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/get_story_builder_session_use_case.dart';
@@ -245,6 +246,8 @@ final classifyStoryUseCaseProvider = Provider<ClassifyStoryUseCase>((ref) {
   return ClassifyStoryUseCase(
     storyRepository: ref.watch(storyRepositoryProvider),
     eventBus: ref.watch(eventBusProvider),
+    heroRepository: ref.watch(heroRepositoryProvider),
+    candidateSync: ref.watch(discoverableStoryCandidateSyncProvider),
   );
 });
 

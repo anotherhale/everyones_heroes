@@ -46,7 +46,11 @@ final class ProjectDiscoverableStoryCandidateUseCase {
       themeIds: evaluation.catalogThemeIds,
       updatedAt: facts.updatedAt.toUtc(),
     );
-    await _projection.upsert(record);
+    await _projection.upsert(
+      record,
+      storyVisibility: facts.storyVisibility,
+      heroVisibility: facts.heroVisibility,
+    );
     return ProjectDiscoverableStoryCandidateResult.upserted(
       storyId: facts.storyId,
       record: record,
@@ -89,6 +93,20 @@ final class ProjectDiscoverableStoryCandidateResult {
   final bool wasUpserted;
   final String? reason;
   final StoryCandidateRecord? record;
+
+  Map<String, Object?> toJson() => {
+        'storyId': storyId,
+        'wasUpserted': wasUpserted,
+        if (reason != null) 'reason': reason,
+        if (record != null)
+          'record': {
+            'storyId': record!.storyId,
+            'heroId': record!.heroId,
+            'title': record!.title,
+            'themeIds': record!.themeIds,
+            'updatedAt': record!.updatedAt.toUtc().toIso8601String(),
+          },
+      };
 }
 
 /// Combined in-memory projection store + [StoryCandidateSource] for tests.
@@ -100,7 +118,12 @@ final class InMemoryDiscoverableStoryCandidateProjection
       List.unmodifiable(_byId.values.toList());
 
   @override
-  Future<void> upsert(StoryCandidateRecord record) async {
+  Future<void> upsert(
+    StoryCandidateRecord record, {
+    String? storyVisibility,
+    String? heroVisibility,
+  }) async {
+    // Visibility diagnostics are Postgres-only; in-memory keeps the record.
     _byId[record.storyId] = record;
   }
 

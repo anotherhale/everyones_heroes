@@ -1,4 +1,4 @@
-/// Hero & Story module boundary (PF-ADR-002 / J.2 Slice 4).
+/// Hero & Story module boundary (PF-ADR-002 / J.2 Slice 4–5).
 ///
 /// Owns: Hero, Story, representations, builder, catalog (when migrated);
 /// adaptive Story candidate eligibility, projection, retrieval, and relevance.
@@ -6,12 +6,14 @@
 /// NarrativeTheme vocabulary (Discovery owns the catalog).
 ///
 /// J.2 Slice 4 wires a **live** PostgreSQL discoverable-candidate projection
-/// behind [DiscoverableStoryCandidatePort]. The Slice 3 architectural seed is
-/// retained only as an explicit test fixture — never production default.
+/// behind [DiscoverableStoryCandidatePort]. Slice 5 productizes ingest via
+/// [HeroStoryApi] → [ProjectDiscoverableStoryCandidateUseCase]. The Slice 3
+/// architectural seed remains a test fixture only — never production default.
 ///
 /// Full Story aggregate / Postgres authority remains deferred (Phase 7).
 library;
 
+import 'package:eh_platform/src/api/hero_story_api.dart';
 import 'package:eh_platform/src/experience/application/ports/discoverable_story_candidate_port.dart';
 import 'package:eh_platform/src/hero_story/application/ports/discoverable_story_candidate_projection.dart';
 import 'package:eh_platform/src/hero_story/application/ports/story_candidate_source.dart';
@@ -20,7 +22,9 @@ import 'package:eh_platform/src/hero_story/application/use_cases/project_discove
 import 'package:eh_platform/src/hero_story/infrastructure/postgres_story_candidate_source.dart';
 import 'package:eh_platform/src/hero_story/infrastructure/seeded_story_candidate_catalog.dart';
 import 'package:eh_platform/src/persistence/database.dart';
+import 'package:shelf/shelf.dart';
 
+export 'package:eh_platform/src/api/hero_story_api.dart';
 export 'package:eh_platform/src/hero_story/application/ports/discoverable_story_candidate_projection.dart';
 export 'package:eh_platform/src/hero_story/application/ports/story_candidate_source.dart';
 export 'package:eh_platform/src/hero_story/application/services/deterministic_story_relevance_ranker.dart';
@@ -88,11 +92,15 @@ final class HeroStoryModule {
         : ProjectDiscoverableStoryCandidateUseCase(
             projection: effectiveProjection,
           );
+    final api = projectUseCase == null
+        ? null
+        : HeroStoryApi(projectCandidate: projectUseCase);
     return HeroStoryComponents(
       candidateSource: candidateSource,
       storyCandidatePort: port,
       projection: effectiveProjection,
       projectCandidate: projectUseCase,
+      api: api,
     );
   }
 }
@@ -104,6 +112,7 @@ final class HeroStoryComponents {
     required this.storyCandidatePort,
     this.projection,
     this.projectCandidate,
+    this.api,
   });
 
   /// Replaceable candidate store (live Postgres in production).
@@ -117,4 +126,9 @@ final class HeroStoryComponents {
 
   /// Transitional upsert/invalidate use case. Null when no projection writer.
   final ProjectDiscoverableStoryCandidateUseCase? projectCandidate;
+
+  /// Thin HTTP ingest for candidate projection (J.2 Slice 5). Null when no UC.
+  final HeroStoryApi? api;
+
+  Handler? get handler => api?.router.call;
 }

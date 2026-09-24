@@ -513,3 +513,23 @@ This refactoring should be completed after Phase H.2 functionality is implemente
 **Deferred**
 
 ----
+
+---
+
+# TD-J2-001 Candidate projection sync gap
+
+Status: Closed
+
+Closed: 2026-09-24
+
+Priority: High
+
+Related: J.2 Slice 4 / Slice 5, Post-J.2 Architecture Reassessment (Candidate A)
+
+Description:
+
+After Slice 4, `discoverable_story_candidates` existed but had no product ingest from Flutter Story authority.
+
+Resolution:
+
+J.2 Slice 5 wired HTTP ingest + Flutter soft-fail sync. Remaining transitional debt: dual-stack HTTP sync until Phase 7 platform Story authority + reactors (tracked separately as Phase 7 work, not reopened here).

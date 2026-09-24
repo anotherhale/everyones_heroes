@@ -481,3 +481,17 @@ Aggregate
 Database
 
 The storage mechanism should remain replaceable without affecting domain behavior.
+
+---
+
+# J.2 discoverable Story candidate projection (additive)
+
+Not a Story aggregate repository. Derived read model only.
+
+| Port | Role |
+|------|------|
+| DiscoverableStoryCandidateProjection | `upsert` / `remove` / `exists` |
+| StoryCandidateSource | `listCandidates()` for ranking |
+| PostgresStoryCandidateSource | Implements both against `discoverable_story_candidates` (migration `003`) |
+
+Ingest: `HeroStoryApi` → `ProjectDiscoverableStoryCandidateUseCase` (J.2 Slice 5).

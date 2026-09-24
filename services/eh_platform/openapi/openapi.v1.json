@@ -3,7 +3,7 @@
   "info": {
     "title": "Everyone's Heroes Platform API",
     "version": "0.2.0",
-    "description": "PF.3 foundation + H.2 Life Journey + J.1 Experience Selection contracts."
+    "description": "PF.3 foundation + H.2 Life Journey + J.1 Experience Selection + J.2 Hero & Story candidate ingest contracts."
   },
   "servers": [
     {
@@ -101,6 +101,50 @@
         }
       }
     },
+    "/v1/hero-story/candidates/{storyId}": {
+      "put": {
+        "summary": "Project discoverable Story candidate (J.2 Slice 5)",
+        "description": "Transitional ingest: accepts Flutter-exported eligibility facts, evaluates AdaptiveStoryCandidateEligibilityPolicy, and upserts or removes a row in discoverable_story_candidates. Flutter Story remains authoritative for publish/archive. Not a Candidate aggregate.",
+        "operationId": "projectDiscoverableStoryCandidate",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "storyId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StoryCandidateEligibilityFacts"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Projection applied (upserted or removed when ineligible)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectDiscoverableStoryCandidateResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid eligibility facts payload"
+          },
+          "401": {
+            "description": "Missing or invalid bearer token"
+          }
+        }
+      }
+    },
     "/v1/openapi.json": {
       "get": {
         "summary": "OpenAPI document",
@@ -170,6 +214,61 @@
             "properties": {
               "kind": { "type": "string" },
               "storyId": { "type": "string" }
+            }
+          }
+        }
+      },
+      "StoryCandidateEligibilityFacts": {
+        "type": "object",
+        "required": [
+          "storyId",
+          "heroId",
+          "title",
+          "themeIds",
+          "updatedAt",
+          "lifecycleStatus",
+          "storyVisibility",
+          "hasProvisionalNarrative",
+          "hasAuthoritativeRepresentation",
+          "heroStatus",
+          "heroVisibility"
+        ],
+        "properties": {
+          "storyId": { "type": "string" },
+          "heroId": { "type": "string" },
+          "title": { "type": "string" },
+          "themeIds": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "updatedAt": { "type": "string", "format": "date-time" },
+          "lifecycleStatus": { "type": "string" },
+          "storyVisibility": { "type": "string" },
+          "hasProvisionalNarrative": { "type": "boolean" },
+          "hasAuthoritativeRepresentation": { "type": "boolean" },
+          "heroStatus": { "type": "string" },
+          "heroVisibility": { "type": "string" }
+        }
+      },
+      "ProjectDiscoverableStoryCandidateResult": {
+        "type": "object",
+        "required": ["storyId", "wasUpserted"],
+        "properties": {
+          "storyId": { "type": "string" },
+          "wasUpserted": { "type": "boolean" },
+          "reason": { "type": "string", "nullable": true },
+          "record": {
+            "nullable": true,
+            "type": "object",
+            "properties": {
+              "storyId": { "type": "string" },
+              "heroId": { "type": "string" },
+              "title": { "type": "string" },
+              "themeIds": {
+                "type": "array",
+                "items": { "type": "string" }
+              },
+              "updatedAt": { "type": "string", "format": "date-time" }
             }
           }
         }

@@ -187,6 +187,7 @@ final class PlatformComposition {
       openApiDocument: openApiDocument,
       lifeJourneyApi: lifeJourney.api,
       experienceApi: experience.api,
+      heroStoryApi: heroStory.api,
     );
 
     final handler = const Pipeline()

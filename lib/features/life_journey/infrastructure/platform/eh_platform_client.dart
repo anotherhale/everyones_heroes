@@ -86,6 +86,17 @@ final class EhPlatformClient {
     return _get('/v1/experiences/today');
   }
 
+  /// J.2 Slice 5 — project (or invalidate) a discoverable Story candidate.
+  ///
+  /// Body mirrors platform `StoryCandidateEligibilityFacts`. Upsert is
+  /// idempotent on `story_id`.
+  Future<Map<String, dynamic>> projectDiscoverableStoryCandidate({
+    required String storyId,
+    required Map<String, Object?> facts,
+  }) async {
+    return _put('/v1/hero-story/candidates/$storyId', facts);
+  }
+
   Future<Map<String, dynamic>> _get(String path) async {
     final response = await _http.get(
       _baseUrl.resolve(path),
@@ -105,6 +116,18 @@ final class EhPlatformClient {
         ..._headers(),
         if (idempotencyKey != null) 'Idempotency-Key': idempotencyKey,
       },
+      body: jsonEncode(body),
+    );
+    return _decode(response);
+  }
+
+  Future<Map<String, dynamic>> _put(
+    String path,
+    Map<String, Object?> body,
+  ) async {
+    final response = await _http.put(
+      _baseUrl.resolve(path),
+      headers: _headers(),
       body: jsonEncode(body),
     );
     return _decode(response);

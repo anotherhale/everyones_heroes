@@ -7,7 +7,14 @@ import 'package:eh_platform/src/hero_story/domain/models/story_candidate_record.
 /// via domain events.
 abstract interface class DiscoverableStoryCandidateProjection {
   /// Upsert a projection row. Caller must already enforce eligibility.
-  Future<void> upsert(StoryCandidateRecord record);
+  ///
+  /// Optional [storyVisibility] / [heroVisibility] are diagnostic denormalized
+  /// fields only — not authoritative Story/Hero state.
+  Future<void> upsert(
+    StoryCandidateRecord record, {
+    String? storyVisibility,
+    String? heroVisibility,
+  });
 
   /// Remove a story from the projection (no longer eligible).
   Future<void> remove(String storyId);
