@@ -25,7 +25,7 @@ final class SeededStoryCandidateCatalog implements StoryCandidateSource {
         heroId: 'seed-hero-a',
         title: '[Seed] Finding Direction',
         themeIds: const [
-          // Overlaps Slice 2 analyzer output (always emits `discovery`).
+          // Overlaps catalog `discovery` fallback and purpose-aware content.
           'discovery',
           'purpose',
         ],
