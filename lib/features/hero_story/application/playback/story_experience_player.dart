@@ -32,7 +32,9 @@ final class StoryExperiencePlaybackSnapshot {
 /// Application-facing port that renders a persisted [StoryExperiencePlan].
 ///
 /// Responsibilities:
-/// - play the Hero's original recording bytes unchanged
+/// - play the Hero's original recording bytes unchanged (default voice track)
+/// - optionally play a previously persisted derived voice presentation
+///   without regenerating it
 /// - interpret the plan into a presentation timeline
 /// - layer demo stems according to presentation purposes
 /// - insert intentional silence as a playback gap (never rewrite media)
@@ -41,13 +43,19 @@ final class StoryExperiencePlaybackSnapshot {
 abstract interface class StoryExperiencePlayer {
   Stream<StoryExperiencePlaybackSnapshot> get snapshots;
 
-  /// Loads original recording bytes and prepares playback for [plan].
+  /// Loads recording bytes and prepares playback for [plan].
+  ///
+  /// [originalRecordingBytes] remain the canonical fallback.
+  /// When [presentationVoiceBytes] is provided (a previously persisted
+  /// derived voice artifact), that audio is used as the voice track without
+  /// invoking AI or regenerating audio.
   ///
   /// [transcriptLength] improves proportional span→time mapping when known.
   Future<void> load({
     required Uint8List originalRecordingBytes,
     required StoryExperiencePlan plan,
     int? transcriptLength,
+    Uint8List? presentationVoiceBytes,
   });
 
   Future<void> play();

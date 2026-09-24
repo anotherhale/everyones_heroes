@@ -45,6 +45,7 @@ final class FakeStoryExperiencePlayer implements StoryExperiencePlayer {
     required Uint8List originalRecordingBytes,
     required StoryExperiencePlan plan,
     int? transcriptLength,
+    Uint8List? presentationVoiceBytes,
   }) async {
     calls.add('load');
     if (failOnLoad) {
@@ -53,7 +54,11 @@ final class FakeStoryExperiencePlayer implements StoryExperiencePlayer {
     if (originalRecordingBytes.isEmpty) {
       throw StateError('Original recording is empty.');
     }
-    loadedBytes = Uint8List.fromList(originalRecordingBytes);
+    loadedBytes = Uint8List.fromList(
+      presentationVoiceBytes != null && presentationVoiceBytes.isNotEmpty
+          ? presentationVoiceBytes
+          : originalRecordingBytes,
+    );
     loadedPlan = plan;
     _timeline = _timelineBuilder.build(
       plan: plan,

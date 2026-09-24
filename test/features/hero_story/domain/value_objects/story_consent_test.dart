@@ -10,18 +10,25 @@ void main() {
     expect(consent.isProcessingApproved, isFalse);
     expect(consent.isPublicationApproved, isFalse);
     expect(consent.isAiTransformationApproved, isFalse);
+    expect(consent.isVoiceRenderingApproved, isFalse);
 
     consent = consent.grantProcessing(at);
     expect(consent.isProcessingApproved, isTrue);
     expect(consent.isPublicationApproved, isFalse);
     expect(consent.isAiTransformationApproved, isFalse);
+    expect(consent.isVoiceRenderingApproved, isFalse);
 
     consent = consent.grantPublication(at);
     expect(consent.isPublicationApproved, isTrue);
     expect(consent.isAiTransformationApproved, isFalse);
+    expect(consent.isVoiceRenderingApproved, isFalse);
 
     consent = consent.grantAiTransformation(at);
     expect(consent.isAiTransformationApproved, isTrue);
+    expect(consent.isVoiceRenderingApproved, isFalse);
+
+    consent = consent.grantVoiceRendering(at);
+    expect(consent.isVoiceRenderingApproved, isTrue);
   });
 
   test('revoking one stage does not clear others', () {
@@ -30,12 +37,23 @@ void main() {
         .grantProcessing(at)
         .grantPublication(at)
         .grantAiTransformation(at)
+        .grantVoiceRendering(at)
         .revokeProcessing()
-        .revokePublication();
+        .revokePublication()
+        .revokeAiTransformation();
 
     expect(consent.isRecorded, isTrue);
     expect(consent.isProcessingApproved, isFalse);
     expect(consent.isPublicationApproved, isFalse);
+    expect(consent.isAiTransformationApproved, isFalse);
+    expect(consent.isVoiceRenderingApproved, isTrue);
+  });
+
+  test('AI transformation consent does not imply voice rendering', () {
+    final consent = StoryConsent.none
+        .grantAiTransformation(at)
+        .grantProcessing(at);
     expect(consent.isAiTransformationApproved, isTrue);
+    expect(consent.isVoiceRenderingApproved, isFalse);
   });
 }

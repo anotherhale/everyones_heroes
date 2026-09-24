@@ -5,12 +5,15 @@ import 'package:shelf/shelf.dart';
 import 'package:shelf/shelf_io.dart' as shelf_io;
 import 'package:shelf_router/shelf_router.dart';
 
-/// Everyone's Heroes AI proxy entrypoint (HS.11 / SB.7 / SB.8 / SB.11 / HS.12.3 / HS.12.4).
+/// Everyone's Heroes AI proxy entrypoint
+/// (HS.11 / SB.7 / SB.8 / SB.11 / HS.12.3 / HS.12.4 / HS.12.6).
 ///
 /// Environment:
 /// - `OPENAI_API_KEY` (required)
 /// - `OPENAI_TRANSCRIPTION_MODEL` (optional, default gpt-4o-mini-transcribe)
 /// - `OPENAI_CHAT_MODEL` (optional, default gpt-4o-mini)
+/// - `OPENAI_SPEECH_MODEL` (optional, default tts-1)
+/// - `OPENAI_SPEECH_VOICE` (optional, default alloy — synthetic narration only)
 /// - `OPENAI_BASE_URL` (optional)
 /// - `EH_AI_PROXY_HOST` / `EH_AI_PROXY_PORT`
 /// - `EH_AI_PROXY_AUTH_TOKEN` (optional bearer token)
@@ -22,6 +25,7 @@ Future<void> main(List<String> args) async {
   final authoring = StoryAuthoringHandler(config: config);
   final capturedReading = CapturedStoryReadingHandler(config: config);
   final experiencePlan = StoryExperiencePlanHandler(config: config);
+  final voiceRendering = StoryVoiceRenderingHandler(config: config);
 
   final router = Router();
   router.post('/story-transcriptions', transcription.handleTranscribe);
@@ -30,6 +34,7 @@ Future<void> main(List<String> args) async {
   router.post('/story-authoring', authoring.handleAuthor);
   router.post('/captured-story-readings', capturedReading.handleGenerate);
   router.post('/story-experience-plans', experiencePlan.handleGenerate);
+  router.post('/story-voice-renderings', voiceRendering.handleRender);
   router.get('/health', (_) => Response.ok('ok'));
 
   final pipeline = const Pipeline()

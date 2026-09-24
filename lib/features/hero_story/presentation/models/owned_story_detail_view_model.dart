@@ -22,6 +22,7 @@ final class OwnedStoryDetailViewModel {
     required this.isProcessingApproved,
     required this.isPublicationApproved,
     required this.isAiTransformationApproved,
+    required this.isVoiceRenderingApproved,
     required this.hasProvisionalNarrative,
     required this.originalLanguage,
     required this.canArchive,
@@ -45,6 +46,7 @@ final class OwnedStoryDetailViewModel {
   final bool isProcessingApproved;
   final bool isPublicationApproved;
   final bool isAiTransformationApproved;
+  final bool isVoiceRenderingApproved;
   final bool hasProvisionalNarrative;
   final LanguageCode originalLanguage;
   final StoryRepresentationId? primaryOriginalAudioId;
@@ -85,6 +87,7 @@ final class OwnedStoryDetailViewModel {
       isProcessingApproved: detail.isProcessingApproved,
       isPublicationApproved: detail.isPublicationApproved,
       isAiTransformationApproved: detail.isAiTransformationApproved,
+      isVoiceRenderingApproved: detail.isVoiceRenderingApproved,
       hasProvisionalNarrative: provisional,
       originalLanguage: detail.originalLanguage,
       primaryOriginalAudioId: detail.primaryOriginalAudioId,

@@ -450,6 +450,10 @@ class _OwnedStoryDetailBody extends ConsumerWidget {
               'AI transformation consented'
             else
               'AI transformation not consented',
+            if (detail.isVoiceRenderingApproved)
+              'AI voice narration consented'
+            else
+              'AI voice narration not consented',
             if (detail.isPublicationApproved)
               'Publication consented'
             else

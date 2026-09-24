@@ -23,6 +23,7 @@ final class OwnedStoryDetail {
     required this.isProcessingApproved,
     required this.isPublicationApproved,
     required this.isAiTransformationApproved,
+    required this.isVoiceRenderingApproved,
     required this.representations,
     this.primaryOriginalAudioId,
     this.primaryOriginalAudioDuration,
@@ -41,6 +42,7 @@ final class OwnedStoryDetail {
   final bool isProcessingApproved;
   final bool isPublicationApproved;
   final bool isAiTransformationApproved;
+  final bool isVoiceRenderingApproved;
   final List<OwnedRepresentationSummary> representations;
   final StoryRepresentationId? primaryOriginalAudioId;
   final Duration? primaryOriginalAudioDuration;
