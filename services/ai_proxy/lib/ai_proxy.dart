@@ -1,6 +1,8 @@
-/// Everyone's Heroes AI proxy library (HS.11 / SB.7 / SB.8 / SB.11).
+/// Everyone's Heroes AI proxy library (HS.11 / SB.7 / SB.8 / SB.11 / HS.12.3).
 library;
 
+export 'src/captured_story_reading_handler.dart';
+export 'src/captured_story_reading_instructions.dart';
 export 'src/openai_chat_client.dart';
 export 'src/openai_transcription_client.dart';
 export 'src/proxy_config.dart';

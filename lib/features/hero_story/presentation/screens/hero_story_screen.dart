@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:everyonesheroes/features/hero_story/presentation/models/captured_story_reading_view_data.dart';
 import 'package:everyonesheroes/features/hero_story/presentation/models/hero_story_view_data.dart';
 import 'package:everyonesheroes/features/hero_story/presentation/providers/hero_story_playback_controller.dart';
 import 'package:everyonesheroes/features/hero_story/presentation/providers/hero_story_provider.dart';
+import 'package:everyonesheroes/features/hero_story/presentation/providers/hero_story_understanding_controller.dart';
 import 'package:everyonesheroes/features/hero_story/presentation/screens/owned_story_detail_screen.dart';
 
 /// Hero-owned presentation of a saved Story.
 ///
-/// The canonical Story is unchanged. This screen plays the original recording.
+/// The canonical Story is unchanged. This screen plays the original recording
+/// and optionally surfaces a grounded captured-story reading (HS.12.3).
 class HeroStoryScreen extends ConsumerWidget {
   const HeroStoryScreen({required this.storyId, super.key});
 
@@ -60,6 +63,10 @@ class _HeroStoryBody extends ConsumerWidget {
     final playback = ref.watch(heroStoryPlaybackProvider(storyId));
     final playbackController = ref.read(
       heroStoryPlaybackProvider(storyId).notifier,
+    );
+    final understanding = ref.watch(heroStoryUnderstandingProvider(storyId));
+    final understandingController = ref.read(
+      heroStoryUnderstandingProvider(storyId).notifier,
     );
     final recordingId = story.originalRecordingId;
 
@@ -163,6 +170,65 @@ class _HeroStoryBody extends ConsumerWidget {
             ),
           ],
         ],
+        const SizedBox(height: 20),
+        OutlinedButton.icon(
+          key: const ValueKey('hero-story-understand-button'),
+          onPressed: understanding.isProcessing
+              ? null
+              : () => understandingController.understand(
+                    isRetry: understanding.phase ==
+                        HeroStoryUnderstandingPhase.failed,
+                  ),
+          icon: understanding.isProcessing
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Icon(Icons.auto_awesome_outlined),
+          label: Text(
+            understanding.phase == HeroStoryUnderstandingPhase.failed
+                ? 'Retry understanding'
+                : understanding.phase == HeroStoryUnderstandingPhase.ready
+                    ? 'Refresh understanding'
+                    : 'Understand my story',
+          ),
+        ),
+        if (understanding.isProcessing) ...[
+          const SizedBox(height: 16),
+          Text(
+            HeroStoryUnderstandingController.processingMessage,
+            key: const ValueKey('hero-story-understanding-processing'),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
+        if (understanding.errorMessage != null) ...[
+          const SizedBox(height: 16),
+          Text(
+            understanding.errorMessage!,
+            key: const ValueKey('hero-story-understanding-error'),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.error,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Your original recording is still available.',
+            key: const ValueKey('hero-story-understanding-error-recording'),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
+        if (understanding.reading != null) ...[
+          const SizedBox(height: 28),
+          _CapturedStoryReadingSection(
+            reading: understanding.reading!,
+            theme: theme,
+          ),
+        ],
         const SizedBox(height: 28),
         Text(
           'A real story from a real person',
@@ -199,8 +265,154 @@ class _HeroStoryBody extends ConsumerWidget {
       HeroStoryPlaybackPhase.idle ||
       HeroStoryPlaybackPhase.loading ||
       HeroStoryPlaybackPhase.completed ||
-      HeroStoryPlaybackPhase.failed => 'Play my recording',
+      HeroStoryPlaybackPhase.failed =>
+        'Play my recording',
     };
+  }
+}
+
+class _CapturedStoryReadingSection extends StatelessWidget {
+  const _CapturedStoryReadingSection({
+    required this.reading,
+    required this.theme,
+  });
+
+  final CapturedStoryReadingViewData reading;
+  final ThemeData theme;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      key: const ValueKey('hero-story-reading-section'),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Story Understanding',
+          key: const ValueKey('hero-story-reading-title'),
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Grounded in your transcript — not a rewrite of your story.',
+          key: const ValueKey('hero-story-reading-subtitle'),
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: 16),
+        _ReadingElementTile(
+          key: const ValueKey('hero-story-reading-movement'),
+          label: 'Movement',
+          element: reading.movement,
+          theme: theme,
+        ),
+        _ReadingThemesTile(
+          key: const ValueKey('hero-story-reading-themes'),
+          themes: reading.themes,
+          theme: theme,
+        ),
+        _ReadingElementTile(
+          key: const ValueKey('hero-story-reading-challenge'),
+          label: 'Challenge',
+          element: reading.challenge,
+          theme: theme,
+        ),
+        _ReadingElementTile(
+          key: const ValueKey('hero-story-reading-turning-point'),
+          label: 'Turning point',
+          element: reading.turningPoint,
+          theme: theme,
+        ),
+        _ReadingElementTile(
+          key: const ValueKey('hero-story-reading-outcome'),
+          label: 'Outcome',
+          element: reading.outcome,
+          theme: theme,
+        ),
+      ],
+    );
+  }
+}
+
+class _ReadingElementTile extends StatelessWidget {
+  const _ReadingElementTile({
+    required this.label,
+    required this.element,
+    required this.theme,
+    super.key,
+  });
+
+  final String label;
+  final GroundedElementViewData element;
+  final ThemeData theme;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: theme.textTheme.labelLarge?.copyWith(
+              color: theme.colorScheme.primary,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(element.text, style: theme.textTheme.bodyLarge),
+          const SizedBox(height: 2),
+          Text(
+            'Source ${element.spanLabel}',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ReadingThemesTile extends StatelessWidget {
+  const _ReadingThemesTile({
+    required this.themes,
+    required this.theme,
+    super.key,
+  });
+
+  final List<GroundedThemeViewData> themes;
+  final ThemeData theme;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Themes',
+            style: theme.textTheme.labelLarge?.copyWith(
+              color: theme.colorScheme.primary,
+            ),
+          ),
+          const SizedBox(height: 4),
+          for (final item in themes) ...[
+            Text(item.label, style: theme.textTheme.bodyLarge),
+            Text(
+              'Source ${item.spanLabel}',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 4),
+          ],
+        ],
+      ),
+    );
   }
 }
 

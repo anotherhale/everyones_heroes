@@ -62,6 +62,7 @@ export 'events/story_understanding_superseded.dart';
 export 'repositories/hero_repository.dart';
 export 'repositories/story_builder_session_repository.dart';
 export 'repositories/story_proposal_repository.dart';
+export 'repositories/captured_story_reading_repository.dart';
 export 'repositories/story_repository.dart';
 export 'repositories/story_understanding_repository.dart';
 
@@ -90,15 +91,18 @@ export 'services/story_builder_understanding_port.dart';
 export 'services/story_builder_understanding_provenance.dart';
 export 'services/unsupported_ai_story_builder_question_strategy.dart';
 export 'services/story_transcription_port.dart';
+export 'services/captured_story_reading_port.dart';
 export 'services/story_translation_port.dart';
 export 'services/story_understanding_port.dart';
 
 export 'value_objects/candidate_content_suitability.dart';
 export 'value_objects/candidate_spirituality_classification.dart';
 export 'value_objects/candidate_story_classification.dart';
+export 'value_objects/captured_story_reading.dart';
 export 'value_objects/content_suitability.dart';
 export 'value_objects/deterministic_story_structure.dart';
 export 'value_objects/deterministic_story_structure_section.dart';
+export 'value_objects/grounded_story_element.dart';
 export 'value_objects/hero_profile.dart';
 export 'value_objects/media_reference.dart';
 export 'value_objects/provenance_step.dart';
