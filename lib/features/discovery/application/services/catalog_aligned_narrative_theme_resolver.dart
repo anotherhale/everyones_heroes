@@ -59,7 +59,7 @@ final class CatalogAlignedNarrativeThemeResolver
   static Iterable<String> _textParts(ReflectionResponse response) {
     return switch (response) {
       JournalResponse(:final prompt, :final response) => [
-          if (prompt != null) prompt,
+          ?prompt,
           response,
         ],
       PromptResponse(:final prompt, :final response) => [prompt, response],
