@@ -23,7 +23,6 @@ import 'package:everyonesheroes/features/hero_story/application/use_cases/transc
 import 'package:everyonesheroes/features/hero_story/application/use_cases/understand_owned_hero_story_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/update_story_consent_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/domain/domain.dart';
-import 'package:everyonesheroes/features/hero_story/domain/services/captured_story_reading_port.dart';
 import 'package:everyonesheroes/features/hero_story/infrastructure/ai/in_memory_captured_story_reading_adapter.dart';
 import 'package:everyonesheroes/features/hero_story/infrastructure/ai/in_memory_story_transcription_adapter.dart';
 import 'package:everyonesheroes/features/hero_story/infrastructure/media/in_memory_story_media_storage_adapter.dart';

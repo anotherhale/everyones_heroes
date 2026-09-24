@@ -276,6 +276,12 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('capture-view-story-button')));
     await tester.pumpAndSettle();
 
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('hero-story-details-button')),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('hero-story-details-button')));
     await tester.pumpAndSettle();
 

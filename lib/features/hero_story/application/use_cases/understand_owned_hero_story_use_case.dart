@@ -20,10 +20,9 @@ final class UnderstandOwnedHeroStoryUseCase
     implements
         UseCase<UnderstandOwnedHeroStoryRequest, UnderstandOwnedHeroStoryResponse> {
   const UnderstandOwnedHeroStoryUseCase({
-    required StartOwnedStoryTranscriptionUseCase startTranscription,
-    required GenerateCapturedStoryReadingUseCase generateReading,
-  })  : _startTranscription = startTranscription,
-        _generateReading = generateReading;
+    required this._startTranscription,
+    required this._generateReading,
+  });
 
   final StartOwnedStoryTranscriptionUseCase _startTranscription;
   final GenerateCapturedStoryReadingUseCase _generateReading;

@@ -27,14 +27,11 @@ final class GenerateCapturedStoryReadingUseCase
           GenerateCapturedStoryReadingResponse
         > {
   const GenerateCapturedStoryReadingUseCase({
-    required StoryRepository storyRepository,
-    required HeroRepository heroRepository,
-    required CapturedStoryReadingPort readingPort,
-    required CapturedStoryReadingRepository readingRepository,
-  })  : _storyRepository = storyRepository,
-        _heroRepository = heroRepository,
-        _readingPort = readingPort,
-        _readingRepository = readingRepository;
+    required this._storyRepository,
+    required this._heroRepository,
+    required this._readingPort,
+    required this._readingRepository,
+  });
 
   final StoryRepository _storyRepository;
   final HeroRepository _heroRepository;

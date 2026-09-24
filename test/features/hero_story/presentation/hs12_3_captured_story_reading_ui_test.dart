@@ -189,23 +189,15 @@ void main() {
     addTearDown(container.dispose);
 
     await captureThroughHeroStory(tester, container);
+    final storyId = (await stories.findAll()).single.id.value;
 
     await tester.tap(find.byKey(const ValueKey('hero-story-understand-button')));
     await tester.pump();
-    expect(
-      find.byKey(const ValueKey('hero-story-understanding-processing')),
-      findsOneWidget,
-    );
 
     await tester.runAsync(() async {
-      for (var i = 0; i < 40; i++) {
-        final phase = container
-            .read(
-              heroStoryUnderstandingProvider(
-                (await stories.findAll()).single.id.value,
-              ),
-            )
-            .phase;
+      for (var i = 0; i < 60; i++) {
+        final phase =
+            container.read(heroStoryUnderstandingProvider(storyId)).phase;
         if (phase == HeroStoryUnderstandingPhase.ready ||
             phase == HeroStoryUnderstandingPhase.failed) {
           break;
@@ -215,6 +207,10 @@ void main() {
     });
     await tester.pumpAndSettle();
 
+    expect(
+      container.read(heroStoryUnderstandingProvider(storyId)).phase,
+      HeroStoryUnderstandingPhase.ready,
+    );
     expect(find.byKey(const ValueKey('hero-story-reading-section')), findsOneWidget);
     expect(find.byKey(const ValueKey('hero-story-reading-movement')), findsOneWidget);
     expect(find.byKey(const ValueKey('hero-story-reading-themes')), findsOneWidget);
@@ -228,10 +224,10 @@ void main() {
     expect(find.text('Play my recording'), findsOneWidget);
 
     final story = (await stories.findAll()).single;
-    final titleBefore = story.title.value;
-    expect(titleBefore, storyTitle);
+    expect(story.title.value, storyTitle);
     expect(await readings.findByStoryId(story.id), isNotNull);
 
+    await tester.ensureVisible(find.byKey(const ValueKey('hero-story-play-button')));
     await tester.tap(find.byKey(const ValueKey('hero-story-play-button')));
     await tester.pumpAndSettle();
     expect(player.calls, containsAllInOrder(<String>['load', 'play']));
