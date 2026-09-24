@@ -1,10 +1,10 @@
 # J.2 — Discovery Platform Foundation
 
 - **Document type:** Architecture + Implementation Report
-- **Status:** Slices 1–3 implemented; Slices 4–6 not implemented
+- **Status:** Slices 1–3 implemented; Slice 4 planned (not implemented); Slices 5–6 not implemented
 - **Phase:** J.2 — Platform Narrative Theme Foundation + Story candidate seed
-- **Baseline:** J.1 complete (`a8d92ad` / PR #58); planning baseline after D.1 plan (`56db481` / PR #59)
-- **Date:** 2026-09-23
+- **Baseline:** J.1 complete (`a8d92ad` / PR #58); planning baseline after D.1 plan (`56db481` / PR #59); Slices 1–3 at `5a0a279` / PR #60
+- **Date:** 2026-09-23 (Slice 4 plan added 2026-09-24)
 
 ---
 
@@ -15,7 +15,7 @@
 | **J.2 Slice 1** | Platform NarrativeTheme reference catalog | **COMPLETE** |
 | **J.2 Slice 2** | Resolve themes → AdaptiveDiscoverySignals (catalog-aligned) | **COMPLETE** |
 | **J.2 Slice 3** | Story candidate persistence / seeding | **COMPLETE** |
-| **J.2 Slice 4** | Live candidate discovery / ranking refinement | **NOT IMPLEMENTED** |
+| **J.2 Slice 4** | Live candidate discovery / ranking refinement | **PLANNED** — see [`J.2-Slice-4-Live-Story-Candidate-Discovery-Plan.md`](./J.2-Slice-4-Live-Story-Candidate-Discovery-Plan.md) |
 | **J.2 Slice 5** | DiscoveryProfile / Influence productization | **NOT IMPLEMENTED** (see D.1) |
 | **J.2 Slice 6** | Public Discovery REST / full personalization | **NOT IMPLEMENTED** |
 
@@ -391,7 +391,7 @@ No new SQL migrations were added for Slice 3 (transitional code-defined seed). E
 
 Also deferred to later slices:
 
-* Slice 4 — live candidate discovery / ranking refinement (replace seed with real HS store; refine without ML)
+* Slice 4 — live candidate discovery / ranking refinement (replace seed with real HS store; refine without ML). **Planning complete:** [`J.2-Slice-4-Live-Story-Candidate-Discovery-Plan.md`](./J.2-Slice-4-Live-Story-Candidate-Discovery-Plan.md). Implementation not started.
 * Slice 5/6 — DiscoveryProfile / broader Discovery capabilities (see D.1)
 
 ---
