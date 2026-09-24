@@ -79,13 +79,17 @@ Not a domain aggregate. Free of Flutter/Riverpod/repository deps on the type its
 `DeterministicStoryRelevanceRanker`:
 
 1. Theme overlap count (primary)
-2. Max behavior-pattern strength boost when overlap > 0 (0.0–1.0)
-3. Tie-break: `updatedAt` desc, then `storyId` asc
+2. Most recently expressed matched theme (`themeLastExpressedAt` from Reflections)
+3. Max behavior-pattern strength boost when overlap > 0 (0.0–1.0)
+4. Tie-break: `updatedAt` desc, then `storyId` asc
 
 Patterns alone never invent Story relevance. Empty themes → empty candidates →
-UI.3 reflection fallback.
+UI.3 reflection fallback. Empty theme-recency map → prior overlap/boost/timestamp
+ordering (HS-ADR-071).
 
 Participating pattern types: all present Journey patterns (strength used as boost).
+
+See also: `Theme-Recency-Story-Ranking-Implementation-Report.md`.
 
 ---
 

@@ -266,6 +266,98 @@ void main() {
       );
     },
   );
+
+  test(
+    'theme-recency ranking selects older Story matching recent theme',
+    () async {
+      final journey = Journey.create(
+        id: JourneyId.generate(),
+        vision: JourneyVision('Become someone who shows up.'),
+      );
+      await journeyRepository.save(journey);
+      currentJourneyContext.setCurrentJourney(journey.id);
+
+      final hero = Hero.create(
+        id: HeroId.generate(),
+        profile: HeroProfile(
+          displayName: 'Ada',
+          biography: 'Lived experience.',
+          experienceAreas: const ['Service'],
+          languages: [LanguageCode('en')],
+        ),
+        visibility: HeroVisibility.public,
+      );
+      await heroes.save(hero);
+
+      // Intentionally adverse: courage Story is newer than service Story.
+      final courageStory = await _seedPublishedStory(
+        stories,
+        hero: hero,
+        title: 'Story A Courage (newer updatedAt)',
+        themes: [NarrativeThemeReferenceIds.courage],
+        createdAt: DateTime.utc(2026, 3, 1),
+      );
+      final serviceStory = await _seedPublishedStory(
+        stories,
+        hero: hero,
+        title: 'Story B Service (older updatedAt)',
+        themes: [NarrativeThemeReferenceIds.service],
+        createdAt: DateTime.utc(2026, 1, 1),
+      );
+
+      expect(
+        courageStory.updatedAt.isAfter(serviceStory.updatedAt),
+        isTrue,
+        reason: 'Fixture must make Story timestamp unable to explain the win',
+      );
+      expect(courageStory.id, isNot(serviceStory.id));
+
+      await _submitAndAnalyze(
+        analyzeReflectionUseCase,
+        reflectionRepository,
+        journeyId: journey.id,
+        journalText: 'Today I found courage when I spoke up.',
+        expectedTheme: NarrativeThemeReferenceIds.courage,
+      );
+
+      final afterCourage = (await getTodayExperienceUseCase.execute()).fold(
+        onSuccess: (value) => value,
+        onFailure: (error) => throw StateError(error),
+      );
+      expect(afterCourage.type, ExperienceType.story);
+      expect(
+        (afterCourage.target as StoryExperienceTarget).storyId,
+        courageStory.id,
+      );
+
+      await _submitAndAnalyze(
+        analyzeReflectionUseCase,
+        reflectionRepository,
+        journeyId: journey.id,
+        journalText: 'I want to grow through service to others.',
+        expectedTheme: NarrativeThemeReferenceIds.service,
+      );
+
+      final afterService = (await getTodayExperienceUseCase.execute()).fold(
+        onSuccess: (value) => value,
+        onFailure: (error) => throw StateError(error),
+      );
+
+      expect(afterService.type, ExperienceType.story);
+      expect(
+        (afterService.target as StoryExperienceTarget).storyId,
+        serviceStory.id,
+        reason:
+            'Recent service theme must beat newer courage Story updatedAt',
+      );
+      expect(
+        (afterService.target as StoryExperienceTarget).storyId,
+        isNot((afterCourage.target as StoryExperienceTarget).storyId),
+      );
+      expect(afterService.id, 'adaptive-story-${serviceStory.id.value}');
+      expect(afterService.id, isNot(afterCourage.id));
+    },
+  );
 }
 
 Future<void> _submitAndAnalyze(

@@ -8,10 +8,13 @@ import 'package:eh_platform/src/hero_story/domain/models/story_candidate_record.
 ///
 /// Scoring:
 /// - Primary: narrative theme overlap count
-/// - Secondary: max behavior-pattern strength when overlap > 0 (0.0–1.0)
+/// - Secondary: most recently expressed matched theme (Reflection submission)
+/// - Tertiary: max behavior-pattern strength when overlap > 0 (0.0–1.0)
 /// - Tie-break: updatedAt desc, then storyId asc
 ///
 /// Patterns strengthen relevance; they do not create relevance without themes.
+/// Theme recency prefers Stories aligned with recent understanding over
+/// historical union + Story publish-time ties.
 /// No ML, embeddings, popularity, or engagement metrics.
 final class DeterministicStoryRelevanceRanker {
   const DeterministicStoryRelevanceRanker();
@@ -22,6 +25,7 @@ final class DeterministicStoryRelevanceRanker {
   }) {
     final signalThemeValues = signals.narrativeThemeIds.toSet();
     final patternBoost = _patternBoost(signals);
+    final themeLastExpressedAt = signals.themeLastExpressedAt;
 
     final candidates = <DiscoverableStoryCandidate>[];
 
@@ -52,7 +56,9 @@ final class DeterministicStoryRelevanceRanker {
       );
     }
 
-    candidates.sort(_compare);
+    candidates.sort(
+      (a, b) => _compare(a, b, themeLastExpressedAt),
+    );
     return List.unmodifiable(candidates);
   }
 
@@ -70,13 +76,44 @@ final class DeterministicStoryRelevanceRanker {
     return maxStrength;
   }
 
+  static DateTime _maxMatchedThemeExpressedAt(
+    List<String> matchedThemeIds,
+    Map<String, DateTime> themeLastExpressedAt,
+  ) {
+    DateTime? best;
+    for (final themeId in matchedThemeIds) {
+      final at = themeLastExpressedAt[themeId];
+      if (at == null) {
+        continue;
+      }
+      if (best == null || at.isAfter(best)) {
+        best = at;
+      }
+    }
+    return best ?? DateTime.fromMillisecondsSinceEpoch(0, isUtc: true);
+  }
+
   static int _compare(
     DiscoverableStoryCandidate a,
     DiscoverableStoryCandidate b,
+    Map<String, DateTime> themeLastExpressedAt,
   ) {
     final overlap = b.themeOverlapCount.compareTo(a.themeOverlapCount);
     if (overlap != 0) {
       return overlap;
+    }
+
+    final recentA = _maxMatchedThemeExpressedAt(
+      a.matchedThemeIds,
+      themeLastExpressedAt,
+    );
+    final recentB = _maxMatchedThemeExpressedAt(
+      b.matchedThemeIds,
+      themeLastExpressedAt,
+    );
+    final recent = recentB.compareTo(recentA);
+    if (recent != 0) {
+      return recent;
     }
 
     final boost = b.patternBoost.compareTo(a.patternBoost);

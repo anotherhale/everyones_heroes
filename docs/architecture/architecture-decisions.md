@@ -2392,3 +2392,47 @@ Rejected:
 
 - Adding `StoryLifecycle.processing` solely for transcription
 - A second persistence framework or SQL for HS.11 job state
+
+---
+
+# HS-ADR-071 Theme Recency Precedes Story Timestamp in Adaptive Ranking
+
+Status: Accepted
+
+Date: 2026-09-24
+
+Phase: Slice D — Deterministic Theme-Recency Story Ranking
+
+Decision:
+
+Extend `AdaptiveDiscoverySignals` with `themeLastExpressedAt` (theme value →
+latest Reflection `submittedAt`/`createdAt`) and rank Discover* Story
+candidates as:
+
+1. theme overlap count DESC  
+2. max matched theme last-expressed-at DESC  
+3. pattern boost DESC  
+4. Story `updatedAt` DESC  
+5. `storyId` ASC  
+
+Reuse `DeterministicStoryRelevanceRanker` and the existing adaptive Today path.
+Do not introduce a Personalization Engine, ML ranker, Candidate aggregate, or
+second selection path.
+
+Historical theme union remains available in `narrativeThemeIds`. Empty
+`themeLastExpressedAt` preserves prior deterministic ordering.
+
+Rationale:
+
+After Slice C, diversified themes still lost to Story publish-time ties under
+equal overlap. Recent understanding must control Story identity when candidate
+Stories differ by theme.
+
+Rejected:
+
+- Replacing the ranker with a recommendation/personalization engine
+- Encoding recency only via list order of `narrativeThemeIds`
+- Discarding historical themes from the union
+- Pattern–Story affinity redesign in this slice
+
+See: `docs/architecture/Theme-Recency-Story-Ranking-Implementation-Report.md`
