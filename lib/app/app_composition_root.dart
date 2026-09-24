@@ -12,6 +12,7 @@ import 'package:everyonesheroes/features/hero_story/application/providers/media/
 import 'package:everyonesheroes/features/hero_story/application/providers/persistence/hero_story_persistence_providers.dart';
 import 'package:everyonesheroes/features/hero_story/application/providers/ai/story_transcription_port_provider.dart';
 import 'package:everyonesheroes/features/hero_story/application/providers/recording/recording_providers.dart';
+import 'package:everyonesheroes/features/hero_story/application/providers/repositories/captured_story_reading_repository_provider.dart';
 import 'package:everyonesheroes/features/hero_story/application/providers/repositories/hero_repository_provider.dart';
 import 'package:everyonesheroes/features/hero_story/application/providers/repositories/story_builder_session_repository_provider.dart';
 import 'package:everyonesheroes/features/hero_story/application/providers/repositories/story_proposal_repository_provider.dart';
@@ -173,6 +174,9 @@ final class AppCompositionRoot {
         ),
         storyProposalRepositoryProvider.overrideWithValue(
           durable.storyProposalRepository,
+        ),
+        capturedStoryReadingRepositoryProvider.overrideWithValue(
+          durable.capturedStoryReadingRepository,
         ),
         storyMediaStoragePortProvider.overrideWithValue(durable.mediaStorage),
         captureCompletionStoreProvider.overrideWithValue(

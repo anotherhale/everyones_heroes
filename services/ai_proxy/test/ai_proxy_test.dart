@@ -415,6 +415,219 @@ void main() {
     });
   });
 
+  group('CapturedStoryReadingHandler', () {
+    late CapturedStoryReadingHandler handler;
+    late _FakeChatClient chat;
+
+    const transcript =
+        'I was unsure at first. The challenge was hard. '
+        'Then I knew I had to step forward. And that is what I did.';
+
+    Map<String, dynamic> validReading() => {
+          'movement': {
+            'text': 'The story shifts from uncertainty to action.',
+            'sourceSpan': {'startOffset': 0, 'endOffset': 22},
+          },
+          'themes': [
+            {
+              'label': 'courage',
+              'sourceSpan': {'startOffset': 0, 'endOffset': 10},
+            },
+          ],
+          'challenge': {
+            'text': 'The challenge was hard.',
+            'sourceSpan': {'startOffset': 23, 'endOffset': 46},
+          },
+          'turningPoint': {
+            'text': 'I knew I had to step forward.',
+            'sourceSpan': {'startOffset': 47, 'endOffset': 80},
+          },
+          'outcome': {
+            'text': 'And that is what I did.',
+            'sourceSpan': {'startOffset': 81, 'endOffset': transcript.length},
+          },
+        };
+
+    setUp(() {
+      chat = _FakeChatClient();
+      handler = CapturedStoryReadingHandler(
+        config: const ProxyConfig(
+          openAiApiKey: 'test-key',
+          authToken: 'secret',
+        ),
+        client: chat,
+      );
+    });
+
+    test('rejects unauthorized requests when auth token configured', () async {
+      final middleware = handler.authMiddleware;
+      final inner = middleware((request) async => Response.ok('ok'));
+      final response = await inner(
+        Request(
+          'POST',
+          Uri.parse('http://localhost/captured-story-readings'),
+        ),
+      );
+      expect(response.statusCode, 401);
+    });
+
+    test('returns grounded reading for valid request', () async {
+      chat.content = jsonEncode(validReading());
+      final body = jsonEncode({
+        'storyId': 's1',
+        'transcriptRepresentationId': 't1',
+        'transcriptText': transcript,
+        'language': 'en',
+        'processingVersion': 'hs12.3.v1',
+      });
+      final response = await handler.handleGenerate(
+        Request(
+          'POST',
+          Uri.parse('http://localhost/captured-story-readings'),
+          body: body,
+        ),
+      );
+      expect(response.statusCode, 200);
+      final json = jsonDecode(await response.readAsString()) as Map;
+      expect(json['movement'], isA<Map>());
+      expect(json['themes'], isA<List>());
+      expect(json['challenge'], isA<Map>());
+      expect(json['turningPoint'], isA<Map>());
+      expect(json['outcome'], isA<Map>());
+      expect(json['providerLabel'], 'openai_via_eh_proxy');
+      expect(json['storyId'], 's1');
+      expect(chat.lastSystemPrompt, contains('Do NOT diagnose'));
+      expect(chat.lastUserPrompt, contains('---BEGIN_TRANSCRIPT---'));
+      expect(chat.lastUserPrompt, contains('step forward'));
+    });
+
+    test('maps malformed body to 400', () async {
+      final response = await handler.handleGenerate(
+        Request(
+          'POST',
+          Uri.parse('http://localhost/captured-story-readings'),
+          body: 'not-json',
+        ),
+      );
+      expect(response.statusCode, 400);
+    });
+
+    test('maps missing transcript to 400', () async {
+      final response = await handler.handleGenerate(
+        Request(
+          'POST',
+          Uri.parse('http://localhost/captured-story-readings'),
+          body: jsonEncode({
+            'storyId': 's1',
+            'transcriptRepresentationId': 't1',
+          }),
+        ),
+      );
+      expect(response.statusCode, 400);
+    });
+
+    test('maps provider failure to 502', () async {
+      chat.throwOnCall = true;
+      final response = await handler.handleGenerate(
+        Request(
+          'POST',
+          Uri.parse('http://localhost/captured-story-readings'),
+          body: jsonEncode({
+            'storyId': 's1',
+            'transcriptRepresentationId': 't1',
+            'transcriptText': transcript,
+          }),
+        ),
+      );
+      expect(response.statusCode, 502);
+    });
+
+    test('rejects invalid AI response missing grounded fields', () async {
+      chat.content = jsonEncode({
+        'movement': {
+          'text': 'ok',
+          'sourceSpan': {'startOffset': 0, 'endOffset': 2},
+        },
+        'themes': [
+          {
+            'label': 'courage',
+            'sourceSpan': {'startOffset': 0, 'endOffset': 2},
+          },
+        ],
+        // missing challenge / turningPoint / outcome
+      });
+      final response = await handler.handleGenerate(
+        Request(
+          'POST',
+          Uri.parse('http://localhost/captured-story-readings'),
+          body: jsonEncode({
+            'storyId': 's1',
+            'transcriptRepresentationId': 't1',
+            'transcriptText': transcript,
+          }),
+        ),
+      );
+      expect(response.statusCode, 502);
+    });
+
+    test('rejects spans outside transcript', () async {
+      final bad = validReading();
+      bad['challenge'] = {
+        'text': 'out of range',
+        'sourceSpan': {'startOffset': 0, 'endOffset': 9999},
+      };
+      chat.content = jsonEncode(bad);
+      final response = await handler.handleGenerate(
+        Request(
+          'POST',
+          Uri.parse('http://localhost/captured-story-readings'),
+          body: jsonEncode({
+            'storyId': 's1',
+            'transcriptRepresentationId': 't1',
+            'transcriptText': transcript,
+          }),
+        ),
+      );
+      expect(response.statusCode, 502);
+    });
+
+    test('rejects psychological claim fields', () async {
+      final bad = validReading();
+      bad['personality'] = 'resilient';
+      chat.content = jsonEncode(bad);
+      final response = await handler.handleGenerate(
+        Request(
+          'POST',
+          Uri.parse('http://localhost/captured-story-readings'),
+          body: jsonEncode({
+            'storyId': 's1',
+            'transcriptRepresentationId': 't1',
+            'transcriptText': transcript,
+          }),
+        ),
+      );
+      expect(response.statusCode, 502);
+    });
+  });
+
+  group('CapturedStoryReadingInstructions', () {
+    test('prompt invariants', () {
+      const prompt = CapturedStoryReadingInstructions.systemPrompt;
+      expect(
+        CapturedStoryReadingInstructions.prohibitsPsychologicalClaims(prompt),
+        isTrue,
+      );
+      expect(
+        CapturedStoryReadingInstructions.requiresSourceSpans(prompt),
+        isTrue,
+      );
+      expect(
+        CapturedStoryReadingInstructions.prohibitsRewritingStory(prompt),
+        isTrue,
+      );
+    });
+  });
+
   test('ProxyConfig requires OPENAI_API_KEY', () {
     expect(
       () => ProxyConfig.fromEnvironment(environment: {}),

@@ -1,4 +1,4 @@
-# Everyone's Heroes AI Proxy (HS.11 / SB.7 / SB.8 / SB.11)
+# Everyone's Heroes AI Proxy (HS.11 / SB.7 / SB.8 / SB.11 / HS.12.3)
 
 Production AI credentials stay on this server. The Flutter app never embeds
 OpenAI secrets (HS-ADR-067 / HS-ADR-068).
@@ -11,6 +11,7 @@ OpenAI secrets (HS-ADR-067 / HS-ADR-068).
 | `POST` | `/story-builder-questions` | AI Story Coach next question (SB.7) |
 | `POST` | `/story-understanding` | Story Builder Understanding (SB.8) |
 | `POST` | `/story-authoring` | AI Story Proposal authoring (SB.11) |
+| `POST` | `/captured-story-readings` | Grounded Captured Story Reading (HS.12.3) |
 | `GET` | `/health` | Liveness (auth exempt) |
 
 ## Run

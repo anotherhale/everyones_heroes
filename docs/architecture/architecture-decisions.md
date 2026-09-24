@@ -2436,3 +2436,58 @@ Rejected:
 - Pattern–Story affinity redesign in this slice
 
 See: `docs/architecture/Theme-Recency-Story-Ranking-Implementation-Report.md`
+
+---
+
+# HS-ADR-072 Captured Story Reading Is a Grounded Derived Artifact
+
+Status: Accepted
+
+Date: 2026-09-24
+
+Phase: HS.12.3 — Explicit Transcription + Grounded Captured-Story Reading
+
+Decision:
+
+Introduce `CapturedStoryReading` as a derived presentation artifact keyed by
+`StoryId`. It is produced from a transcript representation and is **not**
+stored on the canonical `Story` aggregate.
+
+A Captured Story Reading contains only grounded narrative structure:
+
+- movement
+- themes
+- challenge
+- turning point
+- outcome
+
+Every element carries a `SourceSpanReference` into the transcript. Spans
+outside the transcript are rejected at the proxy and application boundary.
+
+`CapturedStoryReading` is distinct from:
+
+- HS.4 `StoryUnderstanding` (catalog classification proposals)
+- SB.8 `StoryBuilderUnderstanding` (Builder-session analysis)
+
+Transcription remains an explicit Hero action (HS-ADR-069). Opening Hero Story
+or playing the original recording does not start AI processing.
+
+The schema must not carry psychological claims (personality, attachment style,
+trauma, mental health diagnosis, resilience scores, inferred motivation, or
+behavioral profiling).
+
+Rationale:
+
+The hero owns the story. AI owns presentation. A grounded reading lets the
+Hero verify that understanding came from words they spoke, without rewriting
+the Story or inventing a diagnosis.
+
+Rejected:
+
+- Adding transcript / reading fields onto the `Story` aggregate
+- Retargeting `POST /story-understanding` (SB.8) for captured stories
+- Auto-starting transcription on save or Hero Story open
+- Psychological / diagnostic schema fields
+- Implementing Story Experience Plan / music in this slice (HS.12.4+)
+
+See: `docs/architecture/HS.12-AI-Hero-Story-Demo-Plan.md`

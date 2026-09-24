@@ -136,6 +136,7 @@ void main() {
       controller.updateTitle(storyTitle);
       await controller.acceptRecording();
       controller.setGrantProcessing(true);
+      controller.setGrantAiTransformation(true);
       await controller.submitConsent();
     });
     await tester.pump();
@@ -190,7 +191,7 @@ void main() {
     expect(find.textContaining('Story —'), findsNothing);
     expect(find.text('Original recording'), findsOneWidget);
     expect(find.text('Play my recording'), findsOneWidget);
-    expect(find.text('Understand my story'), findsNothing);
+    expect(find.text('Understand my story'), findsOneWidget);
 
     final saved = await stories.findAll();
     expect(saved.single.title.value, storyTitle);
