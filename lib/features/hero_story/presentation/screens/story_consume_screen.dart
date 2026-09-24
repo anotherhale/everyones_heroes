@@ -184,7 +184,7 @@ class _StoryConsumeScreenState extends ConsumerState<StoryConsumeScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Consume')),
+      appBar: AppBar(title: const Text('Story Experience')),
       body: SafeArea(
         child: _loading
             ? const Center(child: CircularProgressIndicator())

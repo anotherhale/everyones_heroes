@@ -6,9 +6,18 @@ import 'package:everyonesheroes/features/hero_story/presentation/screens/story_c
 
 /// Story experience detail with narrative body (HS.7 Slice 1).
 class StoryDetailScreen extends ConsumerWidget {
-  const StoryDetailScreen({required this.storyId, super.key});
+  const StoryDetailScreen({
+    required this.storyId,
+    this.discoveryRationale,
+    super.key,
+  });
 
   final String storyId;
+
+  /// Grounded candidate rationale carried from Today's Story experience.
+  ///
+  /// Detail does not invent an explanation. Catalog entry omits this value.
+  final String? discoveryRationale;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -46,6 +55,22 @@ class StoryDetailScreen extends ConsumerWidget {
                   style: theme.textTheme.titleMedium?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
+                ),
+              ],
+              if (discoveryRationale != null &&
+                  discoveryRationale!.trim().isNotEmpty) ...[
+                const SizedBox(height: 16),
+                Text(
+                  'Why this Story?',
+                  key: const ValueKey('story-why-this-story'),
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  discoveryRationale!,
+                  key: const ValueKey('story-discovery-rationale'),
                 ),
               ],
               const SizedBox(height: 20),

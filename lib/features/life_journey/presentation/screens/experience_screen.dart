@@ -36,7 +36,10 @@ final class _ExperienceScreenState extends ConsumerState<ExperienceScreen> {
 
       await Navigator.of(context).push(
         MaterialPageRoute<void>(
-          builder: (_) => StoryDetailScreen(storyId: storyId),
+          builder: (_) => StoryDetailScreen(
+            storyId: storyId,
+            discoveryRationale: widget.experience.rationale,
+          ),
         ),
       );
       return;
@@ -94,6 +97,17 @@ final class _ExperienceScreenState extends ConsumerState<ExperienceScreen> {
               ),
               if (widget.experience.rationale != null) ...[
                 const SizedBox(height: 24),
+                if (widget.experience.experienceType ==
+                    ExperienceType.story) ...[
+                  Text(
+                    'Why this Story?',
+                    key: const ValueKey('experience-why-this-story'),
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                ],
                 Card(
                   child: Padding(
                     padding: const EdgeInsets.all(16),
