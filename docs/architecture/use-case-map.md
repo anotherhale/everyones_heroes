@@ -1078,3 +1078,14 @@ Behavioral Evidence
 Narrative Guidance
 
 Guidance should remain explainable and traceable to observable evidence.
+
+---
+
+# J.2 / Hero & Story platform (additive)
+
+| Use Case / Collaboration | Status | Context | Notes |
+| ------------------------ | ------ | ------- | ----- |
+| ProjectDiscoverableStoryCandidateUseCase | Implemented | Hero & Story (platform) | Eligibility → upsert/remove projection |
+| DiscoverableStoryCandidateSync | Implemented | Hero & Story (Flutter) | Soft-fail sync after publish/archive |
+| PublishStoryUseCase (+ sync) | Implemented | Hero & Story (Flutter) | Story authority; optional projection sync |
+| ArchiveStoryUseCase (+ sync) | Implemented | Hero & Story (Flutter) | Story authority; optional projection sync |

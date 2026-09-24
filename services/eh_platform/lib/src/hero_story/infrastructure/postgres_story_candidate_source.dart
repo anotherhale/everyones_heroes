@@ -44,34 +44,8 @@ ORDER BY updated_at DESC, story_id ASC
   }
 
   @override
-  Future<void> upsert(StoryCandidateRecord record) async {
-    await _database.connection.execute(
-      r'''
-INSERT INTO discoverable_story_candidates (
-  story_id, hero_id, title, theme_ids, updated_at, projected_at
-) VALUES (
-  $1, $2, $3, $4::jsonb, $5, NOW()
-)
-ON CONFLICT (story_id) DO UPDATE SET
-  hero_id = EXCLUDED.hero_id,
-  title = EXCLUDED.title,
-  theme_ids = EXCLUDED.theme_ids,
-  updated_at = EXCLUDED.updated_at,
-  projected_at = NOW()
-''',
-      parameters: [
-        record.storyId,
-        record.heroId,
-        record.title,
-        jsonEncode(record.themeIds),
-        record.updatedAt.toUtc(),
-      ],
-    );
-  }
-
-  /// Upsert with optional denormalized visibility diagnostics.
-  Future<void> upsertWithEligibilityMeta({
-    required StoryCandidateRecord record,
+  Future<void> upsert(
+    StoryCandidateRecord record, {
     String? storyVisibility,
     String? heroVisibility,
   }) async {

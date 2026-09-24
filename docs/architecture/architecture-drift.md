@@ -442,3 +442,36 @@ Done When:
 Filename matches the class it contains.
 
 
+
+---
+
+# DRIFT-012 Story publish/archive did not refresh candidate projection
+
+Status: Closed
+
+Closed: 2026-09-24
+
+Priority: High
+
+Affected Context:
+
+Hero & Story → Experience (platform Today)
+
+Expected:
+
+Eligible published Stories become durable rows in `discoverable_story_candidates` so platform Today can surface `adaptive-story-*`.
+
+Previous:
+
+Slice 4 built the projection + read path, but no Flutter publish/archive path invoked `ProjectDiscoverableStoryCandidateUseCase`. Platform Today failed closed to reflection when the table was empty.
+
+Resolution (J.2 Slice 5):
+
+* `PUT /v1/hero-story/candidates/{storyId}` → `ProjectDiscoverableStoryCandidateUseCase`
+* Flutter `SyncDiscoverableStoryCandidatePort` after publish / archive / hero visibility / classify
+* Soft-fail sync; Story remains authoritative
+* No Candidate aggregate; migration `003` reused
+
+Done When:
+
+Publish/archive of eligible Stories productizes the projection and Today can discover them without the Slice 3 seed.

@@ -465,3 +465,33 @@ Narrative Guidance
 Contribution
 
 Events are the mechanism that allows each stage to evolve independently.
+
+---
+
+# J.2 Slice 5 — Candidate projection sync (application-driven)
+
+Flutter Story events remain Flutter-local:
+
+```text
+Story.publish → StoryPublished
+Story.archive → StoryArchived
+```
+
+Projection membership is **not** driven by a platform reactor in this slice.
+Instead (transitional dual-stack):
+
+```text
+PublishStoryUseCase / ArchiveStoryUseCase success
+        ↓
+DiscoverableStoryCandidateSync (soft-fail)
+        ↓
+PUT /v1/hero-story/candidates/{storyId}
+        ↓
+ProjectDiscoverableStoryCandidateUseCase
+        ↓
+Postgres discoverable_story_candidates
+```
+
+Explicitly **not** introduced: `StoryCandidateProjected`, platform clones of
+`StoryPublished` / `StoryArchived`. Phase 7 may replace HTTP sync with platform
+Story authority + reactors.

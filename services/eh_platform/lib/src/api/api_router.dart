@@ -2,6 +2,7 @@ import 'package:eh_platform/src/api/handlers/health_handlers.dart';
 import 'package:eh_platform/src/api/handlers/identity_handlers.dart';
 import 'package:eh_platform/src/api/api_errors.dart';
 import 'package:eh_platform/src/api/experience_api.dart';
+import 'package:eh_platform/src/api/hero_story_api.dart';
 import 'package:eh_platform/src/api/life_journey_api.dart';
 import 'package:eh_platform/src/api/middleware/auth_middleware.dart';
 import 'package:eh_platform/src/api/middleware/correlation_middleware.dart';
@@ -21,9 +22,11 @@ final class ApiRouter {
     String openApiDocument = '',
     LifeJourneyApi? lifeJourneyApi,
     ExperienceApi? experienceApi,
+    HeroStoryApi? heroStoryApi,
   })  : _openApiDocument = openApiDocument,
         _lifeJourneyApi = lifeJourneyApi,
-        _experienceApi = experienceApi;
+        _experienceApi = experienceApi,
+        _heroStoryApi = heroStoryApi;
 
   final PlatformDatabase _database;
   final GetCurrentPrincipalHandler _getCurrentPrincipalHandler;
@@ -31,6 +34,7 @@ final class ApiRouter {
   final String _openApiDocument;
   final LifeJourneyApi? _lifeJourneyApi;
   final ExperienceApi? _experienceApi;
+  final HeroStoryApi? _heroStoryApi;
 
   Handler build() {
     final router = Router();
@@ -86,20 +90,24 @@ final class ApiRouter {
     return router.call;
   }
 
-  /// Cascades Life Journey + Experience routers under a single auth pipeline.
+  /// Cascades Life Journey + Experience + Hero & Story under one auth pipeline.
   Handler? _authenticatedModuleHandler() {
-    final lifeJourney = _lifeJourneyApi;
-    final experience = _experienceApi;
-    if (lifeJourney == null && experience == null) {
+    final handlers = <Handler>[
+      if (_lifeJourneyApi != null) _lifeJourneyApi.router.call,
+      if (_experienceApi != null) _experienceApi.router.call,
+      if (_heroStoryApi != null) _heroStoryApi.router.call,
+    ];
+    if (handlers.isEmpty) {
       return null;
     }
-    if (lifeJourney != null && experience != null) {
-      return Cascade()
-          .add(lifeJourney.router.call)
-          .add(experience.router.call)
-          .handler;
+    if (handlers.length == 1) {
+      return handlers.single;
     }
-    return lifeJourney?.router.call ?? experience!.router.call;
+    var cascade = Cascade().add(handlers.first);
+    for (final handler in handlers.skip(1)) {
+      cascade = cascade.add(handler);
+    }
+    return cascade.handler;
   }
 }
 

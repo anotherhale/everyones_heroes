@@ -78,15 +78,26 @@ curl -s -H "Authorization: Bearer dev-platform-token" localhost:8080/v1/me
 |--------|------|---------|
 | `GET` | `/v1/experiences/today` | **Today's Experience** (platform selection) |
 
+## J.2 Hero & Story candidate ingest
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| `PUT` | `/v1/hero-story/candidates/{storyId}` | **Project discoverable candidate** (eligibility facts → Postgres projection) |
+
 Identity: `Authorization: Bearer <token>` resolved by PF.3 Identity
 (`BearerTokenAuthenticator` / sessions) to an `AuthenticatedPrincipal`.
 
 Idempotency: `Idempotency-Key` on submit (PF.3 `command_idempotency` table).
+Candidate projection upsert is naturally idempotent on `story_id` PK.
 
 Experience Selection is on-read from Journey understanding — no experience
 table. HS.8 Story composition uses `DiscoverableStoryCandidatePort`; platform
 bootstrap wires a **live** Hero & Story Postgres candidate projection
 (`PostgresStoryCandidateSource` / `discoverable_story_candidates`).
+J.2 Slice 5 productizes ingest: Flutter Story publish/archive maps eligibility
+facts and calls `PUT /v1/hero-story/candidates/{storyId}` →
+`ProjectDiscoverableStoryCandidateUseCase`. Flutter Story remains authoritative;
+the table is a derived read model (no Candidate aggregate).
 The Slice 3 architectural seed remains a test fixture only — never the
 production default. Fail-closed reflection remains the only Today Experience
 fallback when no eligible/relevant Story exists.

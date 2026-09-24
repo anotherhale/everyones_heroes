@@ -1,12 +1,12 @@
 # J.2 Candidate Projection Productization — Implementation Plan
 
 - **Document type:** Architecture + Implementation Plan (planning only)
-- **Status:** Ready for implementation authorization — **no code changes authorized by this document**
+- **Status:** Implemented — J.2 Slice 5 candidate projection productization
 - **Working name:** J.2.5 / Candidate Projection Productization
 - **Baseline (code):** `main` @ `7392cd4` — Post-J.2 architecture reassessment (#63); Slice 4 at `4b84f0a` (#62)
 - **Upstream:** [`Post-J2-Architecture-Reassessment.md`](./Post-J2-Architecture-Reassessment.md) (Candidate A), [`J.2-Slice-4-Live-Story-Candidate-Discovery-Plan.md`](./J.2-Slice-4-Live-Story-Candidate-Discovery-Plan.md), [`J.2-Discovery-Platform-Foundation.md`](./J.2-Discovery-Platform-Foundation.md)
 - **Date:** 2026-09-24
-- **Constraint:** Documentation and discovery only. Do not implement until explicitly authorized.
+- **Constraint:** Planning document retained as architecture record. Implementation authorized and completed separately (Slice 5).
 
 ---
 

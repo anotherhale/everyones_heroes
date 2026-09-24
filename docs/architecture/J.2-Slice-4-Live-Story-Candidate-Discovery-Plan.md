@@ -459,6 +459,11 @@ discoverable_story_candidates
 
 ### Transitional ingest (Slice 4, not Phase 7)
 
+> **Update (J.2 Slice 5):** Product ingest is now wired — Flutter publish/archive
+> → HTTP `PUT /v1/hero-story/candidates/{storyId}` → this use case.
+> See [`J2-Candidate-Projection-Productization-Plan.md`](./J2-Candidate-Projection-Productization-Plan.md).
+> Phase 7 still replaces HTTP sync with platform Story authority + reactors.
+
 Introduce an HS application capability such as:
 
 * `UpsertDiscoverableStoryCandidateUseCase` / `ProjectDiscoverableStoryCandidate`

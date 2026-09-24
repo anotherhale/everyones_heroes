@@ -16,7 +16,8 @@
 | **J.2 Slice 2** | Resolve themes → AdaptiveDiscoverySignals (catalog-aligned) | **COMPLETE** |
 | **J.2 Slice 3** | Story candidate persistence / seeding | **COMPLETE** |
 | **J.2 Slice 4** | Live candidate discovery / ranking refinement | **COMPLETE** — see [`J.2-Slice-4-Live-Story-Candidate-Discovery-Plan.md`](./J.2-Slice-4-Live-Story-Candidate-Discovery-Plan.md) |
-| **J.2 Slice 5** | DiscoveryProfile / Influence productization | **NOT IMPLEMENTED** (see D.1) |
+| **J.2 Slice 5** | Candidate projection productization (ingest) | **COMPLETE** — see [`J2-Candidate-Projection-Productization-Plan.md`](./J2-Candidate-Projection-Productization-Plan.md) |
+| **D.1** | DiscoveryProfile / Influence productization | **NOT IMPLEMENTED** (see D.1 plan) |
 | **J.2 Slice 6** | Public Discovery REST / full personalization | **NOT IMPLEMENTED** |
 
 ---
@@ -398,7 +399,8 @@ No new SQL migrations were added for Slice 3 (transitional code-defined seed). E
 Also deferred to later slices:
 
 * Slice 4 — live candidate discovery / ranking refinement — **COMPLETE** (see Slice 4 plan + implementation notes below).
-* Slice 5/6 — DiscoveryProfile / broader Discovery capabilities (see D.1)
+* Slice 5 — candidate projection productization (Flutter publish/archive → HTTP ingest → Postgres → Today) — **COMPLETE** (see productization plan).
+* D.1 — DiscoveryProfile / broader Discovery capabilities (separate authorization)
 
 ---
 
@@ -428,6 +430,34 @@ DiscoverableStoryCandidatePort → AdaptiveExperienceComposer → Today
 | Fail-closed | Empty / no overlap → default reflection |
 
 Full detail: [`J.2-Slice-4-Live-Story-Candidate-Discovery-Plan.md`](./J.2-Slice-4-Live-Story-Candidate-Discovery-Plan.md).
+
+---
+
+## 9c. Slice 5 — Candidate projection productization (summary)
+
+Closes the Slice 4 **ingest gap**. Flutter Story remains authoritative for publish/archive.
+
+```text
+PublishStoryUseCase / ArchiveStoryUseCase (+ hero visibility / classify)
+        ↓
+StoryCandidateEligibilityFactsMapper
+        ↓
+SyncDiscoverableStoryCandidatePort → PUT /v1/hero-story/candidates/{storyId}
+        ↓
+ProjectDiscoverableStoryCandidateUseCase
+        ↓
+discoverable_story_candidates → existing Today read path
+```
+
+| Concern | Decision |
+|---------|----------|
+| Ingest API | `HeroStoryApi` — `PUT /v1/hero-story/candidates/{storyId}` |
+| Flutter sync | Soft-fail after durable Story save; no publish rollback |
+| No Candidate aggregate | Projection remains derived HS read model |
+| Migration | Reuses `003` — no new schema |
+| Phase 7 | Still replaces HTTP sync with platform Story authority + reactors |
+
+Full detail: [`J2-Candidate-Projection-Productization-Plan.md`](./J2-Candidate-Projection-Productization-Plan.md).
 
 ---
 
@@ -476,3 +506,15 @@ Full detail: [`J.2-Slice-4-Live-Story-Candidate-Discovery-Plan.md`](./J.2-Slice-
 * [x] DiscoveryProfile not required
 * [x] Architecture + integration + regression suites updated
 * [x] Phase 7 full HS migration not dragged into Slice 4
+
+### Slice 5
+
+* [x] Flutter Story remains authoritative for publish/archive
+* [x] No Candidate aggregate introduced
+* [x] `ProjectDiscoverableStoryCandidateUseCase` reused
+* [x] Migration `003` reused
+* [x] Backend HTTP ingest (`PUT /v1/hero-story/candidates/{storyId}`)
+* [x] Flutter sync port/adapter after publish/archive/hero-visibility/classify
+* [x] Soft-fail sync (publish not rolled back on projection failure)
+* [x] Today read path unchanged; adaptive-story-* from projected candidates
+* [x] Focused ingest + productization + Flutter sync tests
