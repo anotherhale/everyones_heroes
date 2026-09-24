@@ -5,19 +5,30 @@ import 'package:everyonesheroes/features/life_journey/domain/patterns/behavior_p
 ///
 /// Not a domain aggregate. Free of Riverpod/Flutter/repository dependencies.
 /// Sourced from Journey behavior patterns and Reflection NarrativeThemeIds.
+///
+/// [narrativeThemeIds] is the historical theme union (sorted).
+/// [themeLastExpressedAt] maps each theme value to the most recent Reflection
+/// `submittedAt` (falling back to `createdAt`) that carried that theme.
 final class AdaptiveDiscoverySignals {
   AdaptiveDiscoverySignals({
     List<NarrativeThemeId> narrativeThemeIds = const [],
     List<BehaviorPattern> behaviorPatterns = const [],
+    Map<String, DateTime> themeLastExpressedAt = const {},
   }) : narrativeThemeIds = List.unmodifiable(narrativeThemeIds),
-       behaviorPatterns = List.unmodifiable(behaviorPatterns);
+       behaviorPatterns = List.unmodifiable(behaviorPatterns),
+       themeLastExpressedAt = Map.unmodifiable(themeLastExpressedAt);
 
   final List<NarrativeThemeId> narrativeThemeIds;
   final List<BehaviorPattern> behaviorPatterns;
 
+  /// Theme value → latest Reflection submission time expressing that theme.
+  final Map<String, DateTime> themeLastExpressedAt;
+
   bool get hasThemes => narrativeThemeIds.isNotEmpty;
 
   bool get hasPatterns => behaviorPatterns.isNotEmpty;
+
+  bool get hasThemeRecency => themeLastExpressedAt.isNotEmpty;
 
   bool get isEmpty => !hasThemes && !hasPatterns;
 

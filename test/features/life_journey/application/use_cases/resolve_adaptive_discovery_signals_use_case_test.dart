@@ -110,6 +110,51 @@ void main() {
         ['alpha', 'zebra'],
       );
     });
+
+    test(
+      'themeLastExpressedAt tracks most recent submission per theme',
+      () async {
+        final journey = Journey(
+          id: JourneyId('journey-recency'),
+          vision: JourneyVision('Track theme recency.'),
+        );
+        final courage = NarrativeThemeId('courage');
+        final service = NarrativeThemeId('service');
+
+        await _saveSubmittedReflectionWithThemes(
+          reflectionRepository,
+          journeyId: journey.id,
+          themes: [courage],
+          submittedAt: DateTime.utc(2026, 1, 1),
+        );
+        await _saveSubmittedReflectionWithThemes(
+          reflectionRepository,
+          journeyId: journey.id,
+          themes: [service],
+          submittedAt: DateTime.utc(2026, 1, 2),
+        );
+
+        final signals = await useCase.execute(journey);
+
+        expect(
+          signals.narrativeThemeIds.map((t) => t.value).toSet(),
+          {'courage', 'service'},
+        );
+        expect(
+          signals.themeLastExpressedAt['courage'],
+          DateTime.utc(2026, 1, 1),
+        );
+        expect(
+          signals.themeLastExpressedAt['service'],
+          DateTime.utc(2026, 1, 2),
+        );
+        expect(
+          signals.themeLastExpressedAt['service']!
+              .isAfter(signals.themeLastExpressedAt['courage']!),
+          isTrue,
+        );
+      },
+    );
   });
 
   group('AdaptiveDiscoverySignals', () {
@@ -156,15 +201,16 @@ Future<void> _saveSubmittedReflectionWithThemes(
   InMemoryReflectionRepository repository, {
   required JourneyId journeyId,
   required List<NarrativeThemeId> themes,
+  DateTime? submittedAt,
 }) async {
-  final reflection = Reflection.create(
+  final at = submittedAt ?? DateTime.utc(2026, 1, 1);
+  final reflection = Reflection(
     id: ReflectionId.generate(),
     journeyId: journeyId,
+    createdAt: at,
+    submittedAt: at,
+    responses: const [JournalResponse(response: 'I showed up today.')],
+    narrativeThemes: themes,
   );
-  reflection.addResponse(
-    const JournalResponse(response: 'I showed up today.'),
-  );
-  reflection.submit();
-  reflection.addNarrativeThemes(themes);
   await repository.save(reflection);
 }

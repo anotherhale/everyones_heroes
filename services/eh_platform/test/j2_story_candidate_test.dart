@@ -235,6 +235,138 @@ void main() {
       );
     });
 
+    test(
+      'recent theme beats older union theme despite newer Story updatedAt',
+      () {
+        final ranked = ranker.rank(
+          records: [
+            StoryCandidateRecord(
+              storyId: 'courage-newer',
+              heroId: 'h1',
+              title: 'Courage newer',
+              themeIds: const ['courage'],
+              updatedAt: DateTime.utc(2026, 3, 1),
+            ),
+            StoryCandidateRecord(
+              storyId: 'service-older',
+              heroId: 'h1',
+              title: 'Service older',
+              themeIds: const ['service'],
+              updatedAt: DateTime.utc(2026, 1, 1),
+            ),
+          ],
+          signals: AdaptiveDiscoverySignals(
+            narrativeThemeIds: const ['courage', 'service'],
+            themeLastExpressedAt: {
+              'courage': DateTime.utc(2026, 2, 1),
+              'service': DateTime.utc(2026, 2, 2),
+            },
+          ),
+        );
+
+        expect(
+          ranked.map((c) => c.storyId).toList(),
+          ['service-older', 'courage-newer'],
+        );
+        expect(
+          ranked.first.updatedAt.isBefore(ranked.last.updatedAt),
+          isTrue,
+        );
+      },
+    );
+
+    test(
+      'historical themes remain; ranking prefers most recent matched theme',
+      () {
+        final ranked = ranker.rank(
+          records: [
+            StoryCandidateRecord(
+              storyId: 'courage-story',
+              heroId: 'h1',
+              title: 'Courage',
+              themeIds: const ['courage'],
+              updatedAt: DateTime.utc(2026, 1, 1),
+            ),
+            StoryCandidateRecord(
+              storyId: 'service-story',
+              heroId: 'h1',
+              title: 'Service',
+              themeIds: const ['service'],
+              updatedAt: DateTime.utc(2026, 1, 1),
+            ),
+          ],
+          signals: AdaptiveDiscoverySignals(
+            narrativeThemeIds: const ['courage', 'service'],
+            themeLastExpressedAt: {
+              'courage': DateTime.utc(2026, 1, 10),
+              'service': DateTime.utc(2026, 1, 20),
+            },
+          ),
+        );
+
+        expect(
+          ranked.map((c) => c.storyId).toSet(),
+          {'courage-story', 'service-story'},
+        );
+        expect(ranked.first.storyId, 'service-story');
+      },
+    );
+
+    test(
+      'equivalent recent-theme candidates tie-break by storyId when timestamps match',
+      () {
+        final expressed = DateTime.utc(2026, 2, 1);
+        final updated = DateTime.utc(2026, 1, 15);
+        final signals = AdaptiveDiscoverySignals(
+          narrativeThemeIds: const ['service'],
+          themeLastExpressedAt: {'service': expressed},
+        );
+
+        final ranked = ranker.rank(
+          records: [
+            StoryCandidateRecord(
+              storyId: 'story-b',
+              heroId: 'h1',
+              title: 'B',
+              themeIds: const ['service'],
+              updatedAt: updated,
+            ),
+            StoryCandidateRecord(
+              storyId: 'story-a',
+              heroId: 'h1',
+              title: 'A',
+              themeIds: const ['service'],
+              updatedAt: updated,
+            ),
+          ],
+          signals: signals,
+        );
+
+        expect(ranked.map((c) => c.storyId).toList(), ['story-a', 'story-b']);
+
+        final again = ranker.rank(
+          records: [
+            StoryCandidateRecord(
+              storyId: 'story-a',
+              heroId: 'h1',
+              title: 'A',
+              themeIds: const ['service'],
+              updatedAt: updated,
+            ),
+            StoryCandidateRecord(
+              storyId: 'story-b',
+              heroId: 'h1',
+              title: 'B',
+              themeIds: const ['service'],
+              updatedAt: updated,
+            ),
+          ].reversed.toList(),
+          signals: signals,
+        );
+        expect(again.map((c) => c.storyId).toList(), ['story-a', 'story-b']);
+      },
+    );
+
     test('no theme overlap yields empty (fail-closed input to composer)', () {
       final ranked = ranker.rank(
         records: SeededStoryCandidateCatalog.architecturalSeed().records,

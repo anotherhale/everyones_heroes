@@ -157,7 +157,7 @@ void main() {
       );
 
       expect(experienceB.type, ExperienceType.story);
-      // Union is courage+perseverance; equal overlap → newer story B wins.
+      // Union is courage+perseverance; perseverance is more recent → Story B.
       expect(
         (experienceB.target as StoryExperienceTarget).storyId,
         storyB.id,

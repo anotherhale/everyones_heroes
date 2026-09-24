@@ -155,6 +155,161 @@ void main() {
       ]);
     });
 
+    test(
+      'recent theme beats older union theme despite newer Story updatedAt',
+      () {
+        final ranked = ranker.rank(
+          summaries: [
+            _summary(
+              id: 'courage-newer',
+              title: 'Courage (newer Story)',
+              themes: [courage],
+              updatedAt: DateTime.utc(2026, 3, 1),
+            ),
+            _summary(
+              id: 'service-older',
+              title: 'Service (older Story)',
+              themes: [service],
+              updatedAt: DateTime.utc(2026, 1, 1),
+            ),
+          ],
+          signals: AdaptiveDiscoverySignals(
+            narrativeThemeIds: [courage, service],
+            themeLastExpressedAt: {
+              'courage': DateTime.utc(2026, 2, 1),
+              'service': DateTime.utc(2026, 2, 2),
+            },
+          ),
+        );
+
+        expect(ranked.map((c) => c.storyId.value).toList(), [
+          'service-older',
+          'courage-newer',
+        ]);
+        expect(
+          ranked.first.updatedAt.isBefore(ranked.last.updatedAt),
+          isTrue,
+        );
+      },
+    );
+
+    test(
+      'historical themes remain; ranking prefers most recent matched theme',
+      () {
+        final ranked = ranker.rank(
+          summaries: [
+            _summary(
+              id: 'courage-story',
+              title: 'Courage',
+              themes: [courage],
+              updatedAt: DateTime.utc(2026, 1, 1),
+            ),
+            _summary(
+              id: 'service-story',
+              title: 'Service',
+              themes: [service],
+              updatedAt: DateTime.utc(2026, 1, 1),
+            ),
+          ],
+          signals: AdaptiveDiscoverySignals(
+            narrativeThemeIds: [courage, service],
+            themeLastExpressedAt: {
+              'courage': DateTime.utc(2026, 1, 10),
+              'service': DateTime.utc(2026, 1, 20),
+            },
+          ),
+        );
+
+        expect(
+          ranked.map((c) => c.storyId.value).toSet(),
+          {'courage-story', 'service-story'},
+        );
+        expect(ranked.first.storyId.value, 'service-story');
+      },
+    );
+
+    test(
+      'equivalent recent-theme candidates tie-break by storyId when timestamps match',
+      () {
+        final expressed = DateTime.utc(2026, 2, 1);
+        final updated = DateTime.utc(2026, 1, 15);
+        final ranked = ranker.rank(
+          summaries: [
+            _summary(
+              id: 'story-b',
+              title: 'B',
+              themes: [service],
+              updatedAt: updated,
+            ),
+            _summary(
+              id: 'story-a',
+              title: 'A',
+              themes: [service],
+              updatedAt: updated,
+            ),
+          ],
+          signals: AdaptiveDiscoverySignals(
+            narrativeThemeIds: [service],
+            themeLastExpressedAt: {'service': expressed},
+          ),
+        );
+
+        expect(ranked.map((c) => c.storyId.value).toList(), [
+          'story-a',
+          'story-b',
+        ]);
+
+        final again = ranker.rank(
+          summaries: ranked.map((c) {
+            return _summary(
+              id: c.storyId.value,
+              title: c.title,
+              themes: [service],
+              updatedAt: updated,
+            );
+          }).toList().reversed.toList(),
+          signals: AdaptiveDiscoverySignals(
+            narrativeThemeIds: [service],
+            themeLastExpressedAt: {'service': expressed},
+          ),
+        );
+        expect(
+          again.map((c) => c.storyId.value).toList(),
+          ['story-a', 'story-b'],
+        );
+      },
+    );
+
+    test(
+      'without themeLastExpressedAt, existing updatedAt ordering is preserved',
+      () {
+        final ranked = ranker.rank(
+          summaries: [
+            _summary(
+              id: 'older',
+              title: 'Older',
+              themes: [courage],
+              updatedAt: DateTime.utc(2026, 1, 1),
+            ),
+            _summary(
+              id: 'newer',
+              title: 'Newer',
+              themes: [service],
+              updatedAt: DateTime.utc(2026, 2, 1),
+            ),
+          ],
+          signals: AdaptiveDiscoverySignals(
+            narrativeThemeIds: [courage, service],
+          ),
+        );
+
+        expect(ranked.map((c) => c.storyId.value).toList(), [
+          'newer',
+          'older',
+        ]);
+      },
+    );
+
     test('ranking is deterministic for identical inputs', () {
       final summaries = [
         _summary(

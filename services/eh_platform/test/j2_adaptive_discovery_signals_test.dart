@@ -278,6 +278,58 @@ void main() {
       expect(signals.narrativeThemeIds, isNot(contains('self-discovery')));
       expect(signals.narrativeThemeIds, isNot(contains('garbage-theme')));
     });
+
+    test(
+      'themeLastExpressedAt tracks most recent submission per aligned theme',
+      () async {
+        final userId = UserId('00000000-0000-4000-8000-0000000000tr');
+        final journeyId = JourneyId('j-theme-recency');
+
+        await lifeJourney.application.createJourney(
+          userId: userId,
+          request: CreateJourneyRequest(
+            journeyId: journeyId,
+            vision: JourneyVision('Grow'),
+          ),
+        );
+
+        final courageReflection = Reflection(
+          id: ReflectionId('r-courage'),
+          journeyId: journeyId,
+          createdAt: DateTime.utc(2026, 1, 1),
+          submittedAt: DateTime.utc(2026, 1, 1),
+          narrativeThemes: const [NarrativeThemeId('courage')],
+        );
+        final serviceReflection = Reflection(
+          id: ReflectionId('r-service'),
+          journeyId: journeyId,
+          createdAt: DateTime.utc(2026, 1, 2),
+          submittedAt: DateTime.utc(2026, 1, 2),
+          narrativeThemes: const [NarrativeThemeId('service')],
+        );
+
+        final repo = lifeJourney.reflectionRepository
+            as OwnedInMemoryReflectionRepository;
+        await repo.saveForUser(courageReflection, userId);
+        await repo.saveForUser(serviceReflection, userId);
+
+        final journey = await lifeJourney.journeyRepository.findById(journeyId);
+        final signals = await signalResolver.resolve(journey!);
+
+        expect(
+          signals.narrativeThemeIds.toSet(),
+          {'courage', 'service'},
+        );
+        expect(
+          signals.themeLastExpressedAt['courage'],
+          DateTime.utc(2026, 1, 1),
+        );
+        expect(
+          signals.themeLastExpressedAt['service'],
+          DateTime.utc(2026, 1, 2),
+        );
+      },
+    );
   });
 
   group('Theme overlap seam (unit; no Story persistence)', () {
