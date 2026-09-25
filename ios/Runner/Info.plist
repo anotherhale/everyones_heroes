@@ -6,6 +6,13 @@
 	<string>Everyone’s Heroes needs the microphone so you can record your story.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Everyone’s Heroes may use the camera for future video story recording.</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Everyone’s Heroes connects to the development AI proxy on your local network.</string>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>CFBundleDevelopmentRegion</key>
