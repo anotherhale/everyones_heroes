@@ -1,8 +1,8 @@
 import 'dart:io';
 
-/// Server-side configuration for the EH AI proxy (HS.11 / SB.7).
+/// Server-side configuration for the EH AI proxy (HS.11 / SB.7 / Experiment A).
 ///
-/// OpenAI credentials and model selection live here — never in Flutter.
+/// Vendor credentials and model selection live here — never in Flutter.
 final class ProxyConfig {
   const ProxyConfig({
     required this.openAiApiKey,
@@ -11,6 +11,9 @@ final class ProxyConfig {
     this.chatModel = 'gpt-4o-mini',
     this.speechModel = 'tts-1',
     this.speechVoice = 'alloy',
+    this.stabilityApiKey = '',
+    this.stabilityBaseUrl = 'https://api.stability.ai',
+    this.stabilityAudioModel = 'stable-audio-3',
     this.host = '0.0.0.0',
     this.port = 8787,
     this.authToken,
@@ -43,6 +46,14 @@ final class ProxyConfig {
       speechVoice: env['OPENAI_SPEECH_VOICE']?.trim().isNotEmpty == true
           ? env['OPENAI_SPEECH_VOICE']!.trim()
           : 'alloy',
+      stabilityApiKey: env['STABILITY_API_KEY']?.trim() ?? '',
+      stabilityBaseUrl: env['STABILITY_BASE_URL']?.trim().isNotEmpty == true
+          ? env['STABILITY_BASE_URL']!.trim()
+          : 'https://api.stability.ai',
+      stabilityAudioModel:
+          env['STABILITY_AUDIO_MODEL']?.trim().isNotEmpty == true
+              ? env['STABILITY_AUDIO_MODEL']!.trim()
+              : 'stable-audio-3',
       host: env['EH_AI_PROXY_HOST']?.trim().isNotEmpty == true
           ? env['EH_AI_PROXY_HOST']!.trim()
           : '0.0.0.0',
@@ -59,7 +70,15 @@ final class ProxyConfig {
   final String chatModel;
   final String speechModel;
   final String speechVoice;
+
+  /// Optional; required only when [StoryMusicGenerationHandler] is used live.
+  final String stabilityApiKey;
+  final String stabilityBaseUrl;
+  final String stabilityAudioModel;
+
   final String host;
   final int port;
   final String? authToken;
+
+  bool get hasStabilityApiKey => stabilityApiKey.trim().isNotEmpty;
 }

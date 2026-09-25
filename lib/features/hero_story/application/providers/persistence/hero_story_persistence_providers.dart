@@ -8,7 +8,10 @@ import 'package:everyonesheroes/features/hero_story/application/capture/capture_
 import 'package:everyonesheroes/features/hero_story/application/transcription/story_transcription_job_store.dart';
 import 'package:everyonesheroes/features/hero_story/application/understanding/transcription_completion_store.dart';
 import 'package:everyonesheroes/features/hero_story/domain/repositories/captured_story_reading_repository.dart';
+import 'package:everyonesheroes/features/hero_story/domain/repositories/experience_lab_run_repository.dart';
+import 'package:everyonesheroes/features/hero_story/application/lab/experience_render_manifest_repository.dart';
 import 'package:everyonesheroes/features/hero_story/domain/repositories/hero_repository.dart';
+import 'package:everyonesheroes/features/hero_story/domain/repositories/music_rendering_repository.dart';
 import 'package:everyonesheroes/features/hero_story/domain/repositories/story_builder_session_repository.dart';
 import 'package:everyonesheroes/features/hero_story/domain/repositories/story_experience_plan_repository.dart';
 import 'package:everyonesheroes/features/hero_story/domain/repositories/story_proposal_repository.dart';
@@ -18,7 +21,10 @@ import 'package:everyonesheroes/features/hero_story/domain/services/story_media_
 import 'package:everyonesheroes/features/hero_story/infrastructure/capture/file_capture_completion_store.dart';
 import 'package:everyonesheroes/features/hero_story/infrastructure/media/local_file_story_media_storage_adapter.dart';
 import 'package:everyonesheroes/features/hero_story/infrastructure/repositories/file_captured_story_reading_repository.dart';
+import 'package:everyonesheroes/features/hero_story/infrastructure/repositories/file_experience_lab_run_repository.dart';
+import 'package:everyonesheroes/features/hero_story/infrastructure/repositories/file_experience_render_manifest_repository.dart';
 import 'package:everyonesheroes/features/hero_story/infrastructure/repositories/file_hero_repository.dart';
+import 'package:everyonesheroes/features/hero_story/infrastructure/repositories/file_music_rendering_repository.dart';
 import 'package:everyonesheroes/features/hero_story/infrastructure/repositories/file_story_builder_session_repository.dart';
 import 'package:everyonesheroes/features/hero_story/infrastructure/repositories/file_story_experience_plan_repository.dart';
 import 'package:everyonesheroes/features/hero_story/infrastructure/repositories/file_story_proposal_repository.dart';
@@ -82,6 +88,16 @@ final class HeroStoryDurablePersistence {
       storyVoiceRenderingRepository = FileStoryVoiceRenderingRepository(
         rootDirectory: rootDirectory,
       ),
+      musicRenderingRepository = FileMusicRenderingRepository(
+        rootDirectory: rootDirectory,
+      ),
+      experienceLabRunRepository = FileExperienceLabRunRepository(
+        rootDirectory: rootDirectory,
+      ),
+      experienceRenderManifestRepository =
+          FileExperienceRenderManifestRepository(
+        rootDirectory: rootDirectory,
+      ),
       mediaStorage = LocalFileStoryMediaStorageAdapter(
         rootDirectory: rootDirectory,
       ),
@@ -106,6 +122,9 @@ final class HeroStoryDurablePersistence {
   final CapturedStoryReadingRepository capturedStoryReadingRepository;
   final StoryExperiencePlanRepository storyExperiencePlanRepository;
   final StoryVoiceRenderingRepository storyVoiceRenderingRepository;
+  final MusicRenderingRepository musicRenderingRepository;
+  final ExperienceLabRunRepository experienceLabRunRepository;
+  final ExperienceRenderManifestRepository experienceRenderManifestRepository;
   final StoryMediaStoragePort mediaStorage;
   late final CaptureCompletionStore captureCompletionStore;
   late final TranscriptionCompletionStore transcriptionCompletionStore;

@@ -13,7 +13,10 @@ import 'package:everyonesheroes/features/hero_story/application/providers/persis
 import 'package:everyonesheroes/features/hero_story/application/providers/ai/story_transcription_port_provider.dart';
 import 'package:everyonesheroes/features/hero_story/application/providers/recording/recording_providers.dart';
 import 'package:everyonesheroes/features/hero_story/application/providers/repositories/captured_story_reading_repository_provider.dart';
+import 'package:everyonesheroes/features/hero_story/application/providers/repositories/experience_lab_run_repository_provider.dart';
+import 'package:everyonesheroes/features/hero_story/application/providers/repositories/experience_render_manifest_repository_provider.dart';
 import 'package:everyonesheroes/features/hero_story/application/providers/repositories/hero_repository_provider.dart';
+import 'package:everyonesheroes/features/hero_story/application/providers/repositories/music_rendering_repository_provider.dart';
 import 'package:everyonesheroes/features/hero_story/application/providers/repositories/story_builder_session_repository_provider.dart';
 import 'package:everyonesheroes/features/hero_story/application/providers/repositories/story_experience_plan_repository_provider.dart';
 import 'package:everyonesheroes/features/hero_story/application/providers/repositories/story_proposal_repository_provider.dart';
@@ -185,6 +188,15 @@ final class AppCompositionRoot {
         ),
         storyVoiceRenderingRepositoryProvider.overrideWithValue(
           durable.storyVoiceRenderingRepository,
+        ),
+        musicRenderingRepositoryProvider.overrideWithValue(
+          durable.musicRenderingRepository,
+        ),
+        experienceLabRunRepositoryProvider.overrideWithValue(
+          durable.experienceLabRunRepository,
+        ),
+        experienceRenderManifestRepositoryProvider.overrideWithValue(
+          durable.experienceRenderManifestRepository,
         ),
         storyMediaStoragePortProvider.overrideWithValue(durable.mediaStorage),
         captureCompletionStoreProvider.overrideWithValue(

@@ -313,6 +313,8 @@ final class StorySnapshotMapper {
           consent.aiTransformationApprovedAt?.toIso8601String(),
       'voiceRenderingApprovedAt':
           consent.voiceRenderingApprovedAt?.toIso8601String(),
+      'musicGenerationApprovedAt':
+          consent.musicGenerationApprovedAt?.toIso8601String(),
     };
   }
 
@@ -328,6 +330,7 @@ final class StorySnapshotMapper {
       publicationApprovedAt: parseOptional('publicationApprovedAt'),
       aiTransformationApprovedAt: parseOptional('aiTransformationApprovedAt'),
       voiceRenderingApprovedAt: parseOptional('voiceRenderingApprovedAt'),
+      musicGenerationApprovedAt: parseOptional('musicGenerationApprovedAt'),
     );
   }
 

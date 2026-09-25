@@ -1,7 +1,7 @@
-# Everyone's Heroes AI Proxy (HS.11 / SB.7 / SB.8 / SB.11 / HS.12.3 / HS.12.4 / HS.12.6)
+# Everyone's Heroes AI Proxy (HS.11 / SB.7 / SB.8 / SB.11 / HS.12.3 / HS.12.4 / HS.12.6 / Experiment A)
 
 Production AI credentials stay on this server. The Flutter app never embeds
-OpenAI secrets (HS-ADR-067 / HS-ADR-068).
+vendor secrets (HS-ADR-067 / HS-ADR-068).
 
 ## Endpoints
 
@@ -14,6 +14,8 @@ OpenAI secrets (HS-ADR-067 / HS-ADR-068).
 | `POST` | `/captured-story-readings` | Grounded Captured Story Reading (HS.12.3) |
 | `POST` | `/story-experience-plans` | Typed Story Experience Plan (HS.12.4) |
 | `POST` | `/story-voice-renderings` | Synthetic Story voice narration (HS.12.6) |
+| `POST` | `/experience-creative-directions` | Experiment A presentation creative direction |
+| `POST` | `/story-music-generations` | Experiment A Stable Audio instrumental bed |
 | `GET` | `/health` | Liveness (auth exempt) |
 
 ## Run
@@ -27,6 +29,9 @@ export OPENAI_API_KEY=sk-...
 # export OPENAI_CHAT_MODEL=gpt-4o-mini
 # export OPENAI_SPEECH_MODEL=tts-1
 # export OPENAI_SPEECH_VOICE=alloy
+# export STABILITY_API_KEY=sk-...
+# export STABILITY_BASE_URL=https://api.stability.ai
+# export STABILITY_AUDIO_MODEL=stable-audio-3
 # export EH_AI_PROXY_PORT=8787
 # export EH_AI_PROXY_AUTH_TOKEN=dev-token
 dart run bin/server.dart
