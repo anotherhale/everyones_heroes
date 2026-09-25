@@ -6,7 +6,7 @@ import 'package:shelf/shelf_io.dart' as shelf_io;
 import 'package:shelf_router/shelf_router.dart';
 
 /// Everyone's Heroes AI proxy entrypoint
-/// (HS.11 / SB.7 / SB.8 / SB.11 / HS.12.3 / HS.12.4 / HS.12.6).
+/// (HS.11 / SB.7 / SB.8 / SB.11 / HS.12.3 / HS.12.4 / HS.12.6 / Experiment A).
 ///
 /// Environment:
 /// - `OPENAI_API_KEY` (required)
@@ -15,6 +15,9 @@ import 'package:shelf_router/shelf_router.dart';
 /// - `OPENAI_SPEECH_MODEL` (optional, default tts-1)
 /// - `OPENAI_SPEECH_VOICE` (optional, default alloy — synthetic narration only)
 /// - `OPENAI_BASE_URL` (optional)
+/// - `STABILITY_API_KEY` (optional; required for live music generation)
+/// - `STABILITY_BASE_URL` (optional, default https://api.stability.ai)
+/// - `STABILITY_AUDIO_MODEL` (optional, default stable-audio-3)
 /// - `EH_AI_PROXY_HOST` / `EH_AI_PROXY_PORT`
 /// - `EH_AI_PROXY_AUTH_TOKEN` (optional bearer token)
 Future<void> main(List<String> args) async {
@@ -26,6 +29,8 @@ Future<void> main(List<String> args) async {
   final capturedReading = CapturedStoryReadingHandler(config: config);
   final experiencePlan = StoryExperiencePlanHandler(config: config);
   final voiceRendering = StoryVoiceRenderingHandler(config: config);
+  final creativeDirection = ExperienceCreativeDirectionHandler(config: config);
+  final musicGeneration = StoryMusicGenerationHandler(config: config);
 
   final router = Router();
   router.post('/story-transcriptions', transcription.handleTranscribe);
@@ -35,6 +40,11 @@ Future<void> main(List<String> args) async {
   router.post('/captured-story-readings', capturedReading.handleGenerate);
   router.post('/story-experience-plans', experiencePlan.handleGenerate);
   router.post('/story-voice-renderings', voiceRendering.handleRender);
+  router.post(
+    '/experience-creative-directions',
+    creativeDirection.handleDirect,
+  );
+  router.post('/story-music-generations', musicGeneration.handleGenerate);
   router.get('/health', (_) => Response.ok('ok'));
 
   final pipeline = const Pipeline()
