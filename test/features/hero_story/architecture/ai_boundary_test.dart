@@ -81,6 +81,13 @@ void main() {
     expect(names, contains('proxy_story_transcription_adapter.dart'));
     expect(names, contains('story_transcription_config.dart'));
     expect(names, contains('in_memory_story_understanding_adapter.dart'));
+    // Experiment A (AI Experience Laboratory) — proxy adapters are OK.
+    expect(names, contains('in_memory_creative_direction_adapter.dart'));
+    expect(names, contains('proxy_creative_direction_adapter.dart'));
+    expect(names, contains('creative_direction_response_parser.dart'));
+    expect(names, contains('in_memory_music_generation_adapter.dart'));
+    expect(names, contains('proxy_music_generation_adapter.dart'));
+    expect(names, contains('music_generation_response_parser.dart'));
     expect(
       names.any(
         (n) =>

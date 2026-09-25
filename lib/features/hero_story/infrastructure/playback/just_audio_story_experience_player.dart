@@ -52,6 +52,10 @@ final class JustAudioStoryExperiencePlayer implements StoryExperiencePlayer {
   bool _disposed = false;
   StoryExperienceDemoStem? _currentStem;
   StoryExperiencePresentationPurpose? _currentPurpose;
+  Uint8List? _generatedMusicBytes;
+  Map<StoryExperiencePresentationPurpose, double>? _musicVolumesByPurpose;
+  bool get _usesGeneratedMusicBed =>
+      _generatedMusicBytes != null && _generatedMusicBytes!.isNotEmpty;
 
   @override
   Stream<StoryExperiencePlaybackSnapshot> get snapshots => _snapshots.stream;
@@ -65,6 +69,8 @@ final class JustAudioStoryExperiencePlayer implements StoryExperiencePlayer {
     required StoryExperiencePlan plan,
     int? transcriptLength,
     Uint8List? presentationVoiceBytes,
+    Uint8List? generatedMusicBytes,
+    Map<StoryExperiencePresentationPurpose, double>? musicVolumesByPurpose,
   }) async {
     if (originalRecordingBytes.isEmpty) {
       throw StateError('Original recording is empty.');
@@ -82,6 +88,11 @@ final class JustAudioStoryExperiencePlayer implements StoryExperiencePlayer {
     _currentStem = null;
     _currentPurpose = null;
     _userPaused = false;
+    _generatedMusicBytes =
+        generatedMusicBytes == null || generatedMusicBytes.isEmpty
+            ? null
+            : Uint8List.fromList(generatedMusicBytes);
+    _musicVolumesByPurpose = musicVolumesByPurpose;
 
     await _voice.setAudioSource(
       AudioSource.uri(
@@ -102,6 +113,19 @@ final class JustAudioStoryExperiencePlayer implements StoryExperiencePlayer {
       recordingDuration: duration,
       transcriptLength: transcriptLength,
     );
+
+    if (_usesGeneratedMusicBed) {
+      await _music.setAudioSource(
+        AudioSource.uri(
+          Uri.dataFromBytes(
+            _generatedMusicBytes!,
+            mimeType: mimeTypeForOriginalRecordingBytes(_generatedMusicBytes!),
+          ),
+        ),
+      );
+      await _music.setLoopMode(LoopMode.one);
+      await _music.setVolume(0.0);
+    }
 
     _voiceStateSub = _voice.playerStateStream.listen((state) {
       if (state.processingState == ProcessingState.completed) {
@@ -236,7 +260,11 @@ final class JustAudioStoryExperiencePlayer implements StoryExperiencePlayer {
       _currentPurpose = cue.purpose;
 
       if (cue.hasSilence) {
-        await _music.stop();
+        if (_usesGeneratedMusicBed) {
+          await _music.setVolume(0.0);
+        } else {
+          await _music.stop();
+        }
         _currentStem = null;
         await _voice.pause();
         _emit(
@@ -255,7 +283,9 @@ final class JustAudioStoryExperiencePlayer implements StoryExperiencePlayer {
         await _voice.play();
       }
 
-      if (cue.stem != null) {
+      if (_usesGeneratedMusicBed) {
+        await _applyGeneratedMusicIntensity(cue.purpose);
+      } else if (cue.stem != null) {
         await _startStem(cue.stem!);
       } else if (cue.purpose == StoryExperiencePresentationPurpose.turningPoint) {
         await _music.stop();
@@ -274,6 +304,37 @@ final class JustAudioStoryExperiencePlayer implements StoryExperiencePlayer {
     } finally {
       _applyingCue = false;
     }
+  }
+
+  Future<void> _applyGeneratedMusicIntensity(
+    StoryExperiencePresentationPurpose purpose,
+  ) async {
+    final volume = _musicVolumesByPurpose?[purpose] ??
+        _defaultVolumeForPurpose(purpose);
+    try {
+      if (_music.playing == false &&
+          _music.playerState.processingState != ProcessingState.completed) {
+        await _music.play();
+      }
+      await _music.setVolume(volume.clamp(0.0, 1.0));
+      _currentStem = null;
+    } catch (_) {
+      // Intensity failures must not destroy story playback.
+    }
+  }
+
+  static double _defaultVolumeForPurpose(
+    StoryExperiencePresentationPurpose purpose,
+  ) {
+    return switch (purpose) {
+      StoryExperiencePresentationPurpose.opening => 0.18,
+      StoryExperiencePresentationPurpose.challenge => 0.26,
+      StoryExperiencePresentationPurpose.uncertainty => 0.18,
+      StoryExperiencePresentationPurpose.turningPoint => 0.0,
+      StoryExperiencePresentationPurpose.decision => 0.34,
+      StoryExperiencePresentationPurpose.resolution => 0.42,
+      StoryExperiencePresentationPurpose.closing => 0.28,
+    };
   }
 
   Future<void> _startStem(StoryExperienceDemoStem stem) async {

@@ -50,12 +50,21 @@ abstract interface class StoryExperiencePlayer {
   /// derived voice artifact), that audio is used as the voice track without
   /// invoking AI or regenerating audio.
   ///
+  /// When [generatedMusicBytes] is provided (a previously persisted
+  /// MusicRendering), Strategy A plays that single instrumental bed and
+  /// modulates volume from timeline purposes instead of swapping demo stems.
+  /// Demo-stem path is unchanged when music bytes are absent.
+  ///
   /// [transcriptLength] improves proportional span→time mapping when known.
+  /// Optional [musicVolumesByPurpose] overrides default intensity volumes
+  /// when playing a generated bed (values from ExperienceRenderManifest).
   Future<void> load({
     required Uint8List originalRecordingBytes,
     required StoryExperiencePlan plan,
     int? transcriptLength,
     Uint8List? presentationVoiceBytes,
+    Uint8List? generatedMusicBytes,
+    Map<StoryExperiencePresentationPurpose, double>? musicVolumesByPurpose,
   });
 
   Future<void> play();

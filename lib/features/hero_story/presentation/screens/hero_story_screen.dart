@@ -5,6 +5,7 @@ import 'package:everyonesheroes/features/hero_story/presentation/models/captured
 import 'package:everyonesheroes/features/hero_story/presentation/models/hero_story_view_data.dart';
 import 'package:everyonesheroes/features/hero_story/presentation/models/story_experience_plan_view_data.dart';
 import 'package:everyonesheroes/features/hero_story/presentation/models/story_voice_rendering_view_data.dart';
+import 'package:everyonesheroes/features/hero_story/presentation/providers/hero_story_experience_lab_controller.dart';
 import 'package:everyonesheroes/features/hero_story/presentation/providers/hero_story_experience_plan_controller.dart';
 import 'package:everyonesheroes/features/hero_story/presentation/providers/hero_story_experience_playback_controller.dart';
 import 'package:everyonesheroes/features/hero_story/presentation/providers/hero_story_playback_controller.dart';
@@ -18,7 +19,8 @@ import 'package:everyonesheroes/features/hero_story/presentation/screens/owned_s
 /// The canonical Story is unchanged. This screen plays the original recording
 /// and optionally surfaces a grounded captured-story reading (HS.12.3), a
 /// derived Story Experience Plan (HS.12.4), playable experience presentation
-/// (HS.12.5), and an explicitly authorized derived voice rendering (HS.12.6).
+/// (HS.12.5), an explicitly authorized derived voice rendering (HS.12.6), and
+/// an experimental AI Experience Laboratory action (Experiment A).
 class HeroStoryScreen extends ConsumerWidget {
   const HeroStoryScreen({required this.storyId, super.key});
 
@@ -88,6 +90,9 @@ class _HeroStoryBody extends ConsumerWidget {
     final voiceRendering = hasExperiencePlan
         ? ref.watch(heroStoryVoiceRenderingProvider(storyId))
         : const HeroStoryVoiceRenderingState();
+    final experienceLab = hasExperiencePlan
+        ? ref.watch(heroStoryExperienceLabProvider(storyId))
+        : const HeroStoryExperienceLabState();
     final recordingId = story.originalRecordingId;
 
     Future<void> stopExperienceIfBound() async {
@@ -104,6 +109,13 @@ class _HeroStoryBody extends ConsumerWidget {
         return;
       }
       await ref.read(heroStoryVoiceRenderingProvider(storyId).notifier).stop();
+    }
+
+    Future<void> stopLabIfBound() async {
+      if (!hasExperiencePlan) {
+        return;
+      }
+      await ref.read(heroStoryExperienceLabProvider(storyId).notifier).stop();
     }
 
     return ListView(
@@ -183,6 +195,7 @@ class _HeroStoryBody extends ConsumerWidget {
                 : () async {
                     await stopExperienceIfBound();
                     await stopNarratedIfBound();
+                    await stopLabIfBound();
                     if (playback.phase == HeroStoryPlaybackPhase.playing) {
                       await playbackController.pause();
                     } else {
@@ -322,6 +335,7 @@ class _HeroStoryBody extends ConsumerWidget {
                           heroStoryExperiencePlaybackProvider(storyId).notifier,
                         );
                         await stopNarratedIfBound();
+                        await stopLabIfBound();
                         if (experiencePlayback.phase ==
                             HeroStoryExperiencePlaybackPhase.playing) {
                           await controller.pause();
@@ -430,6 +444,13 @@ class _HeroStoryBody extends ConsumerWidget {
             _StoryVoiceRenderingSection(
               storyId: storyId,
               state: voiceRendering,
+              theme: theme,
+            ),
+            const SizedBox(height: 28),
+            _StoryExperienceLabSection(
+              storyId: storyId,
+              recordingId: recordingId?.value,
+              state: experienceLab,
               theme: theme,
             ),
           ],
@@ -918,6 +939,170 @@ class _NarratedArtifactSummary extends StatelessWidget {
         ),
       ],
     );
+  }
+}
+
+class _StoryExperienceLabSection extends ConsumerWidget {
+  const _StoryExperienceLabSection({
+    required this.storyId,
+    required this.recordingId,
+    required this.state,
+    required this.theme,
+  });
+
+  final String storyId;
+  final String? recordingId;
+  final HeroStoryExperienceLabState state;
+  final ThemeData theme;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final controller =
+        ref.read(heroStoryExperienceLabProvider(storyId).notifier);
+
+    return Column(
+      key: const ValueKey('hero-story-lab-section'),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'AI Experience Laboratory (Experiment A)',
+          key: const ValueKey('hero-story-lab-title'),
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Experimental: OpenAI creative direction + OpenAI TTS + Stable Audio '
+          'instrumental bed. Presentation only — does not change your Story, '
+          'reading, or experience plan.',
+          key: const ValueKey('hero-story-lab-subtitle'),
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: 12),
+        if (!state.hasRequiredConsent) ...[
+          Text(
+            HeroStoryExperienceLabController.consentRequiredMessage,
+            key: const ValueKey('hero-story-lab-consent-needed'),
+            style: theme.textTheme.bodyMedium,
+          ),
+          const SizedBox(height: 12),
+          OutlinedButton.icon(
+            key: const ValueKey('hero-story-lab-grant-consent-button'),
+            onPressed:
+                state.isGenerating ? null : () => controller.grantLabConsents(),
+            icon: const Icon(Icons.science_outlined),
+            label: const Text('Authorize experimental AI experience'),
+          ),
+          const SizedBox(height: 12),
+        ],
+        OutlinedButton.icon(
+          key: const ValueKey('hero-story-lab-generate-button'),
+          onPressed: !state.canGenerate || !state.hasRequiredConsent
+              ? null
+              : () => controller.generate(
+                    isRetry: state.phase == HeroStoryExperienceLabPhase.failed,
+                  ),
+          icon: state.isGenerating
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Icon(Icons.auto_fix_high_outlined),
+          label: Text(
+            state.phase == HeroStoryExperienceLabPhase.failed
+                ? 'Retry AI experience'
+                : state.hasPlayableArtifact
+                    ? 'Regenerate AI experience'
+                    : 'Create AI experience',
+          ),
+        ),
+        if (state.progressMessage != null) ...[
+          const SizedBox(height: 16),
+          Text(
+            state.progressMessage!,
+            key: const ValueKey('hero-story-lab-progress'),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
+        if (state.errorMessage != null) ...[
+          const SizedBox(height: 16),
+          Text(
+            state.errorMessage!,
+            key: const ValueKey('hero-story-lab-error'),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.error,
+            ),
+          ),
+        ],
+        if (state.hasPlayableArtifact) ...[
+          const SizedBox(height: 16),
+          if (state.providerSummary != null)
+            Text(
+              state.providerSummary!,
+              key: const ValueKey('hero-story-lab-providers'),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          const SizedBox(height: 12),
+          FilledButton.tonalIcon(
+            key: const ValueKey('hero-story-lab-play-button'),
+            onPressed: state.isGenerating || recordingId == null
+                ? null
+                : () async {
+                    if (state.phase == HeroStoryExperienceLabPhase.playing) {
+                      await controller.pause();
+                    } else if (state.phase ==
+                        HeroStoryExperienceLabPhase.paused) {
+                      await controller.resume(
+                        originalRecordingId: recordingId!,
+                      );
+                    } else {
+                      await controller.playLabExperience(
+                        originalRecordingId: recordingId!,
+                      );
+                    }
+                  },
+            icon: Icon(
+              state.phase == HeroStoryExperienceLabPhase.playing
+                  ? Icons.pause
+                  : Icons.play_circle_outline,
+            ),
+            label: Text(_labPlayLabel(state.phase)),
+          ),
+          if (state.phase == HeroStoryExperienceLabPhase.playing ||
+              state.phase == HeroStoryExperienceLabPhase.paused ||
+              state.phase == HeroStoryExperienceLabPhase.silenced) ...[
+            const SizedBox(height: 8),
+            TextButton(
+              key: const ValueKey('hero-story-lab-stop-button'),
+              onPressed: state.isGenerating ? null : controller.stop,
+              child: const Text('Stop AI experience'),
+            ),
+          ],
+        ],
+      ],
+    );
+  }
+
+  static String _labPlayLabel(HeroStoryExperienceLabPhase phase) {
+    return switch (phase) {
+      HeroStoryExperienceLabPhase.playing => 'Pause AI experience',
+      HeroStoryExperienceLabPhase.paused => 'Resume AI experience',
+      HeroStoryExperienceLabPhase.silenced => 'Pause AI experience',
+      HeroStoryExperienceLabPhase.generating => 'Loading…',
+      HeroStoryExperienceLabPhase.idle ||
+      HeroStoryExperienceLabPhase.consentNeeded ||
+      HeroStoryExperienceLabPhase.ready ||
+      HeroStoryExperienceLabPhase.failed =>
+        'Play AI experience',
+    };
   }
 }
 

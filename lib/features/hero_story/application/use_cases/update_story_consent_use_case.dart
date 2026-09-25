@@ -40,6 +40,9 @@ final class UpdateStoryConsentUseCase
       if (request.grantVoiceRendering) {
         consent = consent.grantVoiceRendering(at);
       }
+      if (request.grantMusicGeneration) {
+        consent = consent.grantMusicGeneration(at);
+      }
       if (request.revokeProcessing) {
         consent = consent.revokeProcessing();
       }
@@ -51,6 +54,9 @@ final class UpdateStoryConsentUseCase
       }
       if (request.revokeVoiceRendering) {
         consent = consent.revokeVoiceRendering();
+      }
+      if (request.revokeMusicGeneration) {
+        consent = consent.revokeMusicGeneration();
       }
 
       story.updateConsent(consent, at: at);

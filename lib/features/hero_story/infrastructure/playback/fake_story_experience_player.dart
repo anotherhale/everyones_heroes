@@ -24,12 +24,15 @@ final class FakeStoryExperiencePlayer implements StoryExperiencePlayer {
   final List<String> calls = <String>[];
   Uint8List? loadedBytes;
   StoryExperiencePlan? loadedPlan;
+  Uint8List? loadedMusicBytes;
+  Map<StoryExperiencePresentationPurpose, double>? loadedMusicVolumes;
   bool regeneratedPlan = false;
   bool invokedAi = false;
 
   StoryExperienceTimeline? _timeline;
   StoryExperienceDemoStem? currentStem;
   StoryExperiencePresentationPurpose? currentPurpose;
+  double? currentMusicVolume;
 
   final StreamController<StoryExperiencePlaybackSnapshot> _snapshots =
       StreamController<StoryExperiencePlaybackSnapshot>.broadcast(sync: true);
@@ -46,6 +49,8 @@ final class FakeStoryExperiencePlayer implements StoryExperiencePlayer {
     required StoryExperiencePlan plan,
     int? transcriptLength,
     Uint8List? presentationVoiceBytes,
+    Uint8List? generatedMusicBytes,
+    Map<StoryExperiencePresentationPurpose, double>? musicVolumesByPurpose,
   }) async {
     calls.add('load');
     if (failOnLoad) {
@@ -59,6 +64,10 @@ final class FakeStoryExperiencePlayer implements StoryExperiencePlayer {
           ? presentationVoiceBytes
           : originalRecordingBytes,
     );
+    loadedMusicBytes = generatedMusicBytes == null || generatedMusicBytes.isEmpty
+        ? null
+        : Uint8List.fromList(generatedMusicBytes);
+    loadedMusicVolumes = musicVolumesByPurpose;
     loadedPlan = plan;
     _timeline = _timelineBuilder.build(
       plan: plan,
