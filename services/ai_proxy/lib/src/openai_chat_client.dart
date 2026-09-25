@@ -29,15 +29,20 @@ class OpenAiChatClient {
     required String userPrompt,
   }) async {
     final uri = Uri.parse('$baseUrl/chat/completions');
-    final body = jsonEncode({
+    final bodyMap = <String, dynamic>{
       'model': model,
-      'temperature': 0.4,
       'response_format': {'type': 'json_object'},
       'messages': [
         {'role': 'system', 'content': systemPrompt},
         {'role': 'user', 'content': userPrompt},
       ],
-    });
+    };
+    // GPT-5.x reasoning models reject non-default temperature (only 1 / omit).
+    // Legacy chat models (e.g. gpt-4o-mini) keep the prior sampling value.
+    if (_supportsCustomTemperature(model)) {
+      bodyMap['temperature'] = 0.4;
+    }
+    final body = jsonEncode(bodyMap);
 
     final response = await _client.post(
       uri,
@@ -85,6 +90,15 @@ class OpenAiChatClient {
     }
 
     return OpenAiChatResult(content: content, raw: json);
+  }
+
+  /// Whether this model accepts a non-default [temperature] on chat/completions.
+  ///
+  /// GPT-5 family reasoning models (including GPT-5.6) only allow the default
+  /// temperature; sending `0.4` yields an OpenAI `unsupported_value` error.
+  static bool _supportsCustomTemperature(String model) {
+    final normalized = model.trim().toLowerCase();
+    return !normalized.startsWith('gpt-5');
   }
 
   static String _safe(String body) {
