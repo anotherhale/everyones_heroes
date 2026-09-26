@@ -7,6 +7,7 @@ import 'package:path_provider/path_provider.dart';
 
 import 'package:everyonesheroes/bootstrap/application_bootstrap.dart';
 import 'package:everyonesheroes/core/eventing/event_providers.dart';
+import 'package:everyonesheroes/features/discovery/presentation/inspiring_hero_profile_action.dart';
 import 'package:everyonesheroes/features/hero_story/application/providers/hero/active_local_hero_provider.dart';
 import 'package:everyonesheroes/features/hero_story/application/providers/media/story_media_storage_port_provider.dart';
 import 'package:everyonesheroes/features/hero_story/application/providers/persistence/hero_story_persistence_providers.dart';
@@ -33,6 +34,7 @@ import 'package:everyonesheroes/features/hero_story/infrastructure/ai/proxy_stor
 import 'package:everyonesheroes/features/hero_story/infrastructure/ai/story_transcription_config.dart';
 import 'package:everyonesheroes/features/hero_story/infrastructure/recording/fake_device_recording_adapter.dart';
 import 'package:everyonesheroes/features/hero_story/infrastructure/recording/record_package_web_device_recording_adapter.dart';
+import 'package:everyonesheroes/features/hero_story/presentation/providers/hero_profile_action_provider.dart';
 
 /// Application composition root (HS.9 durable capture + HS.11 transcription).
 ///
@@ -117,6 +119,9 @@ final class AppCompositionRoot {
     final resolvedTranscription = _resolveTranscriptionPort(transcriptionPort);
     final container = ProviderContainer(
       overrides: [
+        heroProfileActionBuilderProvider.overrideWithValue(
+          inspiringHeroProfileActionBuilder,
+        ),
         useRealDeviceRecordingProvider.overrideWithValue(true),
         deviceRecordingPortProvider.overrideWithValue(recordingPort),
         storyTranscriptionPortProvider.overrideWithValue(resolvedTranscription),
@@ -172,6 +177,9 @@ final class AppCompositionRoot {
 
     final container = ProviderContainer(
       overrides: [
+        heroProfileActionBuilderProvider.overrideWithValue(
+          inspiringHeroProfileActionBuilder,
+        ),
         heroRepositoryProvider.overrideWithValue(durable.heroRepository),
         storyRepositoryProvider.overrideWithValue(durable.storyRepository),
         storyBuilderSessionRepositoryProvider.overrideWithValue(

@@ -131,8 +131,11 @@ Deletion workflows are out of scope for D.11.
 
 | Surface | Behavior |
 |---------|----------|
-| `HeroProfileScreen` (seeker, discoverable Hero) | **"Inspires me"** / **"Inspires me ✓"** toggle |
+| `HeroProfileScreen` (seeker, discoverable Hero) | **"Inspires me"** / **"Inspires me ✓"** via Discovery `InspiresMeToggle` |
 | Discover — **Heroes Who Inspire Me** | Lists currently discoverable inspiring Heroes; remove; navigate to profile |
+
+Composition keeps Hero & Story free of Discovery imports: App composition
+injects the control via `heroProfileActionBuilderProvider`.
 
 Private / personal only. Does not imply following, friendship, or public
 endorsement.

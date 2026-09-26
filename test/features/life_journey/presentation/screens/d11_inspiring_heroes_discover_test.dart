@@ -12,6 +12,7 @@ import 'package:everyonesheroes/features/discovery/application/providers/reposit
 import 'package:everyonesheroes/features/discovery/domain/aggregates/discovery_profile.dart';
 import 'package:everyonesheroes/features/discovery/infrastructure/repositories/in_memory_discovery_profile_repository.dart';
 import 'package:everyonesheroes/features/discovery/infrastructure/repositories/in_memory_influence_repository.dart';
+import 'package:everyonesheroes/features/discovery/presentation/inspiring_hero_profile_action.dart';
 import 'package:everyonesheroes/features/hero_story/application/providers/repositories/hero_repository_provider.dart';
 import 'package:everyonesheroes/features/hero_story/application/providers/repositories/story_repository_provider.dart';
 import 'package:everyonesheroes/features/hero_story/application/providers/search/story_search_port_provider.dart';
@@ -22,6 +23,7 @@ import 'package:everyonesheroes/features/hero_story/domain/value_objects/hero_pr
 import 'package:everyonesheroes/features/hero_story/infrastructure/repositories/in_memory_hero_repository.dart';
 import 'package:everyonesheroes/features/hero_story/infrastructure/repositories/in_memory_story_repository.dart';
 import 'package:everyonesheroes/features/hero_story/infrastructure/search/in_memory_story_search_adapter.dart';
+import 'package:everyonesheroes/features/hero_story/presentation/providers/hero_profile_action_provider.dart';
 import 'package:everyonesheroes/features/hero_story/presentation/screens/hero_profile_screen.dart';
 import 'package:everyonesheroes/features/life_journey/presentation/screens/discover_screen.dart';
 
@@ -43,6 +45,9 @@ void main() {
         storyRepositoryProvider.overrideWithValue(stories),
         storySearchPortProvider.overrideWithValue(
           InMemoryStorySearchAdapter(stories),
+        ),
+        heroProfileActionBuilderProvider.overrideWithValue(
+          inspiringHeroProfileActionBuilder,
         ),
       ],
       child: const MaterialApp(

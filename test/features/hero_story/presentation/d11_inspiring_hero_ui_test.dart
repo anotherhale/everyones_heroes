@@ -3,6 +3,7 @@ import 'package:everyonesheroes/core/shared_kernel/language_code.dart';
 import 'package:everyonesheroes/features/discovery/application/providers/repositories/discovery_profile_repository_provider.dart';
 import 'package:everyonesheroes/features/discovery/application/providers/use_cases/discovery_use_case_providers.dart';
 import 'package:everyonesheroes/features/discovery/infrastructure/repositories/in_memory_discovery_profile_repository.dart';
+import 'package:everyonesheroes/features/discovery/presentation/inspiring_hero_profile_action.dart';
 import 'package:everyonesheroes/features/hero_story/application/providers/repositories/hero_repository_provider.dart';
 import 'package:everyonesheroes/features/hero_story/application/providers/repositories/story_repository_provider.dart';
 import 'package:everyonesheroes/features/hero_story/domain/domain.dart'
@@ -11,6 +12,7 @@ import 'package:everyonesheroes/features/hero_story/domain/aggregates/hero.dart'
     as hs;
 import 'package:everyonesheroes/features/hero_story/infrastructure/repositories/in_memory_hero_repository.dart';
 import 'package:everyonesheroes/features/hero_story/infrastructure/repositories/in_memory_story_repository.dart';
+import 'package:everyonesheroes/features/hero_story/presentation/providers/hero_profile_action_provider.dart';
 import 'package:everyonesheroes/features/hero_story/presentation/screens/hero_profile_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -49,6 +51,9 @@ void main() {
         heroRepositoryProvider.overrideWithValue(heroes),
         storyRepositoryProvider.overrideWithValue(stories),
         discoveryProfileRepositoryProvider.overrideWithValue(profiles),
+        heroProfileActionBuilderProvider.overrideWithValue(
+          inspiringHeroProfileActionBuilder,
+        ),
       ],
     );
   }
