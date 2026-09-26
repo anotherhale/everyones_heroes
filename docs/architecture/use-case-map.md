@@ -418,19 +418,22 @@ Events:
 
 Status:
 
-Future
+Implemented (D.5)
 
 Purpose:
 
-Remove an Influence from a Discovery Profile.
+Remove an Influence from the current Discovery Profile and re-resolve
+Narrative Themes from the remaining Influence set.
 
 Dependencies:
 
+* EnsureCurrentDiscoveryProfileUseCase
 * DiscoveryProfileRepository
+* ResolveNarrativeThemesUseCase
 
 Events:
 
-* InfluenceRemoved
+* InfluenceRemoved (raised on aggregate; EventBus publication deferred)
 
 ---
 

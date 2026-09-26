@@ -4,7 +4,7 @@ import 'package:everyonesheroes/core/ids/influence_id.dart';
 import 'package:everyonesheroes/features/discovery/application/providers/use_cases/discovery_use_case_providers.dart';
 import 'package:everyonesheroes/features/life_journey/presentation/providers/today_experience_provider.dart';
 
-/// UI action state for curated Influence selection (D.3).
+/// UI action state for curated Influence selection (D.3 / D.5).
 final class InfluenceSelectionActionState {
   const InfluenceSelectionActionState({
     this.isBusy = false,
@@ -53,19 +53,41 @@ final class InfluenceSelectionController
     state = state.copyWith(clearSaved: true);
   }
 
-  /// Persists selected Influences through application use cases.
+  /// Persists Influence adds and removals through application use cases.
   ///
-  /// Invokes [SelectInfluencesUseCase] (AddInfluence → ResolveNarrativeThemes).
+  /// Removals run first ([RemoveInfluenceUseCase]), then adds
+  /// ([SelectInfluencesUseCase]). Each mutation re-resolves Narrative Themes
+  /// from the current Influence set.
+  ///
+  /// Invalidates [currentDiscoveryProfileProvider] and
+  /// [todayExperienceProvider] after a successful save.
+  ///
   /// Does not emit BehavioralEvidence.
-  Future<bool> save(Iterable<InfluenceId> influenceIds) async {
+  Future<bool> save({
+    Iterable<InfluenceId> influenceIdsToAdd = const [],
+    Iterable<InfluenceId> influenceIdsToRemove = const [],
+  }) async {
     if (state.isBusy) {
+      return false;
+    }
+
+    final toAdd = influenceIdsToAdd.toSet().toList(growable: false);
+    final toRemove = influenceIdsToRemove.toSet().toList(growable: false);
+    if (toAdd.isEmpty && toRemove.isEmpty) {
       return false;
     }
 
     state = state.copyWith(isBusy: true, clearError: true, clearSaved: true);
 
     try {
-      await ref.read(selectInfluencesUseCaseProvider).execute(influenceIds);
+      for (final influenceId in toRemove) {
+        await ref.read(removeInfluenceUseCaseProvider).execute(influenceId);
+      }
+
+      if (toAdd.isNotEmpty) {
+        await ref.read(selectInfluencesUseCaseProvider).execute(toAdd);
+      }
+
       ref.invalidate(currentDiscoveryProfileProvider);
       ref.invalidate(todayExperienceProvider);
       state = state.copyWith(isBusy: false, savedSuccessfully: true);
