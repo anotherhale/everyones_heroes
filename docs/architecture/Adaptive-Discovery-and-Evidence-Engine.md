@@ -276,6 +276,54 @@ It combines:
 
 The Discovery Profile becomes the central source of personalization across the platform.
 
+### Current implementation note (D.13)
+
+`inspiringHeroIds` (“Inspires Me”) may appear among Hero preferences on
+DiscoveryProfile. It is **not** currently part of `AdaptiveDiscoverySignals`
+and must **not** be added merely because it exists on DiscoveryProfile.
+
+Any future use requires an explicit product decision defining the semantic
+bridge between Hero inspiration and experience selection (D.13: **Not Yet**).
+
+Context boundaries:
+
+```text
+Discovery
+  = what currently inspires/interests the person
+Life Journey
+  = what the person actually does/experiences
+Hero & Story
+  = the available Hero/Story content
+Personalization
+  = future decision about what experience is relevant now
+Experience
+  = delivery of that experience
+```
+
+Personalization is a long-term architectural direction in this document. It is
+**not** currently an implemented bounded context or engine. Growth Opportunity
+is likewise a future / missing concept — not a current domain model.
+
+Evidence-first path (do not shortcut with Inspires Me):
+
+```text
+Experience
+    ↓
+Reflection
+    ↓
+Behavioral Evidence
+    ↓
+Behavior Pattern
+    ↓
+Growth Opportunity   ← future
+    ↓
+[future] Personalization
+    ↓
+Experience
+```
+
+“Inspires Me” is an explicit preference, not Behavioral Evidence.
+
 ---
 
 # The Personalization Engine

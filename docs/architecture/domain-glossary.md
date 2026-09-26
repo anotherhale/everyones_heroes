@@ -351,6 +351,13 @@ Outputs may include:
 
 The Personalization Engine is the heart of the platform.
 
+Current Status:
+Future concept / not currently an implemented bounded context or engine.
+Existing adaptive Story selection uses Life Journey application
+`AdaptiveDiscoverySignals`, not a Personalization Engine.
+`DiscoveryProfile.inspiringHeroIds` is **not** currently an input (D.13 —
+Not Yet).
+
 ---
 
 # Deterministic Personalization
@@ -442,6 +449,41 @@ They help the system understand what inspires a user.
 
 ---
 
+# Inspiring Hero
+
+A Hero that a seeker has explicitly marked as inspiring through the Discovery
+experience (“Inspires Me”).
+
+Stored as `DiscoveryProfile.inspiringHeroIds` (D.11).
+
+An Inspiring Hero is:
+
+* explicit
+* user-selected
+* private
+* current-state
+* unordered / set-like
+
+An Inspiring Hero is **not** currently:
+
+* a recommendation instruction
+* a Story affinity
+* a Narrative Theme
+* Behavioral Evidence
+* a Behavior Pattern
+* a Followed Hero
+* a social relationship
+
+Its future role in Personalization is intentionally unresolved (**D.13 —
+Not Yet**). Do not infer Today, ranking, theme, behavioral, or personalization
+behavior from the existence of the field.
+
+Distinct from Influence: Influences are curated recommendation primitives that
+may resolve into Narrative Themes; Inspiring Heroes are EH Hero aggregates the
+seeker has privately marked as inspiring.
+
+---
+
 # Influence Category
 
 The classification of an Influence.
@@ -518,10 +560,18 @@ The Discovery Profile combines:
 * Behavioral Patterns
 * Growth Opportunities
 
-The Discovery Profile is the primary input into personalization.
+Current Flutter-local DiscoveryProfile also stores `inspiringHeroIds` (D.11) —
+an explicit private Inspiring Hero preference whose downstream meaning is
+**Not Yet** defined (D.13 / D-ADR-001). That field is not currently a
+personalization or ranking input.
+
+The Discovery Profile is intended as a primary input into **future**
+personalization. A Personalization Engine / bounded context is not currently
+implemented.
 
 Current Status:
-Not yet implemented.
+Partial — local DiscoveryProfile foundation exists; full profile synthesis and
+personalization consumption remain incomplete / future.
 
 ---
 

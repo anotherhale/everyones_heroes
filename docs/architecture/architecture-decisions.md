@@ -2729,3 +2729,54 @@ AI voice generation is never a prerequisite for playing the Hero's story.
 - Broad voice cloning / marketplace / celebrity impersonation in this slice
 
 See: `docs/architecture/HS.12-AI-Hero-Story-Demo-Plan.md`
+
+---
+
+# D-ADR-001 Inspiring Hero Preference Downstream Semantics Are Not Yet Defined
+
+Status: Accepted — downstream semantics deferred / **Not Yet**
+
+Date: 2026-09-26
+
+Phase: D.13
+
+Decision:
+
+`DiscoveryProfile.inspiringHeroIds` represents an explicit private Hero
+inspiration preference (“Inspires Me”).
+
+Its downstream behavioral meaning is intentionally **Not Yet Defined**.
+
+This is **Not Yet**, not permanently informational-only (option E). The platform
+captures the preference because it may become a future Personalization input,
+but EH has not yet defined what experience / ranking / theme behavior that
+preference should imply.
+
+Consequences:
+
+* Today and existing Discovery / adaptive behavior remain unchanged.
+* The preference may be used by a **future** Personalization capability.
+* No Personalization contract, ranking behavior, theme derivation, or
+  recommendation instruction should be inferred from the existence of the field.
+* D.11 implementation remains valid; no runtime change is required by this ADR.
+
+Non-goals:
+
+This decision does **not** establish:
+
+* Hero → NarrativeTheme derivation
+* Hero → Story affinity
+* Story ranking boosts
+* Hero ranking
+* recommendation behavior
+* social / follow semantics
+* behavioral evidence from inspiration
+* AI inference about why a Hero inspires someone
+* addition of `inspiringHeroIds` to `AdaptiveDiscoverySignals`
+
+Evidence-first boundary:
+
+Do not treat “Inspires Me” as Behavioral Evidence or a Behavior Pattern input.
+
+See: `docs/architecture/D.13-Inspires-Me-Product-Decision.md`  
+Related: `docs/architecture/D.11-Explicit-Hero-Inspiration-Relationship.md`

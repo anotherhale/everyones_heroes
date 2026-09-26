@@ -459,6 +459,8 @@ Events:
 Notes:
 
 Does not resolve Narrative Themes. Does not affect AdaptiveDiscoverySignals.
+Downstream meaning of inspiring Heroes is **Not Yet** defined (D.13 /
+D-ADR-001); do not treat this use case as authorizing ranking or personalization.
 
 ---
 
