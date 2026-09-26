@@ -16,7 +16,15 @@ import 'package:everyonesheroes/features/discovery/infrastructure/repositories/i
 import 'package:everyonesheroes/features/hero_story/application/providers/repositories/hero_repository_provider.dart';
 import 'package:everyonesheroes/features/hero_story/application/providers/repositories/story_repository_provider.dart';
 import 'package:everyonesheroes/features/hero_story/application/providers/search/story_search_port_provider.dart';
-import 'package:everyonesheroes/features/hero_story/domain/domain.dart';
+import 'package:everyonesheroes/features/hero_story/domain/aggregates/hero.dart'
+    as hero_story;
+import 'package:everyonesheroes/features/hero_story/domain/aggregates/story.dart';
+import 'package:everyonesheroes/features/hero_story/domain/enums/hero_visibility.dart';
+import 'package:everyonesheroes/features/hero_story/domain/enums/story_visibility.dart';
+import 'package:everyonesheroes/features/hero_story/domain/value_objects/hero_profile.dart';
+import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_classification.dart';
+import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_narrative.dart';
+import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_title.dart';
 import 'package:everyonesheroes/features/hero_story/infrastructure/repositories/in_memory_hero_repository.dart';
 import 'package:everyonesheroes/features/hero_story/infrastructure/repositories/in_memory_story_repository.dart';
 import 'package:everyonesheroes/features/hero_story/infrastructure/search/in_memory_story_search_adapter.dart';
@@ -51,12 +59,21 @@ void main() {
 
   Future<void> saveInfluence(WidgetTester tester, InfluenceId id) async {
     final tileKey = Key('influence-tile-${id.value}');
-    await tester.ensureVisible(find.byKey(tileKey));
+    await tester.scrollUntilVisible(
+      find.byKey(tileKey),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(tileKey));
     await tester.pump();
 
     final saveButton = find.byKey(const Key('save-influences-button'));
-    await tester.ensureVisible(saveButton);
+    await tester.scrollUntilVisible(
+      saveButton,
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
     await tester.pumpAndSettle();
     await tester.tap(saveButton);
     await tester.pumpAndSettle();
@@ -66,7 +83,7 @@ void main() {
     required String title,
     required List<NarrativeThemeId> themes,
   }) async {
-    final hero = Hero.create(
+    final hero = hero_story.Hero.create(
       id: HeroId.generate(),
       profile: HeroProfile(
         displayName: 'Explore Hero',
@@ -109,6 +126,15 @@ void main() {
         addTearDown(() => tester.binding.setSurfaceSize(null));
 
         await tester.pumpWidget(buildSubject());
+        await tester.pumpAndSettle();
+
+        expect(find.text('Discover'), findsOneWidget);
+
+        await tester.scrollUntilVisible(
+          find.byKey(const Key('explore-stories-heading')),
+          300,
+          scrollable: find.byType(Scrollable).first,
+        );
         await tester.pumpAndSettle();
 
         expect(find.text('Explore Stories'), findsOneWidget);
