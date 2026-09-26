@@ -1,12 +1,19 @@
 import 'package:everyonesheroes/core/ids/narrative_theme_id.dart';
 import 'package:everyonesheroes/features/life_journey/application/models/adaptive_discovery_signals.dart';
+import 'package:everyonesheroes/features/life_journey/application/ports/discovery_profile_theme_source.dart';
 import 'package:everyonesheroes/features/life_journey/domain/aggregates/journey.dart';
 import 'package:everyonesheroes/features/life_journey/domain/repositories/reflection_repository.dart';
 
-/// Resolves adaptive discovery signals from current Journey understanding.
+/// Resolves adaptive discovery signals from current Journey understanding and
+/// DiscoveryProfile themes.
 ///
-/// Themes: union of Reflection.narrativeThemes for the journey.
+/// Themes (deterministic sorted union):
+/// - Reflection.narrativeThemes for the journey
+/// - DiscoveryProfile.narrativeThemeIds for the current user (when wired)
+///
 /// Theme recency: latest Reflection submission time per theme value.
+/// DiscoveryProfile-only themes have no Reflection recency entry.
+///
 /// Patterns: Journey.behaviorPatterns (consume H.2; do not detect here).
 abstract interface class ResolveAdaptiveDiscoverySignalsUseCase {
   Future<AdaptiveDiscoverySignals> execute(Journey journey);
@@ -15,10 +22,14 @@ abstract interface class ResolveAdaptiveDiscoverySignalsUseCase {
 final class DefaultResolveAdaptiveDiscoverySignalsUseCase
     implements ResolveAdaptiveDiscoverySignalsUseCase {
   const DefaultResolveAdaptiveDiscoverySignalsUseCase({
-    required this._reflectionRepository,
-  });
+    required ReflectionRepository reflectionRepository,
+    DiscoveryProfileThemeSource discoveryProfileThemeSource =
+        const EmptyDiscoveryProfileThemeSource(),
+  }) : _reflectionRepository = reflectionRepository,
+       _discoveryProfileThemeSource = discoveryProfileThemeSource;
 
   final ReflectionRepository _reflectionRepository;
+  final DiscoveryProfileThemeSource _discoveryProfileThemeSource;
 
   @override
   Future<AdaptiveDiscoverySignals> execute(Journey journey) async {
@@ -38,6 +49,12 @@ final class DefaultResolveAdaptiveDiscoverySignalsUseCase
           themeLastExpressedAt[themeId.value] = expressedAt;
         }
       }
+    }
+
+    final discoveryThemes =
+        await _discoveryProfileThemeSource.currentUserNarrativeThemeIds();
+    for (final themeId in discoveryThemes) {
+      themeValues.putIfAbsent(themeId.value, () => themeId);
     }
 
     final sortedThemeIds = themeValues.keys.toList()..sort();

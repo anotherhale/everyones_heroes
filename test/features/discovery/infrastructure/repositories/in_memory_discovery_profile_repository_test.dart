@@ -4,6 +4,7 @@ import '../../../../fixtures/discovery/discovery_profile_fixture.dart';
 import '../../../../fixtures/discovery/user_discovery_fixture.dart';
 
 import 'package:everyonesheroes/core/ids/discovery_profile_id.dart';
+import 'package:everyonesheroes/core/ids/user_id.dart';
 import 'package:everyonesheroes/features/discovery/infrastructure/repositories/in_memory_discovery_profile_repository.dart';
 
 void main() {
@@ -50,6 +51,27 @@ void main() {
       expect(loaded, isNotNull);
       expect(loaded!.discoveries, hasLength(1));
       expect(loaded.discoveries.single.value, equals('Rocky Balboa'));
+    });
+
+    test('findByUserId returns the profile for that user', () async {
+      final userId = UserId('local-user');
+      final profile = DiscoveryProfileFixture.create(userId: userId);
+      await repository.save(profile);
+      await repository.save(
+        DiscoveryProfileFixture.create(userId: UserId('other-user')),
+      );
+
+      final loaded = await repository.findByUserId(userId);
+
+      expect(loaded, isNotNull);
+      expect(loaded!.id, profile.id);
+      expect(loaded.userId, userId);
+    });
+
+    test('findByUserId returns null when no profile exists for user', () async {
+      final loaded = await repository.findByUserId(UserId('missing'));
+
+      expect(loaded, isNull);
     });
   });
 }
