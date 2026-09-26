@@ -120,7 +120,7 @@ Patterns remain Journey-owned (`behaviorPatterns`).
 - Platform DiscoveryProfile Postgres / public Discovery API
 - Durable Flutter file repository for DiscoveryProfile
 - Auto-merge Reflection themes into DiscoveryProfile
-- Influence UI / Discover screen redesign
+- Influence UI / Discover screen redesign — **delivered in D.3** (`D.3-Curated-Influence-Discovery.md`)
 - Copying BehaviorPatterns onto DiscoveryProfile
 
 ---
