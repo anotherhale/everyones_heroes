@@ -7,10 +7,11 @@ import 'package:everyonesheroes/features/discovery/domain/aggregates/discovery_p
 import 'package:everyonesheroes/features/discovery/domain/entities/influence.dart';
 import 'package:everyonesheroes/features/discovery/presentation/providers/influence_selection_controller.dart';
 
-/// Discover tab: curated Influence selection for DiscoveryProfile (D.3).
+/// Discover tab: curated Influence selection for DiscoveryProfile (D.3 / D.5).
 ///
-/// Hosts the smallest useful "What inspires you?" picker. Does not become a
-/// social feed, Hero catalog, or recommendation engine.
+/// Hosts the smallest useful "What inspires you?" picker with editable
+/// current Inspirations. Does not become a social feed, Hero catalog, or
+/// recommendation engine.
 class DiscoverScreen extends ConsumerStatefulWidget {
   const DiscoverScreen({super.key});
 
@@ -21,6 +22,9 @@ class DiscoverScreen extends ConsumerStatefulWidget {
 class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
   /// Newly chosen Influences not yet persisted on DiscoveryProfile.
   final Set<String> _pendingAdds = {};
+
+  /// Persisted Influences marked for removal, not yet saved.
+  final Set<String> _pendingRemovals = {};
 
   @override
   Widget build(BuildContext context) {
@@ -91,14 +95,25 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
                           influences: influences,
                           profile: profile,
                           pendingAdds: _pendingAdds,
+                          pendingRemovals: _pendingRemovals,
                           isBusy: actionState.isBusy,
                           errorMessage: actionState.errorMessage,
                           onToggle: (influenceId) {
-                            if (profile.containsInfluence(influenceId)) {
-                              return;
-                            }
                             setState(() {
                               final value = influenceId.value;
+                              final isPersisted =
+                                  profile.containsInfluence(influenceId);
+
+                              if (isPersisted) {
+                                if (_pendingRemovals.contains(value)) {
+                                  _pendingRemovals.remove(value);
+                                } else {
+                                  _pendingRemovals.add(value);
+                                  _pendingAdds.remove(value);
+                                }
+                                return;
+                              }
+
                               if (_pendingAdds.contains(value)) {
                                 _pendingAdds.remove(value);
                               } else {
@@ -106,18 +121,32 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
                               }
                             });
                           },
+                          onRemovePersisted: (influenceId) {
+                            setState(() {
+                              _pendingRemovals.add(influenceId.value);
+                              _pendingAdds.remove(influenceId.value);
+                            });
+                          },
                           onSave: () async {
-                            final ids = {
-                              ...profile.influenceIds.map((id) => id.value),
-                              ..._pendingAdds,
-                            }.map(InfluenceId.new).toList(growable: false);
+                            final toAdd = _pendingAdds
+                                .map(InfluenceId.new)
+                                .toList(growable: false);
+                            final toRemove = _pendingRemovals
+                                .map(InfluenceId.new)
+                                .toList(growable: false);
                             final ok = await ref
                                 .read(
                                   influenceSelectionControllerProvider.notifier,
                                 )
-                                .save(ids);
+                                .save(
+                                  influenceIdsToAdd: toAdd,
+                                  influenceIdsToRemove: toRemove,
+                                );
                             if (ok && mounted) {
-                              setState(_pendingAdds.clear);
+                              setState(() {
+                                _pendingAdds.clear();
+                                _pendingRemovals.clear();
+                              });
                             }
                           },
                         );
@@ -189,33 +218,51 @@ class _InfluencePicker extends StatelessWidget {
     required this.influences,
     required this.profile,
     required this.pendingAdds,
+    required this.pendingRemovals,
     required this.isBusy,
     required this.errorMessage,
     required this.onToggle,
+    required this.onRemovePersisted,
     required this.onSave,
   });
 
   final List<Influence> influences;
   final DiscoveryProfile profile;
   final Set<String> pendingAdds;
+  final Set<String> pendingRemovals;
   final bool isBusy;
   final String? errorMessage;
   final ValueChanged<InfluenceId> onToggle;
+  final ValueChanged<InfluenceId> onRemovePersisted;
   final VoidCallback onSave;
+
+  bool _isEffectivelySelected(InfluenceId id) {
+    if (pendingRemovals.contains(id.value)) {
+      return false;
+    }
+    return profile.containsInfluence(id) || pendingAdds.contains(id.value);
+  }
+
+  bool _isCurrentlyPersisted(InfluenceId id) {
+    return profile.containsInfluence(id) &&
+        !pendingRemovals.contains(id.value);
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final selectedOnProfile = influences
-        .where((influence) => profile.containsInfluence(influence.id))
+    final currentInspirations = influences
+        .where((influence) => _isCurrentlyPersisted(influence.id))
         .toList(growable: false);
+    final hasPendingChanges =
+        pendingAdds.isNotEmpty || pendingRemovals.isNotEmpty;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (selectedOnProfile.isNotEmpty) ...[
+        if (currentInspirations.isNotEmpty) ...[
           Text(
-            'Selected inspirations',
+            'Current Inspirations',
             key: const Key('selected-influences-heading'),
             style: theme.textTheme.titleSmall?.copyWith(
               fontWeight: FontWeight.w700,
@@ -226,15 +273,21 @@ class _InfluencePicker extends StatelessWidget {
             spacing: 8,
             runSpacing: 8,
             children: [
-              for (final influence in selectedOnProfile)
-                Chip(
+              for (final influence in currentInspirations)
+                InputChip(
                   key: Key('selected-influence-chip-${influence.id.value}'),
-                  avatar: Icon(
-                    Icons.check_circle,
-                    size: 18,
-                    color: theme.colorScheme.primary,
-                  ),
                   label: Text(influence.canonicalName),
+                  onDeleted: isBusy
+                      ? null
+                      : () => onRemovePersisted(influence.id),
+                  deleteIcon: Icon(
+                    Icons.close,
+                    key: Key(
+                      'remove-influence-chip-${influence.id.value}',
+                    ),
+                    size: 18,
+                  ),
+                  deleteButtonTooltipMessage: 'Remove inspiration',
                 ),
             ],
           ),
@@ -250,10 +303,8 @@ class _InfluencePicker extends StatelessWidget {
         for (final influence in influences) ...[
           _InfluenceTile(
             influence: influence,
-            isSelected:
-                profile.containsInfluence(influence.id) ||
-                pendingAdds.contains(influence.id.value),
-            isPersisted: profile.containsInfluence(influence.id),
+            isSelected: _isEffectivelySelected(influence.id),
+            isPersisted: _isCurrentlyPersisted(influence.id),
             onToggle: () => onToggle(influence.id),
           ),
           const SizedBox(height: 12),
@@ -271,7 +322,7 @@ class _InfluencePicker extends StatelessWidget {
         const SizedBox(height: 16),
         FilledButton(
           key: const Key('save-influences-button'),
-          onPressed: isBusy || pendingAdds.isEmpty ? null : onSave,
+          onPressed: isBusy || !hasPendingChanges ? null : onSave,
           child: isBusy
               ? const SizedBox(
                   width: 22,

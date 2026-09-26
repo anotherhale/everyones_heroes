@@ -7,6 +7,7 @@ import 'package:everyonesheroes/features/discovery/application/providers/service
 import 'package:everyonesheroes/features/discovery/application/use_cases/add_influence_use_case.dart';
 import 'package:everyonesheroes/features/discovery/application/use_cases/ensure_current_discovery_profile_use_case.dart';
 import 'package:everyonesheroes/features/discovery/application/use_cases/list_influences_use_case.dart';
+import 'package:everyonesheroes/features/discovery/application/use_cases/remove_influence_use_case.dart';
 import 'package:everyonesheroes/features/discovery/application/use_cases/resolve_narrative_themes_use_case.dart';
 import 'package:everyonesheroes/features/discovery/application/use_cases/select_influences_use_case.dart';
 import 'package:everyonesheroes/features/discovery/domain/aggregates/discovery_profile.dart';
@@ -30,6 +31,16 @@ final currentDiscoveryProfileProvider = FutureProvider<DiscoveryProfile>((
 final addInfluenceUseCaseProvider = Provider<AddInfluenceUseCase>((ref) {
   return AddInfluenceUseCase(
     repository: ref.watch(discoveryProfileRepositoryProvider),
+  );
+});
+
+final removeInfluenceUseCaseProvider = Provider<RemoveInfluenceUseCase>((ref) {
+  return RemoveInfluenceUseCase(
+    ensureCurrentDiscoveryProfile: ref.watch(
+      ensureCurrentDiscoveryProfileUseCaseProvider,
+    ),
+    repository: ref.watch(discoveryProfileRepositoryProvider),
+    resolveNarrativeThemes: ref.watch(resolveNarrativeThemesUseCaseProvider),
   );
 });
 

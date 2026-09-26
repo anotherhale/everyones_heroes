@@ -127,11 +127,10 @@ No hard-coded Influence → Story mapping.
 
 ---
 
-## 7. Recommended next step (not implemented)
+## 7. Recommended next steps
 
-Optional follow-ups (separate phases):
-
+- **D.5 Implemented:** Influence removal / editable Current Inspirations UI
+  (see `D.5-Editable-Current-Inspirations.md`)
 - Publish Discovery domain events on EventBus when a consumer needs them
-- Influence removal / DiscoveryProfile management UI
 - Platform DiscoveryProfile persistence (platform D.1 plan)
 - Hero ↔ Discovery inspiration relationship (architectural decision required)
