@@ -1,6 +1,7 @@
 import 'dart:collection';
 
 import 'package:everyonesheroes/core/ids/discovery_profile_id.dart';
+import 'package:everyonesheroes/core/ids/hero_id.dart';
 import 'package:everyonesheroes/core/ids/influence_id.dart';
 import 'package:everyonesheroes/core/ids/narrative_theme_id.dart';
 import 'package:everyonesheroes/core/ids/user_id.dart';
@@ -9,6 +10,8 @@ import 'package:everyonesheroes/features/discovery/domain/entities/user_discover
 import 'package:everyonesheroes/features/discovery/domain/enums/user_discovery_type.dart';
 import 'package:everyonesheroes/features/discovery/domain/events/influence_added.dart';
 import 'package:everyonesheroes/features/discovery/domain/events/influence_removed.dart';
+import 'package:everyonesheroes/features/discovery/domain/events/inspiring_hero_added.dart';
+import 'package:everyonesheroes/features/discovery/domain/events/inspiring_hero_removed.dart';
 import 'package:everyonesheroes/features/discovery/domain/events/narrative_themes_resolved.dart';
 import 'package:everyonesheroes/features/discovery/domain/value_objects/discovery_preference.dart';
 import 'package:everyonesheroes/features/discovery/domain/value_objects/discovery_preference_type.dart';
@@ -18,10 +21,12 @@ final class DiscoveryProfile extends AggregateRoot<DiscoveryProfileId> {
     required DiscoveryProfileId id,
     required this._userId,
     Iterable<InfluenceId>? influenceIds,
+    Iterable<HeroId>? inspiringHeroIds,
     Iterable<NarrativeThemeId>? narrativeThemeIds,
     Iterable<UserDiscovery>? discoveries,
     Iterable<DiscoveryPreference>? preferences,
   }) : _influenceIds = influenceIds?.toSet().toList() ?? [],
+       _inspiringHeroIds = inspiringHeroIds?.toSet().toList() ?? [],
        _narrativeThemeIds = narrativeThemeIds?.toSet().toList() ?? [],
        _discoveries = discoveries?.toList() ?? [],
        _preferences = preferences?.toList() ?? [],
@@ -30,6 +35,12 @@ final class DiscoveryProfile extends AggregateRoot<DiscoveryProfileId> {
   final UserId _userId;
 
   final List<InfluenceId> _influenceIds;
+
+  /// Current-state private preference for EH Heroes who inspire this user (D.11).
+  ///
+  /// Set-like membership: unordered, no ranking, no history, no social meaning.
+  /// Distinct from Influences and from dormant [DiscoveryType.favoriteHero].
+  final List<HeroId> _inspiringHeroIds;
 
   final List<NarrativeThemeId> _narrativeThemeIds;
 
@@ -42,6 +53,9 @@ final class DiscoveryProfile extends AggregateRoot<DiscoveryProfileId> {
   UnmodifiableListView<InfluenceId> get influenceIds =>
       UnmodifiableListView(_influenceIds);
 
+  UnmodifiableListView<HeroId> get inspiringHeroIds =>
+      UnmodifiableListView(_inspiringHeroIds);
+
   UnmodifiableListView<NarrativeThemeId> get narrativeThemeIds =>
       UnmodifiableListView(_narrativeThemeIds);
 
@@ -53,6 +67,9 @@ final class DiscoveryProfile extends AggregateRoot<DiscoveryProfileId> {
 
   bool containsInfluence(InfluenceId influenceId) =>
       _influenceIds.contains(influenceId);
+
+  bool containsInspiringHero(HeroId heroId) =>
+      _inspiringHeroIds.contains(heroId);
 
   bool containsTheme(NarrativeThemeId themeId) =>
       _narrativeThemeIds.contains(themeId);
@@ -98,6 +115,43 @@ final class DiscoveryProfile extends AggregateRoot<DiscoveryProfileId> {
         aggregateId: id,
         discoveryProfileId: id,
         influenceId: influenceId,
+      ),
+    );
+  }
+
+  /// Records that [heroId] currently inspires this user (D.11).
+  ///
+  /// Idempotent. Does not resolve Narrative Themes. Does not imply follow,
+  /// favorite, or recommendation ranking.
+  void addInspiringHero(HeroId heroId) {
+    if (_inspiringHeroIds.contains(heroId)) {
+      return;
+    }
+
+    _inspiringHeroIds.add(heroId);
+
+    raise(
+      InspiringHeroAdded(
+        aggregateId: id,
+        discoveryProfileId: id,
+        heroId: heroId,
+      ),
+    );
+  }
+
+  /// Removes [heroId] from this user's inspiring Heroes preference (D.11).
+  ///
+  /// Idempotent when the HeroId is absent.
+  void removeInspiringHero(HeroId heroId) {
+    if (!_inspiringHeroIds.remove(heroId)) {
+      return;
+    }
+
+    raise(
+      InspiringHeroRemoved(
+        aggregateId: id,
+        discoveryProfileId: id,
+        heroId: heroId,
       ),
     );
   }

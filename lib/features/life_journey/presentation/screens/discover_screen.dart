@@ -2,19 +2,23 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:everyonesheroes/core/ids/influence_id.dart';
+import 'package:everyonesheroes/features/discovery/application/dto/responses/inspiring_hero_summary.dart';
 import 'package:everyonesheroes/features/discovery/application/providers/use_cases/discovery_use_case_providers.dart';
 import 'package:everyonesheroes/features/discovery/domain/aggregates/discovery_profile.dart';
 import 'package:everyonesheroes/features/discovery/domain/entities/influence.dart';
 import 'package:everyonesheroes/features/discovery/presentation/providers/influence_selection_controller.dart';
+import 'package:everyonesheroes/features/discovery/presentation/providers/inspiring_hero_controller.dart';
+import 'package:everyonesheroes/features/hero_story/presentation/screens/hero_profile_screen.dart';
 import 'package:everyonesheroes/features/hero_story/presentation/screens/story_detail_screen.dart';
 import 'package:everyonesheroes/features/life_journey/application/models/inspiration_story_exploration.dart';
 import 'package:everyonesheroes/features/life_journey/application/providers/use_cases/explore_stories_by_inspiration_use_case_provider.dart';
 
 /// Discover tab: curated Influence selection + inspiration-grounded Story
-/// exploration (D.3 / D.5 / D.7).
+/// exploration (D.3 / D.5 / D.7) and private inspiring Heroes (D.11).
 ///
-/// Hosts "What inspires you?" with editable Current Inspirations, then
-/// Explore Stories connected through NarrativeTheme overlap.
+/// Hosts "What inspires you?" with editable Current Inspirations, optional
+/// "Heroes Who Inspire Me", then Explore Stories connected through
+/// NarrativeTheme overlap.
 /// Does not become a social feed, recommendation engine, or PersonalizationEngine.
 class DiscoverScreen extends ConsumerStatefulWidget {
   const DiscoverScreen({super.key});
@@ -160,6 +164,8 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
                   },
                 ),
                 const SizedBox(height: 32),
+                const _HeroesWhoInspireMeSection(),
+                const SizedBox(height: 32),
                 const Divider(height: 1),
                 const SizedBox(height: 24),
                 _InspirationStoryExplorationSection(
@@ -170,6 +176,106 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Private current-state inspiring Heroes (D.11). Discoverable only; unresolved
+/// IDs stay on DiscoveryProfile and are omitted here.
+class _HeroesWhoInspireMeSection extends ConsumerWidget {
+  const _HeroesWhoInspireMeSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final heroesAsync = ref.watch(inspiringHeroesProvider);
+    final actionState = ref.watch(inspiringHeroControllerProvider);
+
+    return heroesAsync.when(
+      loading: () => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
+      data: (heroes) {
+        if (heroes.isEmpty) {
+          return const SizedBox.shrink();
+        }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              'Heroes Who Inspire Me',
+              key: const Key('inspiring-heroes-heading'),
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Private to you — not a follow or public endorsement.',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: 12),
+            for (final hero in heroes)
+              _InspiringHeroTile(
+                hero: hero,
+                isBusy: actionState.isBusy,
+                onRemove: () {
+                  ref
+                      .read(inspiringHeroControllerProvider.notifier)
+                      .remove(hero.heroId);
+                },
+                onOpen: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) =>
+                          HeroProfileScreen(heroId: hero.heroId.value),
+                    ),
+                  );
+                },
+              ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _InspiringHeroTile extends StatelessWidget {
+  const _InspiringHeroTile({
+    required this.hero,
+    required this.isBusy,
+    required this.onRemove,
+    required this.onOpen,
+  });
+
+  final InspiringHeroSummary hero;
+  final bool isBusy;
+  final VoidCallback onRemove;
+  final VoidCallback onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      key: Key('inspiring-hero-tile-${hero.heroId.value}'),
+      contentPadding: EdgeInsets.zero,
+      title: Text(hero.displayName),
+      subtitle: hero.biography == null || hero.biography!.isEmpty
+          ? null
+          : Text(
+              hero.biography!,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+      trailing: IconButton(
+        key: Key('remove-inspiring-hero-${hero.heroId.value}'),
+        tooltip: 'Remove',
+        onPressed: isBusy ? null : onRemove,
+        icon: const Icon(Icons.close, size: 20),
+      ),
+      onTap: onOpen,
     );
   }
 }

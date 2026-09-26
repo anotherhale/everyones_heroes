@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:everyonesheroes/core/ids/hero_id.dart';
+import 'package:everyonesheroes/features/discovery/application/providers/use_cases/discovery_use_case_providers.dart';
+import 'package:everyonesheroes/features/discovery/presentation/providers/inspiring_hero_controller.dart';
 import 'package:everyonesheroes/features/hero_story/presentation/providers/hero_experience_providers.dart';
 import 'package:everyonesheroes/features/hero_story/presentation/screens/story_detail_screen.dart';
 
 /// Hero profile + discoverable stories for that Hero (HS.7 Slice 2).
+///
+/// Includes private "Inspires me" preference control (D.11) — not follow,
+/// favorite, or public endorsement.
 class HeroProfileScreen extends ConsumerWidget {
   const HeroProfileScreen({required this.heroId, super.key});
 
@@ -15,6 +21,8 @@ class HeroProfileScreen extends ConsumerWidget {
     final theme = Theme.of(context);
     final heroAsync = ref.watch(heroExperienceProvider(heroId));
     final storiesAsync = ref.watch(heroStoriesProvider(heroId));
+    final inspiringAsync = ref.watch(isHeroInspiringMeProvider(heroId));
+    final actionState = ref.watch(inspiringHeroControllerProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Hero')),
@@ -30,6 +38,8 @@ class HeroProfileScreen extends ConsumerWidget {
           ),
         ),
         data: (hero) {
+          final isInspiring = inspiringAsync.valueOrNull ?? false;
+
           return ListView(
             padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
             children: [
@@ -47,6 +57,39 @@ class HeroProfileScreen extends ConsumerWidget {
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
+              const SizedBox(height: 16),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: FilterChip(
+                  key: const Key('inspires-me-toggle'),
+                  label: Text(
+                    isInspiring ? 'Inspires me ✓' : 'Inspires me',
+                    key: Key(
+                      isInspiring
+                          ? 'inspires-me-selected'
+                          : 'inspires-me-unselected',
+                    ),
+                  ),
+                  selected: isInspiring,
+                  onSelected: actionState.isBusy || inspiringAsync.isLoading
+                      ? null
+                      : (_) {
+                          ref
+                              .read(inspiringHeroControllerProvider.notifier)
+                              .toggle(HeroId(heroId));
+                        },
+                ),
+              ),
+              if (actionState.errorMessage != null) ...[
+                const SizedBox(height: 8),
+                Text(
+                  actionState.errorMessage!,
+                  key: const Key('inspires-me-error'),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.error,
+                  ),
+                ),
+              ],
               if (hero.biography != null) ...[
                 const SizedBox(height: 16),
                 Text(hero.biography!, style: theme.textTheme.bodyLarge),

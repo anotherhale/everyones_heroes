@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:everyonesheroes/core/ids/discovery_profile_id.dart';
+import 'package:everyonesheroes/core/ids/hero_id.dart';
 import 'package:everyonesheroes/core/ids/influence_id.dart';
 import 'package:everyonesheroes/core/ids/narrative_theme_id.dart';
 import 'package:everyonesheroes/core/ids/user_id.dart';
@@ -39,6 +40,10 @@ void main() {
       test('starts with no preferences', () {
         expect(profile.preferences, isEmpty);
       });
+
+      test('starts with no inspiring Heroes', () {
+        expect(profile.inspiringHeroIds, isEmpty);
+      });
     });
 
     group('influences', () {
@@ -73,6 +78,75 @@ void main() {
         profile.removeInfluence(const InfluenceId('missing'));
 
         expect(profile.influenceIds, isEmpty);
+      });
+    });
+
+    group('inspiring Heroes', () {
+      test('adds inspiring Hero', () {
+        final heroId = const HeroId('hero-1');
+
+        profile.addInspiringHero(heroId);
+
+        expect(profile.containsInspiringHero(heroId), isTrue);
+      });
+
+      test('duplicate add is idempotent', () {
+        final heroId = const HeroId('hero-1');
+
+        profile.addInspiringHero(heroId);
+        profile.addInspiringHero(heroId);
+
+        expect(profile.inspiringHeroIds, hasLength(1));
+      });
+
+      test('removes inspiring Hero', () {
+        final heroId = const HeroId('hero-1');
+
+        profile.addInspiringHero(heroId);
+        profile.removeInspiringHero(heroId);
+
+        expect(profile.containsInspiringHero(heroId), isFalse);
+      });
+
+      test('duplicate remove is idempotent', () {
+        profile.removeInspiringHero(const HeroId('missing'));
+
+        expect(profile.inspiringHeroIds, isEmpty);
+      });
+
+      test('supports multiple HeroIds', () {
+        final heroA = const HeroId('hero-a');
+        final heroB = const HeroId('hero-b');
+
+        profile.addInspiringHero(heroA);
+        profile.addInspiringHero(heroB);
+
+        expect(profile.inspiringHeroIds, hasLength(2));
+        expect(profile.containsInspiringHero(heroA), isTrue);
+        expect(profile.containsInspiringHero(heroB), isTrue);
+      });
+
+      test('constructor deduplicates inspiring HeroIds', () {
+        final heroId = const HeroId('hero-1');
+        final withDupes = DiscoveryProfile(
+          id: const DiscoveryProfileId('profile-2'),
+          userId: const UserId('user-2'),
+          inspiringHeroIds: [heroId, heroId],
+        );
+
+        expect(withDupes.inspiringHeroIds, hasLength(1));
+      });
+
+      test('does not alter Influence behavior', () {
+        final influenceId = const InfluenceId('influence-1');
+        final heroId = const HeroId('hero-1');
+
+        profile.addInfluence(influenceId);
+        profile.addInspiringHero(heroId);
+
+        expect(profile.containsInfluence(influenceId), isTrue);
+        expect(profile.containsInspiringHero(heroId), isTrue);
+        expect(profile.narrativeThemeIds, isEmpty);
       });
     });
 

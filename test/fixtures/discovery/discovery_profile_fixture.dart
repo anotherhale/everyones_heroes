@@ -1,4 +1,5 @@
 import 'package:everyonesheroes/core/ids/discovery_profile_id.dart';
+import 'package:everyonesheroes/core/ids/hero_id.dart';
 import 'package:everyonesheroes/core/ids/influence_id.dart';
 import 'package:everyonesheroes/core/ids/narrative_theme_id.dart';
 import 'package:everyonesheroes/core/ids/user_id.dart';
@@ -13,6 +14,7 @@ final class DiscoveryProfileFixture {
     DiscoveryProfileId? id,
     UserId? userId,
     Iterable<InfluenceId>? influenceIds,
+    Iterable<HeroId>? inspiringHeroIds,
     Iterable<NarrativeThemeId>? narrativeThemeIds,
     Iterable<UserDiscovery>? discoveries,
     Iterable<DiscoveryPreference>? preferences,
@@ -21,6 +23,7 @@ final class DiscoveryProfileFixture {
       id: id ?? DiscoveryProfileId.generate(),
       userId: userId ?? UserId.generate(),
       influenceIds: influenceIds,
+      inspiringHeroIds: inspiringHeroIds,
       narrativeThemeIds: narrativeThemeIds,
       discoveries: discoveries,
       preferences: preferences,

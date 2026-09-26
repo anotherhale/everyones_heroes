@@ -437,6 +437,75 @@ Events:
 
 ---
 
+## AddInspiringHeroUseCase
+
+Status:
+
+Implemented (D.11)
+
+Purpose:
+
+Add a HeroId to the current DiscoveryProfile's inspiringHeroIds preference.
+
+Dependencies:
+
+* EnsureCurrentDiscoveryProfileUseCase
+* DiscoveryProfileRepository
+
+Events:
+
+* InspiringHeroAdded (raised on aggregate; EventBus publication deferred)
+
+Notes:
+
+Does not resolve Narrative Themes. Does not affect AdaptiveDiscoverySignals.
+
+---
+
+## RemoveInspiringHeroUseCase
+
+Status:
+
+Implemented (D.11)
+
+Purpose:
+
+Remove a HeroId from the current DiscoveryProfile's inspiringHeroIds preference.
+
+Dependencies:
+
+* EnsureCurrentDiscoveryProfileUseCase
+* DiscoveryProfileRepository
+
+Events:
+
+* InspiringHeroRemoved (raised on aggregate; EventBus publication deferred)
+
+---
+
+## ListInspiringHeroesUseCase
+
+Status:
+
+Implemented (D.11)
+
+Purpose:
+
+Resolve the current user's inspiring HeroIds through Hero & Story for
+seeker-facing display (discoverable Heroes only).
+
+Dependencies:
+
+* EnsureCurrentDiscoveryProfileUseCase
+* HeroRepository
+* HeroDiscoverabilityPolicy
+
+Notes:
+
+Does not mutate DiscoveryProfile when Heroes are missing or undiscoverable.
+
+---
+
 ## DiscoverNarrativeThemesUseCase
 
 Status:

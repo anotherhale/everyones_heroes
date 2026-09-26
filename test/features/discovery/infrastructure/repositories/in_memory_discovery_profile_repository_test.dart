@@ -4,6 +4,7 @@ import '../../../../fixtures/discovery/discovery_profile_fixture.dart';
 import '../../../../fixtures/discovery/user_discovery_fixture.dart';
 
 import 'package:everyonesheroes/core/ids/discovery_profile_id.dart';
+import 'package:everyonesheroes/core/ids/hero_id.dart';
 import 'package:everyonesheroes/core/ids/user_id.dart';
 import 'package:everyonesheroes/features/discovery/infrastructure/repositories/in_memory_discovery_profile_repository.dart';
 
@@ -32,9 +33,40 @@ void main() {
       expect(loaded!.id, equals(profile.id));
       expect(loaded.userId, equals(profile.userId));
       expect(loaded.influenceIds, equals(profile.influenceIds));
+      expect(loaded.inspiringHeroIds, equals(profile.inspiringHeroIds));
       expect(loaded.narrativeThemeIds, equals(profile.narrativeThemeIds));
       expect(loaded.discoveries, hasLength(0));
       expect(loaded.preferences, hasLength(0));
+    });
+
+    test('inspiringHeroIds round-trip through save and load', () async {
+      final heroA = HeroId('hero-a');
+      final heroB = HeroId('hero-b');
+      final profile = DiscoveryProfileFixture.create(
+        inspiringHeroIds: [heroA, heroB],
+      );
+
+      await repository.save(profile);
+
+      final loaded = await repository.findById(profile.id);
+
+      expect(loaded, isNotNull);
+      expect(loaded!.inspiringHeroIds, hasLength(2));
+      expect(loaded.containsInspiringHero(heroA), isTrue);
+      expect(loaded.containsInspiringHero(heroB), isTrue);
+    });
+
+    test('saving updated inspiringHeroIds persists changes', () async {
+      final profile = DiscoveryProfileFixture.create();
+      await repository.save(profile);
+
+      final heroId = HeroId('hero-1');
+      profile.addInspiringHero(heroId);
+      await repository.save(profile);
+
+      final loaded = await repository.findById(profile.id);
+      expect(loaded!.containsInspiringHero(heroId), isTrue);
+      expect(loaded.influenceIds, isEmpty);
     });
 
     test('saving an updated profile persists changes', () async {
