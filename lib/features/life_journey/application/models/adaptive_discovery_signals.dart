@@ -11,25 +11,41 @@ import 'package:everyonesheroes/features/life_journey/domain/patterns/behavior_p
 ///
 /// Patterns: Journey.behaviorPatterns.
 ///
-/// [narrativeThemeIds] is the historical theme union (sorted).
+/// [narrativeThemeIds] is the historical theme union (sorted) used for
+/// eligibility and ranking — ranking behavior must not change when explanation
+/// fields are present.
+///
 /// [themeLastExpressedAt] maps each theme value to the most recent Reflection
 /// `submittedAt` (falling back to `createdAt`) that carried that theme.
 /// DiscoveryProfile-only themes may appear in [narrativeThemeIds] without a
 /// recency entry.
+///
+/// [inspirationThemeIds] preserves DiscoveryProfile themes separately so Today's
+/// Experience rationale can attribute matched themes to Inspiration vs
+/// Reflection without redesigning ranking (D.9). Not a weighted signal model.
 final class AdaptiveDiscoverySignals {
   AdaptiveDiscoverySignals({
     List<NarrativeThemeId> narrativeThemeIds = const [],
     List<BehaviorPattern> behaviorPatterns = const [],
     Map<String, DateTime> themeLastExpressedAt = const {},
+    List<NarrativeThemeId> inspirationThemeIds = const [],
   }) : narrativeThemeIds = List.unmodifiable(narrativeThemeIds),
        behaviorPatterns = List.unmodifiable(behaviorPatterns),
-       themeLastExpressedAt = Map.unmodifiable(themeLastExpressedAt);
+       themeLastExpressedAt = Map.unmodifiable(themeLastExpressedAt),
+       inspirationThemeIds = List.unmodifiable(inspirationThemeIds);
 
   final List<NarrativeThemeId> narrativeThemeIds;
   final List<BehaviorPattern> behaviorPatterns;
 
   /// Theme value → latest Reflection submission time expressing that theme.
   final Map<String, DateTime> themeLastExpressedAt;
+
+  /// DiscoveryProfile (Inspiration) narrative themes for the current user.
+  ///
+  /// Used only for explanation provenance against
+  /// [DiscoverableStoryCandidate.matchedThemeIds]. Ranking continues to use
+  /// [narrativeThemeIds] only.
+  final List<NarrativeThemeId> inspirationThemeIds;
 
   bool get hasThemes => narrativeThemeIds.isNotEmpty;
 

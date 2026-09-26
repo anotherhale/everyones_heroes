@@ -84,8 +84,11 @@ void main() {
   }
 
   test(
-    'D.1: DiscoveryProfile themes alone can produce adaptive story experience',
+    'D.1/D.9: DiscoveryProfile-only match attributes Inspiration, not Reflection',
     () async {
+      // Architectural contract (D.9): DiscoveryProfile-only theme match
+      // ≠ recent Reflection. Rationale must identify Inspiration semantics
+      // and must not claim the user recently reflected on the matched theme.
       await seedJourney();
       await discoveryProfileRepository.save(
         DiscoveryProfileFixture.create(
@@ -110,7 +113,11 @@ void main() {
           expect(experience.target, StoryExperienceTarget(storyId: story.id));
           expect(
             experience.rationale,
-            'This story connects with themes you\'ve recently reflected on.',
+            'This story connects with themes from your inspirations.',
+          );
+          expect(
+            experience.rationale!.toLowerCase(),
+            isNot(contains('reflected')),
           );
         },
         onFailure: fail,

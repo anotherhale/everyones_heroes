@@ -205,6 +205,10 @@ void main() {
           signals.themeLastExpressedAt.containsKey('perseverance'),
           isFalse,
         );
+        expect(
+          signals.inspirationThemeIds.map((t) => t.value).toList(),
+          ['courage', 'perseverance'],
+        );
       },
     );
 
@@ -238,6 +242,7 @@ void main() {
         expect(signals.hasThemes, isTrue);
         expect(signals.narrativeThemeIds.single.value, 'leadership');
         expect(signals.themeLastExpressedAt, isEmpty);
+        expect(signals.inspirationThemeIds.single.value, 'leadership');
       },
     );
 

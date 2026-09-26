@@ -14,6 +14,10 @@ import 'package:everyonesheroes/features/life_journey/domain/repositories/reflec
 /// Theme recency: latest Reflection submission time per theme value.
 /// DiscoveryProfile-only themes have no Reflection recency entry.
 ///
+/// Inspiration theme ids: DiscoveryProfile themes preserved separately for
+/// Today's Experience explanation provenance (D.9). Ranking still uses the
+/// union only.
+///
 /// Patterns: Journey.behaviorPatterns (consume H.2; do not detect here).
 abstract interface class ResolveAdaptiveDiscoverySignalsUseCase {
   Future<AdaptiveDiscoverySignals> execute(Journey journey);
@@ -52,8 +56,10 @@ final class DefaultResolveAdaptiveDiscoverySignalsUseCase
 
     final discoveryThemes =
         await _discoveryProfileThemeSource.currentUserNarrativeThemeIds();
+    final inspirationByValue = <String, NarrativeThemeId>{};
     for (final themeId in discoveryThemes) {
       themeValues.putIfAbsent(themeId.value, () => themeId);
+      inspirationByValue.putIfAbsent(themeId.value, () => themeId);
     }
 
     final sortedThemeIds = themeValues.keys.toList()..sort();
@@ -61,10 +67,16 @@ final class DefaultResolveAdaptiveDiscoverySignalsUseCase
       for (final value in sortedThemeIds) themeValues[value]!,
     ];
 
+    final sortedInspirationValues = inspirationByValue.keys.toList()..sort();
+    final inspirationThemeIds = [
+      for (final value in sortedInspirationValues) inspirationByValue[value]!,
+    ];
+
     return AdaptiveDiscoverySignals(
       narrativeThemeIds: narrativeThemeIds,
       behaviorPatterns: List.of(journey.behaviorPatterns),
       themeLastExpressedAt: themeLastExpressedAt,
+      inspirationThemeIds: inspirationThemeIds,
     );
   }
 }
