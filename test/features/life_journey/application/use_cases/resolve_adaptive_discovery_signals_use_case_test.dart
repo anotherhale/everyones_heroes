@@ -1,12 +1,17 @@
 import 'package:everyonesheroes/core/ids/journey_id.dart';
 import 'package:everyonesheroes/core/ids/narrative_theme_id.dart';
 import 'package:everyonesheroes/core/ids/reflection_id.dart';
+import 'package:everyonesheroes/core/ids/user_id.dart';
+import 'package:everyonesheroes/features/discovery/application/ports/repository_discovery_profile_theme_source.dart';
+import 'package:everyonesheroes/features/discovery/infrastructure/repositories/in_memory_discovery_profile_repository.dart';
 import 'package:everyonesheroes/features/life_journey/application/models/adaptive_discovery_signals.dart';
+import 'package:everyonesheroes/features/life_journey/application/ports/discovery_profile_theme_source.dart';
 import 'package:everyonesheroes/features/life_journey/application/use_cases/resolve_adaptive_discovery_signals_use_case.dart';
 import 'package:everyonesheroes/features/life_journey/domain/domain.dart';
 import 'package:everyonesheroes/features/life_journey/infrastructure/repositories/in_memory_reflection_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../../../fixtures/discovery/discovery_profile_fixture.dart';
 import '../../builders/behavioral_evidence_builder.dart';
 
 void main() {
@@ -153,6 +158,110 @@ void main() {
               .isAfter(signals.themeLastExpressedAt['courage']!),
           isTrue,
         );
+      },
+    );
+
+    test(
+      'D.1: unions DiscoveryProfile themes with Reflection themes',
+      () async {
+        final userId = UserId('dev-user');
+        final profileRepository = InMemoryDiscoveryProfileRepository();
+        await profileRepository.save(
+          DiscoveryProfileFixture.create(
+            userId: userId,
+            narrativeThemeIds: [
+              NarrativeThemeId('perseverance'),
+              NarrativeThemeId('courage'),
+            ],
+          ),
+        );
+
+        final journey = Journey(
+          id: JourneyId('journey-discovery-profile'),
+          vision: JourneyVision('DiscoveryProfile contributes themes.'),
+        );
+        await _saveSubmittedReflectionWithThemes(
+          reflectionRepository,
+          journeyId: journey.id,
+          themes: [NarrativeThemeId('service')],
+        );
+
+        final withProfile = DefaultResolveAdaptiveDiscoverySignalsUseCase(
+          reflectionRepository: reflectionRepository,
+          discoveryProfileThemeSource: RepositoryDiscoveryProfileThemeSource(
+            discoveryProfileRepository: profileRepository,
+            currentUserId: userId,
+          ),
+        );
+
+        final signals = await withProfile.execute(journey);
+
+        expect(
+          signals.narrativeThemeIds.map((t) => t.value).toList(),
+          ['courage', 'perseverance', 'service'],
+        );
+        expect(signals.themeLastExpressedAt.containsKey('service'), isTrue);
+        expect(
+          signals.themeLastExpressedAt.containsKey('perseverance'),
+          isFalse,
+        );
+      },
+    );
+
+    test(
+      'D.1: DiscoveryProfile themes alone produce adaptive theme signals',
+      () async {
+        final userId = UserId('dev-user');
+        final profileRepository = InMemoryDiscoveryProfileRepository();
+        await profileRepository.save(
+          DiscoveryProfileFixture.create(
+            userId: userId,
+            narrativeThemeIds: [NarrativeThemeId('leadership')],
+          ),
+        );
+
+        final journey = Journey(
+          id: JourneyId('journey-profile-only'),
+          vision: JourneyVision('Profile-only themes.'),
+        );
+
+        final withProfile = DefaultResolveAdaptiveDiscoverySignalsUseCase(
+          reflectionRepository: reflectionRepository,
+          discoveryProfileThemeSource: RepositoryDiscoveryProfileThemeSource(
+            discoveryProfileRepository: profileRepository,
+            currentUserId: userId,
+          ),
+        );
+
+        final signals = await withProfile.execute(journey);
+
+        expect(signals.hasThemes, isTrue);
+        expect(signals.narrativeThemeIds.single.value, 'leadership');
+        expect(signals.themeLastExpressedAt, isEmpty);
+      },
+    );
+
+    test(
+      'D.1: empty DiscoveryProfileThemeSource leaves Reflection-only behavior',
+      () async {
+        final journey = Journey(
+          id: JourneyId('journey-empty-source'),
+          vision: JourneyVision('Empty discovery source.'),
+        );
+        await _saveSubmittedReflectionWithThemes(
+          reflectionRepository,
+          journeyId: journey.id,
+          themes: [NarrativeThemeId('family')],
+        );
+
+        final withEmpty = DefaultResolveAdaptiveDiscoverySignalsUseCase(
+          reflectionRepository: reflectionRepository,
+          discoveryProfileThemeSource: const EmptyDiscoveryProfileThemeSource(),
+        );
+
+        final signals = await withEmpty.execute(journey);
+
+        expect(signals.narrativeThemeIds.single.value, 'family');
       },
     );
   });
