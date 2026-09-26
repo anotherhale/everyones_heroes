@@ -77,7 +77,7 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
                 const SizedBox(height: 24),
                 influencesAsync.when(
                   loading: () => const _CatalogLoading(),
-                  error: (_, __) => const _CatalogError(),
+                  error: (_, _) => const _CatalogError(),
                   data: (influences) {
                     if (influences.isEmpty) {
                       return const _CatalogEmpty();
@@ -85,7 +85,7 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
 
                     return profileAsync.when(
                       loading: () => const _CatalogLoading(),
-                      error: (_, __) => const _CatalogError(),
+                      error: (_, _) => const _CatalogError(),
                       data: (profile) {
                         return _InfluencePicker(
                           influences: influences,

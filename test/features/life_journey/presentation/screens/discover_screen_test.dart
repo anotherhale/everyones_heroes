@@ -12,8 +12,8 @@ import 'package:everyonesheroes/features/discovery/infrastructure/repositories/i
 import 'package:everyonesheroes/features/life_journey/presentation/screens/discover_screen.dart';
 
 void main() {
-  Widget buildSubject({
-    List<Override> overrides = const [],
+  ProviderScope buildSubject({
+    bool emptyCatalog = false,
   }) {
     return ProviderScope(
       overrides: [
@@ -23,9 +23,14 @@ void main() {
         influenceRepositoryProvider.overrideWithValue(
           InMemoryInfluenceRepository.withReferenceCatalog(),
         ),
-        ...overrides,
+        if (emptyCatalog)
+          curatedInfluencesProvider.overrideWith(
+            (ref) async => const <Influence>[],
+          ),
       ],
-      child: const MaterialApp(home: DiscoverScreen()),
+      child: const MaterialApp(
+        home: Scaffold(body: DiscoverScreen()),
+      ),
     );
   }
 
@@ -57,36 +62,28 @@ void main() {
       await tester.tap(find.byKey(rockyKey));
       await tester.pump();
 
-      final tile = tester.widget<InkWell>(find.byKey(rockyKey));
-      expect(tile, isNotNull);
-
-      // Selected state uses check icon.
       expect(find.byIcon(Icons.check_circle), findsWidgets);
     });
 
     testWidgets('save invokes application layer and shows selected chip', (
       tester,
     ) async {
+      await tester.binding.setSurfaceSize(const Size(800, 1400));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
       await tester.pumpWidget(buildSubject());
       await tester.pumpAndSettle();
 
       final rockyKey = Key(
         'influence-tile-${InfluenceReferenceIds.rockyBalboa.value}',
       );
-      await tester.scrollUntilVisible(
-        find.byKey(rockyKey),
-        200,
-        scrollable: find.byType(Scrollable).first,
-      );
+      await tester.ensureVisible(find.byKey(rockyKey));
       await tester.tap(find.byKey(rockyKey));
       await tester.pump();
 
       final saveButton = find.byKey(const Key('save-influences-button'));
-      await tester.scrollUntilVisible(
-        saveButton,
-        200,
-        scrollable: find.byType(Scrollable).first,
-      );
+      await tester.ensureVisible(saveButton);
+      await tester.pumpAndSettle();
       await tester.tap(saveButton);
       await tester.pumpAndSettle();
 
@@ -103,15 +100,7 @@ void main() {
     });
 
     testWidgets('empty catalog shows graceful empty state', (tester) async {
-      await tester.pumpWidget(
-        buildSubject(
-          overrides: [
-            curatedInfluencesProvider.overrideWith(
-              (ref) async => const <Influence>[],
-            ),
-          ],
-        ),
-      );
+      await tester.pumpWidget(buildSubject(emptyCatalog: true));
       await tester.pumpAndSettle();
 
       expect(
