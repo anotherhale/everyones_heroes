@@ -81,7 +81,7 @@ on the Heroes tab.
 | Boundary | D.3 status |
 |----------|------------|
 | BehavioralEvidence from Influence selection | **Not emitted** — inspiration ≠ behavior |
-| Hero ↔ Discovery (`favoriteHero` → HeroId, InspiredByHero) | **Deferred** |
+| Hero ↔ Discovery (`favoriteHero` → HeroId, InspiredByHero) | **Deferred** — later delivered as D.11 `inspiringHeroIds` (not favoriteHero) |
 | HeroProfile.experienceAreas as preferences | **Not used** |
 | PersonalizationEngine / AI ranking | **Not introduced** |
 | GrowthOpportunity / GrowthProfile | **Not introduced** |

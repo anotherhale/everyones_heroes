@@ -327,6 +327,7 @@ DiscoveryProfile will become the ownership boundary for:
 * Influences
 * Narrative Themes
 * Discovery Preferences
+* Inspiring HeroIds (D.11 — current-state private preference; Hero facts remain in Hero & Story)
 
 ---
 

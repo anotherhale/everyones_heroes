@@ -2,9 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:everyonesheroes/features/hero_story/presentation/providers/hero_experience_providers.dart';
+import 'package:everyonesheroes/features/hero_story/presentation/providers/hero_profile_action_provider.dart';
 import 'package:everyonesheroes/features/hero_story/presentation/screens/story_detail_screen.dart';
 
 /// Hero profile + discoverable stories for that Hero (HS.7 Slice 2).
+///
+/// Optional seeker preference actions (e.g. D.11 "Inspires me") are injected
+/// via [heroProfileActionBuilderProvider] so Hero & Story does not import
+/// Discovery.
 class HeroProfileScreen extends ConsumerWidget {
   const HeroProfileScreen({required this.heroId, super.key});
 
@@ -15,6 +20,8 @@ class HeroProfileScreen extends ConsumerWidget {
     final theme = Theme.of(context);
     final heroAsync = ref.watch(heroExperienceProvider(heroId));
     final storiesAsync = ref.watch(heroStoriesProvider(heroId));
+    final actionBuilder = ref.watch(heroProfileActionBuilderProvider);
+    final profileAction = actionBuilder?.call(ref: ref, heroId: heroId);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Hero')),
@@ -47,6 +54,13 @@ class HeroProfileScreen extends ConsumerWidget {
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
+              if (profileAction != null) ...[
+                const SizedBox(height: 16),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: profileAction,
+                ),
+              ],
               if (hero.biography != null) ...[
                 const SizedBox(height: 16),
                 Text(hero.biography!, style: theme.textTheme.bodyLarge),
