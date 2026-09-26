@@ -219,20 +219,7 @@ void main() {
     });
 
     test('Case E: Pattern + Inspiration — not mislabeled as Reflection', () {
-      final patterns = [
-        BehaviorPattern(
-          type: BehaviorPatternType.consistency,
-          strength: const Strength(0.8),
-          supportingEvidence: [
-            BehavioralEvidenceBuilder()
-                .withType(BehavioralEvidenceType.discipline)
-                .observedAt(DateTime(2026, 8, 1))
-                .build(),
-          ],
-          firstObservedAt: DateTime(2026, 8, 1),
-          lastObservedAt: DateTime(2026, 8, 1),
-        ),
-      ];
+      final patterns = [_consistencyPattern()];
       final signals = AdaptiveDiscoverySignals(
         narrativeThemeIds: [perseverance],
         inspirationThemeIds: [perseverance],
@@ -538,20 +525,7 @@ void main() {
 
     test('Pattern + Inspiration — pattern rationale preserved without Reflection claim',
         () async {
-      final patterns = [
-        BehaviorPattern(
-          type: BehaviorPatternType.consistency,
-          strength: const Strength(0.8),
-          supportingEvidence: [
-            BehavioralEvidenceBuilder()
-                .withType(BehavioralEvidenceType.discipline)
-                .observedAt(DateTime(2026, 8, 1))
-                .build(),
-          ],
-          firstObservedAt: DateTime(2026, 8, 1),
-          lastObservedAt: DateTime(2026, 8, 1),
-        ),
-      ];
+      final patterns = [_consistencyPattern()];
       await seedJourney(patterns: patterns);
       await discoveryProfileRepository.save(
         DiscoveryProfileFixture.create(
@@ -651,6 +625,26 @@ void main() {
       },
     );
   });
+}
+
+BehaviorPattern _consistencyPattern() {
+  final evidence = [
+    BehavioralEvidenceBuilder()
+        .withType(BehavioralEvidenceType.discipline)
+        .observedAt(DateTime(2026, 8, 1))
+        .build(),
+    BehavioralEvidenceBuilder()
+        .withType(BehavioralEvidenceType.discipline)
+        .observedAt(DateTime(2026, 8, 2))
+        .build(),
+  ];
+  return BehaviorPattern(
+    type: BehaviorPatternType.consistency,
+    strength: const Strength(0.8),
+    supportingEvidence: evidence,
+    firstObservedAt: DateTime(2026, 8, 1),
+    lastObservedAt: DateTime(2026, 8, 2),
+  );
 }
 
 StoryDiscoverySummary _summary({
