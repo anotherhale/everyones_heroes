@@ -40,7 +40,8 @@ void main() {
         displayName: 'Alex Rivera',
         biography: 'Service and starting over.',
         experienceAreas: const ['Military'],
-        languages: [english],
+        languages: [english, LanguageCode('es')],
+        geographicContext: 'San Antonio',
       ),
       visibility: HeroVisibility.public,
     );
@@ -116,6 +117,16 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('hero-profile-name')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('hero-profile-geographic-context')),
+      findsOneWidget,
+    );
+    expect(find.text('San Antonio'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('hero-profile-languages')),
+      findsOneWidget,
+    );
+    expect(find.text('EN · ES'), findsOneWidget);
     expect(find.text('Finding Forward'), findsOneWidget);
 
     await tester.tap(find.text('Finding Forward'));
@@ -126,6 +137,67 @@ void main() {
       find.text('I chose courage one ordinary morning.'),
       findsWidgets,
     );
+  });
+
+  testWidgets('private Hero remains inaccessible through seeker profile', (
+    tester,
+  ) async {
+    final privateHero = hs.Hero.create(
+      id: HeroId.generate(),
+      profile: HeroProfile(
+        displayName: 'Private Hero',
+        languages: [english],
+        geographicContext: 'Hidden City',
+      ),
+      visibility: HeroVisibility.private,
+    );
+    await heroes.save(privateHero);
+
+    final container = buildContainer();
+    addTearDown(container.dispose);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(
+          home: HeroProfileScreen(heroId: privateHero.id.value),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('hero-unavailable')), findsOneWidget);
+    expect(find.text('Hidden City'), findsNothing);
+    expect(find.text('Private Hero'), findsNothing);
+  });
+
+  testWidgets('discoverable Hero profile shows updated profile fields', (
+    tester,
+  ) async {
+    hero.updateProfile(
+      HeroProfile(
+        displayName: 'Alex Rivera',
+        biography: 'Service and starting over.',
+        experienceAreas: const ['Military'],
+        languages: [english, LanguageCode('fr')],
+        geographicContext: 'Austin',
+      ),
+    );
+    await heroes.save(hero);
+
+    final container = buildContainer();
+    addTearDown(container.dispose);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(home: HeroProfileScreen(heroId: hero.id.value)),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Austin'), findsOneWidget);
+    expect(find.text('EN · FR'), findsOneWidget);
   });
 
   testWidgets('Story detail begin opens consume without reflection', (

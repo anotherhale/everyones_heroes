@@ -55,7 +55,30 @@ class HeroProfileScreen extends ConsumerWidget {
                 const SizedBox(height: 16),
                 Text(
                   hero.experienceAreas.join(' · '),
+                  key: const ValueKey('hero-profile-experience-areas'),
                   style: theme.textTheme.bodyMedium,
+                ),
+              ],
+              if (hero.geographicContext != null) ...[
+                const SizedBox(height: 16),
+                Text(
+                  hero.geographicContext!,
+                  key: const ValueKey('hero-profile-geographic-context'),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+              if (hero.languages.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                Text(
+                  hero.languages
+                      .map((language) => language.value.toUpperCase())
+                      .join(' · '),
+                  key: const ValueKey('hero-profile-languages'),
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ],
               const SizedBox(height: 28),

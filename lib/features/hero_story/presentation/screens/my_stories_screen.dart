@@ -5,10 +5,12 @@ import 'package:everyonesheroes/features/hero_story/presentation/models/owned_st
 import 'package:everyonesheroes/features/hero_story/presentation/models/owner_hero_discoverability_view_model.dart';
 import 'package:everyonesheroes/features/hero_story/presentation/providers/owned_story_providers.dart';
 import 'package:everyonesheroes/features/hero_story/presentation/providers/owner_hero_discoverability_providers.dart';
+import 'package:everyonesheroes/features/hero_story/presentation/screens/my_hero_profile_screen.dart';
 import 'package:everyonesheroes/features/hero_story/presentation/screens/owned_story_detail_screen.dart';
 import 'package:everyonesheroes/features/hero_story/presentation/screens/tell_your_story_screen.dart';
 
-/// Owner-facing Story library (HS.10) and Hero discoverability (HS.FG.3).
+/// Owner-facing Story library (HS.10), Hero discoverability (HS.FG.3),
+/// and entry to My Hero Profile (HP.1 / HP.2).
 ///
 /// Hero visibility is a Hero-level concern composed here — not in Story Builder
 /// and not coupled to Story publication.
@@ -172,6 +174,13 @@ class _HeroDiscoverabilitySection extends ConsumerWidget {
         isBusy: action.isBusy,
         errorMessage: action.errorMessage,
         onClearError: controller.clearError,
+        onOpenMyHeroProfile: () {
+          Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => const MyHeroProfileScreen(),
+            ),
+          );
+        },
         onMakeDiscoverable: action.isBusy
             ? null
             : () => controller.makeDiscoverable(),
@@ -189,6 +198,7 @@ class _HeroDiscoverabilityBody extends StatelessWidget {
     required this.isBusy,
     required this.errorMessage,
     required this.onClearError,
+    required this.onOpenMyHeroProfile,
     required this.onMakeDiscoverable,
     required this.onMakePrivate,
   });
@@ -198,6 +208,7 @@ class _HeroDiscoverabilityBody extends StatelessWidget {
   final bool isBusy;
   final String? errorMessage;
   final VoidCallback onClearError;
+  final VoidCallback onOpenMyHeroProfile;
   final VoidCallback? onMakeDiscoverable;
   final VoidCallback? onMakePrivate;
 
@@ -207,6 +218,28 @@ class _HeroDiscoverabilityBody extends StatelessWidget {
       key: const ValueKey('hero-discoverability-section'),
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        Text(
+          'Your Hero',
+          key: const ValueKey('hero-owner-section-heading'),
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          model.displayName,
+          key: const ValueKey('hero-owner-display-name'),
+          style: theme.textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 8),
+        OutlinedButton(
+          key: const ValueKey('my-stories-open-hero-profile'),
+          onPressed: onOpenMyHeroProfile,
+          child: const Text('My Hero Profile'),
+        ),
+        const SizedBox(height: 20),
         Text(
           'Hero discoverability',
           key: const ValueKey('hero-discoverability-heading'),

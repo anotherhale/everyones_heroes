@@ -67,6 +67,7 @@ The project has established:
 • UI.1 prototype specification.
 • UI.2 application-backed UI foundation.
 • UI.3 Adaptive Experience Foundation.
+• HP.1 / HP.2 My Hero Profile owner authoring foundation.
 
 UI.3 completion
 
@@ -80,6 +81,29 @@ Validation at closure:
 • Slice 4 demonstrated that updated understanding leads to a refreshed Today’s Experience.
 
 UI.3 established deterministic experience selection as a foundation, not a complete personalization engine.
+
+HP.1 / HP.2 — My Hero Profile owner authoring
+
+Owner authoring is available for existing `HeroProfile` fields:
+
+• displayName
+• biography
+• experienceAreas
+• languages
+• geographicContext
+
+Composition:
+
+ActiveLocalHeroStore → GetMyHeroUseCase → Hero
+UI → UpdateHeroProfileUseCase → Hero.updateProfile → HeroProfileUpdated
+
+Important:
+
+• Uses the existing Hero aggregate / HeroProfile value object — no MyHeroProfile aggregate.
+• Owner read path does not apply the public discoverability gate.
+• Profile editing does not change Hero visibility / discoverability.
+• Identity binding (Person/User ↔ Hero) remains future work.
+• Seeker `HeroProfileScreen` remains read-only and discoverability-gated; it displays geographicContext and languages.
 
 H.2 behavioral understanding
 
