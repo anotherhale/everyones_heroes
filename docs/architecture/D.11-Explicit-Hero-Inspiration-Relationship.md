@@ -1,12 +1,42 @@
 # D.11 — Explicit Hero Inspiration Relationship
 
 - **Document type:** Implementation Report + Architectural Decisions
-- **Status:** Implemented (Flutter local Discovery write path)
+- **Status:** Implemented (Flutter local Discovery write path) — semantics
+  finalized by D.13 (**Not Yet**)
 - **Phase:** D.11 Explicit Hero Inspiration Relationship
 - **Baseline:** D.9 Today Experience Explanation Provenance; D.10 product
   decision (assessment) that EH supports an explicit current-state private
   user preference for Heroes who inspire them
 - **Date:** 2026-09-26
+- **Product semantics:** See D.13 / `D-ADR-001` (downstream meaning Not Yet
+  Defined; D.11 implementation unchanged)
+
+---
+
+## Decision / Current Semantics
+
+The D.11 relationship is intentionally a **private, current-state Discovery
+preference**.
+
+D.13 subsequently established that its **downstream behavioral meaning is
+Not Yet Defined** (not permanently “informational only”).
+
+D.11 does **not** authorize:
+
+* ranking
+* recommendation
+* Narrative Theme derivation from inspiring Heroes
+* personalization / experience selection behavior
+
+Current surfaces remain preference capture and private recall only:
+
+* `DiscoveryProfile.inspiringHeroIds`
+* “Inspires me” on seeker Hero profile
+* “Heroes Who Inspire Me” Discovery list
+
+Authoritative product decision: `docs/architecture/D.13-Inspires-Me-Product-Decision.md`.
+
+**D.11 implementation remains valid and does not need to be changed.**
 
 ---
 
@@ -207,12 +237,19 @@ Not implemented:
 
 ## 11. Deferred decisions
 
+D.13 (**Not Yet**) closed the product question of *whether* a downstream
+meaning is defined today: it is **not**. Specific future interpretations remain
+unresolved and must not be inferred from this field:
+
 1. Whether inspiring Heroes eventually influence Story ranking
 2. Whether they influence Hero discovery ranking
 3. Whether they contribute to personalization / AdaptiveDiscoverySignals
 4. Whether platform persistence becomes authoritative for DiscoveryProfile
 5. Whether public/social semantics are ever introduced
 6. Whether inspiring Heroes ever contribute NarrativeThemes
+
+Any of (1)–(3) or (6) requires a **new** explicit product decision after D.13 —
+not silent wiring because `inspiringHeroIds` exists.
 
 ---
 

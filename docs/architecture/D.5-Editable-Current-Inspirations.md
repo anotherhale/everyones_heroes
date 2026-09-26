@@ -107,7 +107,8 @@ Deterministic ranking is unchanged.
 ## 5. Remaining D.4 / deferred decisions (not solved by D.5)
 
 1. Explicit vs inferred signal provenance
-2. Hero ↔ Discovery relationship — **addressed in D.11** (`inspiringHeroIds`)
+2. Hero ↔ Discovery relationship — **addressed in D.11** (`inspiringHeroIds`);
+   downstream semantics **Not Yet** defined (D.13 / D-ADR-001)
 3. Platform DiscoveryProfile authority
 4. Whether Discover eventually becomes a richer content-discovery experience
 
