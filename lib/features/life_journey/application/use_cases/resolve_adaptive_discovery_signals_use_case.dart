@@ -22,11 +22,10 @@ abstract interface class ResolveAdaptiveDiscoverySignalsUseCase {
 final class DefaultResolveAdaptiveDiscoverySignalsUseCase
     implements ResolveAdaptiveDiscoverySignalsUseCase {
   const DefaultResolveAdaptiveDiscoverySignalsUseCase({
-    required ReflectionRepository reflectionRepository,
-    DiscoveryProfileThemeSource discoveryProfileThemeSource =
+    required this._reflectionRepository,
+    this._discoveryProfileThemeSource =
         const EmptyDiscoveryProfileThemeSource(),
-  }) : _reflectionRepository = reflectionRepository,
-       _discoveryProfileThemeSource = discoveryProfileThemeSource;
+  });
 
   final ReflectionRepository _reflectionRepository;
   final DiscoveryProfileThemeSource _discoveryProfileThemeSource;

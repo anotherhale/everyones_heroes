@@ -12,10 +12,9 @@ import 'package:everyonesheroes/features/life_journey/application/ports/discover
 final class RepositoryDiscoveryProfileThemeSource
     implements DiscoveryProfileThemeSource {
   const RepositoryDiscoveryProfileThemeSource({
-    required DiscoveryProfileRepository discoveryProfileRepository,
-    required UserId currentUserId,
-  }) : _discoveryProfileRepository = discoveryProfileRepository,
-       _currentUserId = currentUserId;
+    required this._discoveryProfileRepository,
+    required this._currentUserId,
+  });
 
   final DiscoveryProfileRepository _discoveryProfileRepository;
   final UserId _currentUserId;

@@ -4,7 +4,7 @@ import 'package:everyonesheroes/features/discovery/application/use_cases/ensure_
 import 'package:everyonesheroes/features/discovery/infrastructure/repositories/in_memory_discovery_profile_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import '../../../fixtures/discovery/discovery_profile_fixture.dart';
+import '../../../../fixtures/discovery/discovery_profile_fixture.dart';
 
 void main() {
   group('EnsureCurrentDiscoveryProfileUseCase', () {

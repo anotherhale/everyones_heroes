@@ -12,10 +12,9 @@ import 'package:everyonesheroes/features/discovery/domain/repositories/discovery
 /// influences or themes.
 final class EnsureCurrentDiscoveryProfileUseCase {
   EnsureCurrentDiscoveryProfileUseCase({
-    required DiscoveryProfileRepository repository,
-    required UserId currentUserId,
-  }) : _repository = repository,
-       _currentUserId = currentUserId;
+    required this._repository,
+    required this._currentUserId,
+  });
 
   final DiscoveryProfileRepository _repository;
   final UserId _currentUserId;
