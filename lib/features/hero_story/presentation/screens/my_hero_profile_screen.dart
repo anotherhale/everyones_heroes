@@ -183,10 +183,12 @@ class _MyHeroProfileScreenState extends ConsumerState<MyHeroProfileScreen> {
         ),
         data: (model) {
           _bindForm(model);
-          return ListView(
+          return SingleChildScrollView(
             key: const ValueKey('my-hero-profile-form'),
             padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
-            children: [
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
               Text(
                 'Your Hero Profile',
                 key: const ValueKey('my-hero-profile-heading'),
@@ -340,7 +342,8 @@ class _MyHeroProfileScreenState extends ConsumerState<MyHeroProfileScreen> {
                 onPressed: action.isBusy ? null : _save,
                 child: Text(action.isBusy ? 'Saving…' : 'Save Profile'),
               ),
-            ],
+              ],
+            ),
           );
         },
       ),

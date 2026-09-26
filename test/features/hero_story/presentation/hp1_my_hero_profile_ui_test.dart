@@ -77,6 +77,10 @@ void main() {
     WidgetTester tester,
     ProviderContainer container,
   ) async {
+    await tester.binding.setSurfaceSize(const Size(800, 1200));
+    addTearDown(() async {
+      await tester.binding.setSurfaceSize(null);
+    });
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,
@@ -186,9 +190,17 @@ void main() {
       'Seattle',
     );
 
+    await tester.ensureVisible(
+      find.byKey(const ValueKey('my-hero-profile-language-es')),
+    );
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('my-hero-profile-language-es')));
     await tester.pumpAndSettle();
 
+    await tester.ensureVisible(
+      find.byKey(const ValueKey('my-hero-profile-save')),
+    );
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('my-hero-profile-save')));
     await tester.pumpAndSettle();
 
@@ -226,6 +238,10 @@ void main() {
       find.byKey(const ValueKey('my-hero-profile-display-name')),
       '   ',
     );
+    await tester.ensureVisible(
+      find.byKey(const ValueKey('my-hero-profile-save')),
+    );
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('my-hero-profile-save')));
     await tester.pumpAndSettle();
 

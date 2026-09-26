@@ -14,8 +14,7 @@ import 'package:everyonesheroes/features/hero_story/domain/repositories/hero_rep
 ///
 /// Does not invent a MyHeroProfile aggregate — returns the existing [Hero].
 final class GetMyHeroUseCase implements UseCase<GetMyHeroRequest, Hero> {
-  const GetMyHeroUseCase({required HeroRepository heroRepository})
-      : _heroRepository = heroRepository;
+  const GetMyHeroUseCase({required this._heroRepository});
 
   final HeroRepository _heroRepository;
 
