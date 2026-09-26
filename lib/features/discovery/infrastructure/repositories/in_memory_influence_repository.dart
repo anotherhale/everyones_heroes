@@ -1,4 +1,5 @@
 import 'package:everyonesheroes/core/ids/influence_id.dart';
+import 'package:everyonesheroes/features/discovery/domain/catalog/influence_reference_catalog.dart';
 
 import '../../domain/entities/influence.dart';
 import '../../domain/repositories/influence_repository.dart';
@@ -8,6 +9,13 @@ final class InMemoryInfluenceRepository implements InfluenceRepository {
     for (final influence in influences ?? const <Influence>[]) {
       _influences[influence.id.value] = influence;
     }
+  }
+
+  /// Seeds Discovery's curated Influence catalog (D.3).
+  factory InMemoryInfluenceRepository.withReferenceCatalog() {
+    return InMemoryInfluenceRepository(
+      influences: InfluenceReferenceCatalog.influences,
+    );
   }
 
   final Map<String, Influence> _influences = {};
