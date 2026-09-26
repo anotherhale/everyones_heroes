@@ -6,12 +6,16 @@ import 'package:everyonesheroes/features/discovery/application/providers/use_cas
 import 'package:everyonesheroes/features/discovery/domain/aggregates/discovery_profile.dart';
 import 'package:everyonesheroes/features/discovery/domain/entities/influence.dart';
 import 'package:everyonesheroes/features/discovery/presentation/providers/influence_selection_controller.dart';
+import 'package:everyonesheroes/features/hero_story/presentation/screens/story_detail_screen.dart';
+import 'package:everyonesheroes/features/life_journey/application/models/inspiration_story_exploration.dart';
+import 'package:everyonesheroes/features/life_journey/application/providers/use_cases/explore_stories_by_inspiration_use_case_provider.dart';
 
-/// Discover tab: curated Influence selection for DiscoveryProfile (D.3 / D.5).
+/// Discover tab: curated Influence selection + inspiration-grounded Story
+/// exploration (D.3 / D.5 / D.7).
 ///
-/// Hosts the smallest useful "What inspires you?" picker with editable
-/// current Inspirations. Does not become a social feed, Hero catalog, or
-/// recommendation engine.
+/// Hosts "What inspires you?" with editable Current Inspirations, then
+/// Explore Stories connected through NarrativeTheme overlap.
+/// Does not become a social feed, recommendation engine, or PersonalizationEngine.
 class DiscoverScreen extends ConsumerStatefulWidget {
   const DiscoverScreen({super.key});
 
@@ -32,6 +36,7 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
     final influencesAsync = ref.watch(curatedInfluencesProvider);
     final profileAsync = ref.watch(currentDiscoveryProfileProvider);
     final actionState = ref.watch(influenceSelectionControllerProvider);
+    final explorationAsync = ref.watch(inspirationGroundedStoriesProvider);
 
     ref.listen(influenceSelectionControllerProvider, (previous, next) {
       if (next.savedSuccessfully &&
@@ -153,6 +158,12 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
                       },
                     );
                   },
+                ),
+                const SizedBox(height: 32),
+                const Divider(height: 1),
+                const SizedBox(height: 24),
+                _InspirationStoryExplorationSection(
+                  explorationAsync: explorationAsync,
                 ),
               ]),
             ),
@@ -429,6 +440,143 @@ class _InfluenceTile extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// D.7 Explore Stories section — inspiration-grounded, not Reflection-derived.
+class _InspirationStoryExplorationSection extends StatelessWidget {
+  const _InspirationStoryExplorationSection({
+    required this.explorationAsync,
+  });
+
+  final AsyncValue<InspirationStoryExploration> explorationAsync;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          'Explore Stories',
+          key: const Key('explore-stories-heading'),
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Stories connected to your inspirations',
+          key: const Key('explore-stories-subtitle'),
+          style: theme.textTheme.bodyMedium?.copyWith(
+            height: 1.4,
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: 16),
+        explorationAsync.when(
+          loading: () => const Padding(
+            padding: EdgeInsets.symmetric(vertical: 24),
+            child: Center(
+              child: CircularProgressIndicator(
+                key: Key('explore-stories-loading'),
+              ),
+            ),
+          ),
+          error: (_, _) => Text(
+            'We could not load related Stories right now.',
+            key: const Key('explore-stories-error'),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.error,
+            ),
+          ),
+          data: (exploration) {
+            if (!exploration.hasInspirations) {
+              return Text(
+                'Choose a few inspirations to discover related Stories.',
+                key: const Key('explore-stories-empty-no-inspirations'),
+                style: theme.textTheme.bodyLarge?.copyWith(height: 1.45),
+              );
+            }
+
+            if (exploration.stories.isEmpty) {
+              return Text(
+                'No Stories match your current inspirations yet.',
+                key: const Key('explore-stories-empty-no-matches'),
+                style: theme.textTheme.bodyLarge?.copyWith(height: 1.45),
+              );
+            }
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                for (var i = 0; i < exploration.stories.length; i++) ...[
+                  if (i > 0) const Divider(height: 1),
+                  _InspirationStoryTile(story: exploration.stories[i]),
+                ],
+              ],
+            );
+          },
+        ),
+      ],
+    );
+  }
+}
+
+class _InspirationStoryTile extends StatelessWidget {
+  const _InspirationStoryTile({required this.story});
+
+  final InspirationGroundedStory story;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final heroLabel = story.heroDisplayName;
+
+    return ListTile(
+      key: Key('inspiration-story-tile-${story.storyId.value}'),
+      contentPadding: EdgeInsets.zero,
+      title: Text(
+        story.title,
+        style: theme.textTheme.titleMedium?.copyWith(
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      subtitle: Padding(
+        padding: const EdgeInsets.only(top: 4),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (heroLabel != null && heroLabel.isNotEmpty)
+              Text(
+                heroLabel,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            Text(
+              story.relevanceLabel,
+              key: Key(
+                'inspiration-story-provenance-${story.storyId.value}',
+              ),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.primary,
+                height: 1.35,
+              ),
+            ),
+          ],
+        ),
+      ),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: () {
+        Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) => StoryDetailScreen(storyId: story.storyId.value),
+          ),
+        );
+      },
     );
   }
 }

@@ -214,17 +214,23 @@ void main() {
     testWidgets(
       'toggling a persisted tile marks pending removal without saving',
       (tester) async {
-        await tester.binding.setSurfaceSize(const Size(800, 1400));
+        await tester.binding.setSurfaceSize(const Size(800, 1800));
         addTearDown(() => tester.binding.setSurfaceSize(null));
 
         await tester.pumpWidget(buildSubject());
         await tester.pumpAndSettle();
         await saveRocky(tester);
 
+        await tester.pump(const Duration(seconds: 4));
         final rockyKey = Key(
           'influence-tile-${InfluenceReferenceIds.rockyBalboa.value}',
         );
-        await tester.ensureVisible(find.byKey(rockyKey));
+        await tester.scrollUntilVisible(
+          find.byKey(rockyKey),
+          200,
+          scrollable: find.byType(Scrollable).first,
+        );
+        await tester.pumpAndSettle();
         await tester.tap(find.byKey(rockyKey));
         await tester.pump();
 
