@@ -31,12 +31,10 @@ abstract interface class ExploreStoriesByInspirationUseCase {
 final class DefaultExploreStoriesByInspirationUseCase
     implements ExploreStoriesByInspirationUseCase {
   const DefaultExploreStoriesByInspirationUseCase({
-    required EnsureCurrentDiscoveryProfileUseCase ensureCurrentDiscoveryProfile,
-    required DiscoverStoriesUseCase discoverStories,
-    required NarrativeThemeRepository narrativeThemeRepository,
-  })  : _ensureCurrentDiscoveryProfile = ensureCurrentDiscoveryProfile,
-        _discoverStories = discoverStories,
-        _narrativeThemeRepository = narrativeThemeRepository;
+    required this._ensureCurrentDiscoveryProfile,
+    required this._discoverStories,
+    required this._narrativeThemeRepository,
+  });
 
   final EnsureCurrentDiscoveryProfileUseCase _ensureCurrentDiscoveryProfile;
   final DiscoverStoriesUseCase _discoverStories;
