@@ -38,7 +38,7 @@ class HeroProfileScreen extends ConsumerWidget {
           ),
         ),
         data: (hero) {
-          final isInspiring = inspiringAsync.valueOrNull ?? false;
+          final isInspiring = inspiringAsync.value ?? false;
 
           return ListView(
             padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),

@@ -88,6 +88,8 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
                   ),
                 ),
                 const SizedBox(height: 24),
+                const _HeroesWhoInspireMeSection(),
+                const SizedBox(height: 24),
                 influencesAsync.when(
                   loading: () => const _CatalogLoading(),
                   error: (_, _) => const _CatalogError(),
@@ -163,8 +165,6 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
                     );
                   },
                 ),
-                const SizedBox(height: 32),
-                const _HeroesWhoInspireMeSection(),
                 const SizedBox(height: 32),
                 const Divider(height: 1),
                 const SizedBox(height: 24),
