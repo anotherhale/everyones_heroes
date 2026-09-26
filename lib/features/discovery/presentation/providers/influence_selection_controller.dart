@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:everyonesheroes/core/ids/influence_id.dart';
 import 'package:everyonesheroes/features/discovery/application/providers/use_cases/discovery_use_case_providers.dart';
+import 'package:everyonesheroes/features/life_journey/application/providers/use_cases/explore_stories_by_inspiration_use_case_provider.dart';
 import 'package:everyonesheroes/features/life_journey/presentation/providers/today_experience_provider.dart';
 
 /// UI action state for curated Influence selection (D.3 / D.5).
@@ -59,8 +60,9 @@ final class InfluenceSelectionController
   /// ([SelectInfluencesUseCase]). Each mutation re-resolves Narrative Themes
   /// from the current Influence set.
   ///
-  /// Invalidates [currentDiscoveryProfileProvider] and
-  /// [todayExperienceProvider] after a successful save.
+  /// Invalidates [currentDiscoveryProfileProvider],
+  /// [inspirationGroundedStoriesProvider], and [todayExperienceProvider]
+  /// after a successful save.
   ///
   /// Does not emit BehavioralEvidence.
   Future<bool> save({
@@ -89,6 +91,7 @@ final class InfluenceSelectionController
       }
 
       ref.invalidate(currentDiscoveryProfileProvider);
+      ref.invalidate(inspirationGroundedStoriesProvider);
       ref.invalidate(todayExperienceProvider);
       state = state.copyWith(isBusy: false, savedSuccessfully: true);
       return true;
