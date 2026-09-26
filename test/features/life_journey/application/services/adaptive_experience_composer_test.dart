@@ -57,7 +57,7 @@ void main() {
       expect(experience.target, StoryExperienceTarget(storyId: storyId));
       expect(
         experience.rationale,
-        'This story connects with themes you\'ve recently reflected on.',
+        'This story connects with themes relevant to your journey.',
       );
     });
 
@@ -65,6 +65,9 @@ void main() {
       final journey = _journeyWithConsistency();
       final signals = AdaptiveDiscoverySignals(
         narrativeThemeIds: [NarrativeThemeId('courage')],
+        themeLastExpressedAt: {
+          'courage': DateTime.utc(2026, 1, 1),
+        },
         behaviorPatterns: journey.behaviorPatterns,
       );
       final candidates = [

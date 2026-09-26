@@ -3,7 +3,9 @@ import 'package:everyonesheroes/features/life_journey/application/models/adaptiv
 import 'package:everyonesheroes/features/life_journey/application/models/discoverable_story_candidate.dart';
 import 'package:everyonesheroes/features/life_journey/application/models/experience_action.dart';
 import 'package:everyonesheroes/features/life_journey/application/models/experience_target.dart';
+import 'package:everyonesheroes/features/life_journey/application/models/narrative_theme_match_source.dart';
 import 'package:everyonesheroes/features/life_journey/application/services/experience_selection_service.dart';
+import 'package:everyonesheroes/features/life_journey/application/services/narrative_theme_match_provenance.dart';
 import 'package:everyonesheroes/features/life_journey/domain/aggregates/journey.dart';
 import 'package:everyonesheroes/features/life_journey/domain/patterns/behavior_pattern_type.dart';
 
@@ -11,6 +13,10 @@ import 'package:everyonesheroes/features/life_journey/domain/patterns/behavior_p
 ///
 /// Themes alone may select a Story. Patterns strengthen rationale/score but are
 /// not a hard gate. No candidates → existing [ExperienceSelectionService].
+///
+/// Rationale wording (D.9) attributes matched narrative themes to Inspiration,
+/// Reflection, Mixed, or Unknown using existing selection facts — it does not
+/// query repositories, re-rank, or invent provenance.
 final class AdaptiveExperienceComposer {
   const AdaptiveExperienceComposer({
     required this._reflectionSelectionService,
@@ -45,20 +51,38 @@ final class AdaptiveExperienceComposer {
     );
   }
 
-  /// Grounded rationale from actual matched signals only.
+  /// Grounded rationale from actual matched-theme provenance + optional patterns.
   static String buildRationale({
     required AdaptiveDiscoverySignals signals,
     required DiscoverableStoryCandidate candidate,
   }) {
+    final source = NarrativeThemeMatchProvenance.resolve(
+      signals: signals,
+      candidate: candidate,
+    );
+    final themeClause = _themeClause(source);
     final hasPatterns = signals.hasPatterns && candidate.themeOverlapCount > 0;
 
     if (hasPatterns) {
       final patternLabel = _patternLabel(signals);
-      return 'This story connects with themes you\'ve explored and '
+      return 'This story connects with $themeClause and '
           'patterns of $patternLabel in your journey.';
     }
 
-    return 'This story connects with themes you\'ve recently reflected on.';
+    return 'This story connects with $themeClause.';
+  }
+
+  static String _themeClause(NarrativeThemeMatchSource source) {
+    switch (source) {
+      case NarrativeThemeMatchSource.inspiration:
+        return 'themes from your inspirations';
+      case NarrativeThemeMatchSource.reflection:
+        return 'themes you\'ve recently reflected on';
+      case NarrativeThemeMatchSource.mixed:
+        return 'themes from your inspirations and reflections';
+      case NarrativeThemeMatchSource.unknown:
+        return 'themes relevant to your journey';
+    }
   }
 
   static String _patternLabel(AdaptiveDiscoverySignals signals) {
