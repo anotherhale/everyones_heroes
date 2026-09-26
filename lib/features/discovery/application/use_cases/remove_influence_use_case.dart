@@ -30,12 +30,10 @@ import 'package:everyonesheroes/features/discovery/domain/repositories/discovery
 /// events are still raised by [DiscoveryProfile] for future wiring).
 final class RemoveInfluenceUseCase {
   RemoveInfluenceUseCase({
-    required EnsureCurrentDiscoveryProfileUseCase ensureCurrentDiscoveryProfile,
-    required DiscoveryProfileRepository repository,
-    required ResolveNarrativeThemesUseCase resolveNarrativeThemes,
-  }) : _ensureCurrentDiscoveryProfile = ensureCurrentDiscoveryProfile,
-       _repository = repository,
-       _resolveNarrativeThemes = resolveNarrativeThemes;
+    required this._ensureCurrentDiscoveryProfile,
+    required this._repository,
+    required this._resolveNarrativeThemes,
+  });
 
   final EnsureCurrentDiscoveryProfileUseCase _ensureCurrentDiscoveryProfile;
   final DiscoveryProfileRepository _repository;
