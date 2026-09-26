@@ -13,9 +13,6 @@ import 'package:everyonesheroes/features/hero_story/application/relevance/determ
 import 'package:everyonesheroes/features/hero_story/application/relevance/discover_stories_candidate_adapter.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/discover_stories_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/domain/domain.dart';
-import 'package:everyonesheroes/features/hero_story/domain/enums/spirituality_category.dart';
-import 'package:everyonesheroes/features/hero_story/domain/enums/story_visibility.dart';
-import 'package:everyonesheroes/features/hero_story/domain/enums/suitability_level.dart';
 import 'package:everyonesheroes/features/hero_story/infrastructure/repositories/in_memory_hero_repository.dart';
 import 'package:everyonesheroes/features/hero_story/infrastructure/repositories/in_memory_story_repository.dart';
 import 'package:everyonesheroes/features/hero_story/infrastructure/search/in_memory_story_search_adapter.dart';
@@ -31,10 +28,6 @@ import 'package:everyonesheroes/features/life_journey/application/services/narra
 import 'package:everyonesheroes/features/life_journey/application/use_cases/get_today_experience_use_case.dart';
 import 'package:everyonesheroes/features/life_journey/application/use_cases/resolve_adaptive_discovery_signals_use_case.dart';
 import 'package:everyonesheroes/features/life_journey/domain/domain.dart';
-import 'package:everyonesheroes/features/life_journey/domain/enums/behavioral_evidence_type.dart';
-import 'package:everyonesheroes/features/life_journey/domain/patterns/behavior_pattern.dart';
-import 'package:everyonesheroes/features/life_journey/domain/patterns/behavior_pattern_type.dart';
-import 'package:everyonesheroes/features/life_journey/domain/value_objects/strength.dart';
 import 'package:everyonesheroes/features/life_journey/infrastructure/repositories/in_memory_journey_repository.dart';
 import 'package:everyonesheroes/features/life_journey/infrastructure/repositories/in_memory_reflection_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
