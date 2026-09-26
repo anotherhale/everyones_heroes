@@ -590,6 +590,40 @@ Do not duplicate concepts across aggregate boundaries.
 
 ---
 
+# Hero & Story Context (HP.1 / HP.2 note)
+
+Status: Foundational Hero / Story model implemented; owner profile authoring available.
+
+## Hero
+
+Type:
+
+Aggregate Root
+
+Responsibility:
+
+Represents a person whose lived experience may inspire others.
+
+Owns:
+
+* HeroProfile (value object — displayName, biography, experienceAreas, languages, geographicContext)
+* Visibility
+* Status
+
+Does not own:
+
+* Stories (queried by Story.heroId)
+* Behavioral evidence / patterns
+* Discovery preferences
+
+Owner authoring (HP.1 / HP.2):
+
+* My Hero Profile edits existing HeroProfile fields through UpdateHeroProfileUseCase.
+* Does not create a separate MyHeroProfile aggregate.
+* Identity binding remains future work.
+
+---
+
 # Architectural North Star
 
 Store:

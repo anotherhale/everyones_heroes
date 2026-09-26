@@ -9,17 +9,20 @@ import 'package:everyonesheroes/features/hero_story/application/services/discove
 import 'package:everyonesheroes/features/hero_story/application/use_cases/approve_story_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/archive_story_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/change_hero_visibility_use_case.dart';
+import 'package:everyonesheroes/features/hero_story/application/use_cases/get_my_hero_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/get_owned_story_detail_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/list_hero_owned_stories_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/load_owned_story_media_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/publish_story_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/submit_story_use_case.dart';
+import 'package:everyonesheroes/features/hero_story/application/use_cases/update_hero_profile_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/update_story_consent_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/infrastructure/platform/platform_sync_discoverable_story_candidate_adapter.dart';
 import 'package:everyonesheroes/features/life_journey/application/providers/use_cases/submit_reflection_use_case_provider.dart';
 import 'package:everyonesheroes/features/life_journey/infrastructure/platform/eh_platform_config.dart';
 
-/// Owner Story application providers (HS.10 / HS.FG.1 / HS.FG.3 / J.2 Slice 5).
+/// Owner Story / Hero application providers
+/// (HS.10 / HS.FG.1 / HS.FG.3 / HP.1 / J.2 Slice 5).
 ///
 /// Separated from discoverability-gated experience providers.
 ///
@@ -28,6 +31,9 @@ import 'package:everyonesheroes/features/life_journey/infrastructure/platform/eh
 ///
 /// HS.FG.3 wires [ChangeHeroVisibilityUseCase] for explicit Hero
 /// discoverability consent. Story publication does not change Hero visibility.
+///
+/// HP.1 wires [GetMyHeroUseCase] and [UpdateHeroProfileUseCase] for owner
+/// Hero Profile authoring. Profile editing does not change discoverability.
 ///
 /// J.2 Slice 5 wires optional platform candidate projection sync after
 /// publish / archive / hero-visibility (soft-fail; Story remains authoritative).
@@ -137,5 +143,26 @@ final changeHeroVisibilityUseCaseProvider =
     heroRepository: ref.watch(heroRepositoryProvider),
     storyRepository: ref.watch(storyRepositoryProvider),
     candidateSync: ref.watch(discoverableStoryCandidateSyncProvider),
+  );
+});
+
+/// Owner Hero read without discoverability gate (HP.1).
+///
+/// Callers must supply the active Hero id from [ActiveLocalHeroStore].
+final getMyHeroUseCaseProvider = Provider<GetMyHeroUseCase>((ref) {
+  return GetMyHeroUseCase(
+    heroRepository: ref.watch(heroRepositoryProvider),
+  );
+});
+
+/// Owner Hero Profile update composition (HP.1 / HP.2).
+///
+/// Reuses existing [Hero.updateProfile] / [HeroProfileUpdated]. Does not
+/// change visibility or invent a second profile model.
+final updateHeroProfileUseCaseProvider =
+    Provider<UpdateHeroProfileUseCase>((ref) {
+  return UpdateHeroProfileUseCase(
+    heroRepository: ref.watch(heroRepositoryProvider),
+    eventBus: ref.watch(eventBusProvider),
   );
 });
