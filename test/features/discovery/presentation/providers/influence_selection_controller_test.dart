@@ -37,7 +37,7 @@ void main() {
     );
   });
 
-  tearDown(container.dispose);
+  tearDown(() => container.dispose());
 
   group('InfluenceSelectionController D.5', () {
     test('save persists removal and refreshes current selected state',

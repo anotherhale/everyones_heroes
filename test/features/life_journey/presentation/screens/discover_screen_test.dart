@@ -154,25 +154,17 @@ void main() {
         await tester.pumpAndSettle();
         await saveRocky(tester);
 
-        await tester.tap(
-          find.byKey(
-            Key(
-              'remove-influence-chip-'
-              '${InfluenceReferenceIds.rockyBalboa.value}',
-            ),
-          ),
+        // Dismiss snackbar / scroll so the Current Inspirations chip is hittable.
+        await tester.pump(const Duration(seconds: 4));
+        final chipKey = Key(
+          'selected-influence-chip-${InfluenceReferenceIds.rockyBalboa.value}',
         );
+        await tester.ensureVisible(find.byKey(chipKey));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byTooltip('Remove inspiration'));
         await tester.pump();
 
-        expect(
-          find.byKey(
-            Key(
-              'selected-influence-chip-'
-              '${InfluenceReferenceIds.rockyBalboa.value}',
-            ),
-          ),
-          findsNothing,
-        );
+        expect(find.byKey(chipKey), findsNothing);
         expect(find.text('Saved'), findsNothing);
 
         final saveButton = tester.widget<FilledButton>(
@@ -192,28 +184,23 @@ void main() {
       await tester.pumpAndSettle();
       await saveRocky(tester);
 
-      await tester.tap(
-        find.byKey(
-          Key(
-            'remove-influence-chip-${InfluenceReferenceIds.rockyBalboa.value}',
-          ),
-        ),
+      await tester.pump(const Duration(seconds: 4));
+      final chipKey = Key(
+        'selected-influence-chip-${InfluenceReferenceIds.rockyBalboa.value}',
       );
+      await tester.ensureVisible(find.byKey(chipKey));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('Remove inspiration'));
       await tester.pump();
 
-      await tester.tap(find.byKey(const Key('save-influences-button')));
+      final saveButton = find.byKey(const Key('save-influences-button'));
+      await tester.ensureVisible(saveButton);
+      await tester.pumpAndSettle();
+      await tester.tap(saveButton);
       await tester.pumpAndSettle();
 
       expect(find.text('Current Inspirations'), findsNothing);
-      expect(
-        find.byKey(
-          Key(
-            'selected-influence-chip-'
-            '${InfluenceReferenceIds.rockyBalboa.value}',
-          ),
-        ),
-        findsNothing,
-      );
+      expect(find.byKey(chipKey), findsNothing);
       expect(find.text('Your inspirations were saved.'), findsOneWidget);
 
       final persisted = await profileRepository.findByUserId(localUserId);
