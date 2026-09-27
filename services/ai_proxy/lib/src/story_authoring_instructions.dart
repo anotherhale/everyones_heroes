@@ -60,10 +60,17 @@ Only use these roles: beginning, challenge, importance, struggle, stakes,
 turningPoint, decision, action, outcome, reflection, message.
 
 Uncertainty:
-When material is insufficient for a section, omit that section rather than inventing.
+When material is insufficient for a particular section role, omit that role
+rather than inventing for it.
+When the request includes hero-authored (or other non-empty) source section
+content, you MUST return a non-empty top-level "sections" array that reshapes
+that material into derived prose. Returning zero sections when source material
+exists is a contract failure — reshape what was supplied instead of omitting
+everything.
 
 Output:
-Return ONLY a JSON object with this schema:
+Return ONLY a single top-level JSON object (do not wrap it under another key)
+with this schema:
 {
   "title": "optional grounded title",
   "summary": "optional short derived summary",
@@ -76,6 +83,9 @@ Return ONLY a JSON object with this schema:
   ],
   "warnings": ["optional notes about uncertainty or omitted material"]
 }
+
+"sections" is required, must be a JSON array, and must contain at least one
+section object whenever the request supplied source material with content.
 ''';
 
   static bool requiresSourceFidelity(String prompt) =>
@@ -96,7 +106,13 @@ Return ONLY a JSON object with this schema:
 
   static bool preservesUncertainty(String prompt) =>
       prompt.contains('Preserve uncertainty') ||
+      prompt.contains('omit that role rather than inventing') ||
       prompt.contains('omit that section rather than inventing');
+
+  static bool requiresNonEmptySections(String prompt) =>
+      prompt.contains('non-empty top-level "sections" array') &&
+      prompt.contains('Returning zero sections when source material') &&
+      prompt.contains('do not wrap it under another key');
 
   static bool preservesVoice(String prompt) =>
       prompt.contains("preserving the Hero's perspective") ||

@@ -29,19 +29,11 @@ class OpenAiChatClient {
     required String userPrompt,
   }) async {
     final uri = Uri.parse('$baseUrl/chat/completions');
-    final bodyMap = <String, dynamic>{
-      'model': model,
-      'response_format': {'type': 'json_object'},
-      'messages': [
-        {'role': 'system', 'content': systemPrompt},
-        {'role': 'user', 'content': userPrompt},
-      ],
-    };
-    // GPT-5.x reasoning models reject non-default temperature (only 1 / omit).
-    // Legacy chat models (e.g. gpt-4o-mini) keep the prior sampling value.
-    if (_supportsCustomTemperature(model)) {
-      bodyMap['temperature'] = 0.4;
-    }
+    final bodyMap = buildChatRequest(
+      model: model,
+      systemPrompt: systemPrompt,
+      userPrompt: userPrompt,
+    );
     final body = jsonEncode(bodyMap);
 
     final response = await _client.post(
@@ -92,10 +84,36 @@ class OpenAiChatClient {
     return OpenAiChatResult(content: content, raw: json);
   }
 
+  /// Builds the chat/completions JSON body for EH structured-output calls.
+  ///
+  /// Capability/model-aware: GPT-5 family models omit `temperature` because
+  /// non-default values are rejected by the provider. Legacy chat models keep
+  /// `temperature: 0.4`. Always preserves `model`, `response_format`, and
+  /// the system/user messages contract.
+  static Map<String, dynamic> buildChatRequest({
+    required String model,
+    required String systemPrompt,
+    required String userPrompt,
+  }) {
+    final body = <String, dynamic>{
+      'model': model,
+      'response_format': {'type': 'json_object'},
+      'messages': [
+        {'role': 'system', 'content': systemPrompt},
+        {'role': 'user', 'content': userPrompt},
+      ],
+    };
+    if (_supportsCustomTemperature(model)) {
+      body['temperature'] = 0.4;
+    }
+    return body;
+  }
+
   /// Whether this model accepts a non-default [temperature] on chat/completions.
   ///
-  /// GPT-5 family reasoning models (including GPT-5.6) only allow the default
-  /// temperature; sending `0.4` yields an OpenAI `unsupported_value` error.
+  /// GPT-5 family reasoning models (including GPT-5.6 / Luna) only allow the
+  /// default temperature; sending `0.4` yields an OpenAI `unsupported_value`
+  /// error.
   static bool _supportsCustomTemperature(String model) {
     final normalized = model.trim().toLowerCase();
     return !normalized.startsWith('gpt-5');

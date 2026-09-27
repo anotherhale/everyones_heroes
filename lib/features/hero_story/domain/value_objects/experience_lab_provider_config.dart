@@ -37,11 +37,15 @@ final class ExperienceLabProviderConfig extends ValueObject {
   }
 
   /// Experiment A defaults (OpenAI creative + OpenAI TTS + Stable Audio 3.0).
+  ///
+  /// [creativeModel] is an opaque lab fingerprint label only — the EH AI
+  /// proxy's `OPENAI_CHAT_MODEL` selects the actual vendor chat model.
+  /// Response `modelLabel` from the proxy is authoritative.
   factory ExperienceLabProviderConfig.experimentA() {
     return ExperienceLabProviderConfig(
       experiment: ExperienceLabExperiment.experimentA,
       creativeProvider: 'openai',
-      creativeModel: 'gpt-4o-mini',
+      creativeModel: 'eh-proxy-chat',
       voiceProvider: 'openai',
       voiceModel: 'tts-1',
       musicProvider: 'stable_audio',

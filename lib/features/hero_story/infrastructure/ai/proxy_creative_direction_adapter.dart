@@ -67,7 +67,8 @@ final class ProxyCreativeDirectionAdapter implements CreativeDirectionPort {
               ? request.processingVersion!.trim()
               : PresentationCreativeDirection.defaultProcessingVersion,
       if (request.providerHint != null) 'provider': request.providerHint,
-      if (request.modelHint != null) 'model': request.modelHint,
+      // Do not send modelHint: the EH AI proxy owns OPENAI_CHAT_MODEL.
+      // Flutter must not select or claim the vendor chat model.
     });
 
     late http.Response response;

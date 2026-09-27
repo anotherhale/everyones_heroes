@@ -377,6 +377,117 @@ void main() {
       expect(response.statusCode, 502);
     });
 
+    test(
+      'accepts GPT-5.6 wrapped authoring object with nested sections',
+      () async {
+        // Live GPT-5.6 sometimes wraps the contract once:
+        // {"authoring":{"title":...,"sections":[...]}}
+        chat.content = jsonEncode({
+          'authoring': {
+            'title': 'Kept Going',
+            'summary': 'A short derived summary.',
+            'sections': [
+              {
+                'role': 'struggle',
+                'content':
+                    'Even when giving up felt tempting, the Hero kept moving.',
+                'sourceResponseIds': ['r17'],
+              },
+            ],
+            'warnings': [],
+          },
+        });
+        final response = await handler.handleAuthor(
+          Request(
+            'POST',
+            Uri.parse('http://localhost/story-authoring'),
+            body: jsonEncode({
+              'sections': [
+                {
+                  'role': 'struggle',
+                  'content': 'I kept going even when I wanted to quit.',
+                  'sourceResponseIds': ['r17'],
+                  'contentOrigin': 'heroAuthored',
+                  'wasSkipped': false,
+                },
+              ],
+            }),
+          ),
+        );
+        expect(response.statusCode, 200);
+        final json = jsonDecode(await response.readAsString()) as Map;
+        expect(json['sections'], isA<List>());
+        expect((json['sections'] as List), isNotEmpty);
+        expect(json['title'], 'Kept Going');
+        expect(json['modelLabel'], 'gpt-4o-mini');
+      },
+    );
+
+    test(
+      'accepts GPT-5.6 role-keyed sections map without weakening emptiness',
+      () async {
+        chat.content = jsonEncode({
+          'title': 'Kept Going',
+          'sections': {
+            'struggle': {
+              'content': 'The Hero kept moving through doubt.',
+              'sourceResponseIds': ['r17'],
+            },
+          },
+        });
+        final response = await handler.handleAuthor(
+          Request(
+            'POST',
+            Uri.parse('http://localhost/story-authoring'),
+            body: jsonEncode({
+              'sections': [
+                {
+                  'role': 'struggle',
+                  'content': 'I kept going.',
+                  'sourceResponseIds': ['r17'],
+                  'contentOrigin': 'heroAuthored',
+                  'wasSkipped': false,
+                },
+              ],
+            }),
+          ),
+        );
+        expect(response.statusCode, 200);
+        final json = jsonDecode(await response.readAsString()) as Map;
+        final sections = json['sections'] as List;
+        expect(sections, hasLength(1));
+        expect((sections.first as Map)['role'], 'struggle');
+      },
+    );
+
+    test('still rejects empty sections array from the model', () async {
+      chat.content = jsonEncode({
+        'title': 'Empty',
+        'sections': <dynamic>[],
+        'warnings': ['Insufficient material'],
+      });
+      final response = await handler.handleAuthor(
+        Request(
+          'POST',
+          Uri.parse('http://localhost/story-authoring'),
+          body: jsonEncode({
+            'sections': [
+              {
+                'role': 'beginning',
+                'content': 'Once',
+                'sourceResponseIds': ['r1'],
+                'contentOrigin': 'heroAuthored',
+                'wasSkipped': false,
+              },
+            ],
+          }),
+        ),
+      );
+      expect(response.statusCode, 502);
+      final json = jsonDecode(await response.readAsString()) as Map;
+      expect(json['error'], contains('no sections'));
+    });
+
     test('auth middleware rejects missing bearer token', () async {
       final pipeline = const Pipeline()
           .addMiddleware(handler.authMiddleware)
@@ -410,6 +521,7 @@ void main() {
       expect(StoryAuthoringInstructions.requiresProvenance(prompt), isTrue);
       expect(StoryAuthoringInstructions.distinguishesDerived(prompt), isTrue);
       expect(StoryAuthoringInstructions.preservesUncertainty(prompt), isTrue);
+      expect(StoryAuthoringInstructions.requiresNonEmptySections(prompt), isTrue);
       expect(StoryAuthoringInstructions.preservesVoice(prompt), isTrue);
       expect(prompt.contains('Manufacture quotes'), isTrue);
     });

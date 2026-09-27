@@ -207,7 +207,8 @@ final class RunExperienceLabUseCase
             targetDurationSeconds: request.targetDurationSeconds,
             processingVersion: config.creativePromptVersion,
             providerHint: config.creativeProvider,
-            modelHint: config.creativeModel,
+            // modelHint intentionally omitted — proxy OPENAI_CHAT_MODEL is
+            // authoritative for creative-direction chat model identity.
           ),
         );
       } on CreativeDirectionException catch (e) {

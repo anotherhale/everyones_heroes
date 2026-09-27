@@ -128,6 +128,34 @@ void main() {
       expect(chat.lastUserPrompt, contains('---BEGIN_MUSIC_DIRECTION---'));
     });
 
+    test(
+      'modelLabel uses proxy chatModel, ignoring Flutter modelHint',
+      () async {
+        handler = ExperienceCreativeDirectionHandler(
+          config: const ProxyConfig(
+            openAiApiKey: 'test-key',
+            chatModel: 'gpt-5.6-luna',
+            authToken: 'secret',
+          ),
+          client: chat,
+        );
+        chat.content = jsonEncode(validDirection());
+        final body = requestBody()..['model'] = 'gpt-4o-mini';
+        final response = await handler.handleDirect(
+          Request(
+            'POST',
+            Uri.parse('http://localhost/experience-creative-directions'),
+            body: jsonEncode(body),
+          ),
+        );
+        expect(response.statusCode, 200);
+        final json =
+            jsonDecode(await response.readAsString()) as Map<String, dynamic>;
+        expect(json['modelLabel'], 'gpt-5.6-luna');
+        expect(json['modelLabel'], isNot('gpt-4o-mini'));
+      },
+    );
+
     test('rejects malformed model output', () async {
       chat.content = jsonEncode({
         'narrationEmphasis': 'ok',

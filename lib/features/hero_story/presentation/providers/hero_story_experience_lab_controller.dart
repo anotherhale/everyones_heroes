@@ -465,7 +465,9 @@ final class HeroStoryExperienceLabController
 
   static String _providerSummary(ExperienceLabRun run) {
     final c = run.config;
-    return 'Experiment A · creative ${c.creativeProvider}/${c.creativeModel} · '
+    // Creative chat model identity comes from the EH AI proxy response
+    // (modelLabel), not from the lab config fingerprint label.
+    return 'Experiment A · creative ${c.creativeProvider} (proxy chat) · '
         'voice ${c.voiceProvider}/${c.voiceModel} · '
         'music ${c.musicProvider}/${c.musicModel}';
   }
