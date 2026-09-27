@@ -38,7 +38,7 @@ void main() {
             'no vocals, no lyrics',
         'transitionNotes': ['Duck music under speech'],
         'providerLabel': 'openai_via_eh_proxy',
-        'modelLabel': 'gpt-4o-mini',
+        'modelLabel': 'gpt-5.6-luna',
         'processingVersion': 'exp-a.creative.v1',
       };
 
@@ -60,6 +60,7 @@ void main() {
       MusicIntensityLabel.quiet,
     );
     expect(direction.providerLabel, 'openai_via_eh_proxy');
+    expect(direction.modelLabel, 'gpt-5.6-luna');
     expect(
       direction.processingVersion,
       PresentationCreativeDirection.defaultProcessingVersion,

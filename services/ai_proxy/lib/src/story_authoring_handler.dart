@@ -91,6 +91,7 @@ final class StoryAuthoringHandler {
           ...authored,
           'providerLabel': 'openai_via_eh_proxy',
           'promptOrTemplateVersion': 'sb11.ai.v1',
+          'modelLabel': _config.chatModel,
         }),
         headers: {'content-type': 'application/json'},
       );
@@ -121,13 +122,21 @@ final class StoryAuthoringHandler {
       }))
       ..writeln('---END_STORY_AUTHORING_CONTEXT---')
       ..writeln(
-        'Produce Story Authoring JSON only. '
+        'Produce Story Authoring JSON only as a single top-level object. '
+        'Include a non-empty "sections" array reshaping the supplied source '
+        'material. Do not wrap the object under another key. '
+        'Do not return an empty sections array when source material is present. '
         'Use only sourceResponseIds present in the context. '
         'Prefer SOURCE MATERIAL over DERIVED UNDERSTANDING when they conflict.',
       );
     return buffer.toString();
   }
 
+  /// Parses provider JSON into the EH authoring contract.
+  ///
+  /// Handles known GPT-5.x output shapes without weakening the domain
+  /// contract: fence stripping, single-level wrapper unwrap, and role-keyed
+  /// section maps. Empty / missing sections remain hard failures.
   static Map<String, dynamic> _parseModelJson(String content) {
     var raw = content.trim();
     if (raw.startsWith('```')) {
@@ -138,18 +147,75 @@ final class StoryAuthoringHandler {
     if (decoded is! Map) {
       throw const FormatException('Model output was not a JSON object.');
     }
-    final map = Map<String, dynamic>.from(decoded);
+    var map = _unwrapAuthoringObject(Map<String, dynamic>.from(decoded));
     // Strip fields the model must not control.
     map.remove('lifecycle');
     map.remove('contentOrigin');
     map.remove('accepted');
     map.remove('status');
 
-    final sections = map['sections'];
-    if (sections is! List || sections.isEmpty) {
+    final sections = _normalizeSections(map['sections']);
+    if (sections == null || sections.isEmpty) {
       throw const FormatException('Model output contained no sections.');
     }
+    map['sections'] = sections;
     return map;
+  }
+
+  /// GPT-5.x sometimes wraps the contract object once, e.g.
+  /// `{"authoring":{"sections":[...]}}` or `{"result":{...}}`.
+  static Map<String, dynamic> _unwrapAuthoringObject(Map<String, dynamic> map) {
+    if (_hasSectionsField(map)) {
+      return map;
+    }
+    Map<String, dynamic>? candidate;
+    for (final value in map.values) {
+      if (value is! Map) continue;
+      final nested = Map<String, dynamic>.from(value);
+      if (!_hasSectionsField(nested)) continue;
+      if (candidate != null) {
+        // Ambiguous multi-wrapper — do not guess.
+        return map;
+      }
+      candidate = nested;
+    }
+    return candidate ?? map;
+  }
+
+  static bool _hasSectionsField(Map<String, dynamic> map) =>
+      map.containsKey('sections');
+
+  /// Normalizes `sections` to a list of maps.
+  ///
+  /// Accepts the canonical list shape and the GPT-5.x role-keyed map shape
+  /// `{"struggle": {...}, "beginning": {...}}`. Does not invent sections.
+  static List<dynamic>? _normalizeSections(Object? raw) {
+    if (raw == null) return null;
+    if (raw is List) {
+      return raw;
+    }
+    if (raw is Map) {
+      final values = <dynamic>[];
+      for (final entry in raw.entries) {
+        final value = entry.value;
+        if (value is! Map) {
+          return null;
+        }
+        final section = Map<String, dynamic>.from(value);
+        // If the model keyed by role and omitted role inside the object,
+        // recover the role from the map key.
+        if ((section['role'] as String?)?.trim().isNotEmpty != true &&
+            (section['narrativeRole'] as String?)?.trim().isNotEmpty != true) {
+          final key = entry.key.toString().trim();
+          if (key.isNotEmpty) {
+            section['role'] = key;
+          }
+        }
+        values.add(section);
+      }
+      return values;
+    }
+    return null;
   }
 
   static Response _error(int status, String message) {

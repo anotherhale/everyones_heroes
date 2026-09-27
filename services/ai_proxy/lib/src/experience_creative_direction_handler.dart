@@ -80,10 +80,10 @@ final class ExperienceCreativeDirectionHandler {
     }
 
     final userPrompt = _buildUserPrompt(payload);
-    final modelHint = (payload['model'] as String?)?.trim();
-    final modelLabel = (modelHint != null && modelHint.isNotEmpty)
-        ? modelHint
-        : _config.chatModel;
+    // OPENAI_CHAT_MODEL (ProxyConfig.chatModel) is authoritative.
+    // Optional Flutter `model` is opaque client metadata only — never used
+    // for OpenAI model selection or response modelLabel.
+    final modelLabel = _config.chatModel;
 
     try {
       final result = await _client.completeJson(
