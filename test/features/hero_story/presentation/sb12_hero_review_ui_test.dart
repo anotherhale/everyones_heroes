@@ -382,13 +382,12 @@ void main() {
     expect(await stories.findAll(), isEmpty);
   });
 
-  testWidgets('AI failure keeps proposal and returns to review', (
-    tester,
-  ) async {
-    // Improve with AI is offered only for non-AI-shaped proposals.
-    final existing = await proposals.findById(proposalId);
-    await proposals.save(
-      StoryProposal(
+  testWidgets(
+    'AI failure Continue rehydrates canonical proposal from repository',
+    (tester) async {
+      // Improve with AI is offered only for non-AI-shaped proposals.
+      final existing = await proposals.findById(proposalId);
+      final canonical = StoryProposal(
         id: existing!.id,
         sessionId: existing.sessionId,
         title: existing.title,
@@ -405,59 +404,93 @@ void main() {
         updatedAt: existing.updatedAt,
         derivedSummary: existing.derivedSummary,
         review: existing.review,
-      ),
-    );
+      );
+      await proposals.save(canonical);
 
-    final container = ProviderContainer(
-      overrides: [
-        heroRepositoryProvider.overrideWithValue(heroes),
-        storyBuilderSessionRepositoryProvider.overrideWithValue(sessions),
-        storyProposalRepositoryProvider.overrideWithValue(proposals),
-        storyRepositoryProvider.overrideWithValue(stories),
-        eventBusProvider.overrideWithValue(
-          InMemoryEventBus(
-            eventStore: InMemoryEventStore(),
-            dispatcher: InMemoryEventDispatcher(),
+      final container = ProviderContainer(
+        overrides: [
+          heroRepositoryProvider.overrideWithValue(heroes),
+          storyBuilderSessionRepositoryProvider.overrideWithValue(sessions),
+          storyProposalRepositoryProvider.overrideWithValue(proposals),
+          storyRepositoryProvider.overrideWithValue(stories),
+          eventBusProvider.overrideWithValue(
+            InMemoryEventBus(
+              eventStore: InMemoryEventStore(),
+              dispatcher: InMemoryEventDispatcher(),
+            ),
           ),
-        ),
-        activeLocalHeroStoreProvider.overrideWithValue(ActiveLocalHeroStore()),
-        storyAuthoringTransportProvider.overrideWithValue(
-          InMemoryStoryProposalAuthoringAdapter(
-            forcedFailureMessage: 'simulated AI authoring outage',
+          activeLocalHeroStoreProvider.overrideWithValue(ActiveLocalHeroStore()),
+          storyAuthoringTransportProvider.overrideWithValue(
+            InMemoryStoryProposalAuthoringAdapter(
+              forcedFailureMessage: 'simulated AI authoring outage',
+            ),
           ),
-        ),
-      ],
-    );
-    addTearDown(container.dispose);
-    await pumpReview(tester, container);
+        ],
+      );
+      addTearDown(container.dispose);
+      await pumpReview(tester, container);
 
-    expect(find.text('Improve with AI'), findsOneWidget);
-    await tester.tap(
-      find.byKey(const ValueKey('story-builder-improve-with-ai')),
-    );
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 100));
+      expect(find.text('Improve with AI'), findsOneWidget);
+      await tester.tap(
+        find.byKey(const ValueKey('story-builder-improve-with-ai')),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
 
-    expect(
-      find.byKey(const ValueKey('story-builder-authoring-unavailable')),
-      findsOneWidget,
-    );
-    final mid = await proposals.findById(proposalId);
-    expect(mid, isNotNull);
-    expect(mid!.lifecycle, StoryProposalLifecycleStatus.readyForReview);
+      expect(
+        find.byKey(const ValueKey('story-builder-authoring-unavailable')),
+        findsOneWidget,
+      );
+      final mid = await proposals.findById(proposalId);
+      expect(mid, isNotNull);
+      expect(mid!.lifecycle, StoryProposalLifecycleStatus.readyForReview);
+      expect(mid.isContentEquivalentTo(canonical), isTrue);
 
-    await tester.tap(
-      find.byKey(const ValueKey('story-builder-authoring-continue')),
-    );
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 50));
+      // Critical: transient proposal objects unavailable; only durable id remains.
+      final controller = container.read(storyBuilderControllerProvider.notifier);
+      controller.clearTransientProposalsForTest();
+      final cleared = container.read(storyBuilderControllerProvider);
+      expect(cleared.proposal, isNull);
+      expect(cleared.originalProposal, isNull);
+      expect(cleared.canonicalProposalId, proposalId);
+      expect(cleared.phase, StoryBuilderUiPhase.authoringUnavailable);
 
-    expect(find.text('Review Your Story'), findsOneWidget);
-    expect(find.text('Approve Story'), findsOneWidget);
-    final restored = container.read(storyBuilderControllerProvider).proposal;
-    expect(restored!.id, proposalId);
-    expect(await stories.findAll(), isEmpty);
-  });
+      await tester.tap(
+        find.byKey(const ValueKey('story-builder-authoring-continue')),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 50));
+
+      expect(find.text('Review Your Story'), findsOneWidget);
+      expect(find.text('Approve Story'), findsOneWidget);
+      expect(find.text('Hero beginning.'), findsWidgets);
+      expect(find.text('AI challenge.'), findsWidgets);
+
+      final restored = container.read(storyBuilderControllerProvider);
+      expect(restored.phase, StoryBuilderUiPhase.proposalPreview);
+      expect(restored.proposal, isNotNull);
+      expect(restored.proposal!.id, proposalId);
+      expect(restored.proposal!.narrative, canonical.narrative);
+      expect(restored.proposal!.sections.length, canonical.sections.length);
+      for (var i = 0; i < canonical.sections.length; i++) {
+        expect(
+          restored.proposal!.sections[i].content,
+          canonical.sections[i].content,
+        );
+        expect(
+          restored.proposal!.sections[i].narrativeRole,
+          canonical.sections[i].narrativeRole,
+        );
+      }
+      expect(restored.proposal!.isContentEquivalentTo(canonical), isTrue);
+      expect(await stories.findAll(), isEmpty);
+
+      // Continue must not create a second proposal identity.
+      final bySession = await proposals.findBySessionId(sessionId);
+      expect(bySession.length, 1);
+      expect(bySession.first.id, proposalId);
+    },
+  );
 
   testWidgets('deterministic offline proposal opens review without AI', (
     tester,
