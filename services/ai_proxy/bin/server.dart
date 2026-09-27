@@ -47,8 +47,11 @@ Future<void> main(List<String> args) async {
   router.post('/story-music-generations', musicGeneration.handleGenerate);
   router.get('/health', handleHealth);
 
+  // CORS outermost after logging so OPTIONS preflight never hits auth,
+  // and browser (Flutter Web) clients on a different origin can call the proxy.
   final pipeline = const Pipeline()
       .addMiddleware(logRequests())
+      .addMiddleware(corsMiddleware())
       .addMiddleware(transcription.authMiddleware)
       .addHandler(router.call);
 

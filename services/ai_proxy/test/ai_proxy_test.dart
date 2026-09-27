@@ -1040,6 +1040,68 @@ void main() {
     });
   });
 
+  group('CORS middleware', () {
+    test('OPTIONS preflight returns 204 with CORS headers before auth', () async {
+      final handler = StoryTranscriptionHandler(
+        config: const ProxyConfig(
+          openAiApiKey: 'test-key',
+          authToken: 'secret',
+        ),
+        client: _FakeOpenAiClient(),
+      );
+      final pipeline = const Pipeline()
+          .addMiddleware(corsMiddleware())
+          .addMiddleware(handler.authMiddleware)
+          .addHandler((request) async => Response.ok('should-not-run'));
+
+      final response = await pipeline(
+        Request(
+          'OPTIONS',
+          Uri.parse('http://localhost/story-transcriptions'),
+          headers: {
+            'origin': 'https://eh-web.onrender.com',
+            'access-control-request-method': 'POST',
+            'access-control-request-headers': 'authorization,content-type',
+          },
+        ),
+      );
+
+      expect(response.statusCode, 204);
+      expect(
+        response.headers['access-control-allow-origin'],
+        'https://eh-web.onrender.com',
+      );
+      expect(
+        response.headers['access-control-allow-methods'],
+        contains('POST'),
+      );
+      expect(
+        response.headers['access-control-allow-headers']!.toLowerCase(),
+        contains('authorization'),
+      );
+    });
+
+    test('POST responses include reflected Origin for browser clients', () async {
+      final pipeline = const Pipeline()
+          .addMiddleware(corsMiddleware())
+          .addHandler((request) async => Response.ok('ok'));
+
+      final response = await pipeline(
+        Request(
+          'POST',
+          Uri.parse('http://localhost/story-transcriptions'),
+          headers: {'origin': 'https://eh-web.onrender.com'},
+        ),
+      );
+
+      expect(response.statusCode, 200);
+      expect(
+        response.headers['access-control-allow-origin'],
+        'https://eh-web.onrender.com',
+      );
+    });
+  });
+
   group('StoryVoiceRenderingHandler', () {
     late StoryVoiceRenderingHandler handler;
     late _FakeSpeechClient speech;
