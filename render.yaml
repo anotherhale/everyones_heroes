@@ -1,22 +1,80 @@
 # Everyone's Heroes — Render Blueprint
 # https://render.com/docs/blueprint-spec
 #
-# Render does not provide a native Dart runtime. This service builds from the
-# Dockerfile under services/ai_proxy and deploys independently of the Flutter app.
+# Two independently deployable services from the same GitHub repo:
+#   1. eh-web       — Flutter Web static site (CDN)
+#   2. eh-ai-proxy  — Dart AI HTTP proxy (Docker)
 #
-# Secrets (OPENAI_API_KEY, EH_AI_PROXY_AUTH_TOKEN) are NOT stored here.
-# Set them in the Render Dashboard when creating/syncing the Blueprint (sync: false).
+# Render has no native Dart/Flutter runtime:
+#   - eh-ai-proxy builds via Dockerfile under services/ai_proxy
+#   - eh-web clones Flutter during build (scripts/render_build_flutter_web.sh)
 #
-# Connecting the GitHub repo and authorizing Render must be done in the Render UI
-# the first time; this file alone cannot grant repository access.
+# Secrets are NOT stored in this file (sync: false → Dashboard).
+# Connecting GitHub ↔ Render must be done in the Render UI the first time.
+#
+# ⚠ TEMPORARY TEST SECURITY LIMITATION
+# EH_AI_PROXY_AUTH_TOKEN is intentionally embedded in the Flutter Web JS bundle
+# via --dart-define for this initial test deployment. Anyone can extract it from
+# the published static assets. OPENAI_API_KEY must NEVER be passed to eh-web.
 
 services:
+  # ---------------------------------------------------------------------------
+  # Flutter Web application (Static Site — free)
+  # ---------------------------------------------------------------------------
+  - type: web
+    name: eh-web
+    runtime: static
+    # Static sites use Render's free Static Site offering (no `plan` field in Blueprint).
+    repo: https://github.com/anotherhale/everyones_heroes
+    branch: main
+    rootDir: .
+    # SKIP_INSTALL_DEPS: Render's Node auto-install is irrelevant; Flutter is
+    # installed by the build script.
+    buildCommand: ./scripts/render_build_flutter_web.sh
+    staticPublishPath: build/web
+    autoDeployTrigger: commit
+    buildFilter:
+      paths:
+        - lib/**
+        - web/**
+        - assets/**
+        - pubspec.yaml
+        - pubspec.lock
+        - analysis_options.yaml
+        - scripts/render_build_flutter_web.sh
+    routes:
+      # Flutter SPA: deep links / refresh must serve index.html
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: SKIP_INSTALL_DEPS
+        value: "true"
+      - key: EH_TRANSCRIPTION_MODE
+        value: proxy
+      # Public HTTPS URL of the AI proxy (Render-injected on eh-ai-proxy).
+      - key: EH_AI_PROXY_URL
+        fromService:
+          name: eh-ai-proxy
+          type: web
+          envVarKey: RENDER_EXTERNAL_URL
+      # Same bearer as the proxy. TEST-ONLY: becomes public in the web JS bundle.
+      - key: EH_AI_PROXY_AUTH_TOKEN
+        fromService:
+          name: eh-ai-proxy
+          type: web
+          envVarKey: EH_AI_PROXY_AUTH_TOKEN
+
+  # ---------------------------------------------------------------------------
+  # Dart AI proxy (Docker web service — free)
+  # ---------------------------------------------------------------------------
   - type: web
     name: eh-ai-proxy
     runtime: docker
     repo: https://github.com/anotherhale/everyones_heroes
     branch: main
     rootDir: services/ai_proxy
+    # Paths are relative to rootDir (Render Blueprint rule).
     dockerfilePath: ./Dockerfile
     dockerContext: .
     plan: free

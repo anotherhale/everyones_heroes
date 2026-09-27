@@ -114,36 +114,65 @@ flutter run -d <ios-device-id> \
   --dart-define=EH_PLATFORM_AUTH_TOKEN=dev-platform-token
 ```
 
-## Remote AI proxy on Render (away from home network)
+## Remote AI proxy + Flutter Web on Render
 
-When the Mac proxy is unreachable, use the Render-hosted AI proxy from
-[`services/ai_proxy`](../services/ai_proxy/README.md) and the repo-root
-[`render.yaml`](../render.yaml).
+When the Mac proxy is unreachable — or you want a hosted Flutter Web build —
+use the Render Blueprint in [`render.yaml`](../render.yaml).
 
-Render Dashboard secrets (never commit):
+Services:
+
+| Service | URL pattern | Role |
+| --- | --- | --- |
+| `eh-web` | `https://eh-web.onrender.com` | Flutter Web static site |
+| `eh-ai-proxy` | `https://eh-ai-proxy.onrender.com` | Dart AI proxy (Docker) |
+
+Details: [`services/ai_proxy/README.md`](../services/ai_proxy/README.md).
+
+### Render Dashboard secrets (never commit)
+
+Set on **`eh-ai-proxy` only**:
 
 | Variable | Role |
 | --- | --- |
-| `OPENAI_API_KEY` | OpenAI access — **server only** |
+| `OPENAI_API_KEY` | OpenAI access — **server only; never on eh-web** |
 | `EH_AI_PROXY_AUTH_TOKEN` | Proxy bearer shared with the app |
 
-Render supplies the listen port via `PORT`. The proxy also accepts
-`EH_AI_PROXY_PORT` for local use (default `8787`).
+Optional: `STABILITY_API_KEY`.
 
-Public URL pattern: `https://<service-name>.onrender.com`  
-Health: `GET /health` → `{"status":"ok"}`
+`eh-web` receives `EH_AI_PROXY_URL`, `EH_TRANSCRIPTION_MODE=proxy`, and
+`EH_AI_PROXY_AUTH_TOKEN` at **build time** via Blueprint env wiring and
+`--dart-define` (see `scripts/render_build_flutter_web.sh`). Local Flutter
+defaults remain unchanged (`http://localhost:8787` when defines are omitted).
+
+⚠ **Temporary test-only security limitation:** embedding
+`EH_AI_PROXY_AUTH_TOKEN` in the Flutter Web bundle makes that token publicly
+inspectable in browser DevTools / downloaded JS. Acceptable only for this
+initial test. Do not put `OPENAI_API_KEY` in the web build.
+
+Render supplies the proxy listen port via `PORT`. Locally the proxy still uses
+`EH_AI_PROXY_PORT` (default `8787`).
+
+Health: `GET https://eh-ai-proxy.onrender.com/health` → `{"status":"ok"}`.
 
 Connect the GitHub repository in the Render UI (Blueprint sync). Automatic
-deploys run from `main` when `services/ai_proxy/**` changes.
+deploys from `main`:
+
+* `eh-ai-proxy` when `services/ai_proxy/**` changes
+* `eh-web` when Flutter app paths change (`lib/**`, `web/**`, `assets/**`, …)
 
 iPhone against Render (placeholders — do not commit the token or hard-code the URL in the app):
 
 ```bash
 flutter run -d <ios-device-id> \
-  --dart-define=EH_AI_PROXY_URL=https://<render-service>.onrender.com \
+  --dart-define=EH_AI_PROXY_URL=https://eh-ai-proxy.onrender.com \
   --dart-define=EH_TRANSCRIPTION_MODE=proxy \
   --dart-define=EH_AI_PROXY_AUTH_TOKEN=<token>
 ```
 
 Local development continues to use `http://localhost:8787` (or the Mac LAN IP)
-without changing Flutter defaults.
+without changing Flutter defaults:
+
+```bash
+cd services/ai_proxy
+dart run bin/server.dart
+```

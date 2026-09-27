@@ -4,6 +4,7 @@ library;
 
 export 'src/captured_story_reading_handler.dart';
 export 'src/captured_story_reading_instructions.dart';
+export 'src/cors.dart';
 export 'src/experience_creative_direction_handler.dart';
 export 'src/experience_creative_direction_instructions.dart';
 export 'src/health.dart';

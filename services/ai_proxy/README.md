@@ -77,34 +77,65 @@ transcription, Story Builder coaching, Story Understanding, and Story Authoring.
 
 Repository Blueprint: [`render.yaml`](../../render.yaml) at the repo root.
 
-Render has **no native Dart runtime**, so the Blueprint builds this package with
-Docker (`services/ai_proxy/Dockerfile`) and runs the compiled `bin/server`
-entrypoint. The Flutter app is not part of this service.
+The Blueprint defines **two** services:
+
+| Service | Type | Role |
+|---------|------|------|
+| `eh-web` | Static Site | Flutter Web (`build/web`) |
+| `eh-ai-proxy` | Docker web service | This AI proxy |
+
+Render has **no native Dart runtime**, so `eh-ai-proxy` builds with Docker
+(`services/ai_proxy/Dockerfile`) and runs the compiled `bin/server` entrypoint.
+
+`eh-web` clones Flutter during its Static Site build
+([`scripts/render_build_flutter_web.sh`](../../scripts/render_build_flutter_web.sh))
+and injects proxy settings via `--dart-define` (same `String.fromEnvironment`
+keys used locally / on iPhone).
 
 ### Required Render environment variables (Dashboard secrets)
 
+On **`eh-ai-proxy` only**:
+
 | Variable | Notes |
 |----------|--------|
-| `OPENAI_API_KEY` | Server only — never in Flutter or `render.yaml` values |
-| `EH_AI_PROXY_AUTH_TOKEN` | Shared bearer token; also passed to Flutter via `--dart-define` only at run time |
+| `OPENAI_API_KEY` | Server only — **never** on `eh-web` / Flutter / `render.yaml` values |
+| `EH_AI_PROXY_AUTH_TOKEN` | Shared bearer token |
 
-Optional: `STABILITY_API_KEY` for live music generation.
+Optional on `eh-ai-proxy`: `STABILITY_API_KEY` for live music generation.
 
-Render injects `PORT` automatically. Do not hard-code a port in the Blueprint.
-The proxy maps `PORT` when `EH_AI_PROXY_PORT` is unset.
+On **`eh-web`** (build-time, via Blueprint wiring — not pasted as OpenAI secrets):
 
-### Public URL
+| Variable | Source |
+|----------|--------|
+| `EH_AI_PROXY_URL` | `fromService` → `eh-ai-proxy` `RENDER_EXTERNAL_URL` |
+| `EH_AI_PROXY_AUTH_TOKEN` | `fromService` → `eh-ai-proxy` `EH_AI_PROXY_AUTH_TOKEN` |
+| `EH_TRANSCRIPTION_MODE` | Blueprint value `proxy` |
 
-After deploy:
+Render injects `PORT` automatically on the proxy. Do not hard-code a port in
+the Blueprint. The proxy maps `PORT` when `EH_AI_PROXY_PORT` is unset.
+
+### Public URLs
+
+After deploy (exact hostnames are shown in the Render Dashboard):
 
 ```text
-https://<service-name>.onrender.com
+https://eh-web.onrender.com          # Flutter Web
+https://eh-ai-proxy.onrender.com     # AI proxy
 ```
 
-Default Blueprint service name: `eh-ai-proxy` → typically
-`https://eh-ai-proxy.onrender.com` (exact hostname is shown in the Render Dashboard).
+Health check path configured in the Blueprint: `GET /health` → `{"status":"ok"}`.
 
-Health check path configured in the Blueprint: `GET /health`.
+### CORS (Flutter Web → proxy)
+
+The proxy adds a minimal CORS middleware so browsers on the `eh-web` origin can
+call the proxy:
+
+* Reflects `Origin` (or `*` when absent)
+* Allows `GET`, `POST`, `OPTIONS`
+* Allows `Authorization`, `Content-Type`
+* Answers `OPTIONS` preflight with `204` **before** auth runs
+
+This is intentional for the initial test deployment — not a production allowlist.
 
 ### Connect GitHub → Render (one-time UI steps)
 
@@ -115,25 +146,29 @@ Health check path configured in the Blueprint: `GET /health`.
    (Account Settings → Linked Accounts / Git providers), and grant repo access.
 3. **New → Blueprint** (or sync an existing Blueprint), point at this repository
    and the `main` branch, and select the root `render.yaml`.
-4. When prompted for `sync: false` env vars, paste `OPENAI_API_KEY` and
-   `EH_AI_PROXY_AUTH_TOKEN` (and optional `STABILITY_API_KEY`). Never commit them.
-5. Create/sync the Blueprint. Render builds the Docker image from
-   `services/ai_proxy` and deploys the web service.
+4. When prompted for `sync: false` env vars on **`eh-ai-proxy`**, paste
+   `OPENAI_API_KEY` and `EH_AI_PROXY_AUTH_TOKEN` (and optional `STABILITY_API_KEY`).
+   Never commit them. Do **not** paste `OPENAI_API_KEY` onto `eh-web`.
+5. Create/sync the Blueprint. Render deploys both services.
 
 ### Automatic deploys
 
-The Blueprint sets `autoDeployTrigger: commit` and `branch: main`. After the
-repo is linked, pushes/merges to `main` that touch `services/ai_proxy/**`
-trigger a new deploy:
+Both services use `autoDeployTrigger: commit` and `branch: main`, with
+independent `buildFilter` paths:
 
 ```text
 GitHub (push/merge to main)
-  → Render automatic deploy
-  → EH AI Proxy
-  → OpenAI API
+        │
+   ┌────┴────┐
+   ▼         ▼
+ eh-web   eh-ai-proxy
+ (Flutter) (Docker)
 ```
 
-### Docker build / start (what Render runs)
+* `eh-web` rebuilds when `lib/**`, `web/**`, `assets/**`, `pubspec.*`, etc. change
+* `eh-ai-proxy` rebuilds when `services/ai_proxy/**` changes
+
+### Docker build / start (what Render runs for eh-ai-proxy)
 
 | Step | Command / behavior |
 |------|--------------------|
@@ -141,6 +176,19 @@ GitHub (push/merge to main)
 | Start | `/app/bin/server` (Dockerfile `CMD`) |
 | Port | Render-provided `PORT` env var |
 | Health | `GET /health` |
+
+### Flutter Web build (what Render runs for eh-web)
+
+Equivalent to:
+
+```bash
+flutter build web --release \
+  --dart-define=EH_AI_PROXY_URL=https://<eh-ai-proxy>.onrender.com \
+  --dart-define=EH_TRANSCRIPTION_MODE=proxy \
+  --dart-define=EH_AI_PROXY_AUTH_TOKEN=$EH_AI_PROXY_AUTH_TOKEN
+```
+
+Publish directory: `build/web`. SPA rewrite: `/*` → `/index.html`.
 
 ### Remote Flutter / iPhone (placeholders only — do not commit tokens)
 
@@ -156,14 +204,20 @@ The Render URL is supplied only at launch time via `--dart-define`.
 
 ## Security
 
-Never commit or place in Flutter / `render.yaml` values / `--dart-define`:
+Never commit or place in Flutter / `render.yaml` values / the `eh-web` build:
 
 * `OPENAI_API_KEY`
+
+⚠ **Temporary test-only limitation:** `EH_AI_PROXY_AUTH_TOKEN` is embedded in the
+public Flutter Web JavaScript bundle for this initial Render deployment. Treat
+the token as publicly inspectable. Do not reuse a production secret. Proper web
+authentication will come later.
 
 The Flutter app may know only:
 
 * `EH_AI_PROXY_URL`
 * `EH_AI_PROXY_AUTH_TOKEN` (proxy bearer — not the OpenAI key)
+* Mode defines such as `EH_TRANSCRIPTION_MODE=proxy`
 
 Do not log or return vendor API keys from any endpoint.
 
