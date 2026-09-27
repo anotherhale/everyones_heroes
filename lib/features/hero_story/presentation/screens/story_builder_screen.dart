@@ -167,7 +167,9 @@ class _StoryBuilderScreenState extends ConsumerState<StoryBuilderScreen> {
                       state.isBusy ? null : () => controller.retryAiAuthoring(),
                   onContinueWithCurrent: state.isBusy
                       ? null
-                      : () => controller.continueWithCurrentProposal(),
+                      : () {
+                          controller.continueWithCurrentProposal();
+                        },
                   onExit: () {
                     ref.invalidate(resumableStoryBuilderSessionsProvider);
                     Navigator.of(context).maybePop();

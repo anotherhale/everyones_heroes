@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:everyonesheroes/core/ids/story_builder_response_id.dart';
 import 'package:everyonesheroes/core/ids/story_builder_session_id.dart';
+import 'package:everyonesheroes/core/ids/story_proposal_id.dart';
 import 'package:everyonesheroes/core/results/failure.dart';
 import 'package:everyonesheroes/core/results/success.dart';
 import 'package:everyonesheroes/features/hero_story/application/dto/requests/advance_story_builder_request.dart';
@@ -66,6 +67,7 @@ final class StoryBuilderUiState {
     this.isBusy = false,
     this.proposal,
     this.originalProposal,
+    this.canonicalProposalId,
     this.showingOriginalProposal = false,
     this.materializedStory,
   });
@@ -84,6 +86,12 @@ final class StoryBuilderUiState {
 
   /// Pre-AI proposal retained for compare / recovery (SB.11).
   final StoryProposal? originalProposal;
+
+  /// Durable proposal identity for recovery after AI authoring failure.
+  ///
+  /// Transient UI metadata only — the [StoryProposalRepository] remains the
+  /// source of truth. Survives clearing of [proposal] / [originalProposal].
+  final StoryProposalId? canonicalProposalId;
 
   /// When true, review UI shows [originalProposal] instead of AI proposal.
   final bool showingOriginalProposal;
@@ -141,6 +149,8 @@ final class StoryBuilderUiState {
     bool clearProposal = false,
     StoryProposal? originalProposal,
     bool clearOriginalProposal = false,
+    StoryProposalId? canonicalProposalId,
+    bool clearCanonicalProposalId = false,
     bool? showingOriginalProposal,
     Story? materializedStory,
     bool clearMaterializedStory = false,
@@ -162,6 +172,9 @@ final class StoryBuilderUiState {
       originalProposal: clearOriginalProposal
           ? null
           : (originalProposal ?? this.originalProposal),
+      canonicalProposalId: clearCanonicalProposalId
+          ? null
+          : (canonicalProposalId ?? this.canonicalProposalId),
       showingOriginalProposal:
           showingOriginalProposal ?? this.showingOriginalProposal,
       materializedStory: clearMaterializedStory
@@ -257,6 +270,7 @@ final class StoryBuilderController extends Notifier<StoryBuilderUiState> {
             state = state.copyWith(
               phase: StoryBuilderUiPhase.storyCreated,
               proposal: resumedProposal,
+              canonicalProposalId: resumedProposal.id,
               materializedStory: story,
               isBusy: false,
               clearPrompt: true,
@@ -269,6 +283,7 @@ final class StoryBuilderController extends Notifier<StoryBuilderUiState> {
         state = state.copyWith(
           phase: StoryBuilderUiPhase.proposalPreview,
           proposal: resumedProposal,
+          canonicalProposalId: resumedProposal.id,
           isBusy: false,
           clearPrompt: true,
           clearOriginalProposal: true,
@@ -661,6 +676,7 @@ final class StoryBuilderController extends Notifier<StoryBuilderUiState> {
     state = state.copyWith(
       phase: StoryBuilderUiPhase.proposalPreview,
       proposal: proposal,
+      canonicalProposalId: proposal.id,
       isBusy: false,
       clearError: true,
       clearOriginalProposal: true,
@@ -676,7 +692,12 @@ final class StoryBuilderController extends Notifier<StoryBuilderUiState> {
     if (current == null || state.isBusy) {
       return;
     }
-    state = state.copyWith(isBusy: true, clearError: true);
+    state = state.copyWith(
+      isBusy: true,
+      clearError: true,
+      // Retain durable identity for Continue recovery even if UI objects clear.
+      canonicalProposalId: current.id,
+    );
     final result = await ref.read(shapeStoryProposalUseCaseProvider).execute(
           ShapeStoryProposalRequest(
             proposalId: current.id,
@@ -691,6 +712,7 @@ final class StoryBuilderController extends Notifier<StoryBuilderUiState> {
         // Keep current proposal as the recoverable original.
         originalProposal: state.originalProposal ?? current,
         proposal: current,
+        canonicalProposalId: current.id,
       );
       return;
     }
@@ -699,6 +721,7 @@ final class StoryBuilderController extends Notifier<StoryBuilderUiState> {
       phase: StoryBuilderUiPhase.proposalPreview,
       originalProposal: state.originalProposal ?? current,
       proposal: shaped,
+      canonicalProposalId: current.id,
       showingOriginalProposal: false,
       isBusy: false,
       clearError: true,
@@ -713,13 +736,69 @@ final class StoryBuilderController extends Notifier<StoryBuilderUiState> {
     improveProposalWithAi();
   }
 
-  void continueWithCurrentProposal() {
-    final proposal = state.proposal ?? state.originalProposal;
+  /// Restores the canonical persisted proposal after AI authoring failure.
+  ///
+  /// Reloads from [storyProposalRepositoryProvider] — does not rebuild,
+  /// reshape, or allocate a new proposal identity.
+  Future<void> continueWithCurrentProposal() async {
+    if (state.isBusy) {
+      return;
+    }
+
+    final recoveryId = state.canonicalProposalId ??
+        state.proposal?.id ??
+        state.originalProposal?.id;
+    if (recoveryId == null) {
+      state = state.copyWith(
+        phase: StoryBuilderUiPhase.authoringUnavailable,
+        isBusy: false,
+        errorMessage:
+            'Your story proposal could not be restored. '
+            'The proposal identity is missing.',
+        clearProposal: true,
+        clearOriginalProposal: true,
+        showingOriginalProposal: false,
+      );
+      return;
+    }
+
+    state = state.copyWith(isBusy: true, clearError: true);
+
+    final loaded = await ref
+        .read(storyProposalRepositoryProvider)
+        .findById(recoveryId);
+    if (loaded == null) {
+      state = state.copyWith(
+        phase: StoryBuilderUiPhase.authoringUnavailable,
+        isBusy: false,
+        errorMessage:
+            'Your story proposal could not be restored. '
+            'The saved proposal was not found.',
+        clearProposal: true,
+        clearOriginalProposal: true,
+        showingOriginalProposal: false,
+        canonicalProposalId: recoveryId,
+      );
+      return;
+    }
+
     state = state.copyWith(
       phase: StoryBuilderUiPhase.proposalPreview,
-      proposal: proposal,
+      proposal: loaded,
+      originalProposal: loaded,
+      canonicalProposalId: loaded.id,
       clearError: true,
       isBusy: false,
+      showingOriginalProposal: false,
+    );
+  }
+
+  /// Test helper: drops in-memory proposal objects while keeping recovery id.
+  @visibleForTesting
+  void clearTransientProposalsForTest() {
+    state = state.copyWith(
+      clearProposal: true,
+      clearOriginalProposal: true,
       showingOriginalProposal: false,
     );
   }
@@ -738,6 +817,7 @@ final class StoryBuilderController extends Notifier<StoryBuilderUiState> {
       phase: StoryBuilderUiPhase.completed,
       clearProposal: true,
       clearOriginalProposal: true,
+      clearCanonicalProposalId: true,
       showingOriginalProposal: false,
       clearError: true,
     );
