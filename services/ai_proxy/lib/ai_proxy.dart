@@ -6,6 +6,7 @@ export 'src/captured_story_reading_handler.dart';
 export 'src/captured_story_reading_instructions.dart';
 export 'src/experience_creative_direction_handler.dart';
 export 'src/experience_creative_direction_instructions.dart';
+export 'src/health.dart';
 export 'src/openai_chat_client.dart';
 export 'src/openai_speech_client.dart';
 export 'src/openai_transcription_client.dart';

@@ -37,6 +37,17 @@ migrate_working_dir/
 .env
 **/.env
 !**/.env.example
+.env.local
+**/.env.local
+.env.render
+**/.env.render
+*.pem
+*.p12
+secrets/
+**/secrets/
+.render-secrets*
+**/openai_api_key*
+**/eh_ai_proxy_auth_token*
 
 
 # Symbolication related
