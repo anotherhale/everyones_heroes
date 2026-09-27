@@ -17,8 +17,9 @@ services:
     repo: https://github.com/anotherhale/everyones_heroes
     branch: main
     rootDir: services/ai_proxy
-    dockerfilePath: ./services/ai_proxy/Dockerfile
-    dockerContext: ./services/ai_proxy
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: free
     healthCheckPath: /health
     autoDeployTrigger: commit
     buildFilter:
