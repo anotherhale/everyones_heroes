@@ -57,7 +57,10 @@ final class ProxyConfig {
       host: env['EH_AI_PROXY_HOST']?.trim().isNotEmpty == true
           ? env['EH_AI_PROXY_HOST']!.trim()
           : '0.0.0.0',
-      port: int.tryParse(env['EH_AI_PROXY_PORT'] ?? '') ?? 8787,
+      // Prefer EH_AI_PROXY_PORT; fall back to platform PORT (e.g. Render), then 8787.
+      port: int.tryParse(env['EH_AI_PROXY_PORT'] ?? '') ??
+          int.tryParse(env['PORT'] ?? '') ??
+          8787,
       authToken: env['EH_AI_PROXY_AUTH_TOKEN']?.trim().isNotEmpty == true
           ? env['EH_AI_PROXY_AUTH_TOKEN']!.trim()
           : null,

@@ -1,0 +1,35 @@
+# Everyone's Heroes — Render Blueprint
+# https://render.com/docs/blueprint-spec
+#
+# Render does not provide a native Dart runtime. This service builds from the
+# Dockerfile under services/ai_proxy and deploys independently of the Flutter app.
+#
+# Secrets (OPENAI_API_KEY, EH_AI_PROXY_AUTH_TOKEN) are NOT stored here.
+# Set them in the Render Dashboard when creating/syncing the Blueprint (sync: false).
+#
+# Connecting the GitHub repo and authorizing Render must be done in the Render UI
+# the first time; this file alone cannot grant repository access.
+
+services:
+  - type: web
+    name: eh-ai-proxy
+    runtime: docker
+    repo: https://github.com/anotherhale/everyones_heroes
+    branch: main
+    rootDir: services/ai_proxy
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: free
+    healthCheckPath: /health
+    autoDeployTrigger: commit
+    buildFilter:
+      paths:
+        - services/ai_proxy/**
+    envVars:
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: EH_AI_PROXY_AUTH_TOKEN
+        sync: false
+      # Optional — required only for live /story-music-generations (Stable Audio).
+      - key: STABILITY_API_KEY
+        sync: false

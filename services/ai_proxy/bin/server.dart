@@ -18,7 +18,7 @@ import 'package:shelf_router/shelf_router.dart';
 /// - `STABILITY_API_KEY` (optional; required for live music generation)
 /// - `STABILITY_BASE_URL` (optional, default https://api.stability.ai)
 /// - `STABILITY_AUDIO_MODEL` (optional, default stable-audio-3)
-/// - `EH_AI_PROXY_HOST` / `EH_AI_PROXY_PORT`
+/// - `EH_AI_PROXY_HOST` / `EH_AI_PROXY_PORT` (falls back to `PORT`, then 8787)
 /// - `EH_AI_PROXY_AUTH_TOKEN` (optional bearer token)
 Future<void> main(List<String> args) async {
   final config = ProxyConfig.fromEnvironment();
@@ -45,7 +45,7 @@ Future<void> main(List<String> args) async {
     creativeDirection.handleDirect,
   );
   router.post('/story-music-generations', musicGeneration.handleGenerate);
-  router.get('/health', (_) => Response.ok('ok'));
+  router.get('/health', handleHealth);
 
   final pipeline = const Pipeline()
       .addMiddleware(logRequests())

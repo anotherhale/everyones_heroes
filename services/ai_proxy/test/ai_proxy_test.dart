@@ -983,6 +983,63 @@ void main() {
     expect(config.speechVoice, 'nova');
   });
 
+  test('ProxyConfig prefers EH_AI_PROXY_PORT over PORT', () {
+    final config = ProxyConfig.fromEnvironment(
+      environment: {
+        'OPENAI_API_KEY': 'k',
+        'EH_AI_PROXY_PORT': '8787',
+        'PORT': '10000',
+      },
+    );
+    expect(config.port, 8787);
+  });
+
+  test('ProxyConfig falls back to PORT then 8787', () {
+    final fromPort = ProxyConfig.fromEnvironment(
+      environment: {
+        'OPENAI_API_KEY': 'k',
+        'PORT': '10000',
+      },
+    );
+    expect(fromPort.port, 10000);
+
+    final defaultPort = ProxyConfig.fromEnvironment(
+      environment: {'OPENAI_API_KEY': 'k'},
+    );
+    expect(defaultPort.port, 8787);
+    expect(defaultPort.host, '0.0.0.0');
+  });
+
+  group('GET /health', () {
+    test('returns 200 JSON status ok without calling OpenAI', () async {
+      final response = handleHealth(
+        Request('GET', Uri.parse('http://localhost/health')),
+      );
+      expect(response.statusCode, 200);
+      expect(response.headers['content-type'], contains('application/json'));
+      final json = jsonDecode(await response.readAsString()) as Map;
+      expect(json['status'], 'ok');
+    });
+
+    test('is auth-exempt when EH_AI_PROXY_AUTH_TOKEN is set', () async {
+      final handler = StoryTranscriptionHandler(
+        config: const ProxyConfig(
+          openAiApiKey: 'test-key',
+          authToken: 'secret',
+        ),
+        client: _FakeOpenAiClient(),
+      );
+      final middleware = handler.authMiddleware;
+      final inner = middleware(handleHealth);
+      final response = await inner(
+        Request('GET', Uri.parse('http://localhost/health')),
+      );
+      expect(response.statusCode, 200);
+      final json = jsonDecode(await response.readAsString()) as Map;
+      expect(json['status'], 'ok');
+    });
+  });
+
   group('StoryVoiceRenderingHandler', () {
     late StoryVoiceRenderingHandler handler;
     late _FakeSpeechClient speech;

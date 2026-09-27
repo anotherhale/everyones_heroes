@@ -63,7 +63,7 @@ Confirm the Mac answers on that address. `/health` does not require the token:
 curl -s "http://192.168.1.42:8787/health"
 ```
 
-A body of `ok` means the phone’s network can use the same URL. Confirm the token next. A `400` means the bearer was accepted and the empty body was rejected. A `401` means the token does not match `EH_AI_PROXY_AUTH_TOKEN`.
+A JSON body of `{"status":"ok"}` means the phone’s network can use the same URL. Confirm the token next. A `400` means the bearer was accepted and the empty body was rejected. A `401` means the token does not match `EH_AI_PROXY_AUTH_TOKEN`.
 
 ```bash
 curl -s -o /dev/null -w "%{http_code}\n" \
@@ -113,3 +113,37 @@ flutter run -d <ios-device-id> \
   --dart-define=EH_H2_MODE=platform \
   --dart-define=EH_PLATFORM_AUTH_TOKEN=dev-platform-token
 ```
+
+## Remote AI proxy on Render (away from home network)
+
+When the Mac proxy is unreachable, use the Render-hosted AI proxy from
+[`services/ai_proxy`](../services/ai_proxy/README.md) and the repo-root
+[`render.yaml`](../render.yaml).
+
+Render Dashboard secrets (never commit):
+
+| Variable | Role |
+| --- | --- |
+| `OPENAI_API_KEY` | OpenAI access — **server only** |
+| `EH_AI_PROXY_AUTH_TOKEN` | Proxy bearer shared with the app |
+
+Render supplies the listen port via `PORT`. The proxy also accepts
+`EH_AI_PROXY_PORT` for local use (default `8787`).
+
+Public URL pattern: `https://<service-name>.onrender.com`  
+Health: `GET /health` → `{"status":"ok"}`
+
+Connect the GitHub repository in the Render UI (Blueprint sync). Automatic
+deploys run from `main` when `services/ai_proxy/**` changes.
+
+iPhone against Render (placeholders — do not commit the token or hard-code the URL in the app):
+
+```bash
+flutter run -d <ios-device-id> \
+  --dart-define=EH_AI_PROXY_URL=https://<render-service>.onrender.com \
+  --dart-define=EH_TRANSCRIPTION_MODE=proxy \
+  --dart-define=EH_AI_PROXY_AUTH_TOKEN=<token>
+```
+
+Local development continues to use `http://localhost:8787` (or the Mac LAN IP)
+without changing Flutter defaults.
