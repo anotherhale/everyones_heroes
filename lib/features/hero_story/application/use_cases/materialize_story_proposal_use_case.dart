@@ -7,10 +7,12 @@ import 'package:everyonesheroes/features/hero_story/application/bridges/story_bu
 import 'package:everyonesheroes/features/hero_story/application/dto/requests/classify_story_request.dart';
 import 'package:everyonesheroes/features/hero_story/application/dto/requests/materialize_story_proposal_request.dart';
 import 'package:everyonesheroes/features/hero_story/application/mappers/story_materialization_mapper.dart';
+import 'package:everyonesheroes/features/hero_story/application/mappers/story_proposal_narrative_resolver.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/classify_story_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/create_story_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/use_case.dart';
 import 'package:everyonesheroes/features/hero_story/domain/aggregates/story.dart';
+import 'package:everyonesheroes/features/hero_story/domain/aggregates/story_builder_session.dart';
 import 'package:everyonesheroes/features/hero_story/domain/enums/story_lifecycle_status.dart';
 import 'package:everyonesheroes/features/hero_story/domain/enums/story_proposal_lifecycle_status.dart';
 import 'package:everyonesheroes/features/hero_story/domain/repositories/hero_repository.dart';
@@ -99,6 +101,8 @@ final class MaterializeStoryProposalUseCase
           ) ??
           await _storyRepository.findById(deterministicId);
 
+      final session = await _sessionRepository.findById(proposal.sessionId);
+
       if (existing != null) {
         // Re-approval after revision: refresh draft content in place.
         if (proposal.materializedStoryId == null &&
@@ -106,6 +110,7 @@ final class MaterializeStoryProposalUseCase
           final refreshed = await _refreshDraftFromProposal(
             existing,
             proposal,
+            session,
           );
           await _linkProposalIfNeeded(proposal, refreshed, request);
           return Success(refreshed);
@@ -114,7 +119,6 @@ final class MaterializeStoryProposalUseCase
         return Success(existing);
       }
 
-      final session = await _sessionRepository.findById(proposal.sessionId);
       if (session == null) {
         return Failure(
           'Story Builder session ${proposal.sessionId} not found '
@@ -136,11 +140,17 @@ final class MaterializeStoryProposalUseCase
           ? hero.profile.languages.first
           : LanguageCode('en');
 
+      final narrativeContent = StoryProposalNarrativeResolver.resolve(
+        proposal: proposal,
+        session: session,
+      );
+
       final createRequest = _mapper.toCreateStoryRequest(
         proposal: proposal,
         heroId: session.heroId,
         originalLanguage: originalLanguage,
         storyId: deterministicId,
+        narrativeContent: narrativeContent,
       );
 
       final createResult = await _createStoryUseCase.execute(createRequest);
@@ -163,8 +173,12 @@ final class MaterializeStoryProposalUseCase
   Future<Story> _refreshDraftFromProposal(
     Story story,
     StoryProposal proposal,
+    StoryBuilderSession? session,
   ) async {
-    final narrativeText = proposal.narrative?.trim();
+    final narrativeText = StoryProposalNarrativeResolver.resolve(
+      proposal: proposal,
+      session: session,
+    );
     if (narrativeText == null || narrativeText.isEmpty) {
       throw ArgumentError(
         'Cannot refresh a Story from a proposal without narrative.',

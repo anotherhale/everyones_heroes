@@ -554,5 +554,276 @@ void main() {
         StoryMaterializationMapper.storyIdForProposal(proposal.id),
       );
     });
+
+    test(
+      'assembles narrativeContent from section material when narrative is null',
+      () {
+        final proposal = StoryProposal(
+          id: StoryProposalId('prop-sections'),
+          sessionId: sessionId,
+          title: StoryTitle('From sections'),
+          narrative: null,
+          sections: [
+            StoryProposalSection(
+              id: StoryProposalSectionId('s0'),
+              narrativeRole: StoryBuilderNarrativeRole.beginning,
+              order: 0,
+              contentOrigin: StoryProposalContentOrigin.heroAuthored,
+              content: 'Hero beginning answer.',
+              sourceResponseIds: [StoryBuilderResponseId('resp-1')],
+            ),
+            StoryProposalSection(
+              id: StoryProposalSectionId('s1'),
+              narrativeRole: StoryBuilderNarrativeRole.challenge,
+              order: 1,
+              contentOrigin: StoryProposalContentOrigin.heroAuthored,
+              content: 'Hero challenge answer.',
+              sourceResponseIds: [StoryBuilderResponseId('resp-2')],
+            ),
+          ],
+          intent: StoryBuilderIntent.empty(),
+          provenance: StoryProposalProvenance(
+            sessionId: sessionId,
+            derivationKind: StoryProposalDerivationKind.deterministic,
+            processingVersion: StoryProposal.shapedProcessingVersion,
+          ),
+          lifecycle: StoryProposalLifecycleStatus.accepted,
+          createdAt: DateTime.utc(2026, 9, 22),
+          updatedAt: DateTime.utc(2026, 9, 22),
+        );
+
+        expect(proposal.narrative, isNull);
+        expect(
+          proposal.narrativeContent,
+          'Hero beginning answer.\n\nHero challenge answer.',
+        );
+
+        final request = const StoryMaterializationMapper().toCreateStoryRequest(
+          proposal: proposal,
+          heroId: heroId,
+          originalLanguage: LanguageCode('en'),
+        );
+        expect(
+          request.narrative.value,
+          'Hero beginning answer.\n\nHero challenge answer.',
+        );
+      },
+    );
+
+    test(
+      'rejects materialization when narrative and sections are empty',
+      () {
+        final proposal = StoryProposal(
+          id: StoryProposalId('prop-empty'),
+          sessionId: sessionId,
+          title: StoryTitle('Empty'),
+          narrative: null,
+          sections: [
+            StoryProposalSection(
+              id: StoryProposalSectionId('s0'),
+              narrativeRole: StoryBuilderNarrativeRole.beginning,
+              order: 0,
+              contentOrigin: StoryProposalContentOrigin.heroAuthored,
+              content: null,
+              sourceResponseIds: [StoryBuilderResponseId('resp-missing')],
+            ),
+          ],
+          intent: StoryBuilderIntent.empty(),
+          provenance: StoryProposalProvenance(
+            sessionId: sessionId,
+            derivationKind: StoryProposalDerivationKind.deterministic,
+            processingVersion: StoryProposal.shapedProcessingVersion,
+          ),
+          lifecycle: StoryProposalLifecycleStatus.accepted,
+          createdAt: DateTime.utc(2026, 9, 22),
+          updatedAt: DateTime.utc(2026, 9, 22),
+        );
+
+        expect(proposal.narrativeContent, isNull);
+        expect(
+          () => const StoryMaterializationMapper().toCreateStoryRequest(
+            proposal: proposal,
+            heroId: heroId,
+            originalLanguage: LanguageCode('en'),
+          ),
+          throwsA(
+            isA<ArgumentError>().having(
+              (e) => e.message,
+              'message',
+              contains('without narrative content'),
+            ),
+          ),
+        );
+      },
+    );
+  });
+
+  group('Narrative recovery from Hero material', () {
+    test(
+      'materializes when narrative is null but section content exists',
+      () async {
+        final responseId = StoryBuilderResponseId.generate();
+        final proposal = StoryProposal(
+          id: StoryProposalId.generate(),
+          sessionId: sessionId,
+          title: StoryTitle('Section recovery'),
+          narrative: null,
+          sections: [
+            StoryProposalSection(
+              id: StoryProposalSectionId('sec-begin'),
+              narrativeRole: StoryBuilderNarrativeRole.beginning,
+              order: 0,
+              contentOrigin: StoryProposalContentOrigin.heroAuthored,
+              content: 'I started by showing up every day.',
+              sourceResponseIds: [responseId],
+            ),
+          ],
+          intent: StoryBuilderIntent.empty(),
+          provenance: StoryProposalProvenance(
+            sessionId: sessionId,
+            derivationKind: StoryProposalDerivationKind.deterministic,
+            processingVersion: StoryProposal.shapedProcessingVersion,
+          ),
+          lifecycle: StoryProposalLifecycleStatus.readyForReview,
+          createdAt: DateTime.utc(2026, 9, 22, 10),
+          updatedAt: DateTime.utc(2026, 9, 22, 11),
+        );
+        await proposalRepository.save(proposal);
+        final approved = await approve(proposal.id);
+
+        final result = await materialize.execute(
+          MaterializeStoryProposalRequest(proposalId: approved.id),
+        );
+
+        expect(result, isA<Success<Story>>());
+        final story = (result as Success<Story>).value;
+        expect(story.narrative.value, 'I started by showing up every day.');
+        expect(story.lifecycleStatus, StoryLifecycleStatus.draft);
+      },
+    );
+
+    test(
+      'materializes from canonical session answers when proposal narrative '
+      'and section contents are empty',
+      () async {
+        final responseId = StoryBuilderResponseId('canonical-answer-1');
+        final catalogPrompt =
+            DeterministicStoryBuilderCatalog.prompts.first;
+        // Replace the empty completed session with one that holds Hero answers.
+        final sessionWithAnswers = StoryBuilderSession(
+          id: sessionId,
+          heroId: heroId,
+          status: StoryBuilderSessionStatus.completed,
+          mode: StoryBuilderMode.guided,
+          intent: StoryBuilderIntent.empty(),
+          createdAt: DateTime.utc(2026, 9, 22, 8),
+          updatedAt: DateTime.utc(2026, 9, 22, 9),
+          prompts: [catalogPrompt],
+          responses: [
+            StoryBuilderResponse(
+              id: responseId,
+              promptId: catalogPrompt.id,
+              ordinal: catalogPrompt.ordinal,
+              text: 'Canonical Hero answer from the Builder session.',
+              createdAt: DateTime.utc(2026, 9, 22, 8, 5),
+            ),
+          ],
+        );
+        await sessionRepository.save(sessionWithAnswers);
+
+        final proposal = StoryProposal(
+          id: StoryProposalId.generate(),
+          sessionId: sessionId,
+          title: StoryTitle('Session recovery'),
+          // Simulates AI-shaped proposal that dropped section prose while
+          // retaining sourceResponseIds — narrative field stays null.
+          narrative: null,
+          sections: [
+            StoryProposalSection(
+              id: StoryProposalSectionId('sec-empty'),
+              narrativeRole: catalogPrompt.narrativeRole!,
+              order: 0,
+              contentOrigin: StoryProposalContentOrigin.derived,
+              content: null,
+              sourceResponseIds: [responseId],
+            ),
+          ],
+          intent: StoryBuilderIntent.empty(),
+          provenance: StoryProposalProvenance(
+            sessionId: sessionId,
+            derivationKind: StoryProposalDerivationKind.aiShaped,
+            processingVersion: StoryProposal.aiShapedProcessingVersion,
+          ),
+          lifecycle: StoryProposalLifecycleStatus.readyForReview,
+          createdAt: DateTime.utc(2026, 9, 22, 10),
+          updatedAt: DateTime.utc(2026, 9, 22, 11),
+          derivedSummary: 'AI summary must not become Story narrative.',
+        );
+        await proposalRepository.save(proposal);
+        final approved = await approve(proposal.id);
+
+        final result = await materialize.execute(
+          MaterializeStoryProposalRequest(proposalId: approved.id),
+        );
+
+        expect(result, isA<Success<Story>>());
+        final story = (result as Success<Story>).value;
+        expect(
+          story.narrative.value,
+          'Canonical Hero answer from the Builder session.',
+        );
+        expect(
+          story.narrative.value,
+          isNot(contains('AI summary must not become Story narrative.')),
+        );
+      },
+    );
+
+    test(
+      'fails when proposal and session have genuinely empty story material',
+      () async {
+        final proposal = StoryProposal(
+          id: StoryProposalId.generate(),
+          sessionId: sessionId,
+          title: StoryTitle('Genuinely empty'),
+          narrative: null,
+          sections: [
+            StoryProposalSection(
+              id: StoryProposalSectionId('sec-empty'),
+              narrativeRole: StoryBuilderNarrativeRole.beginning,
+              order: 0,
+              contentOrigin: StoryProposalContentOrigin.heroAuthored,
+              content: null,
+              sourceResponseIds: [StoryBuilderResponseId('no-such-response')],
+            ),
+          ],
+          intent: StoryBuilderIntent.empty(),
+          provenance: StoryProposalProvenance(
+            sessionId: sessionId,
+            derivationKind: StoryProposalDerivationKind.deterministic,
+            processingVersion: StoryProposal.shapedProcessingVersion,
+          ),
+          lifecycle: StoryProposalLifecycleStatus.readyForReview,
+          createdAt: DateTime.utc(2026, 9, 22, 10),
+          updatedAt: DateTime.utc(2026, 9, 22, 11),
+        );
+        await proposalRepository.save(proposal);
+        final approved = await approve(proposal.id);
+
+        final result = await materialize.execute(
+          MaterializeStoryProposalRequest(proposalId: approved.id),
+        );
+
+        expect(result, isA<Failure<Story>>());
+        expect(
+          (result as Failure<Story>).error,
+          contains('without narrative content'),
+        );
+        expect(storyRepository.count, 0);
+        final still = await proposalRepository.findById(approved.id);
+        expect(still!.lifecycle, StoryProposalLifecycleStatus.accepted);
+        expect(still.materializedStoryId, isNull);
+      },
+    );
   });
 }
