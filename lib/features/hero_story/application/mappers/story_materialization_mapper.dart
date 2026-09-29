@@ -28,6 +28,9 @@ final class StoryMaterializationMapper {
     required LanguageCode originalLanguage,
     StoryId? storyId,
     DateTime? createdAt,
+    /// Pre-resolved Hero narrative (sections / session answers). When omitted,
+    /// falls back to [StoryProposal.narrativeContent].
+    String? narrativeContent,
   }) {
     if (!proposal.isAccepted) {
       throw StateError(
@@ -36,7 +39,8 @@ final class StoryMaterializationMapper {
       );
     }
 
-    final narrativeText = proposal.narrative?.trim();
+    final narrativeText =
+        (narrativeContent ?? proposal.narrativeContent)?.trim();
     if (narrativeText == null || narrativeText.isEmpty) {
       throw ArgumentError(
         'Cannot materialize a StoryProposal without narrative content.',

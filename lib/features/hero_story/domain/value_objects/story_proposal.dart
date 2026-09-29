@@ -100,6 +100,20 @@ final class StoryProposal extends ValueObject {
   /// Null when no answered material produced content.
   final String? narrative;
 
+  /// Story-ready narrative body for materialization consumers.
+  ///
+  /// Prefers [narrative]. When absent, assembles non-empty section contents
+  /// (Hero-authored or Hero-reviewed derived). Does not invent text and does
+  /// not treat [derivedSummary] as narrative. Null only when no section
+  /// material exists — preserving the blank-narrative field invariant.
+  String? get narrativeContent {
+    final existing = narrative?.trim();
+    if (existing != null && existing.isNotEmpty) {
+      return existing;
+    }
+    return _assembleNarrative(sections);
+  }
+
   final List<StoryProposalSection> sections;
 
   /// Intent snapshot at proposal time (purpose/themes; not mutated).
