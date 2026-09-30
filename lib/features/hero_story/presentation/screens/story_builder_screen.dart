@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -449,98 +450,33 @@ class _QuestionBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final prompt = state.prompt;
-    final colorScheme = theme.colorScheme;
-    final progressLabel = state.isAiMode
-        ? 'Question ${state.displayStep}'
-        : 'Question ${state.displayStep} of ${state.totalQuestions}';
-    // Scrollable content + sticky actions: works with keyboard inset and
-    // large Dynamic Type without a fixed-height expands TextField (iOS IME).
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Expanded(
-          child: SingleChildScrollView(
-            key: const ValueKey('story-builder-question-scroll'),
-            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  progressLabel,
-                  key: const ValueKey('story-builder-progress'),
-                  style: theme.textTheme.labelLarge?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                    letterSpacing: 0.4,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  state.isAiMode
-                      ? 'AI Story Coach — you remain the author.'
-                      : "Let's tell your story together.",
-                  key: const ValueKey('story-builder-coach-label'),
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: colorScheme.onSurface,
-                  ),
-                ),
-                const SizedBox(height: 20),
-                Text(
-                  prompt?.text ?? '',
-                  key: const ValueKey('story-builder-prompt'),
-                  style: theme.textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    height: 1.35,
-                    color: colorScheme.onSurface,
-                  ),
-                ),
-                const SizedBox(height: 20),
-                TextField(
-                  key: const ValueKey('story-builder-response-field'),
-                  controller: textController,
-                  focusNode: focusNode,
-                  onChanged: onDraftChanged,
-                  // Keep the field enabled while busy so iOS does not grey out /
-                  // blank composed text; actions below are what we disable.
-                  readOnly: state.isBusy,
-                  keyboardType: TextInputType.multiline,
-                  textInputAction: TextInputAction.newline,
-                  textCapitalization: TextCapitalization.sentences,
-                  autocorrect: true,
-                  enableSuggestions: true,
-                  minLines: 6,
-                  maxLines: null,
-                  style: theme.textTheme.bodyLarge?.copyWith(
-                    color: colorScheme.onSurface,
-                    height: 1.45,
-                  ),
-                  cursorColor: colorScheme.primary,
-                  decoration: InputDecoration(
-                    hintText: 'Write in your own words…',
-                    hintStyle: theme.textTheme.bodyLarge?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                    alignLabelWithHint: true,
-                  ),
-                ),
-                if (state.errorMessage != null) ...[
-                  const SizedBox(height: 12),
-                  Text(
-                    state.errorMessage!,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: colorScheme.error,
-                    ),
-                  ),
-                ],
-                // Extra space so the focused line can scroll above the keyboard.
-                const SizedBox(height: 24),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(height: 12),
-        Wrap(
+    // Rebuild when focus changes so keyboard-open layout adapts immediately.
+    return ListenableBuilder(
+      listenable: focusNode,
+      builder: (context, _) {
+        final prompt = state.prompt;
+        final colorScheme = theme.colorScheme;
+        final media = MediaQuery.of(context);
+        final keyboardOpen =
+            media.viewInsets.bottom > 0 || focusNode.hasFocus;
+        // iOS WebKit AutoFill accessory (Chrome/Safari) is often omitted from
+        // viewInsets on Flutter Web — reserve space so Continue stays visible.
+        final webAutofillFudge =
+            kIsWeb && focusNode.hasFocus ? media.viewPadding.bottom + 56 : 0.0;
+        final progressLabel = state.isAiMode
+            ? 'Question ${state.displayStep}'
+            : 'Question ${state.displayStep} of ${state.totalQuestions}';
+        final minLines = keyboardOpen ? 3 : 5;
+        final promptStyle = (keyboardOpen
+                ? theme.textTheme.titleMedium
+                : theme.textTheme.headlineSmall)
+            ?.copyWith(
+          fontWeight: FontWeight.w600,
+          height: 1.35,
+          color: colorScheme.onSurface,
+        );
+
+        final actionRow = Wrap(
           key: const ValueKey('story-builder-actions'),
           alignment: WrapAlignment.spaceBetween,
           crossAxisAlignment: WrapCrossAlignment.center,
@@ -584,8 +520,94 @@ class _QuestionBody extends StatelessWidget {
               ],
             ),
           ],
-        ),
-      ],
+        );
+
+        // Keep prompt + field + actions in one scrollable column so mobile-web
+        // keyboards never permanently trap Continue under the accessory bar.
+        return Padding(
+          padding: EdgeInsets.only(bottom: webAutofillFudge),
+          child: SingleChildScrollView(
+            key: const ValueKey('story-builder-question-scroll'),
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  progressLabel,
+                  key: const ValueKey('story-builder-progress'),
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                    letterSpacing: 0.4,
+                  ),
+                ),
+                if (!keyboardOpen) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    state.isAiMode
+                        ? 'AI Story Coach — you remain the author.'
+                        : "Let's tell your story together.",
+                    key: const ValueKey('story-builder-coach-label'),
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: colorScheme.onSurface,
+                    ),
+                  ),
+                ],
+                SizedBox(height: keyboardOpen ? 12 : 20),
+                Text(
+                  prompt?.text ?? '',
+                  key: const ValueKey('story-builder-prompt'),
+                  style: promptStyle,
+                ),
+                SizedBox(height: keyboardOpen ? 12 : 20),
+                TextField(
+                  key: const ValueKey('story-builder-response-field'),
+                  controller: textController,
+                  focusNode: focusNode,
+                  onChanged: onDraftChanged,
+                  // Keep the field enabled while busy so iOS does not grey out /
+                  // blank composed text; actions below are what we disable.
+                  readOnly: state.isBusy,
+                  keyboardType: TextInputType.multiline,
+                  textInputAction: TextInputAction.newline,
+                  textCapitalization: TextCapitalization.sentences,
+                  autocorrect: true,
+                  enableSuggestions: true,
+                  // Empty hints → autocomplete=off on Flutter Web (avoids Safari
+                  // Password/Credit/Address AutoFill chrome on story text).
+                  autofillHints: const <String>[],
+                  minLines: minLines,
+                  maxLines: null,
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    color: colorScheme.onSurface,
+                    height: 1.45,
+                  ),
+                  cursorColor: colorScheme.primary,
+                  decoration: InputDecoration(
+                    hintText: 'Write in your own words…',
+                    hintStyle: theme.textTheme.bodyLarge?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                    alignLabelWithHint: true,
+                  ),
+                ),
+                if (state.errorMessage != null) ...[
+                  const SizedBox(height: 12),
+                  Text(
+                    state.errorMessage!,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: colorScheme.error,
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 16),
+                actionRow,
+                const SizedBox(height: 24),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }
@@ -792,6 +814,7 @@ class _ScriptReviewBodyState extends State<_ScriptReviewBody> {
                     textCapitalization: TextCapitalization.sentences,
                     autocorrect: true,
                     enableSuggestions: true,
+                    autofillHints: const <String>[],
                     minLines: 10,
                     maxLines: null,
                     style: theme.textTheme.bodyLarge?.copyWith(

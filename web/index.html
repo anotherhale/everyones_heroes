@@ -19,6 +19,8 @@
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="description" content="A new Flutter project.">
+  <meta name="color-scheme" content="light dark">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
@@ -31,6 +33,79 @@
 
   <title>everyonesheroes</title>
   <link rel="manifest" href="manifest.json">
+
+  <!--
+    Flutter Web on iOS (Chrome, Safari, etc. — all WebKit) inserts a DOM
+    <input>/<textarea> overlay while editing. WebKit defaults that overlay to
+    an opaque white surface, which hides Flutter's themed field and makes typed
+    text appear invisible in Dark Mode. Keep the overlay transparent and theme
+    the DOM text/caret via prefers-color-scheme so IME/QuickType remain native
+    while contrast matches the EH Material theme.
+  -->
+  <style>
+    html, body {
+      background-color: #14110E;
+      margin: 0;
+      padding: 0;
+      overscroll-behavior: none;
+    }
+
+    input.flt-text-editing,
+    textarea.flt-text-editing,
+    .flt-text-editing,
+    flt-semantics input,
+    flt-semantics textarea {
+      background: transparent !important;
+      background-color: transparent !important;
+      outline: none !important;
+      border: none !important;
+      box-shadow: none !important;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      html, body {
+        background-color: #14110E;
+      }
+
+      input.flt-text-editing,
+      textarea.flt-text-editing,
+      .flt-text-editing,
+      flt-semantics input,
+      flt-semantics textarea {
+        color: #F5F0E6 !important;
+        -webkit-text-fill-color: #F5F0E6 !important;
+        caret-color: #D4AF37 !important;
+      }
+
+      input.flt-text-editing::placeholder,
+      textarea.flt-text-editing::placeholder {
+        color: rgba(245, 240, 230, 0.55) !important;
+        -webkit-text-fill-color: rgba(245, 240, 230, 0.55) !important;
+      }
+    }
+
+    @media (prefers-color-scheme: light) {
+      html, body {
+        background-color: #FFF8F0;
+      }
+
+      input.flt-text-editing,
+      textarea.flt-text-editing,
+      .flt-text-editing,
+      flt-semantics input,
+      flt-semantics textarea {
+        color: #1C1917 !important;
+        -webkit-text-fill-color: #1C1917 !important;
+        caret-color: #B8962E !important;
+      }
+
+      input.flt-text-editing::placeholder,
+      textarea.flt-text-editing::placeholder {
+        color: rgba(28, 25, 23, 0.55) !important;
+        -webkit-text-fill-color: rgba(28, 25, 23, 0.55) !important;
+      }
+    }
+  </style>
 </head>
 <body>
   <!--
@@ -42,5 +117,58 @@
     * https://docs.flutter.dev/platform-integration/web/initialization
   -->
   <script src="flutter_bootstrap.js" async></script>
+  <script>
+    // Safari shows Password/Credit/Address AutoFill chrome for generic
+    // inputs. Force autocomplete=off on Flutter's editing overlay as it
+    // appears so story responses stay ordinary multiline text entry.
+    (function () {
+      function disableAutofill(node) {
+        if (!(node instanceof HTMLInputElement) &&
+            !(node instanceof HTMLTextAreaElement)) {
+          return;
+        }
+        if (!node.classList.contains('flt-text-editing') &&
+            node.closest('flt-semantics') == null) {
+          return;
+        }
+        node.setAttribute('autocomplete', 'off');
+        node.setAttribute('autocapitalize', 'sentences');
+        node.setAttribute('autocorrect', 'on');
+        node.setAttribute('spellcheck', 'true');
+        node.setAttribute('data-lpignore', 'true');
+        node.setAttribute('data-1p-ignore', 'true');
+      }
+
+      function scan(root) {
+        if (!(root instanceof Element) && !(root instanceof Document)) {
+          return;
+        }
+        root.querySelectorAll(
+          'input.flt-text-editing, textarea.flt-text-editing, flt-semantics input, flt-semantics textarea'
+        ).forEach(disableAutofill);
+      }
+
+      const observer = new MutationObserver((mutations) => {
+        for (const mutation of mutations) {
+          mutation.addedNodes.forEach((node) => {
+            if (node instanceof Element) {
+              disableAutofill(node);
+              scan(node);
+            }
+          });
+        }
+      });
+
+      if (document.body) {
+        observer.observe(document.body, { childList: true, subtree: true });
+        scan(document);
+      } else {
+        document.addEventListener('DOMContentLoaded', () => {
+          observer.observe(document.body, { childList: true, subtree: true });
+          scan(document);
+        });
+      }
+    })();
+  </script>
 </body>
 </html>

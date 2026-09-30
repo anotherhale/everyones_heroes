@@ -101,8 +101,9 @@ void main() {
       expect(field.autocorrect, isTrue);
       expect(field.enableSuggestions, isTrue);
       expect(field.expands, isFalse);
-      expect(field.minLines, 6);
+      expect(field.minLines, greaterThanOrEqualTo(3));
       expect(field.maxLines, isNull);
+      expect(field.autofillHints, isEmpty);
 
       await tester.enterText(
         find.byKey(const ValueKey('story-builder-response-field')),
@@ -308,5 +309,36 @@ void main() {
       final field = tester.widget<TextField>(fieldFinder);
       expect(field.focusNode!.hasFocus, isTrue);
     });
+
+    testWidgets(
+      'focusing the field compact layout keeps actions and prompt reachable',
+      (tester) async {
+        await settleOnQuestion(tester);
+        expect(
+          find.byKey(const ValueKey('story-builder-coach-label')),
+          findsOneWidget,
+        );
+
+        await tester.tap(
+          find.byKey(const ValueKey('story-builder-response-field')),
+        );
+        await tester.pump();
+
+        // Compact chrome while editing — prompt + field + actions remain.
+        expect(
+          find.byKey(const ValueKey('story-builder-coach-label')),
+          findsNothing,
+        );
+        expect(find.byKey(const ValueKey('story-builder-prompt')), findsOneWidget);
+        expect(
+          find.byKey(const ValueKey('story-builder-continue')),
+          findsOneWidget,
+        );
+        final field = tester.widget<TextField>(
+          find.byKey(const ValueKey('story-builder-response-field')),
+        );
+        expect(field.minLines, 3);
+      },
+    );
   });
 }
