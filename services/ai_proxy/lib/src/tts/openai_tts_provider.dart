@@ -5,7 +5,7 @@ import 'package:ai_proxy/src/tts/tts_provider.dart';
 ///
 /// Wraps the existing [OpenAiSpeechClient]. Does not perform voice cloning.
 final class OpenAiTtsProvider implements TtsProvider {
-  OpenAiTtsProvider({required OpenAiSpeechClient this._client});
+  OpenAiTtsProvider({required this._client});
 
   final OpenAiSpeechClient _client;
 
