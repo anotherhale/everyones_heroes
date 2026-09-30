@@ -53,6 +53,7 @@ enum StoryBuilderUiPhase {
   completed,
   generatingScript,
   scriptReview,
+  namingStory,
   scriptApproved,
   proposalPreview,
   storyCreated,
@@ -83,6 +84,7 @@ final class StoryBuilderUiState {
     this.script,
     this.scriptDraftText = '',
     this.isEditingScript = false,
+    this.pendingStoryTitle = '',
   });
 
   final StoryBuilderUiPhase phase;
@@ -121,6 +123,13 @@ final class StoryBuilderUiState {
   /// Whether the script review UI is in edit mode.
   final bool isEditingScript;
 
+  /// Hero-entered Story title draft for the naming step (SB.8 follow-up).
+  ///
+  /// UI / materialization workflow state only — not stored on
+  /// [StoryBuilderSession] or [StoryBuilderScript]. Persists across back
+  /// navigation and Create Story retries within this controller lifetime.
+  final String pendingStoryTitle;
+
   int get displayStep => promptIndex + 1;
 
   bool get isAiMode => mode == StoryBuilderMode.ai;
@@ -145,6 +154,9 @@ final class StoryBuilderUiState {
 
   bool get canCompareProposals =>
       originalProposal != null && proposal != null && isAiAssistedProposal;
+
+  /// Whether the pending title is non-empty after trim (UI enablement).
+  bool get canCreateNamedStory => pendingStoryTitle.trim().isNotEmpty;
 
   StoryProposal? get displayedProposal {
     if (showingOriginalProposal && originalProposal != null) {
@@ -180,6 +192,7 @@ final class StoryBuilderUiState {
     bool clearScript = false,
     String? scriptDraftText,
     bool? isEditingScript,
+    String? pendingStoryTitle,
   }) {
     return StoryBuilderUiState(
       phase: phase ?? this.phase,
@@ -209,6 +222,7 @@ final class StoryBuilderUiState {
       script: clearScript ? null : (script ?? this.script),
       scriptDraftText: scriptDraftText ?? this.scriptDraftText,
       isEditingScript: isEditingScript ?? this.isEditingScript,
+      pendingStoryTitle: pendingStoryTitle ?? this.pendingStoryTitle,
     );
   }
 }
@@ -311,11 +325,15 @@ final class StoryBuilderController extends Notifier<StoryBuilderUiState> {
           }
         }
         if (resumedScript.isApproved) {
+          final restoredTitle = await _restorePendingTitleFromScript(
+            resumedScript,
+          );
           state = state.copyWith(
-            phase: StoryBuilderUiPhase.scriptApproved,
+            phase: StoryBuilderUiPhase.namingStory,
             script: resumedScript,
             scriptDraftText: resumedScript.content,
             isEditingScript: false,
+            pendingStoryTitle: restoredTitle ?? state.pendingStoryTitle,
             isBusy: false,
             clearPrompt: true,
           );
@@ -1191,7 +1209,7 @@ final class StoryBuilderController extends Notifier<StoryBuilderUiState> {
     await createMyStory(replaceExistingDraft: true);
   }
 
-  /// Approves the script, then materializes the Story (retryable).
+  /// Approves the script, then navigates to Name Your Story (does not create).
   Future<bool> approveScript() async {
     final script = state.script;
     if (script == null || state.isBusy) return false;
@@ -1208,17 +1226,52 @@ final class StoryBuilderController extends Notifier<StoryBuilderUiState> {
       return false;
     }
     final approved = (approveResult as Success<StoryBuilderScript>).value;
+    final restoredTitle = await _restorePendingTitleFromScript(approved);
     state = state.copyWith(
-      phase: StoryBuilderUiPhase.scriptApproved,
+      phase: StoryBuilderUiPhase.namingStory,
       script: approved,
       scriptDraftText: approved.content,
       isEditingScript: false,
+      pendingStoryTitle: restoredTitle ?? state.pendingStoryTitle,
+      isBusy: false,
       clearError: true,
     );
-    return materializeApprovedScript();
+    return true;
   }
 
-  /// Creates the Story from an approved script. Safe to retry.
+  void updatePendingStoryTitle(String text) {
+    state = state.copyWith(pendingStoryTitle: text);
+  }
+
+  /// Returns to the approved script without revoking approval or clearing title.
+  void returnToApprovedScript() {
+    final script = state.script;
+    if (script == null || !script.isApproved) return;
+    state = state.copyWith(
+      phase: StoryBuilderUiPhase.scriptReview,
+      script: script,
+      scriptDraftText: script.content,
+      isEditingScript: false,
+      clearError: true,
+    );
+  }
+
+  /// Moves an approved script into the naming step (preserves pending title).
+  void continueToNameYourStory() {
+    final script = state.script;
+    if (script == null || !script.isApproved || state.isBusy) return;
+    state = state.copyWith(
+      phase: StoryBuilderUiPhase.namingStory,
+      script: script,
+      scriptDraftText: script.content,
+      isEditingScript: false,
+      clearError: true,
+    );
+  }
+
+  /// Creates the Story from an approved script using the Hero-provided title.
+  ///
+  /// Safe to retry. Preserves [pendingStoryTitle] and script approval on failure.
   Future<bool> materializeApprovedScript() async {
     final script = state.script;
     if (script == null) return false;
@@ -1230,17 +1283,33 @@ final class StoryBuilderController extends Notifier<StoryBuilderUiState> {
       );
       return false;
     }
-    state = state.copyWith(isBusy: true, clearError: true);
+    final titleDraft = state.pendingStoryTitle.trim();
+    if (titleDraft.isEmpty) {
+      state = state.copyWith(
+        phase: StoryBuilderUiPhase.namingStory,
+        isBusy: false,
+        errorMessage: 'Story title cannot be empty.',
+      );
+      return false;
+    }
+    state = state.copyWith(
+      phase: StoryBuilderUiPhase.namingStory,
+      isBusy: true,
+      clearError: true,
+    );
     final result =
         await ref.read(materializeStoryBuilderScriptUseCaseProvider).execute(
-              MaterializeStoryBuilderScriptRequest(scriptId: script.id),
+              MaterializeStoryBuilderScriptRequest(
+                scriptId: script.id,
+                title: titleDraft,
+              ),
             );
     if (result is Failure) {
       final refreshed = await ref
           .read(storyBuilderScriptRepositoryProvider)
           .findById(script.id);
       state = state.copyWith(
-        phase: StoryBuilderUiPhase.scriptApproved,
+        phase: StoryBuilderUiPhase.namingStory,
         script: refreshed ?? script,
         isBusy: false,
         errorMessage: (result as Failure).error,
@@ -1255,10 +1324,24 @@ final class StoryBuilderController extends Notifier<StoryBuilderUiState> {
       phase: StoryBuilderUiPhase.storyCreated,
       script: refreshed ?? script,
       materializedStory: story,
+      pendingStoryTitle: story.title.value,
       isBusy: false,
       clearError: true,
     );
     return true;
+  }
+
+  Future<String?> _restorePendingTitleFromScript(
+    StoryBuilderScript script,
+  ) async {
+    if (state.pendingStoryTitle.trim().isNotEmpty) {
+      return state.pendingStoryTitle;
+    }
+    final proposalId = script.linkedProposalId;
+    if (proposalId == null) return null;
+    final proposal =
+        await ref.read(storyProposalRepositoryProvider).findById(proposalId);
+    return proposal?.title?.value;
   }
 
   Future<StoryProposal?> _loadLatestProposal(

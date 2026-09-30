@@ -93,7 +93,10 @@ final class StoryProposal extends ValueObject {
   final StoryProposalId id;
   final StoryBuilderSessionId sessionId;
 
-  /// Explicit absence when no defensible title exists (no Builder title field).
+  /// Explicit absence when no defensible title exists yet.
+  ///
+  /// SB.8 script materialization requires a Hero-provided title before Story
+  /// creation; other proposal paths may leave this null until review.
   final StoryTitle? title;
 
   /// Assembled candidate narrative from Hero-authored section content only.
@@ -207,6 +210,32 @@ final class StoryProposal extends ValueObject {
         reviewedAt: decidedAt,
         editedAfterDecision: false,
       ),
+    );
+  }
+
+  /// Sets the Story title at the materialization boundary.
+  ///
+  /// Does **not** revoke acceptance or mark review as edited — the Hero chose
+  /// this title as part of creating the Story, not as a content revision of an
+  /// already-approved proposal narrative.
+  StoryProposal withTitle(StoryTitle title, {DateTime? at}) {
+    if (this.title == title) {
+      return this;
+    }
+    return StoryProposal(
+      id: id,
+      sessionId: sessionId,
+      title: title,
+      narrative: narrative,
+      sections: sections,
+      intent: intent,
+      provenance: provenance,
+      lifecycle: lifecycle,
+      createdAt: createdAt,
+      updatedAt: at ?? DateTime.now(),
+      derivedSummary: derivedSummary,
+      materializedStoryId: materializedStoryId,
+      review: review,
     );
   }
 
