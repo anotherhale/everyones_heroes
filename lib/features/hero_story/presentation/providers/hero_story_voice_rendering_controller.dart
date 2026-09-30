@@ -361,6 +361,7 @@ final class HeroStoryVoiceRenderingController
       experiencePlanProcessingVersion:
           rendering.experiencePlanProcessingVersion,
       sourceRepresentationId: rendering.sourceRepresentationId.value,
+      language: rendering.language.value,
       renderingMode: rendering.renderingMode,
       contentType: rendering.contentType,
       byteLength: rendering.byteLength,

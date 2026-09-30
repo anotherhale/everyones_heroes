@@ -5,11 +5,14 @@ import 'package:ai_proxy/src/proxy_config.dart';
 import 'package:shelf/shelf.dart';
 import 'package:shelf_router/shelf_router.dart';
 
-/// EH-owned HTTP contract for Story voice rendering (HS.12.6).
+/// EH-owned HTTP contract for Story voice rendering (HS.12.6 / HS-ADR-077).
 ///
 /// `POST /story-voice-renderings` accepts presentation source text and returns
-/// base64 audio for ordinary synthetic narration. Does not rewrite Story
-/// content, invent psychological claims, or perform voice cloning.
+/// complete-file base64 audio for ordinary synthetic narration. Does not
+/// rewrite Story content, invent psychological claims, or perform voice cloning.
+///
+/// Provider selection is infrastructure-side (env / opaque hints). Domain never
+/// depends on a specific TTS vendor.
 final class StoryVoiceRenderingHandler {
   StoryVoiceRenderingHandler({
     required ProxyConfig config,
@@ -27,6 +30,8 @@ final class StoryVoiceRenderingHandler {
   final OpenAiSpeechClient _client;
 
   static const supportedMode = 'syntheticNarration';
+  static final RegExp _languagePattern =
+      RegExp(r'^[a-z]{2,3}(-[a-z0-9]{2,8})?$');
 
   Router get router {
     final router = Router();
@@ -83,6 +88,8 @@ final class StoryVoiceRenderingHandler {
     final experiencePlanId = payload['experiencePlanId'];
     final sourceRepresentationId = payload['sourceRepresentationId'];
     final renderingMode = (payload['renderingMode'] as String?)?.trim() ?? '';
+    final languageRaw = (payload['language'] as String?)?.trim().toLowerCase() ??
+        '';
 
     if (storyId is! String || storyId.trim().isEmpty) {
       return _error(400, 'storyId is required.');
@@ -94,6 +101,16 @@ final class StoryVoiceRenderingHandler {
         sourceRepresentationId.trim().isEmpty) {
       return _error(400, 'sourceRepresentationId is required.');
     }
+    if (languageRaw.isEmpty) {
+      return _error(400, 'language is required.');
+    }
+    if (!_languagePattern.hasMatch(languageRaw)) {
+      return _error(
+        400,
+        'language must be a valid BCP 47 primary tag '
+        '(optionally with region), e.g. "en", "es", "en-us".',
+      );
+    }
     if (renderingMode.isEmpty) {
       return _error(400, 'renderingMode is required.');
     }
@@ -101,16 +118,29 @@ final class StoryVoiceRenderingHandler {
       return _error(
         400,
         'Unsupported renderingMode "$renderingMode". '
-        'HS.12.6 supports only $supportedMode '
-        '(ordinary synthetic narration — not voice cloning).',
+        'Synthetic Story voice rendering supports only $supportedMode '
+        '(ordinary synthetic narration — not voice cloning). '
+        'Voice cloning is not authorized by narration consent.',
       );
     }
+
+    // Opaque routing hints are accepted for future multi-provider selection.
+    // This milestone still synthesizes via the configured OpenAI speech client.
+    final providerHint = (payload['providerHint'] as String?)?.trim();
+    final modelHint = (payload['modelHint'] as String?)?.trim();
 
     try {
       final result = await _client.synthesize(text: sourceText);
       if (result.audioBytes.isEmpty) {
         return _error(502, 'Provider returned empty audio.');
       }
+
+      final providerLabel = (providerHint != null && providerHint.isNotEmpty)
+          ? '${providerHint}_via_eh_proxy'
+          : 'openai_tts_via_eh_proxy';
+      final modelLabel = (modelHint != null && modelHint.isNotEmpty)
+          ? modelHint
+          : result.model;
 
       return Response.ok(
         jsonEncode({
@@ -125,11 +155,12 @@ final class StoryVoiceRenderingHandler {
                       .trim()
                   : null,
           'sourceRepresentationId': sourceRepresentationId.trim(),
+          'language': languageRaw,
           'renderingMode': supportedMode,
           'audioBase64': base64Encode(result.audioBytes),
           'contentType': result.contentType,
-          'providerLabel': 'openai_tts_via_eh_proxy',
-          'modelLabel': result.model,
+          'providerLabel': providerLabel,
+          'modelLabel': modelLabel,
           'processingVersion':
               (payload['processingVersion'] as String?)?.trim().isNotEmpty ==
                       true

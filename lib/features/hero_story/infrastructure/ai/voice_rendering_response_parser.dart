@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:everyonesheroes/core/shared_kernel/language_code.dart';
 import 'package:everyonesheroes/features/hero_story/domain/enums/voice_rendering_mode.dart';
 import 'package:everyonesheroes/features/hero_story/domain/services/voice_rendering_port.dart';
 import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_voice_rendering.dart';
@@ -68,9 +69,25 @@ abstract final class VoiceRenderingResponseParser {
       );
     }
 
+    final languageRaw = (json['language'] as String?)?.trim() ?? '';
+    if (languageRaw.isEmpty) {
+      throw const VoiceRenderingException(
+        'Voice-rendering response is missing language.',
+      );
+    }
+    late final LanguageCode language;
+    try {
+      language = LanguageCode(languageRaw);
+    } on ArgumentError catch (e) {
+      throw VoiceRenderingException(
+        'Voice-rendering language is invalid: $e',
+      );
+    }
+
     return VoiceRenderingDraft(
       audioBytes: audioBytes,
       contentType: contentType,
+      language: language,
       renderingMode: mode,
       providerLabel: (json['providerLabel'] as String?)?.trim(),
       modelLabel: (json['modelLabel'] as String?)?.trim(),

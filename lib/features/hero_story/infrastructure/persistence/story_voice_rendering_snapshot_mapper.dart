@@ -2,6 +2,7 @@ import 'package:everyonesheroes/core/ids/story_experience_plan_id.dart';
 import 'package:everyonesheroes/core/ids/story_id.dart';
 import 'package:everyonesheroes/core/ids/story_representation_id.dart';
 import 'package:everyonesheroes/core/ids/story_voice_rendering_id.dart';
+import 'package:everyonesheroes/core/shared_kernel/language_code.dart';
 import 'package:everyonesheroes/features/hero_story/domain/enums/voice_rendering_mode.dart';
 import 'package:everyonesheroes/features/hero_story/domain/value_objects/media_reference.dart';
 import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_voice_rendering.dart';
@@ -16,6 +17,7 @@ abstract final class StoryVoiceRenderingSnapshotMapper {
       'experiencePlanProcessingVersion':
           rendering.experiencePlanProcessingVersion,
       'sourceRepresentationId': rendering.sourceRepresentationId.value,
+      'language': rendering.language.value,
       'renderingMode': rendering.renderingMode.name,
       'mediaReference': rendering.mediaReference.uri,
       'contentType': rendering.contentType,
@@ -42,6 +44,12 @@ abstract final class StoryVoiceRenderingSnapshotMapper {
       );
     }
 
+    // Pre-language snapshots default to "en" for backward compatibility.
+    final languageRaw = (json['language'] as String?)?.trim();
+    final language = LanguageCode(
+      (languageRaw == null || languageRaw.isEmpty) ? 'en' : languageRaw,
+    );
+
     return StoryVoiceRendering(
       id: StoryVoiceRenderingId(json['id'] as String),
       storyId: StoryId(json['storyId'] as String),
@@ -53,6 +61,7 @@ abstract final class StoryVoiceRenderingSnapshotMapper {
       sourceRepresentationId: StoryRepresentationId(
         json['sourceRepresentationId'] as String,
       ),
+      language: language,
       renderingMode: VoiceRenderingMode.values.byName(
         json['renderingMode'] as String,
       ),

@@ -6,9 +6,10 @@ import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_v
 import 'package:everyonesheroes/features/hero_story/infrastructure/ai/voice_rendering_response_parser.dart';
 import 'package:http/http.dart' as http;
 
-/// Production [VoiceRenderingPort] via EH AI proxy (HS.12.6).
+/// Production [VoiceRenderingPort] via EH AI proxy (HS.12.6 / HS-ADR-077).
 ///
 /// Never holds OpenAI/vendor credentials. Calls `POST /story-voice-renderings`.
+/// Complete-file generation only — no streaming. Synthetic narration only.
 final class ProxyVoiceRenderingAdapter implements VoiceRenderingPort {
   ProxyVoiceRenderingAdapter({
     required Uri baseUrl,
@@ -61,11 +62,16 @@ final class ProxyVoiceRenderingAdapter implements VoiceRenderingPort {
           request.experiencePlanProcessingVersion,
       'sourceRepresentationId': request.sourceRepresentationId.value,
       'sourceText': sourceText,
+      'language': request.language.value,
       'renderingMode': request.renderingMode.name,
       'processingVersion':
           request.processingVersion?.trim().isNotEmpty == true
               ? request.processingVersion!.trim()
               : StoryVoiceRendering.defaultProcessingVersion,
+      if (request.providerHint?.trim().isNotEmpty == true)
+        'providerHint': request.providerHint!.trim(),
+      if (request.modelHint?.trim().isNotEmpty == true)
+        'modelHint': request.modelHint!.trim(),
     });
 
     late http.Response response;

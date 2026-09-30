@@ -347,12 +347,57 @@ void main() {
         beforePlan.transcriptRepresentationId,
       );
       expect(rendering.renderingMode, VoiceRenderingMode.syntheticNarration);
+      expect(rendering.language, english);
       expect(rendering.isAiGenerated, isTrue);
       expect(rendering.byteLength, greaterThan(0));
+      expect(voiceAdapter.lastRequest!.language, english);
+      expect(voiceAdapter.lastRequest!.storyId, seeded.storyId);
 
       final afterStory = await storyRepository.findById(seeded.storyId);
       expect(afterStory!.representations.length, beforeStory!.representations.length);
       expect(afterStory.title.value, beforeStory.title.value);
+    });
+
+    test('language and optional provider hints are forwarded to the port',
+        () async {
+      final seeded = await seed(grantVoice: true);
+      await seedPlan(seeded.heroId, seeded.storyId);
+
+      final result = await renderVoice.execute(
+        RenderStoryVoiceAppRequest(
+          storyId: seeded.storyId,
+          ownerHeroId: seeded.heroId,
+          providerHint: 'openai',
+          modelHint: 'tts-1',
+        ),
+      );
+
+      expect(result, isA<Success<RenderStoryVoiceResponse>>());
+      expect(voiceAdapter.lastRequest!.language, english);
+      expect(voiceAdapter.lastRequest!.providerHint, 'openai');
+      expect(voiceAdapter.lastRequest!.modelHint, 'tts-1');
+      final rendering =
+          (result as Success<RenderStoryVoiceResponse>).value.rendering;
+      expect(rendering.language, english);
+      expect(rendering.providerLabel, 'in_memory_openai');
+      expect(rendering.modelLabel, 'tts-1');
+    });
+
+    test('voiceClone mode remains rejected (cloning out of scope)', () async {
+      final seeded = await seed(grantVoice: true);
+      await seedPlan(seeded.heroId, seeded.storyId);
+
+      final result = await renderVoice.execute(
+        RenderStoryVoiceAppRequest(
+          storyId: seeded.storyId,
+          ownerHeroId: seeded.heroId,
+          renderingMode: VoiceRenderingMode.voiceClone,
+        ),
+      );
+
+      expect(result, isA<Failure<RenderStoryVoiceResponse>>());
+      expect((result as Failure).error, contains('syntheticNarration'));
+      expect(voiceAdapter.callCount, 0);
     });
 
     test('malformed response rejected', () {
@@ -362,6 +407,36 @@ void main() {
       );
       expect(
         () => VoiceRenderingResponseParser.parse('{"audioBase64":"!!!"}'),
+        throwsA(isA<VoiceRenderingException>()),
+      );
+    });
+
+    test('valid proxy JSON parses language provenance', () {
+      final draft = VoiceRenderingResponseParser.parse(
+        jsonEncode({
+          'audioBase64': base64Encode(utf8.encode('bytes')),
+          'contentType': 'audio/mpeg',
+          'language': 'en',
+          'renderingMode': 'syntheticNarration',
+          'providerLabel': 'openai_tts_via_eh_proxy',
+          'modelLabel': 'tts-1',
+          'processingVersion': 'hs12.6.v1',
+        }),
+      );
+      expect(draft.language.value, 'en');
+      expect(draft.renderingMode, VoiceRenderingMode.syntheticNarration);
+      expect(draft.audioBytes, isNotEmpty);
+    });
+
+    test('proxy JSON without language is rejected', () {
+      expect(
+        () => VoiceRenderingResponseParser.parse(
+          jsonEncode({
+            'audioBase64': base64Encode(utf8.encode('bytes')),
+            'contentType': 'audio/mpeg',
+            'renderingMode': 'syntheticNarration',
+          }),
+        ),
         throwsA(isA<VoiceRenderingException>()),
       );
     });
@@ -481,9 +556,12 @@ void main() {
         rendering.sourceRepresentationId,
         plan.transcriptRepresentationId,
       );
+      expect(rendering.language, english);
+      expect(rendering.storyId, seeded.storyId);
       expect(rendering.providerLabel, isNotNull);
       expect(rendering.processingVersion, StoryVoiceRendering.defaultProcessingVersion);
       expect(voiceAdapter.lastRequest!.sourceText, isNotEmpty);
+      expect(voiceAdapter.lastRequest!.language, english);
     });
 
     test('artifact does not mutate Story', () async {
@@ -529,11 +607,18 @@ void main() {
       expect(loaded!.id, rendering.id);
       expect(loaded.mediaReference.uri, rendering.mediaReference.uri);
       expect(loaded.experiencePlanId, rendering.experiencePlanId);
+      expect(loaded.language, rendering.language);
 
       final roundTrip = StoryVoiceRenderingSnapshotMapper.fromJson(
         StoryVoiceRenderingSnapshotMapper.toJson(rendering),
       );
       expect(roundTrip, rendering);
+
+      // Pre-language snapshots remain loadable (default language en).
+      final legacyJson = StoryVoiceRenderingSnapshotMapper.toJson(rendering)
+        ..remove('language');
+      final legacy = StoryVoiceRenderingSnapshotMapper.fromJson(legacyJson);
+      expect(legacy.language.value, 'en');
     });
 
     test('invalid artifact is not persisted', () async {

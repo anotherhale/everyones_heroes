@@ -2,6 +2,7 @@ import 'package:everyonesheroes/core/ids/story_voice_rendering_id.dart';
 import 'package:everyonesheroes/core/results/failure.dart';
 import 'package:everyonesheroes/core/results/result.dart';
 import 'package:everyonesheroes/core/results/success.dart';
+import 'package:everyonesheroes/core/shared_kernel/language_code.dart';
 import 'package:everyonesheroes/features/hero_story/application/dto/requests/render_story_voice_request.dart';
 import 'package:everyonesheroes/features/hero_story/application/dto/responses/render_story_voice_response.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/use_case.dart';
@@ -14,11 +15,11 @@ import 'package:everyonesheroes/features/hero_story/domain/services/story_media_
 import 'package:everyonesheroes/features/hero_story/domain/services/voice_rendering_port.dart';
 import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_voice_rendering.dart';
 
-/// Renders and persists a derived AI voice presentation (HS.12.6).
+/// Renders and persists a derived AI voice presentation (HS.12.6 / HS-ADR-077).
 ///
 /// Requires explicit [StoryConsent.isVoiceRenderingApproved]. Recording,
 /// processing, transcription, publication, or AI-transformation consent alone
-/// is insufficient.
+/// is insufficient. Synthetic narration does not authorize voice cloning.
 ///
 /// Does not mutate the canonical Story, CapturedStoryReading, or
 /// StoryExperiencePlan. Does not create behavioral evidence.
@@ -102,22 +103,6 @@ final class RenderStoryVoiceUseCase
         );
       }
 
-      if (!request.forceRegenerate) {
-        final existing = await _renderingRepository.findByStoryId(story.id);
-        if (existing != null &&
-            existing.experiencePlanId == plan.id &&
-            existing.experiencePlanProcessingVersion ==
-                plan.processingVersion &&
-            existing.renderingMode == request.renderingMode) {
-          return Success(
-            RenderStoryVoiceResponse(
-              rendering: existing,
-              idempotentReplay: true,
-            ),
-          );
-        }
-      }
-
       final transcript = story.findRepresentation(
         plan.transcriptRepresentationId,
       );
@@ -126,6 +111,25 @@ final class RenderStoryVoiceUseCase
         return const Failure(
           'Transcript text is required to render a narrated version.',
         );
+      }
+
+      final language = transcript!.language;
+
+      if (!request.forceRegenerate) {
+        final existing = await _renderingRepository.findByStoryId(story.id);
+        if (existing != null &&
+            existing.experiencePlanId == plan.id &&
+            existing.experiencePlanProcessingVersion ==
+                plan.processingVersion &&
+            existing.renderingMode == request.renderingMode &&
+            existing.language == language) {
+          return Success(
+            RenderStoryVoiceResponse(
+              rendering: existing,
+              idempotentReplay: true,
+            ),
+          );
+        }
       }
 
       final VoiceRenderingDraft draft;
@@ -137,15 +141,18 @@ final class RenderStoryVoiceUseCase
             experiencePlanProcessingVersion: plan.processingVersion,
             sourceRepresentationId: plan.transcriptRepresentationId,
             sourceText: sourceText,
+            language: language,
             renderingMode: request.renderingMode,
             processingVersion: request.processingVersion,
+            providerHint: request.providerHint,
+            modelHint: request.modelHint,
           ),
         );
       } on VoiceRenderingException catch (e) {
         return Failure(e.message);
       }
 
-      final validationError = _validateDraft(draft);
+      final validationError = _validateDraft(draft, expectedLanguage: language);
       if (validationError != null) {
         return Failure(validationError);
       }
@@ -165,6 +172,7 @@ final class RenderStoryVoiceUseCase
         experiencePlanId: plan.id,
         experiencePlanProcessingVersion: plan.processingVersion,
         sourceRepresentationId: plan.transcriptRepresentationId,
+        language: draft.language,
         renderingMode: draft.renderingMode,
         mediaReference: mediaReference,
         contentType: draft.contentType.trim(),
@@ -188,7 +196,10 @@ final class RenderStoryVoiceUseCase
     }
   }
 
-  static String? _validateDraft(VoiceRenderingDraft draft) {
+  static String? _validateDraft(
+    VoiceRenderingDraft draft, {
+    required LanguageCode expectedLanguage,
+  }) {
     if (draft.audioBytes.isEmpty) {
       return 'Generated voice audio is empty.';
     }
@@ -203,6 +214,10 @@ final class RenderStoryVoiceUseCase
     if (draft.renderingMode != VoiceRenderingMode.syntheticNarration) {
       return 'Unsupported voice rendering mode in provider response: '
           '${draft.renderingMode.name}';
+    }
+    if (draft.language != expectedLanguage) {
+      return 'Generated voice language mismatch: expected '
+          '${expectedLanguage.value}, got ${draft.language.value}.';
     }
     return null;
   }

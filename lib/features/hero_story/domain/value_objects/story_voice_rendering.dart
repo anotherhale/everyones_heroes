@@ -2,6 +2,7 @@ import 'package:everyonesheroes/core/ids/story_experience_plan_id.dart';
 import 'package:everyonesheroes/core/ids/story_id.dart';
 import 'package:everyonesheroes/core/ids/story_representation_id.dart';
 import 'package:everyonesheroes/core/ids/story_voice_rendering_id.dart';
+import 'package:everyonesheroes/core/shared_kernel/language_code.dart';
 import 'package:everyonesheroes/core/shared_kernel/value_object.dart';
 import 'package:everyonesheroes/features/hero_story/domain/enums/voice_rendering_mode.dart';
 import 'package:everyonesheroes/features/hero_story/domain/value_objects/media_reference.dart';
@@ -13,6 +14,9 @@ import 'package:everyonesheroes/features/hero_story/domain/value_objects/media_r
 ///
 /// AI-generated audio is a presentation artifact — never the source of truth
 /// for story content, and never behavioral or psychological evidence.
+///
+/// Synthetic narration does not authorize voice cloning. Cloning requires a
+/// future VoiceProfile + dedicated consent (HS-ADR-077).
 final class StoryVoiceRendering extends ValueObject {
   StoryVoiceRendering({
     required this.id,
@@ -20,6 +24,7 @@ final class StoryVoiceRendering extends ValueObject {
     required this.experiencePlanId,
     required String experiencePlanProcessingVersion,
     required this.sourceRepresentationId,
+    required this.language,
     required this.renderingMode,
     required this.mediaReference,
     required String contentType,
@@ -60,6 +65,9 @@ final class StoryVoiceRendering extends ValueObject {
   final StoryExperiencePlanId experiencePlanId;
   final String experiencePlanProcessingVersion;
   final StoryRepresentationId sourceRepresentationId;
+
+  /// Language of the synthesized audio (typically the source transcript language).
+  final LanguageCode language;
   final VoiceRenderingMode renderingMode;
   final MediaReference mediaReference;
   final String contentType;
@@ -89,6 +97,7 @@ final class StoryVoiceRendering extends ValueObject {
         experiencePlanId,
         experiencePlanProcessingVersion,
         sourceRepresentationId,
+        language,
         renderingMode,
         mediaReference,
         contentType,

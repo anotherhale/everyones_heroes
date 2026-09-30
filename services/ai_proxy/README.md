@@ -13,7 +13,7 @@ vendor secrets (HS-ADR-067 / HS-ADR-068).
 | `POST` | `/story-authoring` | AI Story Proposal authoring (SB.11) |
 | `POST` | `/captured-story-readings` | Grounded Captured Story Reading (HS.12.3) |
 | `POST` | `/story-experience-plans` | Typed Story Experience Plan (HS.12.4) |
-| `POST` | `/story-voice-renderings` | Synthetic Story voice narration (HS.12.6) |
+| `POST` | `/story-voice-renderings` | Synthetic Story voice narration (HS.12.6 / HS-ADR-077) |
 | `POST` | `/experience-creative-directions` | Experiment A presentation creative direction |
 | `POST` | `/story-music-generations` | Experiment A Stable Audio instrumental bed |
 | `GET` | `/health` | Liveness (auth exempt; no OpenAI call) |
@@ -342,3 +342,51 @@ Response (JSON):
 
 Hero-authored content is the factual source of truth. Derived understanding is
 guidance only. The model must not invent facts or sourceResponseIds.
+
+## Story Voice Rendering contract (HS.12.6 / HS-ADR-077)
+
+`POST /story-voice-renderings`
+
+Provider-neutral **synthetic narration** only. Complete-file audio (base64).
+Voice cloning / VoiceProfile are out of scope and rejected when
+`renderingMode` is not `syntheticNarration`. Narration does not authorize cloning.
+
+Request (JSON, EH-owned):
+
+```json
+{
+  "storyId": "story-1",
+  "experiencePlanId": "plan-1",
+  "experiencePlanProcessingVersion": "hs12.4.v1",
+  "sourceRepresentationId": "transcript-1",
+  "sourceText": "Transcript or script text to narrate.",
+  "language": "en",
+  "renderingMode": "syntheticNarration",
+  "processingVersion": "hs12.6.v1",
+  "providerHint": "openai",
+  "modelHint": "tts-1"
+}
+```
+
+`language` is required (BCP 47). `providerHint` / `modelHint` are optional opaque
+infrastructure routing hints — not domain voice identities.
+
+Response (JSON):
+
+```json
+{
+  "storyId": "story-1",
+  "experiencePlanId": "plan-1",
+  "experiencePlanProcessingVersion": "hs12.4.v1",
+  "sourceRepresentationId": "transcript-1",
+  "language": "en",
+  "renderingMode": "syntheticNarration",
+  "audioBase64": "...",
+  "contentType": "audio/mpeg",
+  "providerLabel": "openai_tts_via_eh_proxy",
+  "modelLabel": "tts-1",
+  "processingVersion": "hs12.6.v1"
+}
+```
+
+Errors: `{"error":"..."}` with 400 / 401 / 502 / 500.

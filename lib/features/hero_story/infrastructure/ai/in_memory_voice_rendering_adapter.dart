@@ -6,6 +6,9 @@ import 'package:everyonesheroes/features/hero_story/domain/services/voice_render
 import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_voice_rendering.dart';
 
 /// Deterministic [VoiceRenderingPort] for tests and local development.
+///
+/// Produces a complete-file synthetic narration artifact without calling any
+/// commercial TTS vendor. Voice cloning is rejected.
 final class InMemoryVoiceRenderingAdapter implements VoiceRenderingPort {
   InMemoryVoiceRenderingAdapter({
     this.audioBytes,
@@ -47,14 +50,24 @@ final class InMemoryVoiceRenderingAdapter implements VoiceRenderingPort {
 
     final bytes = audioBytes ??
         Uint8List.fromList(
-          utf8.encode('FAKE-TTS:${request.storyId.value}:${text.hashCode}'),
+          utf8.encode(
+            'FAKE-TTS:${request.storyId.value}:'
+            '${request.language.value}:${text.hashCode}',
+          ),
         );
+    final providerLabel = request.providerHint?.trim().isNotEmpty == true
+        ? 'in_memory_${request.providerHint!.trim()}'
+        : 'in_memory_voice_rendering';
+    final modelLabel = request.modelHint?.trim().isNotEmpty == true
+        ? request.modelHint!.trim()
+        : 'fake-tts';
     return VoiceRenderingDraft(
       audioBytes: bytes,
       contentType: contentType,
+      language: request.language,
       renderingMode: VoiceRenderingMode.syntheticNarration,
-      providerLabel: 'in_memory_voice_rendering',
-      modelLabel: 'fake-tts',
+      providerLabel: providerLabel,
+      modelLabel: modelLabel,
       processingVersion: request.processingVersion ??
           StoryVoiceRendering.defaultProcessingVersion,
     );

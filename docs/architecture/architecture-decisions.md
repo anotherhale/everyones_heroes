@@ -2732,6 +2732,88 @@ See: `docs/architecture/HS.12-AI-Hero-Story-Demo-Plan.md`
 
 ---
 
+# HS-ADR-077 Provider-Neutral Synthetic Story Voice Rendering Contract
+
+Status: Accepted
+
+Date: 2026-09-30
+
+Phase: Voice Synthesis M1 — Synthetic Story Voice Rendering
+
+Decision:
+
+Extend the existing HS.12.6 / HS-ADR-076 voice-rendering architecture into a
+**provider-neutral synthetic narration contract** without introducing a parallel
+narration port, VoiceProfile, or cloning capability.
+
+## Architectural rule
+
+> Synthetic Story voice rendering is a derived presentation artifact behind
+> `VoiceRenderingPort`. Provider integration occurs only through the EH AI proxy.
+> Narration consent does not authorize voice cloning.
+
+## Contract
+
+Keep:
+
+- `VoiceRenderingPort` (do **not** introduce `StoryNarrationPort` /
+  `VoiceSynthesisPort`)
+- `POST /story-voice-renderings`
+- `StoryVoiceRendering` as the persisted derived artifact (not canonical Story)
+- `StoryConsent.voiceRenderingApprovedAt` for synthetic narration
+- Complete-file generation (no streaming in this milestone)
+- `InMemoryVoiceRenderingAdapter` for deterministic Flutter tests
+- Existing OpenAI speech client as the initial proxy TTS adapter
+
+Add to the EH-owned request/response and persisted artifact:
+
+- `language` (BCP 47) — language of the synthesized text/audio
+- optional opaque `providerHint` / `modelHint` — infrastructure routing only
+
+## Modes
+
+Still supported:
+
+- `syntheticNarration` only
+
+Still rejected:
+
+- `voiceClone`
+- `heroVoiceTransformation`
+
+Voice cloning remains a future milestone requiring a separate VoiceProfile
+capability and dedicated consent. Synthetic narration must never create or
+imply a cloned voice.
+
+## Architecture
+
+```text
+RenderStoryVoiceUseCase
+  → VoiceRenderingPort
+  → ProxyVoiceRenderingAdapter | InMemoryVoiceRenderingAdapter
+  → EH AI proxy POST /story-voice-renderings
+  → TTS adapter (OpenAI today; replaceable)
+  → complete audio bytes
+  → StoryVoiceRendering (+ StoryMediaStoragePort)
+```
+
+## Rejected
+
+- Parallel narration domain / ports
+- VoiceProfile / cloning / reference-audio enrollment in this milestone
+- Streaming / real-time synthesis
+- Vendor SDKs or credentials in Flutter / domain / application
+- Treating generated audio as canonical Story content
+- Treating AI-transformation or recording consent as narration consent
+- Treating narration consent as cloning consent
+
+See:
+
+- `docs/architecture/Voice-Synthesis-Voice-Cloning-Implementation-Plan.md`
+- `docs/architecture/HS.12.6-Voice-Rendering-Implementation-Report.md`
+
+---
+
 # D-ADR-001 Inspiring Hero Preference Downstream Semantics Are Not Yet Defined
 
 Status: Accepted — downstream semantics deferred / **Not Yet**

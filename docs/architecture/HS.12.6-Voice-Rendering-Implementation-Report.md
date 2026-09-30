@@ -115,3 +115,20 @@ cd services/ai_proxy && dart test
 - OpenAI TTS 4096-character input limit
 - Generated narration is standalone audio; experience player still defaults to original recording
 - No music generation, discovery, personalization, or behavioral evidence
+
+---
+
+## Addendum — HS-ADR-077 provider-neutral synthetic contract (2026-09-30)
+
+Synthetic Story voice rendering remains supported through the HS.12.6 path and
+is now explicitly language-aware and provider-neutral:
+
+- Rendering is represented by `StoryVoiceRendering` (derived artifact, not Story identity)
+- Provider integration occurs behind `VoiceRenderingPort`
+- The EH AI proxy (`POST /story-voice-renderings`) is the integration boundary
+- Complete-file generation is currently supported (no streaming)
+- Contract fields include `language` plus optional opaque `providerHint` / `modelHint`
+- Deterministic tests use `InMemoryVoiceRenderingAdapter` (no external TTS required)
+- Voice cloning remains a future capability and is **not** implicitly authorized by narration
+
+See: `docs/architecture/Voice-Synthesis-Voice-Cloning-Implementation-Plan.md`, HS-ADR-077.
