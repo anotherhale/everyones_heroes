@@ -35,12 +35,12 @@
   <link rel="manifest" href="manifest.json">
 
   <!--
-    Flutter Web on iOS Safari inserts a DOM <input>/<textarea> overlay while
-    editing. Safari defaults that overlay to an opaque white surface, which
-    hides Flutter's themed field and makes typed text appear invisible in
-    Dark Mode. Keep the overlay transparent and theme the DOM text/caret via
-    prefers-color-scheme so IME/QuickType remain native while contrast matches
-    the EH Material theme.
+    Flutter Web on iOS (Chrome, Safari, etc. — all WebKit) inserts a DOM
+    <input>/<textarea> overlay while editing. WebKit defaults that overlay to
+    an opaque white surface, which hides Flutter's themed field and makes typed
+    text appear invisible in Dark Mode. Keep the overlay transparent and theme
+    the DOM text/caret via prefers-color-scheme so IME/QuickType remain native
+    while contrast matches the EH Material theme.
   -->
   <style>
     html, body {

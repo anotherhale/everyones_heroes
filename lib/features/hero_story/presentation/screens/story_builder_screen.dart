@@ -459,8 +459,8 @@ class _QuestionBody extends StatelessWidget {
         final media = MediaQuery.of(context);
         final keyboardOpen =
             media.viewInsets.bottom > 0 || focusNode.hasFocus;
-        // iOS Safari's AutoFill accessory is often omitted from viewInsets on
-        // Flutter Web — reserve space so Continue is not trapped under it.
+        // iOS WebKit AutoFill accessory (Chrome/Safari) is often omitted from
+        // viewInsets on Flutter Web — reserve space so Continue stays visible.
         final webAutofillFudge =
             kIsWeb && focusNode.hasFocus ? media.viewPadding.bottom + 56 : 0.0;
         final progressLabel = state.isAiMode
