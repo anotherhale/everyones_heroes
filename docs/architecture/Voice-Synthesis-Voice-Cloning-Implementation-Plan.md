@@ -1,9 +1,9 @@
 # EH Voice Synthesis & Voice Cloning — Implementation Plan
 
-**Status:** M1 (provider-neutral synthetic narration contract) implemented — see HS-ADR-077; **HS.12.7 TTS provider spike complete** — see `HS.12.7-TTS-Provider-Benchmark.md` (decision point; no automatic production provider lock)  
+**Status:** M1 (provider-neutral synthetic narration contract) implemented — see HS-ADR-077; **HS.12.7 TTS provider spike complete** — see `HS.12.7-TTS-Provider-Benchmark.md`; **HS.12.8 Voice Identity & Cloning architecture spike complete** — see HS-ADR-078 / `HS.12.8-Voice-Identity-and-Cloning-Architecture-Spike.md` (no production cloning)  
 **Date:** 2026-09-30  
 **Audience:** Andy / architecture review  
-**Related:** HS-ADR-076, HS-ADR-077, HS.12.6, AI Experience Provider Laboratory Plan, HS.1 Foundation
+**Related:** HS-ADR-076, HS-ADR-077, HS-ADR-078, HS.12.6, HS.12.7, HS.12.8, AI Experience Provider Laboratory Plan, HS.1 Foundation
 
 ---
 
@@ -813,9 +813,12 @@ Story + consent + plan + transcript
 
 **Still future:**
 
-- V2 local-model spike (Qwen3 / CosyVoice)
-- V3 multi-provider router (`EH_TTS_PROVIDER`)
-- V5 VoiceProfile + cloning consent
+- ~~V2 local-model spike (Qwen3 / CosyVoice)~~ → **HS.12.7 complete** (Qwen3 CustomVoice measured; CosyVoice not verified; no provider lock)
+- ~~Voice identity / cloning architecture~~ → **HS.12.8 complete** (HS-ADR-078; skeletal `VoiceProfilePort`; no production cloning)
+- Multi-provider production hardening / provider lock (Andy approval)
+- **HS.12.9 Voice Profile Foundation** (aggregate + consent gates; still no production clone adapter by default)
+- V5 production cloning adapter enablement (`voiceClone` mode) after consent/product decisions
+- M4 Qwen operational benchmark (separate from architecture)
 
 **M1 success criteria met:**
 
