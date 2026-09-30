@@ -1,0 +1,44 @@
+[
+  {
+    "file": "english_narrative.wav",
+    "durationSec": 94.56,
+    "rmsNorm": 0.096,
+    "silenceRatio": 0.5,
+    "peak": 15732
+  },
+  {
+    "file": "english_short.wav",
+    "durationSec": 22.48,
+    "rmsNorm": 0.095,
+    "silenceRatio": 0.494,
+    "peak": 17948
+  },
+  {
+    "file": "multilingual_de.wav",
+    "durationSec": 4.32,
+    "rmsNorm": 0.164,
+    "silenceRatio": 0.376,
+    "peak": 18091
+  },
+  {
+    "file": "multilingual_en.wav",
+    "durationSec": 4.0,
+    "rmsNorm": 0.127,
+    "silenceRatio": 0.489,
+    "peak": 15941
+  },
+  {
+    "file": "multilingual_es.wav",
+    "durationSec": 6.24,
+    "rmsNorm": 0.13,
+    "silenceRatio": 0.433,
+    "peak": 17685
+  },
+  {
+    "file": "multilingual_fr.wav",
+    "durationSec": 8.48,
+    "rmsNorm": 0.079,
+    "silenceRatio": 0.78,
+    "peak": 17988
+  }
+]

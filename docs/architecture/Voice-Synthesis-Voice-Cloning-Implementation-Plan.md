@@ -1,6 +1,6 @@
 # EH Voice Synthesis & Voice Cloning — Implementation Plan
 
-**Status:** M1 (provider-neutral synthetic narration contract) implemented — see HS-ADR-077  
+**Status:** M1 (provider-neutral synthetic narration contract) implemented — see HS-ADR-077; **HS.12.7 TTS provider spike complete** — see `HS.12.7-TTS-Provider-Benchmark.md` (decision point; no automatic production provider lock)  
 **Date:** 2026-09-30  
 **Audience:** Andy / architecture review  
 **Related:** HS-ADR-076, HS-ADR-077, HS.12.6, AI Experience Provider Laboratory Plan, HS.1 Foundation

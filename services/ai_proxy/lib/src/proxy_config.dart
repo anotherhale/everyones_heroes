@@ -11,6 +11,9 @@ final class ProxyConfig {
     this.chatModel = 'gpt-4o-mini',
     this.speechModel = 'tts-1',
     this.speechVoice = 'alloy',
+    this.ttsProvider = 'openai',
+    this.allowTtsProviderHints = false,
+    this.localTtsBaseUrl,
     this.stabilityApiKey = '',
     this.stabilityBaseUrl = 'https://api.stability.ai',
     this.stabilityAudioModel = 'stable-audio-3',
@@ -28,6 +31,12 @@ final class ProxyConfig {
         'OPENAI_API_KEY is required for the production AI proxy.',
       );
     }
+    final ttsProvider =
+        (env['EH_TTS_PROVIDER']?.trim().isNotEmpty == true
+                ? env['EH_TTS_PROVIDER']!.trim()
+                : 'openai')
+            .toLowerCase();
+    final localTtsUrl = env['EH_LOCAL_TTS_URL']?.trim();
     return ProxyConfig(
       openAiApiKey: key,
       openAiBaseUrl: env['OPENAI_BASE_URL']?.trim().isNotEmpty == true
@@ -46,6 +55,11 @@ final class ProxyConfig {
       speechVoice: env['OPENAI_SPEECH_VOICE']?.trim().isNotEmpty == true
           ? env['OPENAI_SPEECH_VOICE']!.trim()
           : 'alloy',
+      ttsProvider: ttsProvider,
+      allowTtsProviderHints: _truthy(env['EH_TTS_ALLOW_PROVIDER_HINTS']),
+      localTtsBaseUrl: localTtsUrl != null && localTtsUrl.isNotEmpty
+          ? Uri.parse(localTtsUrl)
+          : null,
       stabilityApiKey: env['STABILITY_API_KEY']?.trim() ?? '',
       stabilityBaseUrl: env['STABILITY_BASE_URL']?.trim().isNotEmpty == true
           ? env['STABILITY_BASE_URL']!.trim()
@@ -67,12 +81,30 @@ final class ProxyConfig {
     );
   }
 
+  static bool _truthy(String? value) {
+    final normalized = value?.trim().toLowerCase() ?? '';
+    return normalized == '1' ||
+        normalized == 'true' ||
+        normalized == 'yes' ||
+        normalized == 'on';
+  }
+
   final String openAiApiKey;
   final String openAiBaseUrl;
   final String transcriptionModel;
   final String chatModel;
   final String speechModel;
   final String speechVoice;
+
+  /// Default TTS backend: `openai` | `qwen3` (HS.12.7).
+  /// `cosyvoice` remains a documented candidate but is not a verified adapter.
+  final String ttsProvider;
+
+  /// When true, opaque request `providerHint` may override [ttsProvider].
+  final bool allowTtsProviderHints;
+
+  /// Base URL for the local TTS Python sidecar (Qwen3 / CosyVoice).
+  final Uri? localTtsBaseUrl;
 
   /// Optional; required only when [StoryMusicGenerationHandler] is used live.
   final String stabilityApiKey;

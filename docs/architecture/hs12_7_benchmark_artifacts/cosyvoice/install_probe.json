@@ -1,0 +1,20 @@
+{
+  "status": "NOT_SUCCESSFULLY_TESTED",
+  "reason": "Official requirements are CUDA/TensorRT oriented; Fun-CosyVoice3-0.5B-2512 weights are ~9.75GB; community M4 report cites ~8GB RAM for the worker. Spike host is CPU-only Linux with no NVIDIA GPU. Forcing a full CosyVoice install was stopped per HS.12.7 stopping rule.",
+  "pythonRequirement": "3.10 (conda)",
+  "modelDownloadGb": 9.75,
+  "ttsfrdDownloadGb": 0.35,
+  "repoLicense": "Apache-2.0",
+  "modelLicenseHfCard": "apache-2.0",
+  "ttsfrdLicenseHfCard": "apache-2.0",
+  "blockingRequirementLines": [
+    "--extra-index-url https://download.pytorch.org/whl/cu121",
+    "deepspeed==0.15.1; sys_platform == 'linux'",
+    "onnxruntime-gpu==1.18.0; sys_platform == 'linux'",
+    "tensorrt-cu12==10.13.3.9; sys_platform == 'linux'",
+    "tensorrt-cu12-bindings==10.13.3.9; sys_platform == 'linux'",
+    "tensorrt-cu12-libs==10.13.3.9; sys_platform == 'linux'",
+    "torch==2.3.1"
+  ],
+  "appleSiliconNotes": "Upstream issue #134 open for MPS; community forks exist; drmhse/tts-funaudio reports RTF~0.76 on M4/16GB with ~8GB RAM worker \u2014 practical but tight and install-fragile."
+}

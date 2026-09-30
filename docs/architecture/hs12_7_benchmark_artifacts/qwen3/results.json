@@ -1,0 +1,135 @@
+{
+  "generatedAt": "2026-09-30T02:51:15Z",
+  "provider": "qwen3",
+  "model": "Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice",
+  "device": "cpu",
+  "hostNote": "Cloud Linux x86_64 CPU spike host (not Apple M4)",
+  "rows": [
+    {
+      "provider": "qwen3",
+      "model": "Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice",
+      "itemId": "english_short",
+      "language": "en",
+      "textChars": 259,
+      "startupSeconds": 2.3324914170000284,
+      "firstSynthesis": true,
+      "synthesisSeconds": 59.593,
+      "audioDurationSeconds": 22.48,
+      "realTimeFactor": 2.651,
+      "outputFormat": "audio/wav",
+      "sampleRateHz": 24000,
+      "fileSizeBytes": 1079084,
+      "memory": {
+        "processRssMb": 4676.2,
+        "systemAvailableMb": 4935.0
+      },
+      "audioPath": "/workspace/docs/architecture/hs12_7_benchmark_artifacts/qwen3/audio/english_short.wav",
+      "error": null
+    },
+    {
+      "provider": "qwen3",
+      "model": "Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice",
+      "itemId": "english_narrative",
+      "language": "en",
+      "textChars": 1215,
+      "startupSeconds": null,
+      "firstSynthesis": false,
+      "synthesisSeconds": 271.213,
+      "audioDurationSeconds": 94.56,
+      "realTimeFactor": 2.868,
+      "outputFormat": "audio/wav",
+      "sampleRateHz": 24000,
+      "fileSizeBytes": 4538924,
+      "memory": {
+        "processRssMb": 4971.9,
+        "systemAvailableMb": 4630.2
+      },
+      "audioPath": "/workspace/docs/architecture/hs12_7_benchmark_artifacts/qwen3/audio/english_narrative.wav",
+      "error": null
+    },
+    {
+      "provider": "qwen3",
+      "model": "Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice",
+      "itemId": "multilingual_en",
+      "language": "en",
+      "textChars": 54,
+      "startupSeconds": null,
+      "firstSynthesis": false,
+      "synthesisSeconds": 9.993,
+      "audioDurationSeconds": 4.0,
+      "realTimeFactor": 2.498,
+      "outputFormat": "audio/wav",
+      "sampleRateHz": 24000,
+      "fileSizeBytes": 192044,
+      "memory": {
+        "processRssMb": 4975.7,
+        "systemAvailableMb": 4688.8
+      },
+      "audioPath": "/workspace/docs/architecture/hs12_7_benchmark_artifacts/qwen3/audio/multilingual_en.wav",
+      "error": null
+    },
+    {
+      "provider": "qwen3",
+      "model": "Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice",
+      "itemId": "multilingual_es",
+      "language": "es",
+      "textChars": 64,
+      "startupSeconds": null,
+      "firstSynthesis": false,
+      "synthesisSeconds": 15.921,
+      "audioDurationSeconds": 6.24,
+      "realTimeFactor": 2.551,
+      "outputFormat": "audio/wav",
+      "sampleRateHz": 24000,
+      "fileSizeBytes": 299564,
+      "memory": {
+        "processRssMb": 4981.0,
+        "systemAvailableMb": 4656.3
+      },
+      "audioPath": "/workspace/docs/architecture/hs12_7_benchmark_artifacts/qwen3/audio/multilingual_es.wav",
+      "error": null
+    },
+    {
+      "provider": "qwen3",
+      "model": "Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice",
+      "itemId": "multilingual_fr",
+      "language": "fr",
+      "textChars": 67,
+      "startupSeconds": null,
+      "firstSynthesis": false,
+      "synthesisSeconds": 22.079,
+      "audioDurationSeconds": 8.48,
+      "realTimeFactor": 2.604,
+      "outputFormat": "audio/wav",
+      "sampleRateHz": 24000,
+      "fileSizeBytes": 407084,
+      "memory": {
+        "processRssMb": 4985.0,
+        "systemAvailableMb": 4653.1
+      },
+      "audioPath": "/workspace/docs/architecture/hs12_7_benchmark_artifacts/qwen3/audio/multilingual_fr.wav",
+      "error": null
+    },
+    {
+      "provider": "qwen3",
+      "model": "Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice",
+      "itemId": "multilingual_de",
+      "language": "de",
+      "textChars": 69,
+      "startupSeconds": null,
+      "firstSynthesis": false,
+      "synthesisSeconds": 10.678,
+      "audioDurationSeconds": 4.32,
+      "realTimeFactor": 2.472,
+      "outputFormat": "audio/wav",
+      "sampleRateHz": 24000,
+      "fileSizeBytes": 207404,
+      "memory": {
+        "processRssMb": 4987.7,
+        "systemAvailableMb": 4675.6
+      },
+      "audioPath": "/workspace/docs/architecture/hs12_7_benchmark_artifacts/qwen3/audio/multilingual_de.wav",
+      "error": null
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+# Qwen3-TTS synthetic narration deps for the EH local sidecar (HS.12.7).
+# Install into an isolated venv. CPU works but is slow; prefer MPS/CUDA when available.
+qwen-tts>=0.1.0
+soundfile>=0.12.1
+numpy>=1.24.0
+torch
+torchaudio

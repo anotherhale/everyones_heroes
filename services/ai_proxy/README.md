@@ -37,6 +37,10 @@ export EH_AI_PROXY_AUTH_TOKEN=dev-token
 # export OPENAI_CHAT_MODEL=gpt-4o-mini
 # export OPENAI_SPEECH_MODEL=tts-1
 # export OPENAI_SPEECH_VOICE=alloy
+# HS.12.7 — provider selection stays in the proxy (not Flutter):
+# export EH_TTS_PROVIDER=openai   # openai | qwen3 | cosyvoice
+# export EH_TTS_ALLOW_PROVIDER_HINTS=false
+# export EH_LOCAL_TTS_URL=http://127.0.0.1:8791
 # export STABILITY_API_KEY=sk-...
 # export STABILITY_BASE_URL=https://api.stability.ai
 # export STABILITY_AUDIO_MODEL=stable-audio-3
@@ -390,3 +394,23 @@ Response (JSON):
 ```
 
 Errors: `{"error":"..."}` with 400 / 401 / 502 / 500.
+
+### HS.12.7 provider selection (proxy only)
+
+Provider switching stays inside this service. Flutter continues to call only
+`POST /story-voice-renderings` via `VoiceRenderingPort`.
+
+| Variable | Values | Notes |
+|----------|--------|-------|
+| `EH_TTS_PROVIDER` | `openai` (default), `qwen3` | Verified adapters |
+| `EH_TTS_ALLOW_PROVIDER_HINTS` | `false` (default) / `true` | Lab-only hint override |
+| `EH_LOCAL_TTS_URL` | e.g. `http://127.0.0.1:8791` | Required when provider is `qwen3` |
+
+`cosyvoice` was investigated in HS.12.7 but **not** successfully verified; selecting
+it returns a 502 with an explicit verification failure message.
+
+Local sidecar (Python): `services/ai_proxy/tts_sidecar/`
+
+Reproducible benchmark: `dart run tool/tts_benchmark/run_benchmark.dart`
+
+See: `docs/architecture/HS.12.7-TTS-Provider-Benchmark.md`
