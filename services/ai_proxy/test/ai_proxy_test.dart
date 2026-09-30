@@ -983,6 +983,79 @@ void main() {
     expect(config.speechVoice, 'nova');
   });
 
+  test('ProxyConfig reads EH_TTS_PROVIDER and local sidecar URL', () {
+    final config = ProxyConfig.fromEnvironment(
+      environment: {
+        'OPENAI_API_KEY': 'k',
+        'EH_TTS_PROVIDER': 'qwen3',
+        'EH_TTS_ALLOW_PROVIDER_HINTS': 'true',
+        'EH_LOCAL_TTS_URL': 'http://127.0.0.1:8791',
+      },
+    );
+    expect(config.ttsProvider, 'qwen3');
+    expect(config.allowTtsProviderHints, isTrue);
+    expect(config.localTtsBaseUrl, Uri.parse('http://127.0.0.1:8791'));
+  });
+
+  test('TtsProviderResolver selects OpenAI by default', () {
+    final speech = _FakeSpeechClient();
+    final resolver = TtsProviderResolver(
+      config: const ProxyConfig(openAiApiKey: 'k'),
+      openAiSpeechClient: speech,
+    );
+    expect(resolver.resolve().providerKey, 'openai');
+  });
+
+  test('TtsProviderResolver honors providerHint only when allowed', () {
+    final speech = _FakeSpeechClient();
+    final qwen = _RecordingTtsProvider('qwen3');
+    final denied = TtsProviderResolver(
+      config: const ProxyConfig(openAiApiKey: 'k', ttsProvider: 'openai'),
+      openAiSpeechClient: speech,
+      qwen3Provider: qwen,
+    );
+    expect(denied.resolve(providerHint: 'qwen3').providerKey, 'openai');
+
+    final allowed = TtsProviderResolver(
+      config: const ProxyConfig(
+        openAiApiKey: 'k',
+        ttsProvider: 'openai',
+        allowTtsProviderHints: true,
+      ),
+      openAiSpeechClient: speech,
+      qwen3Provider: qwen,
+    );
+    expect(allowed.resolve(providerHint: 'qwen3').providerKey, 'qwen3');
+  });
+
+  test('TtsProviderResolver rejects unknown provider keys', () {
+    final resolver = TtsProviderResolver(
+      config: const ProxyConfig(openAiApiKey: 'k', ttsProvider: 'nope'),
+      openAiSpeechClient: _FakeSpeechClient(),
+    );
+    expect(
+      () => resolver.resolve(),
+      throwsA(isA<TtsProviderException>()),
+    );
+  });
+
+  test('TtsProviderResolver fails closed for unverified cosyvoice', () {
+    final resolver = TtsProviderResolver(
+      config: const ProxyConfig(openAiApiKey: 'k', ttsProvider: 'cosyvoice'),
+      openAiSpeechClient: _FakeSpeechClient(),
+    );
+    expect(
+      () => resolver.resolve(),
+      throwsA(
+        isA<TtsProviderException>().having(
+          (e) => e.message,
+          'message',
+          contains('not successfully verified'),
+        ),
+      ),
+    );
+  });
+
   test('ProxyConfig prefers EH_AI_PROXY_PORT over PORT', () {
     final config = ProxyConfig.fromEnvironment(
       environment: {
@@ -1226,7 +1299,7 @@ void main() {
       );
     });
 
-    test('echoes opaque provider/model hints without requiring cloning',
+    test('echoes opaque model hints; providerLabel reflects resolved provider',
         () async {
       speech.audioBytes = utf8.encode('hinted-audio');
       final response = await handler.handleRender(
@@ -1244,10 +1317,42 @@ void main() {
       expect(response.statusCode, 200);
       final decoded =
           jsonDecode(await response.readAsString()) as Map<String, dynamic>;
-      expect(decoded['providerLabel'], 'openai_via_eh_proxy');
+      // Hints are ignored for routing unless EH_TTS_ALLOW_PROVIDER_HINTS=true;
+      // provenance always names the resolved infrastructure provider.
+      expect(decoded['providerLabel'], 'openai_tts_via_eh_proxy');
       expect(decoded['modelLabel'], 'tts-1-hd');
       expect(decoded['language'], 'en');
       expect(decoded['renderingMode'], 'syntheticNarration');
+    });
+
+    test('maps TtsProvider failures to 502 without leaking internals', () async {
+      final failing = _FailingTtsProvider();
+      final routed = StoryVoiceRenderingHandler(
+        config: const ProxyConfig(
+          openAiApiKey: 'k',
+          ttsProvider: 'qwen3',
+          localTtsBaseUrl: null,
+        ),
+        ttsResolver: TtsProviderResolver(
+          config: const ProxyConfig(
+            openAiApiKey: 'k',
+            ttsProvider: 'qwen3',
+          ),
+          openAiProvider: OpenAiTtsProvider(client: speech),
+          qwen3Provider: failing,
+        ),
+      );
+      final response = await routed.handleRender(
+        Request(
+          'POST',
+          Uri.parse('http://localhost/story-voice-renderings'),
+          body: jsonEncode(requestBody()),
+        ),
+      );
+      expect(response.statusCode, 502);
+      final decoded = jsonDecode(await response.readAsString()) as Map;
+      expect(decoded['error'], 'model unavailable for spike test');
+      expect(decoded['error'], isNot(contains('Traceback')));
     });
 
     test('maps provider failure to 502', () async {
@@ -1350,5 +1455,31 @@ final class _FakeSpeechClient extends OpenAiSpeechClient {
       model: 'tts-1',
       voice: 'alloy',
     );
+  }
+}
+
+final class _RecordingTtsProvider implements TtsProvider {
+  _RecordingTtsProvider(this.providerKey);
+
+  @override
+  final String providerKey;
+
+  @override
+  Future<TtsSynthesisResult> synthesize(TtsSynthesisRequest request) async {
+    return TtsSynthesisResult(
+      audioBytes: utf8.encode('local-$providerKey'),
+      contentType: 'audio/wav',
+      modelLabel: providerKey,
+    );
+  }
+}
+
+final class _FailingTtsProvider implements TtsProvider {
+  @override
+  String get providerKey => 'qwen3';
+
+  @override
+  Future<TtsSynthesisResult> synthesize(TtsSynthesisRequest request) async {
+    throw const TtsProviderException('model unavailable for spike test');
   }
 }

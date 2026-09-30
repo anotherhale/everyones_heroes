@@ -2,6 +2,8 @@ import 'dart:convert';
 
 import 'package:ai_proxy/src/openai_speech_client.dart';
 import 'package:ai_proxy/src/proxy_config.dart';
+import 'package:ai_proxy/src/tts/tts_provider.dart';
+import 'package:ai_proxy/src/tts/tts_provider_resolver.dart';
 import 'package:shelf/shelf.dart';
 import 'package:shelf_router/shelf_router.dart';
 
@@ -12,22 +14,23 @@ import 'package:shelf_router/shelf_router.dart';
 /// rewrite Story content, invent psychological claims, or perform voice cloning.
 ///
 /// Provider selection is infrastructure-side (env / opaque hints). Domain never
-/// depends on a specific TTS vendor.
+/// depends on a specific TTS vendor. HS.12.7 adds an internal [TtsProvider]
+/// resolver (`openai` / `qwen3` / `cosyvoice`) that stays inside this proxy.
 final class StoryVoiceRenderingHandler {
   StoryVoiceRenderingHandler({
     required ProxyConfig config,
+    TtsProviderResolver? ttsResolver,
+    @Deprecated('Use ttsResolver / TtsProvider; retained for existing tests')
     OpenAiSpeechClient? client,
   })  : _config = config,
-        _client = client ??
-            OpenAiSpeechClient(
-              apiKey: config.openAiApiKey,
-              baseUrl: config.openAiBaseUrl,
-              model: config.speechModel,
-              voice: config.speechVoice,
+        _ttsResolver = ttsResolver ??
+            TtsProviderResolver(
+              config: config,
+              openAiSpeechClient: client,
             );
 
   final ProxyConfig _config;
-  final OpenAiSpeechClient _client;
+  final TtsProviderResolver _ttsResolver;
 
   static const supportedMode = 'syntheticNarration';
   static final RegExp _languagePattern =
@@ -124,23 +127,27 @@ final class StoryVoiceRenderingHandler {
       );
     }
 
-    // Opaque routing hints are accepted for future multi-provider selection.
-    // This milestone still synthesizes via the configured OpenAI speech client.
+    // Opaque routing hints are accepted for infrastructure selection only.
     final providerHint = (payload['providerHint'] as String?)?.trim();
     final modelHint = (payload['modelHint'] as String?)?.trim();
 
     try {
-      final result = await _client.synthesize(text: sourceText);
+      final provider = _ttsResolver.resolve(providerHint: providerHint);
+      final result = await provider.synthesize(
+        TtsSynthesisRequest(
+          text: sourceText,
+          language: languageRaw,
+          modelHint: modelHint,
+        ),
+      );
       if (result.audioBytes.isEmpty) {
         return _error(502, 'Provider returned empty audio.');
       }
 
-      final providerLabel = (providerHint != null && providerHint.isNotEmpty)
-          ? '${providerHint}_via_eh_proxy'
-          : 'openai_tts_via_eh_proxy';
+      final providerLabel = '${provider.providerKey}_tts_via_eh_proxy';
       final modelLabel = (modelHint != null && modelHint.isNotEmpty)
           ? modelHint
-          : result.model;
+          : result.modelLabel;
 
       return Response.ok(
         jsonEncode({
@@ -169,6 +176,8 @@ final class StoryVoiceRenderingHandler {
         }),
         headers: {'content-type': 'application/json'},
       );
+    } on TtsProviderException catch (e) {
+      return _error(502, e.message);
     } on OpenAiSpeechException catch (e) {
       return _error(502, e.message);
     } catch (e) {

@@ -24,3 +24,7 @@ export 'src/story_transcription_handler.dart';
 export 'src/story_understanding_handler.dart';
 export 'src/story_understanding_instructions.dart';
 export 'src/story_voice_rendering_handler.dart';
+export 'src/tts/local_http_tts_provider.dart';
+export 'src/tts/openai_tts_provider.dart';
+export 'src/tts/tts_provider.dart';
+export 'src/tts/tts_provider_resolver.dart';
