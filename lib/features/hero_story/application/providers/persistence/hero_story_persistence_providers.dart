@@ -12,6 +12,7 @@ import 'package:everyonesheroes/features/hero_story/domain/repositories/experien
 import 'package:everyonesheroes/features/hero_story/application/lab/experience_render_manifest_repository.dart';
 import 'package:everyonesheroes/features/hero_story/domain/repositories/hero_repository.dart';
 import 'package:everyonesheroes/features/hero_story/domain/repositories/music_rendering_repository.dart';
+import 'package:everyonesheroes/features/hero_story/domain/repositories/story_builder_script_repository.dart';
 import 'package:everyonesheroes/features/hero_story/domain/repositories/story_builder_session_repository.dart';
 import 'package:everyonesheroes/features/hero_story/domain/repositories/story_experience_plan_repository.dart';
 import 'package:everyonesheroes/features/hero_story/domain/repositories/story_proposal_repository.dart';
@@ -25,6 +26,7 @@ import 'package:everyonesheroes/features/hero_story/infrastructure/repositories/
 import 'package:everyonesheroes/features/hero_story/infrastructure/repositories/file_experience_render_manifest_repository.dart';
 import 'package:everyonesheroes/features/hero_story/infrastructure/repositories/file_hero_repository.dart';
 import 'package:everyonesheroes/features/hero_story/infrastructure/repositories/file_music_rendering_repository.dart';
+import 'package:everyonesheroes/features/hero_story/infrastructure/repositories/file_story_builder_script_repository.dart';
 import 'package:everyonesheroes/features/hero_story/infrastructure/repositories/file_story_builder_session_repository.dart';
 import 'package:everyonesheroes/features/hero_story/infrastructure/repositories/file_story_experience_plan_repository.dart';
 import 'package:everyonesheroes/features/hero_story/infrastructure/repositories/file_story_proposal_repository.dart';
@@ -79,6 +81,9 @@ final class HeroStoryDurablePersistence {
       storyProposalRepository = FileStoryProposalRepository(
         rootDirectory: rootDirectory,
       ),
+      storyBuilderScriptRepository = FileStoryBuilderScriptRepository(
+        rootDirectory: rootDirectory,
+      ),
       capturedStoryReadingRepository = FileCapturedStoryReadingRepository(
         rootDirectory: rootDirectory,
       ),
@@ -119,6 +124,7 @@ final class HeroStoryDurablePersistence {
   final StoryRepository storyRepository;
   final StoryBuilderSessionRepository storyBuilderSessionRepository;
   final StoryProposalRepository storyProposalRepository;
+  final StoryBuilderScriptRepository storyBuilderScriptRepository;
   final CapturedStoryReadingRepository capturedStoryReadingRepository;
   final StoryExperiencePlanRepository storyExperiencePlanRepository;
   final StoryVoiceRenderingRepository storyVoiceRenderingRepository;

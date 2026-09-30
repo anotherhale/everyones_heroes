@@ -2,13 +2,18 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:everyonesheroes/core/ids/story_builder_response_id.dart';
+import 'package:everyonesheroes/core/ids/story_builder_script_id.dart';
 import 'package:everyonesheroes/core/ids/story_builder_session_id.dart';
 import 'package:everyonesheroes/core/ids/story_proposal_id.dart';
 import 'package:everyonesheroes/core/results/failure.dart';
 import 'package:everyonesheroes/core/results/success.dart';
 import 'package:everyonesheroes/features/hero_story/application/dto/requests/advance_story_builder_request.dart';
 import 'package:everyonesheroes/features/hero_story/application/dto/requests/answer_story_builder_prompt_request.dart';
+import 'package:everyonesheroes/features/hero_story/application/dto/requests/approve_story_builder_script_request.dart';
 import 'package:everyonesheroes/features/hero_story/application/dto/requests/approve_story_proposal_request.dart';
+import 'package:everyonesheroes/features/hero_story/application/dto/requests/edit_story_builder_script_request.dart';
+import 'package:everyonesheroes/features/hero_story/application/dto/requests/generate_story_builder_script_request.dart';
+import 'package:everyonesheroes/features/hero_story/application/dto/requests/materialize_story_builder_script_request.dart';
 import 'package:everyonesheroes/features/hero_story/application/dto/requests/materialize_story_proposal_request.dart';
 import 'package:everyonesheroes/features/hero_story/application/dto/requests/begin_story_proposal_revision_request.dart';
 import 'package:everyonesheroes/features/hero_story/application/dto/requests/build_story_proposal_request.dart';
@@ -22,18 +27,21 @@ import 'package:everyonesheroes/features/hero_story/application/dto/requests/sta
 import 'package:everyonesheroes/features/hero_story/application/dto/requests/story_builder_session_id_request.dart';
 import 'package:everyonesheroes/features/hero_story/application/dto/responses/advance_story_builder_result.dart';
 import 'package:everyonesheroes/features/hero_story/application/providers/hero/active_local_hero_provider.dart';
+import 'package:everyonesheroes/features/hero_story/application/providers/repositories/story_builder_script_repository_provider.dart';
 import 'package:everyonesheroes/features/hero_story/application/providers/repositories/story_proposal_repository_provider.dart';
 import 'package:everyonesheroes/features/hero_story/application/providers/repositories/story_repository_provider.dart';
 import 'package:everyonesheroes/features/hero_story/application/providers/use_cases/story_builder_use_case_providers.dart';
 import 'package:everyonesheroes/features/hero_story/domain/aggregates/story.dart';
 import 'package:everyonesheroes/features/hero_story/domain/aggregates/story_builder_session.dart';
 import 'package:everyonesheroes/features/hero_story/domain/enums/story_builder_mode.dart';
+import 'package:everyonesheroes/features/hero_story/domain/enums/story_builder_script_status.dart';
 import 'package:everyonesheroes/features/hero_story/domain/enums/story_builder_session_status.dart';
 import 'package:everyonesheroes/features/hero_story/domain/enums/story_proposal_derivation_kind.dart';
 import 'package:everyonesheroes/features/hero_story/domain/enums/story_proposal_lifecycle_status.dart';
 import 'package:everyonesheroes/features/hero_story/domain/enums/story_shaper_mode.dart';
 import 'package:everyonesheroes/features/hero_story/domain/services/deterministic_story_builder_catalog.dart';
 import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_builder_intent.dart';
+import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_builder_script.dart';
 import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_builder_prompt.dart';
 import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_builder_response.dart';
 import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_proposal.dart';
@@ -44,6 +52,9 @@ enum StoryBuilderUiPhase {
   thinking,
   questioning,
   completed,
+  generatingScript,
+  scriptReview,
+  scriptApproved,
   proposalPreview,
   storyCreated,
   error,
@@ -70,6 +81,9 @@ final class StoryBuilderUiState {
     this.canonicalProposalId,
     this.showingOriginalProposal = false,
     this.materializedStory,
+    this.script,
+    this.scriptDraftText = '',
+    this.isEditingScript = false,
   });
 
   final StoryBuilderUiPhase phase;
@@ -98,6 +112,15 @@ final class StoryBuilderUiState {
 
   /// Canonical Story created after approval (SB.13).
   final Story? materializedStory;
+
+  /// Durable Story Builder script (SB.8).
+  final StoryBuilderScript? script;
+
+  /// In-progress script editor buffer.
+  final String scriptDraftText;
+
+  /// Whether the script review UI is in edit mode.
+  final bool isEditingScript;
 
   int get displayStep => promptIndex + 1;
 
@@ -154,6 +177,10 @@ final class StoryBuilderUiState {
     bool? showingOriginalProposal,
     Story? materializedStory,
     bool clearMaterializedStory = false,
+    StoryBuilderScript? script,
+    bool clearScript = false,
+    String? scriptDraftText,
+    bool? isEditingScript,
   }) {
     return StoryBuilderUiState(
       phase: phase ?? this.phase,
@@ -180,6 +207,9 @@ final class StoryBuilderUiState {
       materializedStory: clearMaterializedStory
           ? null
           : (materializedStory ?? this.materializedStory),
+      script: clearScript ? null : (script ?? this.script),
+      scriptDraftText: scriptDraftText ?? this.scriptDraftText,
+      isEditingScript: isEditingScript ?? this.isEditingScript,
     );
   }
 }
@@ -260,6 +290,48 @@ final class StoryBuilderController extends Notifier<StoryBuilderUiState> {
     final session = (loaded as Success<StoryBuilderSession>).value;
     state = state.copyWith(mode: session.mode);
     if (session.status == StoryBuilderSessionStatus.completed) {
+      final resumedScript = await ref
+          .read(storyBuilderScriptRepositoryProvider)
+          .findLatestBySessionId(sessionId);
+      if (resumedScript != null) {
+        if (resumedScript.materializedStoryId != null) {
+          final story = await ref
+              .read(storyRepositoryProvider)
+              .findById(resumedScript.materializedStoryId!);
+          if (story != null) {
+            state = state.copyWith(
+              phase: StoryBuilderUiPhase.storyCreated,
+              script: resumedScript,
+              scriptDraftText: resumedScript.content,
+              isEditingScript: false,
+              materializedStory: story,
+              isBusy: false,
+              clearPrompt: true,
+            );
+            return;
+          }
+        }
+        if (resumedScript.isApproved) {
+          state = state.copyWith(
+            phase: StoryBuilderUiPhase.scriptApproved,
+            script: resumedScript,
+            scriptDraftText: resumedScript.content,
+            isEditingScript: false,
+            isBusy: false,
+            clearPrompt: true,
+          );
+          return;
+        }
+        state = state.copyWith(
+          phase: StoryBuilderUiPhase.scriptReview,
+          script: resumedScript,
+          scriptDraftText: resumedScript.content,
+          isEditingScript: false,
+          isBusy: false,
+          clearPrompt: true,
+        );
+        return;
+      }
       final resumedProposal = await _loadLatestProposal(sessionId);
       if (resumedProposal != null) {
         if (resumedProposal.materializedStoryId != null) {
@@ -1004,6 +1076,188 @@ final class StoryBuilderController extends Notifier<StoryBuilderUiState> {
       clearError: true,
       showingOriginalProposal: false,
       clearMaterializedStory: true,
+    );
+    return true;
+  }
+
+
+  /// SB.8 primary path: generate a durable Story Script from the session.
+  Future<void> createMyStory({bool replaceExistingDraft = false}) async {
+    final sessionId = state.sessionId;
+    if (sessionId == null || state.isBusy) {
+      return;
+    }
+    if (state.script?.heroEdited == true &&
+        state.script!.isDraft &&
+        replaceExistingDraft &&
+        !state.isBusy) {
+      // Caller must pass confirm via regenerateScript().
+    }
+    state = state.copyWith(
+      phase: StoryBuilderUiPhase.generatingScript,
+      isBusy: true,
+      clearError: true,
+    );
+    final result =
+        await ref.read(generateStoryBuilderScriptUseCaseProvider).execute(
+              GenerateStoryBuilderScriptRequest(
+                sessionId: sessionId,
+                replaceExistingDraft: replaceExistingDraft,
+                confirmDiscardHeroEdits: replaceExistingDraft,
+              ),
+            );
+    if (result is Failure) {
+      state = state.copyWith(
+        phase: StoryBuilderUiPhase.completed,
+        isBusy: false,
+        errorMessage: (result as Failure).error,
+      );
+      return;
+    }
+    final script = (result as Success<StoryBuilderScript>).value;
+    state = state.copyWith(
+      phase: StoryBuilderUiPhase.scriptReview,
+      script: script,
+      scriptDraftText: script.content,
+      isEditingScript: false,
+      isBusy: false,
+      clearError: true,
+    );
+  }
+
+  void beginScriptEdit() {
+    final script = state.script;
+    if (script == null) return;
+    state = state.copyWith(
+      phase: StoryBuilderUiPhase.scriptReview,
+      isEditingScript: true,
+      scriptDraftText: script.content,
+      clearError: true,
+    );
+  }
+
+  void updateScriptDraft(String text) {
+    state = state.copyWith(scriptDraftText: text);
+  }
+
+  void cancelScriptEdit() {
+    final script = state.script;
+    state = state.copyWith(
+      isEditingScript: false,
+      scriptDraftText: script?.content ?? state.scriptDraftText,
+      clearError: true,
+    );
+  }
+
+  Future<bool> saveScriptEdits() async {
+    final script = state.script;
+    if (script == null || state.isBusy) return false;
+    state = state.copyWith(isBusy: true, clearError: true);
+    final result =
+        await ref.read(editStoryBuilderScriptUseCaseProvider).execute(
+              EditStoryBuilderScriptRequest(
+                scriptId: script.id,
+                content: state.scriptDraftText,
+              ),
+            );
+    if (result is Failure) {
+      state = state.copyWith(
+        isBusy: false,
+        errorMessage: (result as Failure).error,
+      );
+      return false;
+    }
+    final edited = (result as Success<StoryBuilderScript>).value;
+    state = state.copyWith(
+      phase: StoryBuilderUiPhase.scriptReview,
+      script: edited,
+      scriptDraftText: edited.content,
+      isEditingScript: false,
+      isBusy: false,
+      clearError: true,
+    );
+    return true;
+  }
+
+  /// Regenerates a new draft. Requires confirmation when Hero edits exist.
+  Future<void> regenerateScript({bool confirmDiscardHeroEdits = false}) async {
+    final script = state.script;
+    if (script != null && script.heroEdited && !confirmDiscardHeroEdits) {
+      state = state.copyWith(
+        errorMessage:
+            'Regenerating would replace your edits. Confirm to continue.',
+      );
+      return;
+    }
+    await createMyStory(replaceExistingDraft: true);
+  }
+
+  /// Approves the script, then materializes the Story (retryable).
+  Future<bool> approveScript() async {
+    final script = state.script;
+    if (script == null || state.isBusy) return false;
+    state = state.copyWith(isBusy: true, clearError: true);
+    final approveResult =
+        await ref.read(approveStoryBuilderScriptUseCaseProvider).execute(
+              ApproveStoryBuilderScriptRequest(scriptId: script.id),
+            );
+    if (approveResult is Failure) {
+      state = state.copyWith(
+        isBusy: false,
+        errorMessage: (approveResult as Failure).error,
+      );
+      return false;
+    }
+    final approved = (approveResult as Success<StoryBuilderScript>).value;
+    state = state.copyWith(
+      phase: StoryBuilderUiPhase.scriptApproved,
+      script: approved,
+      scriptDraftText: approved.content,
+      isEditingScript: false,
+      clearError: true,
+    );
+    return materializeApprovedScript();
+  }
+
+  /// Creates the Story from an approved script. Safe to retry.
+  Future<bool> materializeApprovedScript() async {
+    final script = state.script;
+    if (script == null) return false;
+    if (script.status != StoryBuilderScriptStatus.approved) {
+      state = state.copyWith(
+        isBusy: false,
+        errorMessage:
+            'Only an approved story script can be created as a Story.',
+      );
+      return false;
+    }
+    state = state.copyWith(isBusy: true, clearError: true);
+    final result =
+        await ref.read(materializeStoryBuilderScriptUseCaseProvider).execute(
+              MaterializeStoryBuilderScriptRequest(scriptId: script.id),
+            );
+    if (result is Failure) {
+      final refreshed = await ref
+          .read(storyBuilderScriptRepositoryProvider)
+          .findById(script.id);
+      state = state.copyWith(
+        phase: StoryBuilderUiPhase.scriptApproved,
+        script: refreshed ?? script,
+        isBusy: false,
+        errorMessage: (result as Failure).error,
+      );
+      return false;
+    }
+    final story = (result as Success<Story>).value;
+    final refreshed = await ref
+        .read(storyBuilderScriptRepositoryProvider)
+        .findById(script.id);
+    state = state.copyWith(
+      phase: StoryBuilderUiPhase.storyCreated,
+      script: refreshed ?? script,
+      materializedStory: story,
+      isBusy: false,
+      clearError: true,
     );
     return true;
   }

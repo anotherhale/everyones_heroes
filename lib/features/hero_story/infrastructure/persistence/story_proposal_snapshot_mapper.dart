@@ -1,4 +1,5 @@
 import 'package:everyonesheroes/core/ids/story_builder_response_id.dart';
+import 'package:everyonesheroes/core/ids/story_builder_script_id.dart';
 import 'package:everyonesheroes/core/ids/story_builder_session_id.dart';
 import 'package:everyonesheroes/core/ids/story_id.dart';
 import 'package:everyonesheroes/core/ids/story_proposal_id.dart';
@@ -351,6 +352,7 @@ final class StoryProposalSnapshotMapper {
       'understandingKind': provenance.understandingKind?.name,
       'understandingProcessingVersion':
           provenance.understandingProcessingVersion,
+      'sourceScriptId': provenance.sourceScriptId?.value,
     };
   }
 
@@ -363,6 +365,7 @@ final class StoryProposalSnapshotMapper {
     final understandingKind = json['understandingKind'];
     final understandingProcessingVersion =
         json['understandingProcessingVersion'];
+    final sourceScriptId = json['sourceScriptId'];
 
     if (sessionId is! String || sessionId.isEmpty) {
       throw const FormatException('Invalid provenance.sessionId.');
@@ -382,6 +385,10 @@ final class StoryProposalSnapshotMapper {
         'Invalid provenance.understandingProcessingVersion.',
       );
     }
+    if (sourceScriptId != null &&
+        (sourceScriptId is! String || sourceScriptId.isEmpty)) {
+      throw const FormatException('Invalid provenance.sourceScriptId.');
+    }
 
     return StoryProposalProvenance(
       sessionId: StoryBuilderSessionId(sessionId),
@@ -394,6 +401,9 @@ final class StoryProposalSnapshotMapper {
             ),
       understandingProcessingVersion:
           understandingProcessingVersion as String?,
+      sourceScriptId: sourceScriptId is String
+          ? StoryBuilderScriptId(sourceScriptId)
+          : null,
     );
   }
 
