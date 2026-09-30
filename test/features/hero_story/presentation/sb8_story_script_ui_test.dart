@@ -33,7 +33,6 @@ import 'package:everyonesheroes/features/hero_story/infrastructure/repositories/
 import 'package:everyonesheroes/features/hero_story/infrastructure/repositories/in_memory_story_builder_session_repository.dart';
 import 'package:everyonesheroes/features/hero_story/infrastructure/repositories/in_memory_story_proposal_repository.dart';
 import 'package:everyonesheroes/features/hero_story/infrastructure/repositories/in_memory_story_repository.dart';
-import 'package:everyonesheroes/features/hero_story/presentation/providers/story_builder_controller.dart';
 import 'package:everyonesheroes/features/hero_story/presentation/screens/story_builder_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
