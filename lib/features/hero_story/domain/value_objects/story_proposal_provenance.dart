@@ -1,3 +1,4 @@
+import 'package:everyonesheroes/core/ids/story_builder_script_id.dart';
 import 'package:everyonesheroes/core/ids/story_builder_session_id.dart';
 import 'package:everyonesheroes/core/shared_kernel/value_object.dart';
 import 'package:everyonesheroes/features/hero_story/domain/enums/story_builder_understanding_kind.dart';
@@ -8,6 +9,8 @@ import 'package:everyonesheroes/features/hero_story/domain/enums/story_proposal_
 /// Answers: "Where did this proposal come from?" → [sessionId] (and derivation
 /// metadata). Does not duplicate the session; does not invent a second
 /// provenance system beyond session linkage + derivation kind.
+///
+/// SB.8: optional [sourceScriptId] preserves Session → Script → Proposal.
 final class StoryProposalProvenance extends ValueObject {
   StoryProposalProvenance({
     required this.sessionId,
@@ -15,6 +18,7 @@ final class StoryProposalProvenance extends ValueObject {
     required this.processingVersion,
     this.understandingKind,
     this.understandingProcessingVersion,
+    this.sourceScriptId,
   }) {
     if (processingVersion.trim().isEmpty) {
       throw ArgumentError('processingVersion cannot be empty.');
@@ -39,6 +43,9 @@ final class StoryProposalProvenance extends ValueObject {
   /// Processing version of that Understanding snapshot, if any.
   final String? understandingProcessingVersion;
 
+  /// Approved/draft Story Builder script that supplied narrative content (SB.8).
+  final StoryBuilderScriptId? sourceScriptId;
+
   @override
   List<Object?> get equalityProps => [
     sessionId,
@@ -46,5 +53,6 @@ final class StoryProposalProvenance extends ValueObject {
     processingVersion,
     understandingKind,
     understandingProcessingVersion,
+    sourceScriptId,
   ];
 }

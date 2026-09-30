@@ -3,18 +3,24 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:everyonesheroes/core/eventing/event_providers.dart';
 import 'package:everyonesheroes/features/hero_story/application/providers/ai/story_authoring_port_provider.dart';
 import 'package:everyonesheroes/features/hero_story/application/providers/ai/story_builder_understanding_port_provider.dart';
+import 'package:everyonesheroes/features/hero_story/application/providers/ai/story_script_generator_provider.dart';
+import 'package:everyonesheroes/features/hero_story/application/providers/repositories/story_builder_script_repository_provider.dart';
 import 'package:everyonesheroes/features/hero_story/application/providers/repositories/story_builder_session_repository_provider.dart';
 import 'package:everyonesheroes/features/hero_story/application/providers/repositories/story_proposal_repository_provider.dart';
 import 'package:everyonesheroes/features/hero_story/application/providers/story_builder/story_builder_question_strategy_provider.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/abandon_story_builder_session_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/advance_story_builder_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/answer_story_builder_prompt_use_case.dart';
+import 'package:everyonesheroes/features/hero_story/application/use_cases/approve_story_builder_script_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/build_deterministic_story_structure_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/build_story_proposal_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/shape_story_proposal_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/approve_story_proposal_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/begin_story_proposal_revision_use_case.dart';
+import 'package:everyonesheroes/features/hero_story/application/use_cases/edit_story_builder_script_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/edit_story_proposal_use_case.dart';
+import 'package:everyonesheroes/features/hero_story/application/use_cases/generate_story_builder_script_use_case.dart';
+import 'package:everyonesheroes/features/hero_story/application/use_cases/materialize_story_builder_script_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/reject_story_proposal_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/complete_story_builder_session_use_case.dart';
 import 'package:everyonesheroes/features/hero_story/application/use_cases/classify_story_use_case.dart';
@@ -256,6 +262,42 @@ final materializeStoryProposalUseCaseProvider =
       return MaterializeStoryProposalUseCase(
         proposalRepository: ref.watch(storyProposalRepositoryProvider),
         sessionRepository: ref.watch(storyBuilderSessionRepositoryProvider),
+        storyRepository: ref.watch(storyRepositoryProvider),
+        heroRepository: ref.watch(heroRepositoryProvider),
+        createStoryUseCase: ref.watch(createStoryUseCaseProvider),
+        classifyStoryUseCase: ref.watch(classifyStoryUseCaseProvider),
+      );
+    });
+
+final generateStoryBuilderScriptUseCaseProvider =
+    Provider<GenerateStoryBuilderScriptUseCase>((ref) {
+      return GenerateStoryBuilderScriptUseCase(
+        sessionRepository: ref.watch(storyBuilderSessionRepositoryProvider),
+        scriptRepository: ref.watch(storyBuilderScriptRepositoryProvider),
+        scriptGenerator: ref.watch(storyScriptGeneratorProvider),
+      );
+    });
+
+final editStoryBuilderScriptUseCaseProvider =
+    Provider<EditStoryBuilderScriptUseCase>((ref) {
+      return EditStoryBuilderScriptUseCase(
+        scriptRepository: ref.watch(storyBuilderScriptRepositoryProvider),
+      );
+    });
+
+final approveStoryBuilderScriptUseCaseProvider =
+    Provider<ApproveStoryBuilderScriptUseCase>((ref) {
+      return ApproveStoryBuilderScriptUseCase(
+        scriptRepository: ref.watch(storyBuilderScriptRepositoryProvider),
+      );
+    });
+
+final materializeStoryBuilderScriptUseCaseProvider =
+    Provider<MaterializeStoryBuilderScriptUseCase>((ref) {
+      return MaterializeStoryBuilderScriptUseCase(
+        scriptRepository: ref.watch(storyBuilderScriptRepositoryProvider),
+        sessionRepository: ref.watch(storyBuilderSessionRepositoryProvider),
+        proposalRepository: ref.watch(storyProposalRepositoryProvider),
         storyRepository: ref.watch(storyRepositoryProvider),
         heroRepository: ref.watch(heroRepositoryProvider),
         createStoryUseCase: ref.watch(createStoryUseCaseProvider),

@@ -1,5 +1,6 @@
 import 'package:everyonesheroes/core/ids/hero_id.dart';
 import 'package:everyonesheroes/core/ids/narrative_theme_id.dart';
+import 'package:everyonesheroes/core/ids/story_builder_script_id.dart';
 import 'package:everyonesheroes/core/ids/story_builder_session_id.dart';
 import 'package:everyonesheroes/core/ids/story_id.dart';
 import 'package:everyonesheroes/core/ids/story_proposal_id.dart';
@@ -247,6 +248,8 @@ final class StorySnapshotMapper {
       'proposalDerivationKind': provenance.proposalDerivationKind?.name,
       'proposalContainedDerivedContent':
           provenance.proposalContainedDerivedContent,
+      'sourceStoryBuilderScriptId':
+          provenance.sourceStoryBuilderScriptId?.value,
     };
   }
 
@@ -255,6 +258,7 @@ final class StorySnapshotMapper {
     final proposalIdRaw = json['materializedFromProposalId'];
     final sessionIdRaw = json['sourceSessionId'];
     final derivationRaw = json['proposalDerivationKind'];
+    final scriptIdRaw = json['sourceStoryBuilderScriptId'];
 
     return StoryProvenance(
       originalSourceDescription: json['originalSourceDescription'] as String?,
@@ -273,6 +277,9 @@ final class StorySnapshotMapper {
           : null,
       proposalContainedDerivedContent:
           json['proposalContainedDerivedContent'] as bool? ?? false,
+      sourceStoryBuilderScriptId: scriptIdRaw is String && scriptIdRaw.isNotEmpty
+          ? StoryBuilderScriptId(scriptIdRaw)
+          : null,
     );
   }
 

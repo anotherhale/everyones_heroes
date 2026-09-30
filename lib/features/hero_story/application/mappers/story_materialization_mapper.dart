@@ -1,4 +1,5 @@
 import 'package:everyonesheroes/core/ids/hero_id.dart';
+import 'package:everyonesheroes/core/ids/story_builder_script_id.dart';
 import 'package:everyonesheroes/core/ids/story_id.dart';
 import 'package:everyonesheroes/core/ids/story_proposal_id.dart';
 import 'package:everyonesheroes/core/shared_kernel/language_code.dart';
@@ -28,9 +29,11 @@ final class StoryMaterializationMapper {
     required LanguageCode originalLanguage,
     StoryId? storyId,
     DateTime? createdAt,
-    /// Pre-resolved Hero narrative (sections / session answers). When omitted,
-    /// falls back to [StoryProposal.narrativeContent].
+    /// Pre-resolved Hero narrative (sections / session answers / approved
+    /// script). When omitted, falls back to [StoryProposal.narrativeContent].
     String? narrativeContent,
+    /// SB.8: approved script that supplied narrative content, when present.
+    StoryBuilderScriptId? sourceStoryBuilderScriptId,
   }) {
     if (!proposal.isAccepted) {
       throw StateError(
@@ -52,15 +55,22 @@ final class StoryMaterializationMapper {
           section.contentOrigin == StoryProposalContentOrigin.derived,
     );
 
+    final scriptId =
+        sourceStoryBuilderScriptId ?? proposal.provenance.sourceScriptId;
+    final scriptClause = scriptId == null
+        ? ''
+        : '; StoryBuilderScript ${scriptId.value}';
+
     final provenance = StoryProvenance(
       originalSourceDescription:
           'Materialized from accepted StoryProposal ${proposal.id.value} '
-          '(StoryBuilderSession ${proposal.sessionId.value}; '
+          '(StoryBuilderSession ${proposal.sessionId.value}$scriptClause; '
           'Hero approved; derivation=${proposal.provenance.derivationKind.name})',
       materializedFromProposalId: proposal.id,
       sourceSessionId: proposal.sessionId,
       proposalDerivationKind: proposal.provenance.derivationKind,
       proposalContainedDerivedContent: containedDerived,
+      sourceStoryBuilderScriptId: scriptId,
     );
 
     return CreateStoryRequest(

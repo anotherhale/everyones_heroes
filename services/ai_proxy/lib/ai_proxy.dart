@@ -17,6 +17,8 @@ export 'src/story_authoring_handler.dart';
 export 'src/story_authoring_instructions.dart';
 export 'src/story_builder_coach_handler.dart';
 export 'src/story_builder_coach_instructions.dart';
+export 'src/story_builder_script_handler.dart';
+export 'src/story_builder_script_instructions.dart';
 export 'src/story_experience_plan_handler.dart';
 export 'src/story_experience_plan_instructions.dart';
 export 'src/story_music_generation_handler.dart';

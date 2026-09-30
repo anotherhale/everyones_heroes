@@ -1,3 +1,4 @@
+import 'package:everyonesheroes/core/ids/story_builder_script_id.dart';
 import 'package:everyonesheroes/core/ids/story_builder_session_id.dart';
 import 'package:everyonesheroes/core/ids/story_proposal_id.dart';
 import 'package:everyonesheroes/core/shared_kernel/value_object.dart';
@@ -9,6 +10,9 @@ import 'package:everyonesheroes/features/hero_story/domain/value_objects/provena
 /// SB.13 extends provenance with optional materialization linkage so a
 /// canonical [Story] can answer: "Where did this Story come from?"
 ///
+/// SB.8 extends provenance with optional [sourceStoryBuilderScriptId] so the
+/// chain Session → Script → Proposal → Story remains recoverable.
+///
 /// Content-origin distinctions (heroAuthored vs derived) remain on the
 /// accepted [StoryProposal] sections — approval does not rewrite origin.
 final class StoryProvenance extends ValueObject {
@@ -19,6 +23,7 @@ final class StoryProvenance extends ValueObject {
     this.sourceSessionId,
     this.proposalDerivationKind,
     this.proposalContainedDerivedContent = false,
+    this.sourceStoryBuilderScriptId,
   }) : originalSourceDescription =
            originalSourceDescription?.trim().isEmpty == true
            ? null
@@ -49,6 +54,9 @@ final class StoryProvenance extends ValueObject {
   /// materialization. Does not claim the Hero authored that wording.
   final bool proposalContainedDerivedContent;
 
+  /// Approved Story Builder script that supplied narrative content (SB.8).
+  final StoryBuilderScriptId? sourceStoryBuilderScriptId;
+
   bool get wasMaterializedFromProposal => materializedFromProposalId != null;
 
   StoryProvenance append(ProvenanceStep step) {
@@ -59,6 +67,7 @@ final class StoryProvenance extends ValueObject {
       sourceSessionId: sourceSessionId,
       proposalDerivationKind: proposalDerivationKind,
       proposalContainedDerivedContent: proposalContainedDerivedContent,
+      sourceStoryBuilderScriptId: sourceStoryBuilderScriptId,
     );
   }
 
@@ -70,6 +79,7 @@ final class StoryProvenance extends ValueObject {
       sourceSessionId: sourceSessionId,
       proposalDerivationKind: proposalDerivationKind,
       proposalContainedDerivedContent: proposalContainedDerivedContent,
+      sourceStoryBuilderScriptId: sourceStoryBuilderScriptId,
     );
   }
 
@@ -81,5 +91,6 @@ final class StoryProvenance extends ValueObject {
     sourceSessionId,
     proposalDerivationKind,
     proposalContainedDerivedContent,
+    sourceStoryBuilderScriptId,
   ];
 }

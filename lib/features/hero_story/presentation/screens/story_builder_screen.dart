@@ -7,6 +7,7 @@ import 'package:everyonesheroes/features/hero_story/domain/enums/story_builder_m
 import 'package:everyonesheroes/features/hero_story/domain/enums/story_builder_narrative_role.dart';
 import 'package:everyonesheroes/features/hero_story/domain/enums/story_proposal_content_origin.dart';
 import 'package:everyonesheroes/features/hero_story/domain/enums/story_proposal_lifecycle_status.dart';
+import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_builder_script.dart';
 import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_proposal.dart';
 import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_proposal_section.dart';
 import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_proposal_section_edit.dart';
@@ -179,9 +180,71 @@ class _StoryBuilderScreenState extends ConsumerState<StoryBuilderScreen> {
                 isAiMode: state.isAiMode,
                 isBusy: state.isBusy,
                 errorMessage: state.errorMessage,
-                onBuildProposal: state.isBusy
+                onCreateMyStory: state.isBusy
                     ? null
-                    : () => controller.buildStoryProposal(),
+                    : () => controller.createMyStory(),
+                onDone: () {
+                  ref.invalidate(resumableStoryBuilderSessionsProvider);
+                  Navigator.of(context).maybePop();
+                },
+              ),
+              StoryBuilderUiPhase.generatingScript => const _GeneratingScriptBody(),
+              StoryBuilderUiPhase.scriptReview => _ScriptReviewBody(
+                script: state.script!,
+                draftText: state.scriptDraftText,
+                isEditing: state.isEditingScript,
+                isBusy: state.isBusy,
+                errorMessage: state.errorMessage,
+                onBeginEdit: () => controller.beginScriptEdit(),
+                onCancelEdit: () => controller.cancelScriptEdit(),
+                onDraftChanged: controller.updateScriptDraft,
+                onSaveEdits: () => controller.saveScriptEdits(),
+                onRegenerate: () async {
+                  final script = state.script;
+                  if (script?.heroEdited == true) {
+                    final confirmed = await showDialog<bool>(
+                      context: context,
+                      builder: (ctx) => AlertDialog(
+                        title: const Text('Replace your edits?'),
+                        content: const Text(
+                          'Regenerating will create a new draft and discard '
+                          'your current edits. Your previous answers stay saved.',
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(ctx, false),
+                            child: const Text('Cancel'),
+                          ),
+                          FilledButton(
+                            onPressed: () => Navigator.pop(ctx, true),
+                            child: const Text('Regenerate'),
+                          ),
+                        ],
+                      ),
+                    );
+                    if (confirmed != true) return;
+                    await controller.regenerateScript(
+                      confirmDiscardHeroEdits: true,
+                    );
+                    return;
+                  }
+                  await controller.regenerateScript();
+                },
+                onApprove: () => controller.approveScript(),
+              ),
+              StoryBuilderUiPhase.scriptApproved => _ScriptApprovedBody(
+                script: state.script!,
+                isBusy: state.isBusy,
+                errorMessage: state.errorMessage,
+                onRetryCreate: state.isBusy
+                    ? null
+                    : () => controller.materializeApprovedScript(),
+                onEdit: state.isBusy
+                    ? null
+                    : () {
+                        controller.beginScriptEdit();
+                        // Move back to review for editing after approval clear on save.
+                      },
                 onDone: () {
                   ref.invalidate(resumableStoryBuilderSessionsProvider);
                   Navigator.of(context).maybePop();
@@ -192,7 +255,14 @@ class _StoryBuilderScreenState extends ConsumerState<StoryBuilderScreen> {
                 isBusy: state.isBusy,
                 onEdit: state.isBusy
                     ? null
-                    : () => controller.beginProposalRevision(),
+                    : () {
+                        final script = state.script;
+                        if (script != null) {
+                          controller.beginScriptEdit();
+                        } else {
+                          controller.beginProposalRevision();
+                        }
+                      },
                 onContinueToStory: () {
                   final storyId = state.materializedStory!.id.value;
                   ref.invalidate(resumableStoryBuilderSessionsProvider);
@@ -429,13 +499,13 @@ class _CompletedBody extends StatelessWidget {
   const _CompletedBody({
     required this.onDone,
     required this.isAiMode,
-    required this.onBuildProposal,
+    required this.onCreateMyStory,
     this.isBusy = false,
     this.errorMessage,
   });
 
   final VoidCallback onDone;
-  final VoidCallback? onBuildProposal;
+  final VoidCallback? onCreateMyStory;
   final bool isAiMode;
   final bool isBusy;
   final String? errorMessage;
@@ -456,19 +526,16 @@ class _CompletedBody extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         Text(
-          isAiMode
-              ? 'You collected your own words with help from the AI Story Coach. '
-                  'The coach asked questions — it did not write your story. '
-                  'Later, you can shape this into a Story when you are ready.'
-              : 'You collected your own words through the guided Story Builder. '
-                  'No AI was required. Later, you can shape this into a Story when you are ready.',
+          "You've shared the experiences and words that make up your story.\n"
+          'The AI Story Coach can now shape those ideas into a complete story '
+          'for you to review.',
           style: theme.textTheme.bodyLarge?.copyWith(height: 1.5),
         ),
         if (errorMessage != null) ...[
           const SizedBox(height: 12),
           Text(
             errorMessage!,
-            key: const ValueKey('story-builder-proposal-error'),
+            key: const ValueKey('story-builder-script-error'),
             style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.error,
             ),
@@ -476,13 +543,279 @@ class _CompletedBody extends StatelessWidget {
         ],
         const Spacer(),
         FilledButton(
-          key: const ValueKey('story-builder-build-proposal'),
-          onPressed: onBuildProposal,
-          child: Text(isBusy ? 'Building proposal…' : 'Build Story Proposal'),
+          key: const ValueKey('story-builder-create-my-story'),
+          onPressed: onCreateMyStory,
+          child: Text(isBusy ? 'Creating your story…' : 'Create My Story'),
         ),
         const SizedBox(height: 8),
         OutlinedButton(
           key: const ValueKey('story-builder-done'),
+          onPressed: onDone,
+          child: const Text('Done'),
+        ),
+      ],
+    );
+  }
+}
+
+class _GeneratingScriptBody extends StatelessWidget {
+  const _GeneratingScriptBody();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      key: const ValueKey('story-builder-generating-script'),
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const Spacer(),
+        const Center(child: CircularProgressIndicator()),
+        const SizedBox(height: 24),
+        Text(
+          'Creating your story...',
+          textAlign: TextAlign.center,
+          style: theme.textTheme.headlineSmall?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const Spacer(),
+      ],
+    );
+  }
+}
+
+class _ScriptReviewBody extends StatefulWidget {
+  const _ScriptReviewBody({
+    required this.script,
+    required this.draftText,
+    required this.isEditing,
+    required this.isBusy,
+    required this.errorMessage,
+    required this.onBeginEdit,
+    required this.onCancelEdit,
+    required this.onDraftChanged,
+    required this.onSaveEdits,
+    required this.onRegenerate,
+    required this.onApprove,
+  });
+
+  final StoryBuilderScript script;
+  final String draftText;
+  final bool isEditing;
+  final bool isBusy;
+  final String? errorMessage;
+  final VoidCallback onBeginEdit;
+  final VoidCallback onCancelEdit;
+  final ValueChanged<String> onDraftChanged;
+  final Future<bool> Function() onSaveEdits;
+  final Future<void> Function() onRegenerate;
+  final Future<bool> Function() onApprove;
+
+  @override
+  State<_ScriptReviewBody> createState() => _ScriptReviewBodyState();
+}
+
+class _ScriptReviewBodyState extends State<_ScriptReviewBody> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.draftText);
+  }
+
+  @override
+  void didUpdateWidget(covariant _ScriptReviewBody oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.draftText != widget.draftText &&
+        _controller.text != widget.draftText) {
+      _controller.value = TextEditingValue(
+        text: widget.draftText,
+        selection: TextSelection.collapsed(offset: widget.draftText.length),
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      key: const ValueKey('story-builder-script-review'),
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          'Your Story',
+          key: const ValueKey('story-builder-script-title'),
+          style: theme.textTheme.headlineSmall?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'This is your story, shaped from the words and experiences you shared.\n'
+          'Read it through, make any changes you want, and approve it when it feels right.',
+          style: theme.textTheme.bodyLarge?.copyWith(height: 1.5),
+        ),
+        if (widget.errorMessage != null) ...[
+          const SizedBox(height: 12),
+          Text(
+            widget.errorMessage!,
+            key: const ValueKey('story-builder-script-review-error'),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.error,
+            ),
+          ),
+        ],
+        const SizedBox(height: 16),
+        Expanded(
+          child: widget.isEditing
+              ? TextField(
+                  key: const ValueKey('story-builder-script-editor'),
+                  controller: _controller,
+                  maxLines: null,
+                  expands: true,
+                  textAlignVertical: TextAlignVertical.top,
+                  onChanged: widget.onDraftChanged,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    alignLabelWithHint: true,
+                  ),
+                )
+              : SingleChildScrollView(
+                  key: const ValueKey('story-builder-script-content'),
+                  child: Text(
+                    widget.script.content,
+                    style: theme.textTheme.bodyLarge?.copyWith(height: 1.6),
+                  ),
+                ),
+        ),
+        const SizedBox(height: 16),
+        if (widget.isEditing) ...[
+          FilledButton(
+            key: const ValueKey('story-builder-script-save'),
+            onPressed: widget.isBusy ? null : () => widget.onSaveEdits(),
+            child: Text(widget.isBusy ? 'Saving…' : 'Save'),
+          ),
+          const SizedBox(height: 8),
+          OutlinedButton(
+            key: const ValueKey('story-builder-script-cancel-edit'),
+            onPressed: widget.isBusy ? null : widget.onCancelEdit,
+            child: const Text('Cancel'),
+          ),
+        ] else ...[
+          FilledButton(
+            key: const ValueKey('story-builder-script-approve'),
+            onPressed: widget.isBusy ? null : () => widget.onApprove(),
+            child: Text(widget.isBusy ? 'Approving…' : 'Approve Story'),
+          ),
+          const SizedBox(height: 8),
+          OutlinedButton(
+            key: const ValueKey('story-builder-script-edit'),
+            onPressed: widget.isBusy ? null : widget.onBeginEdit,
+            child: const Text('Edit'),
+          ),
+          const SizedBox(height: 8),
+          TextButton(
+            key: const ValueKey('story-builder-script-regenerate'),
+            onPressed: widget.isBusy ? null : () => widget.onRegenerate(),
+            child: const Text('Regenerate'),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _ScriptApprovedBody extends StatelessWidget {
+  const _ScriptApprovedBody({
+    required this.script,
+    required this.isBusy,
+    required this.errorMessage,
+    required this.onRetryCreate,
+    required this.onEdit,
+    required this.onDone,
+  });
+
+  final StoryBuilderScript script;
+  final bool isBusy;
+  final String? errorMessage;
+  final VoidCallback? onRetryCreate;
+  final VoidCallback? onEdit;
+  final VoidCallback onDone;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final hasError = errorMessage != null && errorMessage!.trim().isNotEmpty;
+    return Column(
+      key: const ValueKey('story-builder-script-approved'),
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          hasError ? 'Script Approved — Create Failed' : 'Your story is ready.',
+          key: const ValueKey('story-builder-script-approved-title'),
+          style: theme.textTheme.headlineSmall?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Text(
+          hasError
+              ? 'Your approved story script is still saved. You can retry creating '
+                  'the Story without answering questions again.'
+              : 'Your story script is approved. You can record it yourself, or '
+                  'have a future voice experience tell it for you.',
+          style: theme.textTheme.bodyLarge?.copyWith(height: 1.5),
+        ),
+        if (hasError) ...[
+          const SizedBox(height: 12),
+          Text(
+            errorMessage!,
+            key: const ValueKey('story-builder-script-materialize-error'),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.error,
+            ),
+          ),
+        ],
+        const Spacer(),
+        FilledButton(
+          key: const ValueKey('story-builder-script-retry-create'),
+          onPressed: onRetryCreate,
+          child: Text(
+            isBusy
+                ? 'Creating Story…'
+                : hasError
+                    ? 'Retry Create Story'
+                    : 'Create Story',
+          ),
+        ),
+        const SizedBox(height: 8),
+        OutlinedButton(
+          key: const ValueKey('story-builder-script-approved-edit'),
+          onPressed: onEdit,
+          child: const Text('Edit'),
+        ),
+        const SizedBox(height: 8),
+        OutlinedButton(
+          key: const ValueKey('story-builder-record-my-story'),
+          onPressed: isBusy ? null : () {},
+          child: const Text('Record My Story'),
+        ),
+        const SizedBox(height: 8),
+        OutlinedButton(
+          key: const ValueKey('story-builder-have-my-voice'),
+          onPressed: null,
+          child: const Text('Have My Voice Tell It'),
+        ),
+        const SizedBox(height: 8),
+        TextButton(
+          key: const ValueKey('story-builder-script-approved-done'),
           onPressed: onDone,
           child: const Text('Done'),
         ),

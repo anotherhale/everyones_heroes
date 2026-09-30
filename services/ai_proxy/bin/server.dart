@@ -29,6 +29,7 @@ Future<void> main(List<String> args) async {
   final coach = StoryBuilderCoachHandler(config: config);
   final understanding = StoryUnderstandingHandler(config: config);
   final authoring = StoryAuthoringHandler(config: config);
+  final scriptGeneration = StoryBuilderScriptHandler(config: config);
   final capturedReading = CapturedStoryReadingHandler(config: config);
   final experiencePlan = StoryExperiencePlanHandler(config: config);
   final voiceRendering = StoryVoiceRenderingHandler(config: config);
@@ -40,6 +41,7 @@ Future<void> main(List<String> args) async {
   router.post('/story-builder-questions', coach.handleSuggestQuestion);
   router.post('/story-understanding', understanding.handleUnderstand);
   router.post('/story-authoring', authoring.handleAuthor);
+  router.post('/story-builder-scripts', scriptGeneration.handleGenerate);
   router.post('/captured-story-readings', capturedReading.handleGenerate);
   router.post('/story-experience-plans', experiencePlan.handleGenerate);
   router.post('/story-voice-renderings', voiceRendering.handleRender);
