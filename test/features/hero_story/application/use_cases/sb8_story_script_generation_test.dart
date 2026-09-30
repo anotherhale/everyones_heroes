@@ -342,34 +342,7 @@ void main() {
   });
 
   group('Materialization', () {
-    test('approved script creates Story with narrative from script', () async {
-      final draft = ((await generate.execute(
-        GenerateStoryBuilderScriptRequest(sessionId: sessionId),
-      )) as Success<StoryBuilderScript>)
-          .value;
-      final approved = ((await approve.execute(
-        ApproveStoryBuilderScriptRequest(scriptId: draft.id),
-      )) as Success<StoryBuilderScript>)
-          .value;
-
-      final storyResult = await materialize.execute(
-        MaterializeStoryBuilderScriptRequest(scriptId: approved.id),
-      );
-      expect(storyResult, isA<Success<Story>>());
-      final story = (storyResult as Success<Story>).value;
-      expect(story.narrative.value, approved.content);
-      expect(
-        story.provenance.sourceStoryBuilderScriptId,
-        approved.id,
-      );
-      expect(story.provenance.sourceSessionId, sessionId);
-
-      final linked = await scriptRepository.findById(approved.id);
-      expect(linked!.materializedStoryId, story.id);
-      expect(linked.isApproved, isTrue);
-    });
-
-    test('failed Story creation preserves approved script and retry works',
+    test('approved script creates Story with Hero title and script narrative',
         () async {
       final draft = ((await generate.execute(
         GenerateStoryBuilderScriptRequest(sessionId: sessionId),
@@ -380,21 +353,113 @@ void main() {
       )) as Success<StoryBuilderScript>)
           .value;
 
+      const chosenTitle = 'My Journey Through Service';
+      final storyResult = await materialize.execute(
+        MaterializeStoryBuilderScriptRequest(
+          scriptId: approved.id,
+          title: chosenTitle,
+        ),
+      );
+      expect(storyResult, isA<Success<Story>>());
+      final story = (storyResult as Success<Story>).value;
+      expect(story.title.value, chosenTitle);
+      expect(story.narrative.value, approved.content);
+      expect(
+        story.provenance.sourceStoryBuilderScriptId,
+        approved.id,
+      );
+      expect(story.provenance.sourceSessionId, sessionId);
+
+      final linked = await scriptRepository.findById(approved.id);
+      expect(linked!.materializedStoryId, story.id);
+      expect(linked.isApproved, isTrue);
+      expect(linked.content, approved.content);
+
+      final proposal =
+          await proposalRepository.findById(linked.linkedProposalId!);
+      expect(proposal, isNotNull);
+      expect(proposal!.title!.value, chosenTitle);
+      expect(proposal.narrative, approved.content);
+    });
+
+    test('empty and whitespace-only titles are rejected', () async {
+      final draft = ((await generate.execute(
+        GenerateStoryBuilderScriptRequest(sessionId: sessionId),
+      )) as Success<StoryBuilderScript>)
+          .value;
+      final approved = ((await approve.execute(
+        ApproveStoryBuilderScriptRequest(scriptId: draft.id),
+      )) as Success<StoryBuilderScript>)
+          .value;
+
+      for (final invalid in ['', '   ', '\n\t']) {
+        final result = await materialize.execute(
+          MaterializeStoryBuilderScriptRequest(
+            scriptId: approved.id,
+            title: invalid,
+          ),
+        );
+        expect(result, isA<Failure<Story>>(), reason: 'title="$invalid"');
+      }
+
+      final preserved = await scriptRepository.findById(approved.id);
+      expect(preserved!.isApproved, isTrue);
+      expect(preserved.materializedStoryId, isNull);
+      expect(preserved.content, approved.content);
+    });
+
+    test('title is trimmed before persistence', () async {
+      final draft = ((await generate.execute(
+        GenerateStoryBuilderScriptRequest(sessionId: sessionId),
+      )) as Success<StoryBuilderScript>)
+          .value;
+      final approved = ((await approve.execute(
+        ApproveStoryBuilderScriptRequest(scriptId: draft.id),
+      )) as Success<StoryBuilderScript>)
+          .value;
+
+      final storyResult = await materialize.execute(
+        MaterializeStoryBuilderScriptRequest(
+          scriptId: approved.id,
+          title: '  Finding Strength Through Service  ',
+        ),
+      );
+      final story = (storyResult as Success<Story>).value;
+      expect(story.title.value, 'Finding Strength Through Service');
+    });
+
+    test(
+        'failed Story creation preserves approved script, title, and retry works',
+        () async {
+      final draft = ((await generate.execute(
+        GenerateStoryBuilderScriptRequest(sessionId: sessionId),
+      )) as Success<StoryBuilderScript>)
+          .value;
+      final approved = ((await approve.execute(
+        ApproveStoryBuilderScriptRequest(scriptId: draft.id),
+      )) as Success<StoryBuilderScript>)
+          .value;
+
+      const chosenTitle = 'My Journey Through Service';
+      final failingRepo = _FailingSaveStoryRepository(storyRepository);
       final failing = MaterializeStoryBuilderScriptUseCase(
         scriptRepository: scriptRepository,
         sessionRepository: sessionRepository,
         proposalRepository: proposalRepository,
-        storyRepository: _FailingSaveStoryRepository(storyRepository),
+        storyRepository: failingRepo,
         heroRepository: heroRepository,
         createStoryUseCase: CreateStoryUseCase(
-          storyRepository: _FailingSaveStoryRepository(storyRepository),
+          storyRepository: failingRepo,
           heroRepository: heroRepository,
           eventBus: eventBus,
         ),
       );
 
       final failed = await failing.execute(
-        MaterializeStoryBuilderScriptRequest(scriptId: approved.id),
+        MaterializeStoryBuilderScriptRequest(
+          scriptId: approved.id,
+          title: chosenTitle,
+        ),
       );
       expect(failed, isA<Failure<Story>>());
 
@@ -402,13 +467,27 @@ void main() {
       expect(preserved!.isApproved, isTrue);
       expect(preserved.content, approved.content);
       expect(preserved.materializedStoryId, isNull);
+      expect(preserved.linkedProposalId, isNotNull);
+
+      final failedProposal =
+          await proposalRepository.findById(preserved.linkedProposalId!);
+      expect(failedProposal!.title!.value, chosenTitle);
+      expect(failedProposal.narrative, approved.content);
 
       final retry = await materialize.execute(
-        MaterializeStoryBuilderScriptRequest(scriptId: approved.id),
+        MaterializeStoryBuilderScriptRequest(
+          scriptId: approved.id,
+          title: chosenTitle,
+        ),
       );
       expect(retry, isA<Success<Story>>());
       final story = (retry as Success<Story>).value;
       expect(story.narrative.value, approved.content);
+      expect(story.title.value, chosenTitle);
+      expect(
+        story.provenance.sourceStoryBuilderScriptId,
+        approved.id,
+      );
     });
 
     test('empty narrative cannot create Story', () async {
@@ -417,6 +496,7 @@ void main() {
       final result = await materialize.execute(
         MaterializeStoryBuilderScriptRequest(
           scriptId: StoryBuilderScriptId.generate(),
+          title: 'Valid Title',
         ),
       );
       expect(result, isA<Failure<Story>>());

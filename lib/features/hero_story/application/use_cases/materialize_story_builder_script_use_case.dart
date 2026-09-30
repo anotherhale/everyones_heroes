@@ -30,14 +30,17 @@ import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_c
 import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_proposal.dart';
 import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_proposal_provenance.dart';
 import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_proposal_section.dart';
+import 'package:everyonesheroes/features/hero_story/domain/value_objects/story_title.dart';
 
 /// Materializes a canonical [Story] from an **approved** Story Builder script.
 ///
 /// Builds (or reuses) a [StoryProposal] whose narrative is the approved script
-/// content — preserving the StoryProposal narrative invariant — then creates
-/// the Story.
+/// content and whose title is the Hero-provided [StoryTitle], then creates the
+/// Story. Title belongs to Story / StoryProposal — not StoryBuilderSession and
+/// not the AI script artifact.
 ///
-/// Retry-safe: failed Create Story leaves the approved script intact.
+/// Retry-safe: failed Create Story leaves the approved script and chosen title
+/// intact (title is persisted on the linked proposal).
 /// Does not regenerate AI content. Does not revoke script approval.
 final class MaterializeStoryBuilderScriptUseCase
     implements UseCase<MaterializeStoryBuilderScriptRequest, Story> {
@@ -99,6 +102,15 @@ final class MaterializeStoryBuilderScriptUseCase
         );
       }
 
+      final StoryTitle storyTitle;
+      try {
+        storyTitle = StoryTitle(request.title);
+      } on ArgumentError catch (e) {
+        return Failure(
+          e.message?.toString() ?? 'Story title is required.',
+        );
+      }
+
       final narrative = script.content.trim();
       if (narrative.isEmpty) {
         return const Failure(
@@ -138,6 +150,7 @@ final class MaterializeStoryBuilderScriptUseCase
         script: script,
         session: session,
         narrative: narrative,
+        title: storyTitle,
         at: request.materializedAt,
       );
 
@@ -200,6 +213,7 @@ final class MaterializeStoryBuilderScriptUseCase
     required StoryBuilderScript script,
     required StoryBuilderSession session,
     required String narrative,
+    required StoryTitle title,
     DateTime? at,
   }) async {
     if (script.linkedProposalId != null) {
@@ -210,7 +224,11 @@ final class MaterializeStoryBuilderScriptUseCase
           (existing.lifecycle == StoryProposalLifecycleStatus.accepted ||
               existing.lifecycle ==
                   StoryProposalLifecycleStatus.readyForReview)) {
-        return existing;
+        final withTitle = existing.withTitle(title, at: at);
+        if (withTitle != existing) {
+          await _proposalRepository.save(withTitle);
+        }
+        return withTitle;
       }
     }
 
@@ -260,7 +278,7 @@ final class MaterializeStoryBuilderScriptUseCase
     final proposal = StoryProposal(
       id: StoryProposalId.generate(),
       sessionId: session.id,
-      title: null,
+      title: title,
       narrative: narrative,
       sections: sections,
       intent: session.intent,

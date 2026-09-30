@@ -232,18 +232,30 @@ class _StoryBuilderScreenState extends ConsumerState<StoryBuilderScreen> {
                 },
                 onApprove: () => controller.approveScript(),
               ),
+              StoryBuilderUiPhase.namingStory => _NameYourStoryBody(
+                titleDraft: state.pendingStoryTitle,
+                isBusy: state.isBusy,
+                errorMessage: state.errorMessage,
+                canCreate: state.canCreateNamedStory,
+                onTitleChanged: controller.updatePendingStoryTitle,
+                onCreateStory: state.isBusy || !state.canCreateNamedStory
+                    ? null
+                    : () => controller.materializeApprovedScript(),
+                onBack: state.isBusy
+                    ? null
+                    : () => controller.returnToApprovedScript(),
+              ),
               StoryBuilderUiPhase.scriptApproved => _ScriptApprovedBody(
                 script: state.script!,
                 isBusy: state.isBusy,
                 errorMessage: state.errorMessage,
                 onRetryCreate: state.isBusy
                     ? null
-                    : () => controller.materializeApprovedScript(),
+                    : () => controller.continueToNameYourStory(),
                 onEdit: state.isBusy
                     ? null
                     : () {
                         controller.beginScriptEdit();
-                        // Move back to review for editing after approval clear on save.
                       },
                 onDone: () {
                   ref.invalidate(resumableStoryBuilderSessionsProvider);
@@ -727,6 +739,127 @@ class _ScriptReviewBodyState extends State<_ScriptReviewBody> {
             child: const Text('Regenerate'),
           ),
         ],
+      ],
+    );
+  }
+}
+
+class _NameYourStoryBody extends StatefulWidget {
+  const _NameYourStoryBody({
+    required this.titleDraft,
+    required this.isBusy,
+    required this.errorMessage,
+    required this.canCreate,
+    required this.onTitleChanged,
+    required this.onCreateStory,
+    required this.onBack,
+  });
+
+  final String titleDraft;
+  final bool isBusy;
+  final String? errorMessage;
+  final bool canCreate;
+  final ValueChanged<String> onTitleChanged;
+  final VoidCallback? onCreateStory;
+  final VoidCallback? onBack;
+
+  @override
+  State<_NameYourStoryBody> createState() => _NameYourStoryBodyState();
+}
+
+class _NameYourStoryBodyState extends State<_NameYourStoryBody> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.titleDraft);
+  }
+
+  @override
+  void didUpdateWidget(covariant _NameYourStoryBody oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.titleDraft != widget.titleDraft &&
+        _controller.text != widget.titleDraft) {
+      _controller.value = TextEditingValue(
+        text: widget.titleDraft,
+        selection: TextSelection.collapsed(offset: widget.titleDraft.length),
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final hasError =
+        widget.errorMessage != null && widget.errorMessage!.trim().isNotEmpty;
+    return Column(
+      key: const ValueKey('story-builder-name-your-story'),
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          hasError ? 'Script Approved — Create Failed' : 'Name Your Story',
+          key: const ValueKey('story-builder-name-your-story-heading'),
+          style: theme.textTheme.headlineSmall?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          hasError
+              ? 'Your approved story script and title are still saved. '
+                  'You can retry creating the Story without answering '
+                  'questions again.'
+              : 'Give your story a title. You can change it later.',
+          key: const ValueKey('story-builder-name-your-story-supporting'),
+          style: theme.textTheme.bodyLarge?.copyWith(height: 1.5),
+        ),
+        if (hasError) ...[
+          const SizedBox(height: 12),
+          Text(
+            widget.errorMessage!,
+            key: const ValueKey('story-builder-name-your-story-error'),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.error,
+            ),
+          ),
+        ],
+        const SizedBox(height: 24),
+        TextField(
+          key: const ValueKey('story-builder-name-your-story-field'),
+          controller: _controller,
+          enabled: !widget.isBusy,
+          textCapitalization: TextCapitalization.sentences,
+          onChanged: widget.onTitleChanged,
+          decoration: const InputDecoration(
+            hintText: 'Enter a title',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        const Spacer(),
+        FilledButton(
+          key: const ValueKey('story-builder-name-your-story-create'),
+          onPressed: widget.onCreateStory,
+          child: Text(
+            widget.isBusy
+                ? 'Creating Story…'
+                : hasError
+                    ? 'Retry Create Story'
+                    : 'Create Story',
+          ),
+        ),
+        const SizedBox(height: 8),
+        OutlinedButton(
+          key: const ValueKey('story-builder-name-your-story-back'),
+          onPressed: widget.onBack,
+          child: const Text('Back to Story Script'),
+        ),
       ],
     );
   }

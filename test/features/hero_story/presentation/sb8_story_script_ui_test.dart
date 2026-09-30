@@ -172,8 +172,28 @@ void main() {
     );
   }
 
+  Future<void> generateAndApprove(WidgetTester tester) async {
+    await tester.tap(find.byKey(const ValueKey('story-builder-create-my-story')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('story-builder-script-review')), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('story-builder-script-edit')));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const ValueKey('story-builder-script-editor')),
+      'When I first joined the military, everything changed.\n\n'
+      'I edited this carefully.\n\n'
+      'Looking back now, perseverance remains the lesson.',
+    );
+    await tester.tap(find.byKey(const ValueKey('story-builder-script-save')));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const ValueKey('story-builder-script-approve')));
+    await tester.pumpAndSettle();
+  }
+
   testWidgets(
-    'Create My Story → review → edit → approve → Story created',
+    'Approve → Name Your Story → Create Story with supplied title',
     (tester) async {
       await tester.pumpWidget(buildApp());
       await tester.pumpAndSettle();
@@ -181,37 +201,118 @@ void main() {
       expect(find.byKey(const ValueKey('story-builder-completed')), findsOneWidget);
       expect(find.text('Create My Story'), findsOneWidget);
 
-      await tester.tap(find.byKey(const ValueKey('story-builder-create-my-story')));
-      await tester.pumpAndSettle();
+      await generateAndApprove(tester);
 
-      expect(find.byKey(const ValueKey('story-builder-script-review')), findsOneWidget);
-      expect(find.textContaining('When I first joined'), findsWidgets);
+      expect(
+        find.byKey(const ValueKey('story-builder-name-your-story')),
+        findsOneWidget,
+      );
+      expect(find.text('Name Your Story'), findsOneWidget);
+      expect(
+        find.text('Give your story a title. You can change it later.'),
+        findsOneWidget,
+      );
 
-      await tester.tap(find.byKey(const ValueKey('story-builder-script-edit')));
-      await tester.pumpAndSettle();
-      expect(find.byKey(const ValueKey('story-builder-script-editor')), findsOneWidget);
+      final createFinder =
+          find.byKey(const ValueKey('story-builder-name-your-story-create'));
+      expect(tester.widget<FilledButton>(createFinder).onPressed, isNull);
 
       await tester.enterText(
-        find.byKey(const ValueKey('story-builder-script-editor')),
-        'When I first joined the military, everything changed.\n\n'
-        'I edited this carefully.\n\n'
-        'Looking back now, perseverance remains the lesson.',
+        find.byKey(const ValueKey('story-builder-name-your-story-field')),
+        'My Journey Through Service',
       );
-      await tester.tap(find.byKey(const ValueKey('story-builder-script-save')));
       await tester.pumpAndSettle();
+      expect(tester.widget<FilledButton>(createFinder).onPressed, isNotNull);
 
-      await tester.tap(find.byKey(const ValueKey('story-builder-script-approve')));
+      await tester.tap(createFinder);
       await tester.pumpAndSettle();
 
       expect(find.byKey(const ValueKey('story-builder-story-created')), findsOneWidget);
-      final scripts = await scriptRepository.findBySessionId(sessionId);
-      expect(scripts.first.isApproved, isTrue);
-      expect(scripts.first.materializedStoryId, isNotNull);
+      expect(find.text('My Journey Through Service'), findsOneWidget);
+
+      final scripts = await scriptRepository.findLatestBySessionId(sessionId);
+      expect(scripts!.isApproved, isTrue);
+      expect(scripts.materializedStoryId, isNotNull);
+      final story = await storyRepository.findById(scripts.materializedStoryId!);
+      expect(story!.title.value, 'My Journey Through Service');
+      expect(story.narrative.value, contains('I edited this carefully'));
     },
   );
 
   testWidgets(
-    'Approve → Create fails → approved script remains → Retry succeeds',
+    'Empty and whitespace-only titles keep Create Story disabled',
+    (tester) async {
+      await tester.pumpWidget(buildApp());
+      await tester.pumpAndSettle();
+      await generateAndApprove(tester);
+
+      final createFinder =
+          find.byKey(const ValueKey('story-builder-name-your-story-create'));
+      expect(tester.widget<FilledButton>(createFinder).onPressed, isNull);
+
+      await tester.enterText(
+        find.byKey(const ValueKey('story-builder-name-your-story-field')),
+        '   ',
+      );
+      await tester.pumpAndSettle();
+      expect(tester.widget<FilledButton>(createFinder).onPressed, isNull);
+
+      final scripts = await scriptRepository.findLatestBySessionId(sessionId);
+      expect(scripts!.isApproved, isTrue);
+      expect(scripts.materializedStoryId, isNull);
+    },
+  );
+
+  testWidgets(
+    'Back from Name Your Story preserves approved script and title draft',
+    (tester) async {
+      await tester.pumpWidget(buildApp());
+      await tester.pumpAndSettle();
+      await generateAndApprove(tester);
+
+      final approvedContent =
+          (await scriptRepository.findLatestBySessionId(sessionId))!.content;
+
+      await tester.enterText(
+        find.byKey(const ValueKey('story-builder-name-your-story-field')),
+        'Learning to Serve',
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(
+        find.byKey(const ValueKey('story-builder-name-your-story-back')),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const ValueKey('story-builder-script-review')), findsOneWidget);
+      expect(find.textContaining('I edited this carefully'), findsWidgets);
+
+      final stillApproved =
+          await scriptRepository.findLatestBySessionId(sessionId);
+      expect(stillApproved!.isApproved, isTrue);
+      expect(stillApproved.content, approvedContent);
+      expect(stillApproved.materializedStoryId, isNull);
+
+      await tester.tap(find.byKey(const ValueKey('story-builder-script-approve')));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const ValueKey('story-builder-name-your-story')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey('story-builder-name-your-story-field')),
+        findsOneWidget,
+      );
+      final field = tester.widget<TextField>(
+        find.byKey(const ValueKey('story-builder-name-your-story-field')),
+      );
+      expect(field.controller!.text, 'Learning to Serve');
+    },
+  );
+
+  testWidgets(
+    'Approve → name → Create fails → Retry preserves title and script',
     (tester) async {
       final failing = _FailingSaveStoryRepository(storyRepository);
       await tester.pumpWidget(buildApp(stories: failing));
@@ -223,24 +324,43 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(
-        find.byKey(const ValueKey('story-builder-script-approved')),
+        find.byKey(const ValueKey('story-builder-name-your-story')),
         findsOneWidget,
       );
+
+      await tester.enterText(
+        find.byKey(const ValueKey('story-builder-name-your-story-field')),
+        'My Journey Through Service',
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.byKey(const ValueKey('story-builder-name-your-story-create')),
+      );
+      await tester.pumpAndSettle();
+
       expect(find.textContaining('Script Approved — Create Failed'), findsOneWidget);
 
       final approved = await scriptRepository.findLatestBySessionId(sessionId);
       expect(approved!.isApproved, isTrue);
       expect(approved.materializedStoryId, isNull);
+      expect(approved.linkedProposalId, isNotNull);
+      final proposal =
+          await proposalRepository.findById(approved.linkedProposalId!);
+      expect(proposal!.title!.value, 'My Journey Through Service');
 
       failing.failSaves = false;
       await tester.tap(
-        find.byKey(const ValueKey('story-builder-script-retry-create')),
+        find.byKey(const ValueKey('story-builder-name-your-story-create')),
       );
       await tester.pumpAndSettle();
 
       expect(find.byKey(const ValueKey('story-builder-story-created')), findsOneWidget);
+      expect(find.text('My Journey Through Service'), findsOneWidget);
       final linked = await scriptRepository.findById(approved.id);
       expect(linked!.materializedStoryId, isNotNull);
+      final story = await storyRepository.findById(linked.materializedStoryId!);
+      expect(story!.title.value, 'My Journey Through Service');
+      expect(story.narrative.value, approved.content);
     },
   );
 }
