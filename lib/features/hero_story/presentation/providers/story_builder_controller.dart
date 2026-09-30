@@ -404,7 +404,14 @@ final class StoryBuilderController extends Notifier<StoryBuilderUiState> {
     await _advance();
   }
 
-  Future<void> updateDraft(String text) async {
+  /// Mirrors the response [TextEditingController] into UI state.
+  ///
+  /// Does not rewrite the controller — presentation owns editing/IME state
+  /// while this remains the application-facing draft mirror.
+  void updateDraft(String text) {
+    if (state.draftText == text) {
+      return;
+    }
     state = state.copyWith(draftText: text);
   }
 
@@ -1154,6 +1161,9 @@ final class StoryBuilderController extends Notifier<StoryBuilderUiState> {
   }
 
   void updateScriptDraft(String text) {
+    if (state.scriptDraftText == text) {
+      return;
+    }
     state = state.copyWith(scriptDraftText: text);
   }
 
