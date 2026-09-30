@@ -787,15 +787,17 @@ Story + consent + plan + transcript
 ## 24. Open decisions requiring Andy’s approval
 
 1. **Artifact model for cloned/published narrations:** remain on `StoryVoiceRendering` vs selective promotion to approved `StoryRepresentation`.
-2. **Cloning consent shape:** Story-level `voiceCloningApprovedAt` vs VoiceProfile-level consent + per-story use grant.
-3. **First commercial hosted provider after OpenAI:** ElevenLabs now, or defer until local spike completes?
-4. **First local model priority:** Qwen3-TTS vs CosyVoice 3 vs both in parallel on Mac mini.
+2. **Cloning consent field placement:** StoryConsent extension vs VoiceProfileAuthorization vs both — independence is locked by HS-ADR-078; schema placement remains open for HS.12.9.
+3. **First commercial hosted provider after OpenAI:** ElevenLabs now, or defer until local clone spike?
+4. **First local cloning model priority:** Qwen3-TTS Base vs CosyVoice 3 vs both — CustomVoice (HS.12.7) is not cloning.
 5. **Whether lab multi-TTS (MiniMax/Qwen cloud) and this plan share the same proxy router workstream.**
-6. **Whether VoiceProfile is in scope for the next coding milestone or deferred until after multi-provider synthetic narration.**
+6. ~~Whether VoiceProfile architecture is in scope before coding~~ → **Resolved by HS.12.8 / HS-ADR-078** (Hero-scoped identity; implement aggregate in HS.12.9).
 7. **Data retention policy** for reference samples and third-party clone storage.
 8. **Whether production Render deployment must support non-OpenAI TTS** in the first milestone or only local/dev.
-9. **Legal sign-off** on Apache-2.0 checkpoints + ElevenLabs cloning ToS before any user-facing clone.
+9. **Legal sign-off** on Apache-2.0 checkpoints + hosted cloning ToS before any user-facing clone.
 10. **Rename question:** keep `VoiceRenderingPort` naming vs public rename to “Story Narration” (label vs type rename).
+11. **Revocation policy** for already-published generated audio (HS.12.8 documents options; does not pick one).
+12. **Non-Hero VoiceProfile ownership** after Identity binding matures.
 
 ---
 
