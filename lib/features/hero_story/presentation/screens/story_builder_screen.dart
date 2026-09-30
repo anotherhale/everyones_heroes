@@ -37,11 +37,18 @@ class StoryBuilderScreen extends ConsumerStatefulWidget {
 }
 
 class _StoryBuilderScreenState extends ConsumerState<StoryBuilderScreen> {
+  /// Persistent for the screen lifetime — never recreated in [build].
   final _textController = TextEditingController();
+  final _responseFocusNode = FocusNode();
+
+  /// Last prompt identity the controller was seeded from. Syncing only on
+  /// prompt/phase changes preserves iOS IME composition, QuickType, and cursor.
+  String? _boundPromptKey;
   var _started = false;
 
   @override
   void dispose() {
+    _responseFocusNode.dispose();
     _textController.dispose();
     super.dispose();
   }
@@ -61,18 +68,48 @@ class _StoryBuilderScreenState extends ConsumerState<StoryBuilderScreen> {
       } else {
         await controller.startNewSession(mode: widget.mode);
       }
-      _syncDraftFromState();
+      _bindControllerToCurrentPrompt(
+        ref.read(storyBuilderControllerProvider),
+        force: true,
+      );
     });
   }
 
-  void _syncDraftFromState() {
-    final draft = ref.read(storyBuilderControllerProvider).draftText;
-    if (_textController.text != draft) {
-      _textController.value = TextEditingValue(
-        text: draft,
-        selection: TextSelection.collapsed(offset: draft.length),
-      );
+  String? _promptKey(StoryBuilderUiState state) {
+    if (state.phase != StoryBuilderUiPhase.questioning) {
+      return null;
     }
+    final promptId = state.prompt?.id.value;
+    if (promptId == null) {
+      return null;
+    }
+    return '$promptId@${state.promptIndex}';
+  }
+
+  /// Seeds the editing controller from session draft when the active prompt
+  /// changes. Must **not** run on every keystroke / [draftText] update.
+  void _bindControllerToCurrentPrompt(
+    StoryBuilderUiState state, {
+    bool force = false,
+  }) {
+    final key = _promptKey(state);
+    if (key == null) {
+      _boundPromptKey = null;
+      return;
+    }
+    if (!force && key == _boundPromptKey) {
+      return;
+    }
+    _boundPromptKey = key;
+    final draft = state.draftText;
+    if (_textController.text == draft &&
+        !_textController.value.composing.isValid) {
+      return;
+    }
+    _textController.value = TextEditingValue(
+      text: draft,
+      selection: TextSelection.collapsed(offset: draft.length),
+    );
   }
 
   Future<void> _pauseAndLeave() async {
@@ -91,13 +128,13 @@ class _StoryBuilderScreenState extends ConsumerState<StoryBuilderScreen> {
     final controller = ref.read(storyBuilderControllerProvider.notifier);
 
     ref.listen(storyBuilderControllerProvider, (prev, next) {
-      if (prev?.draftText != next.draftText &&
-          _textController.text != next.draftText &&
-          next.phase == StoryBuilderUiPhase.questioning) {
-        _textController.value = TextEditingValue(
-          text: next.draftText,
-          selection: TextSelection.collapsed(offset: next.draftText.length),
-        );
+      final prevKey = prev == null ? null : _promptKey(prev);
+      final nextKey = _promptKey(next);
+      final enteredQuestioning = prev?.phase != StoryBuilderUiPhase.questioning &&
+          next.phase == StoryBuilderUiPhase.questioning;
+      final promptChanged = prevKey != nextKey;
+      if (enteredQuestioning || promptChanged) {
+        _bindControllerToCurrentPrompt(next, force: true);
       }
     });
 
@@ -110,6 +147,8 @@ class _StoryBuilderScreenState extends ConsumerState<StoryBuilderScreen> {
         await _pauseAndLeave();
       },
       child: Scaffold(
+        // Keep the focused response above the software keyboard.
+        resizeToAvoidBottomInset: true,
         appBar: AppBar(
           title: Text(state.isAiMode ? 'AI Story Coach' : 'Build My Story'),
           actions: [
@@ -320,6 +359,7 @@ class _StoryBuilderScreenState extends ConsumerState<StoryBuilderScreen> {
               StoryBuilderUiPhase.questioning => _QuestionBody(
                 state: state,
                 textController: _textController,
+                focusNode: _responseFocusNode,
                 onDraftChanged: controller.updateDraft,
                 onBack: state.canGoBack && !state.isBusy
                     ? () => controller.goBack()
@@ -376,6 +416,7 @@ class _QuestionBody extends StatelessWidget {
   const _QuestionBody({
     required this.state,
     required this.textController,
+    required this.focusNode,
     required this.onDraftChanged,
     required this.onBack,
     required this.onSkip,
@@ -386,6 +427,7 @@ class _QuestionBody extends StatelessWidget {
 
   final StoryBuilderUiState state;
   final TextEditingController textController;
+  final FocusNode focusNode;
   final ValueChanged<String> onDraftChanged;
   final VoidCallback? onBack;
   final VoidCallback? onSkip;
@@ -396,97 +438,138 @@ class _QuestionBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final prompt = state.prompt;
+    final colorScheme = theme.colorScheme;
     final progressLabel = state.isAiMode
         ? 'Question ${state.displayStep}'
         : 'Question ${state.displayStep} of ${state.totalQuestions}';
+    // Scrollable content + sticky actions: works with keyboard inset and
+    // large Dynamic Type without a fixed-height expands TextField (iOS IME).
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          progressLabel,
-          key: const ValueKey('story-builder-progress'),
-          style: theme.textTheme.labelLarge?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-            letterSpacing: 0.4,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          state.isAiMode
-              ? 'AI Story Coach — you remain the author.'
-              : "Let's tell your story together.",
-          key: const ValueKey('story-builder-coach-label'),
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: 20),
-        Text(
-          prompt?.text ?? '',
-          key: const ValueKey('story-builder-prompt'),
-          style: theme.textTheme.headlineSmall?.copyWith(
-            fontWeight: FontWeight.w600,
-            height: 1.35,
-          ),
-        ),
-        const SizedBox(height: 20),
         Expanded(
-          child: TextField(
-            key: const ValueKey('story-builder-response-field'),
-            controller: textController,
-            onChanged: onDraftChanged,
-            enabled: !state.isBusy,
-            maxLines: null,
-            expands: true,
-            textAlignVertical: TextAlignVertical.top,
-            decoration: InputDecoration(
-              hintText: 'Write in your own words…',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
+          child: SingleChildScrollView(
+            key: const ValueKey('story-builder-question-scroll'),
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  progressLabel,
+                  key: const ValueKey('story-builder-progress'),
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                    letterSpacing: 0.4,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  state.isAiMode
+                      ? 'AI Story Coach — you remain the author.'
+                      : "Let's tell your story together.",
+                  key: const ValueKey('story-builder-coach-label'),
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: colorScheme.onSurface,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  prompt?.text ?? '',
+                  key: const ValueKey('story-builder-prompt'),
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    height: 1.35,
+                    color: colorScheme.onSurface,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                TextField(
+                  key: const ValueKey('story-builder-response-field'),
+                  controller: textController,
+                  focusNode: focusNode,
+                  onChanged: onDraftChanged,
+                  // Keep the field enabled while busy so iOS does not grey out /
+                  // blank composed text; actions below are what we disable.
+                  readOnly: state.isBusy,
+                  keyboardType: TextInputType.multiline,
+                  textInputAction: TextInputAction.newline,
+                  textCapitalization: TextCapitalization.sentences,
+                  autocorrect: true,
+                  enableSuggestions: true,
+                  minLines: 6,
+                  maxLines: null,
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    color: colorScheme.onSurface,
+                    height: 1.45,
+                  ),
+                  cursorColor: colorScheme.primary,
+                  decoration: InputDecoration(
+                    hintText: 'Write in your own words…',
+                    hintStyle: theme.textTheme.bodyLarge?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                    alignLabelWithHint: true,
+                  ),
+                ),
+                if (state.errorMessage != null) ...[
+                  const SizedBox(height: 12),
+                  Text(
+                    state.errorMessage!,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: colorScheme.error,
+                    ),
+                  ),
+                ],
+                // Extra space so the focused line can scroll above the keyboard.
+                const SizedBox(height: 24),
+              ],
             ),
           ),
         ),
-        if (state.errorMessage != null) ...[
-          const SizedBox(height: 12),
-          Text(
-            state.errorMessage!,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.error,
-            ),
-          ),
-        ],
-        const SizedBox(height: 16),
-        Row(
+        const SizedBox(height: 12),
+        Wrap(
+          key: const ValueKey('story-builder-actions'),
+          alignment: WrapAlignment.spaceBetween,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          spacing: 8,
+          runSpacing: 8,
           children: [
             TextButton(
               key: const ValueKey('story-builder-back'),
               onPressed: onBack,
               child: const Text('Back'),
             ),
-            const Spacer(),
-            if (onFinish != null)
-              TextButton(
-                key: const ValueKey('story-builder-finish'),
-                onPressed: onFinish,
-                child: const Text('Finish'),
-              ),
-            TextButton(
-              key: const ValueKey('story-builder-skip'),
-              onPressed: onSkip,
-              child: const Text('Skip'),
-            ),
-            const SizedBox(width: 8),
-            FilledButton(
-              key: const ValueKey('story-builder-continue'),
-              onPressed: onContinue,
-              child: state.isBusy
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Text('Continue'),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (onFinish != null)
+                  TextButton(
+                    key: const ValueKey('story-builder-finish'),
+                    onPressed: onFinish,
+                    child: const Text('Finish'),
+                  ),
+                TextButton(
+                  key: const ValueKey('story-builder-skip'),
+                  onPressed: onSkip,
+                  child: const Text('Skip'),
+                ),
+                const SizedBox(width: 8),
+                FilledButton(
+                  key: const ValueKey('story-builder-continue'),
+                  onPressed: onContinue,
+                  child: state.isBusy
+                      ? SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: colorScheme.onPrimary,
+                          ),
+                        )
+                      : const Text('Continue'),
+                ),
+              ],
             ),
           ],
         ),
@@ -627,12 +710,17 @@ class _ScriptReviewBodyState extends State<_ScriptReviewBody> {
   @override
   void didUpdateWidget(covariant _ScriptReviewBody oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.draftText != widget.draftText &&
-        _controller.text != widget.draftText) {
-      _controller.value = TextEditingValue(
-        text: widget.draftText,
-        selection: TextSelection.collapsed(offset: widget.draftText.length),
-      );
+    // Re-seed only when entering edit mode or switching scripts — never on
+    // each keystroke mirrored through [draftText] (preserves iOS IME).
+    final enteredEditing = !oldWidget.isEditing && widget.isEditing;
+    final scriptChanged = oldWidget.script.id != widget.script.id;
+    if (enteredEditing || scriptChanged) {
+      if (_controller.text != widget.draftText) {
+        _controller.value = TextEditingValue(
+          text: widget.draftText,
+          selection: TextSelection.collapsed(offset: widget.draftText.length),
+        );
+      }
     }
   }
 
@@ -645,6 +733,7 @@ class _ScriptReviewBodyState extends State<_ScriptReviewBody> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     return Column(
       key: const ValueKey('story-builder-script-review'),
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -654,13 +743,17 @@ class _ScriptReviewBodyState extends State<_ScriptReviewBody> {
           key: const ValueKey('story-builder-script-title'),
           style: theme.textTheme.headlineSmall?.copyWith(
             fontWeight: FontWeight.w700,
+            color: colorScheme.onSurface,
           ),
         ),
         const SizedBox(height: 8),
         Text(
           'This is your story, shaped from the words and experiences you shared.\n'
           'Read it through, make any changes you want, and approve it when it feels right.',
-          style: theme.textTheme.bodyLarge?.copyWith(height: 1.5),
+          style: theme.textTheme.bodyLarge?.copyWith(
+            height: 1.5,
+            color: colorScheme.onSurface,
+          ),
         ),
         if (widget.errorMessage != null) ...[
           const SizedBox(height: 12),
@@ -668,30 +761,49 @@ class _ScriptReviewBodyState extends State<_ScriptReviewBody> {
             widget.errorMessage!,
             key: const ValueKey('story-builder-script-review-error'),
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.error,
+              color: colorScheme.error,
             ),
           ),
         ],
         const SizedBox(height: 16),
         Expanded(
           child: widget.isEditing
-              ? TextField(
-                  key: const ValueKey('story-builder-script-editor'),
-                  controller: _controller,
-                  maxLines: null,
-                  expands: true,
-                  textAlignVertical: TextAlignVertical.top,
-                  onChanged: widget.onDraftChanged,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    alignLabelWithHint: true,
+              ? SingleChildScrollView(
+                  keyboardDismissBehavior:
+                      ScrollViewKeyboardDismissBehavior.onDrag,
+                  child: TextField(
+                    key: const ValueKey('story-builder-script-editor'),
+                    controller: _controller,
+                    readOnly: widget.isBusy,
+                    keyboardType: TextInputType.multiline,
+                    textInputAction: TextInputAction.newline,
+                    textCapitalization: TextCapitalization.sentences,
+                    autocorrect: true,
+                    enableSuggestions: true,
+                    minLines: 10,
+                    maxLines: null,
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      color: colorScheme.onSurface,
+                      height: 1.6,
+                    ),
+                    cursorColor: colorScheme.primary,
+                    onChanged: widget.onDraftChanged,
+                    decoration: InputDecoration(
+                      alignLabelWithHint: true,
+                      hintStyle: theme.textTheme.bodyLarge?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
                   ),
                 )
               : SingleChildScrollView(
                   key: const ValueKey('story-builder-script-content'),
                   child: Text(
                     widget.script.content,
-                    style: theme.textTheme.bodyLarge?.copyWith(height: 1.6),
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      height: 1.6,
+                      color: colorScheme.onSurface,
+                    ),
                   ),
                 ),
         ),
