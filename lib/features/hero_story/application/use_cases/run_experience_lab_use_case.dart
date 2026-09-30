@@ -235,6 +235,8 @@ final class RunExperienceLabUseCase
           plan: plan,
           at: at,
           forceRegenerate: request.forceRegenerate,
+          providerHint: config.voiceProvider,
+          modelHint: config.voiceModel,
         );
         run = run.copyWith(voiceRenderingId: voiceRendering.id);
         await _labRunRepository.save(run);
@@ -321,6 +323,8 @@ final class RunExperienceLabUseCase
     required StoryExperiencePlan plan,
     required DateTime at,
     required bool forceRegenerate,
+    String? providerHint,
+    String? modelHint,
   }) async {
     if (!forceRegenerate) {
       final existing = await _voiceRenderingRepository.findByStoryId(storyId);
@@ -344,6 +348,7 @@ final class RunExperienceLabUseCase
         'Transcript text is required to render lab narration.',
       );
     }
+    final language = transcript!.language;
 
     final draft = await _voiceRenderingPort.render(
       VoiceRenderingRequest(
@@ -352,7 +357,10 @@ final class RunExperienceLabUseCase
         experiencePlanProcessingVersion: plan.processingVersion,
         sourceRepresentationId: plan.transcriptRepresentationId,
         sourceText: sourceText,
+        language: language,
         renderingMode: VoiceRenderingMode.syntheticNarration,
+        providerHint: providerHint,
+        modelHint: modelHint,
       ),
     );
     if (draft.audioBytes.isEmpty) {
@@ -381,6 +389,7 @@ final class RunExperienceLabUseCase
       experiencePlanId: plan.id,
       experiencePlanProcessingVersion: plan.processingVersion,
       sourceRepresentationId: plan.transcriptRepresentationId,
+      language: draft.language,
       renderingMode: VoiceRenderingMode.syntheticNarration,
       mediaReference: mediaReference,
       contentType: draft.contentType.trim(),

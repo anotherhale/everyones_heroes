@@ -1109,6 +1109,9 @@ void main() {
     Map<String, dynamic> requestBody({
       String mode = 'syntheticNarration',
       String sourceText = 'A grounded hero story transcript.',
+      String language = 'en',
+      String? providerHint,
+      String? modelHint,
     }) {
       return {
         'storyId': 'story-1',
@@ -1116,8 +1119,11 @@ void main() {
         'experiencePlanProcessingVersion': 'hs12.4.v1',
         'sourceRepresentationId': 'transcript-1',
         'sourceText': sourceText,
+        'language': language,
         'renderingMode': mode,
         'processingVersion': 'hs12.6.v1',
+        if (providerHint != null) 'providerHint': providerHint,
+        if (modelHint != null) 'modelHint': modelHint,
       };
     }
 
@@ -1167,19 +1173,49 @@ void main() {
       expect(decoded['error'], contains('not voice cloning'));
     });
 
+    test('rejects missing language', () async {
+      final body = requestBody()..remove('language');
+      final response = await handler.handleRender(
+        Request(
+          'POST',
+          Uri.parse('http://localhost/story-voice-renderings'),
+          body: jsonEncode(body),
+        ),
+      );
+      expect(response.statusCode, 400);
+      final decoded = jsonDecode(await response.readAsString()) as Map;
+      expect(decoded['error'], contains('language'));
+    });
+
+    test('rejects invalid language', () async {
+      final response = await handler.handleRender(
+        Request(
+          'POST',
+          Uri.parse('http://localhost/story-voice-renderings'),
+          body: jsonEncode(requestBody(language: '!!')),
+        ),
+      );
+      expect(response.statusCode, 400);
+      final decoded = jsonDecode(await response.readAsString()) as Map;
+      expect(decoded['error'], contains('language'));
+    });
+
     test('returns base64 audio for synthetic narration', () async {
       speech.audioBytes = utf8.encode('fake-mp3-bytes');
       final response = await handler.handleRender(
         Request(
           'POST',
           Uri.parse('http://localhost/story-voice-renderings'),
-          body: jsonEncode(requestBody()),
+          body: jsonEncode(requestBody(language: 'es')),
         ),
       );
       expect(response.statusCode, 200);
       final decoded =
           jsonDecode(await response.readAsString()) as Map<String, dynamic>;
       expect(decoded['renderingMode'], 'syntheticNarration');
+      expect(decoded['language'], 'es');
+      expect(decoded['storyId'], 'story-1');
+      expect(decoded['sourceRepresentationId'], 'transcript-1');
       expect(decoded['contentType'], 'audio/mpeg');
       expect(decoded['providerLabel'], 'openai_tts_via_eh_proxy');
       expect(decoded['processingVersion'], 'hs12.6.v1');
@@ -1188,6 +1224,30 @@ void main() {
         utf8.decode(base64Decode(decoded['audioBase64'] as String)),
         'fake-mp3-bytes',
       );
+    });
+
+    test('echoes opaque provider/model hints without requiring cloning',
+        () async {
+      speech.audioBytes = utf8.encode('hinted-audio');
+      final response = await handler.handleRender(
+        Request(
+          'POST',
+          Uri.parse('http://localhost/story-voice-renderings'),
+          body: jsonEncode(
+            requestBody(
+              providerHint: 'openai',
+              modelHint: 'tts-1-hd',
+            ),
+          ),
+        ),
+      );
+      expect(response.statusCode, 200);
+      final decoded =
+          jsonDecode(await response.readAsString()) as Map<String, dynamic>;
+      expect(decoded['providerLabel'], 'openai_via_eh_proxy');
+      expect(decoded['modelLabel'], 'tts-1-hd');
+      expect(decoded['language'], 'en');
+      expect(decoded['renderingMode'], 'syntheticNarration');
     });
 
     test('maps provider failure to 502', () async {

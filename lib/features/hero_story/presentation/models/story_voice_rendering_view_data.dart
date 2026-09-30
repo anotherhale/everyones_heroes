@@ -8,6 +8,7 @@ final class StoryVoiceRenderingViewData {
     required this.experiencePlanId,
     required this.experiencePlanProcessingVersion,
     required this.sourceRepresentationId,
+    required this.language,
     required this.renderingMode,
     required this.contentType,
     required this.byteLength,
@@ -20,6 +21,7 @@ final class StoryVoiceRenderingViewData {
   final String experiencePlanId;
   final String experiencePlanProcessingVersion;
   final String sourceRepresentationId;
+  final String language;
   final VoiceRenderingMode renderingMode;
   final String contentType;
   final int byteLength;

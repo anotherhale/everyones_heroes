@@ -11,6 +11,8 @@ final class RenderStoryVoiceAppRequest {
     this.renderingMode = VoiceRenderingMode.syntheticNarration,
     this.forceRegenerate = false,
     this.processingVersion = StoryVoiceRendering.defaultProcessingVersion,
+    this.providerHint,
+    this.modelHint,
     this.occurredAt,
   });
 
@@ -21,5 +23,11 @@ final class RenderStoryVoiceAppRequest {
   /// When false, returns an existing artifact for the same plan version.
   final bool forceRegenerate;
   final String processingVersion;
+
+  /// Optional opaque infrastructure provider selection hint (not a vendor SDK).
+  final String? providerHint;
+
+  /// Optional opaque infrastructure model selection hint.
+  final String? modelHint;
   final DateTime? occurredAt;
 }
