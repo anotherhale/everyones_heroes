@@ -2816,11 +2816,13 @@ See:
 
 # HS-ADR-078 Voice Identity and Cloning Boundary
 
-Status: Accepted (architecture spike — not a production implementation)
+Status: Accepted — boundary locked by HS.12.8; VoiceProfile foundation
+implemented in HS.12.9 (no production cloning)
 
-Date: 2026-09-30
+Date: 2026-09-30 (addendum 2026-10-01)
 
-Phase: HS.12.8 — Voice Identity & Cloning Architecture Spike
+Phase: HS.12.8 — Voice Identity & Cloning Architecture Spike;
+HS.12.9 — Voice Profile Foundation
 
 Decision:
 
@@ -2836,17 +2838,21 @@ production cloning, enrollment, or consent UI is implemented.
 
 ## Boundary
 
-- Future VoiceProfile is **Hero-scoped** (not Story-owned, not a marketplace).
+- VoiceProfile is **Hero-scoped** (not Story-owned, not a marketplace).
 - Reference audio is `MediaReference` + storage-port bytes — never domain
   bytes and never Story seeker/catalog API surface.
-- Consent/authorization must distinguish enrollment ≠ story synthesis use ≠
-  publication; existing `voiceRenderingApprovedAt` remains synthetic-only.
-- Enrollment uses a separate skeletal `VoiceProfilePort`; synthesis remains
-  on existing `VoiceRenderingPort`.
+- Consent/authorization must distinguish enrollment ≠ cloning ≠ story
+  synthesis use ≠ publication; existing `voiceRenderingApprovedAt` remains
+  synthetic-only. HS.12.9 implements profile-level
+  `VoiceProfileAuthorization` with four independent gates.
+- Enrollment uses a separate `VoiceProfilePort`; synthesis remains on
+  existing `VoiceRenderingPort`.
 - Provider-specific voice ids / SDKs / credentials stay in AI proxy /
   infrastructure mappings keyed by `VoiceProfileId`.
 - Historical renderings retain snapshot provenance; revoke blocks future
   synthesis; disposition of existing published audio is a policy decision.
+- Optional `voiceProfileId` on `StoryVoiceRendering` remains deferred until
+  cloning enablement.
 
 ## Explicit non-decisions
 
@@ -2858,6 +2864,7 @@ See:
 
 - `docs/architecture/HS-ADR-078-Voice-Identity-and-Cloning-Boundary.md`
 - `docs/architecture/HS.12.8-Voice-Identity-and-Cloning-Architecture-Spike.md`
+- `docs/architecture/HS.12.9-Voice-Profile-Foundation.md`
 
 ---
 
