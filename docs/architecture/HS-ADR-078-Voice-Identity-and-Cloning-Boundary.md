@@ -1,14 +1,18 @@
 # HS-ADR-078 Voice Identity and Cloning Boundary
 
 **Status:** Accepted — architectural boundary locked by HS.12.8; **VoiceProfile
-domain foundation implemented in HS.12.9** (no production cloning)  
-**Date:** 2026-09-30 (addendum 2026-10-01)  
+domain foundation implemented in HS.12.9** (no production cloning);
+**cloning authorization scope modeled in HS.12.10** (no production cloning)  
+**Date:** 2026-09-30 (addenda 2026-10-01)  
 **Phase:** HS.12.8 — Voice Identity & Cloning Architecture Spike;  
-HS.12.9 — Voice Profile Foundation  
-**Related:** HS-ADR-076, HS-ADR-077, HS.12.6, HS.12.7, HS.12.8, HS.12.9,  
+HS.12.9 — Voice Profile Foundation;  
+HS.12.10 — Voice Cloning Authorization Scope & Boundary  
+**Related:** HS-ADR-076, HS-ADR-077, HS.12.6, HS.12.7, HS.12.8, HS.12.9,
+HS.12.10,  
 `Voice-Synthesis-Voice-Cloning-Implementation-Plan.md`,  
 `HS.12.8-Voice-Identity-and-Cloning-Architecture-Spike.md`,  
-`HS.12.9-Voice-Profile-Foundation.md`
+`HS.12.9-Voice-Profile-Foundation.md`,  
+`HS.12.10-Voice-Cloning-Authorization-Scope.md`
 
 ---
 
@@ -309,22 +313,91 @@ Qwen3, CosyVoice, or another provider.
 
 1. Final retention period for reference audio
 2. Encryption / privacy controls for reference audio at rest and in transit
-3. Exact consent field placement and product/legal wording
+3. Exact product/legal consent wording (technical authorization model exists)
 4. Revocation policy for already-published generated audio
 5. Whether selected narrations ever promote to approved `StoryRepresentation`
 6. First cloning provider (Qwen Base vs CosyVoice vs hosted)
 7. Whether non-Hero users may own VoiceProfiles
 8. Streaming / real-time voice conversion (out of scope)
 
-### Future implementation work (post HS.12.9)
+### Future implementation work (post HS.12.10)
 
 - ~~HS.12.9 Voice Profile Foundation~~ → **complete**
+- ~~HS.12.10 Voice Cloning Authorization Scope~~ → **complete**
 - Reference-audio enrollment + storage purpose tags
 - Proxy `/voice-profiles` routes + provider enrollment adapters
-- Enable `VoiceRenderingMode.voiceClone` only behind consent + profile
-- Optional `voiceProfileId` on `StoryVoiceRendering` (deferred in HS.12.9)
+- Enable `VoiceRenderingMode.voiceClone` only behind consent + profile + scope
+- Optional `voiceProfileId` on `StoryVoiceRendering` (deferred in HS.12.9/10)
 - M4 Qwen benchmark remains a separate operational follow-up
-- Per-story voice-use grant schema (profile gates exist; story binding open)
+
+---
+
+## Addendum — HS.12.10 Voice Cloning Authorization Scope (2026-10-01)
+
+### Decision
+
+> Voice cloning authorization scope is configurable per VoiceProfile, with
+> **perStory as the default**. **perProfile** is an explicit opt-in mode.
+
+### Scope ≠ authorization
+
+| Concept | Answers | Location |
+|---------|---------|----------|
+| `VoiceCloningAuthorizationScope` | Where is cloning authorization governed? | `VoiceProfile.cloningAuthorizationScope` |
+| Cloning authorization stamps | Has cloning been authorized at that scope? | Profile `cloningAuthorizedAt` and/or Story `voiceCloningAuthorizedAt` |
+
+These must never collapse into one boolean.
+
+### Semantics
+
+**perStory (default)**
+
+- Effective cloning requires explicit Story-level cloning authorization.
+- Profile-level cloning authorization alone does **not** authorize a Story.
+- A newly created VoiceProfile must not blank-authorize every Story for the Hero.
+
+**perProfile (explicit opt-in)**
+
+- Profile-level cloning authorization may authorize cloning for Stories
+  associated with that profile.
+- Subject to remaining independent gates (enrollment lifecycle, story-use,
+  ownership, publication remains independent).
+
+### Explicit Story denial
+
+StoryConsent distinguishes:
+
+- not granted (both stamps null)
+- authorized (`voiceCloningAuthorizedAt`)
+- denied (`voiceCloningDeniedAt`)
+
+**Story denial always wins**, including under `perProfile` scope. A
+profile-level authorization must never silently override an explicit Story
+denial.
+
+### Independent gates (unchanged)
+
+Enrollment ≠ cloning ≠ story-use ≠ publication ≠ synthetic narration
+(`voiceRenderingApprovedAt`).
+
+### Revocation / lifecycle
+
+- Revoked or deleted VoiceProfiles can never be used for cloning.
+- Changing scope does not erase existing authorization stamps.
+- Switching back to `perStory` restores the Story-level requirement at
+  evaluation time.
+
+### Effective evaluation
+
+Centralized in `VoiceCloningAuthorizationPolicy` →
+`EffectiveVoiceCloningAuthorization`. Do not duplicate in use cases or UI.
+
+### Deferred
+
+Production cloning, provider enrollment adapters, consent UI, and
+`StoryVoiceRendering.voiceProfileId` remain deferred.
+
+See: `docs/architecture/HS.12.10-Voice-Cloning-Authorization-Scope.md`.
 
 ---
 
@@ -361,6 +434,8 @@ HS.12.8 does **not** decide:
 ## See also
 
 - `docs/architecture/HS.12.8-Voice-Identity-and-Cloning-Architecture-Spike.md`
+- `docs/architecture/HS.12.9-Voice-Profile-Foundation.md`
+- `docs/architecture/HS.12.10-Voice-Cloning-Authorization-Scope.md`
 - `docs/architecture/HS.12.6-Voice-Rendering-Implementation-Report.md`
 - `docs/architecture/HS.12.7-TTS-Provider-Benchmark.md`
 - `docs/architecture/Voice-Synthesis-Voice-Cloning-Implementation-Plan.md`

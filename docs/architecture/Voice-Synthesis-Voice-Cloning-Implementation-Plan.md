@@ -819,6 +819,7 @@ Story + consent + plan + transcript
 - ~~Voice identity / cloning architecture~~ → **HS.12.8 complete** (HS-ADR-078; skeletal `VoiceProfilePort`; no production cloning)
 - Multi-provider production hardening / provider lock (Andy approval)
 - ~~**HS.12.9 Voice Profile Foundation**~~ → **complete** (aggregate + lifecycle + four auth gates + in-memory port/repo + use cases; durable persistence and `voiceProfileId` on `StoryVoiceRendering` deferred; still no production clone adapter)
+- ~~**HS.12.10 Voice Cloning Authorization Scope**~~ → **complete** (`perStory` default / `perProfile` opt-in; StoryConsent grant+denial; centralized `VoiceCloningAuthorizationPolicy`; still no production cloning)
 - V5 production cloning adapter enablement (`voiceClone` mode) after consent/product decisions
 - M4 Qwen operational benchmark (separate from architecture)
 
