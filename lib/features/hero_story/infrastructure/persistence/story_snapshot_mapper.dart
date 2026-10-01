@@ -322,6 +322,9 @@ final class StorySnapshotMapper {
           consent.voiceRenderingApprovedAt?.toIso8601String(),
       'musicGenerationApprovedAt':
           consent.musicGenerationApprovedAt?.toIso8601String(),
+      'voiceCloningAuthorizedAt':
+          consent.voiceCloningAuthorizedAt?.toIso8601String(),
+      'voiceCloningDeniedAt': consent.voiceCloningDeniedAt?.toIso8601String(),
     };
   }
 
@@ -338,6 +341,9 @@ final class StorySnapshotMapper {
       aiTransformationApprovedAt: parseOptional('aiTransformationApprovedAt'),
       voiceRenderingApprovedAt: parseOptional('voiceRenderingApprovedAt'),
       musicGenerationApprovedAt: parseOptional('musicGenerationApprovedAt'),
+      // HS.12.10 — absent keys remain null (backward-compatible).
+      voiceCloningAuthorizedAt: parseOptional('voiceCloningAuthorizedAt'),
+      voiceCloningDeniedAt: parseOptional('voiceCloningDeniedAt'),
     );
   }
 

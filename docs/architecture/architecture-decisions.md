@@ -2817,12 +2817,14 @@ See:
 # HS-ADR-078 Voice Identity and Cloning Boundary
 
 Status: Accepted — boundary locked by HS.12.8; VoiceProfile foundation
-implemented in HS.12.9 (no production cloning)
+implemented in HS.12.9; cloning authorization scope modeled in HS.12.10
+(no production cloning)
 
-Date: 2026-09-30 (addendum 2026-10-01)
+Date: 2026-09-30 (addenda 2026-10-01)
 
 Phase: HS.12.8 — Voice Identity & Cloning Architecture Spike;
-HS.12.9 — Voice Profile Foundation
+HS.12.9 — Voice Profile Foundation;
+HS.12.10 — Voice Cloning Authorization Scope & Boundary
 
 Decision:
 
@@ -2845,6 +2847,11 @@ production cloning, enrollment, or consent UI is implemented.
   synthesis use ≠ publication; existing `voiceRenderingApprovedAt` remains
   synthetic-only. HS.12.9 implements profile-level
   `VoiceProfileAuthorization` with four independent gates.
+- **HS.12.10:** Voice cloning authorization scope is configurable per
+  VoiceProfile (`perStory` default; `perProfile` explicit opt-in). Scope ≠
+  authorization. Story-level grant/denial lives on `StoryConsent`; explicit
+  Story denial always wins. Effective evaluation is centralized in
+  `VoiceCloningAuthorizationPolicy`.
 - Enrollment uses a separate `VoiceProfilePort`; synthesis remains on
   existing `VoiceRenderingPort`.
 - Provider-specific voice ids / SDKs / credentials stay in AI proxy /
@@ -2865,6 +2872,7 @@ See:
 - `docs/architecture/HS-ADR-078-Voice-Identity-and-Cloning-Boundary.md`
 - `docs/architecture/HS.12.8-Voice-Identity-and-Cloning-Architecture-Spike.md`
 - `docs/architecture/HS.12.9-Voice-Profile-Foundation.md`
+- `docs/architecture/HS.12.10-Voice-Cloning-Authorization-Scope.md`
 
 ---
 

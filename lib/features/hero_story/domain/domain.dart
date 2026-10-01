@@ -47,6 +47,7 @@ export 'enums/story_visibility.dart';
 export 'enums/suitability_level.dart';
 export 'enums/understanding_review_decision.dart';
 export 'enums/understanding_status.dart';
+export 'enums/voice_cloning_authorization_scope.dart';
 export 'enums/voice_profile_lifecycle_status.dart';
 export 'enums/voice_rendering_mode.dart';
 
@@ -113,6 +114,7 @@ export 'services/captured_story_reading_port.dart';
 export 'services/story_experience_planner_port.dart';
 export 'services/story_translation_port.dart';
 export 'services/story_understanding_port.dart';
+export 'services/voice_cloning_authorization_policy.dart';
 export 'services/voice_profile_port.dart';
 export 'services/voice_rendering_port.dart';
 
@@ -123,6 +125,7 @@ export 'value_objects/captured_story_reading.dart';
 export 'value_objects/content_suitability.dart';
 export 'value_objects/deterministic_story_structure.dart';
 export 'value_objects/deterministic_story_structure_section.dart';
+export 'value_objects/effective_voice_cloning_authorization.dart';
 export 'value_objects/grounded_story_element.dart';
 export 'value_objects/hero_profile.dart';
 export 'value_objects/media_reference.dart';

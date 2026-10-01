@@ -2,6 +2,7 @@ import 'package:everyonesheroes/core/ids/hero_id.dart';
 import 'package:everyonesheroes/core/ids/voice_profile_id.dart';
 import 'package:everyonesheroes/core/shared_kernel/aggregate_root.dart';
 import 'package:everyonesheroes/core/shared_kernel/language_code.dart';
+import 'package:everyonesheroes/features/hero_story/domain/enums/voice_cloning_authorization_scope.dart';
 import 'package:everyonesheroes/features/hero_story/domain/enums/voice_profile_lifecycle_status.dart';
 import 'package:everyonesheroes/features/hero_story/domain/events/voice_profile_created.dart';
 import 'package:everyonesheroes/features/hero_story/domain/events/voice_profile_deleted.dart';
@@ -26,6 +27,8 @@ final class VoiceProfile extends AggregateRoot<VoiceProfileId> {
     VoiceProfileLifecycleStatus lifecycleStatus =
         VoiceProfileLifecycleStatus.draft,
     VoiceProfileAuthorization authorization = VoiceProfileAuthorization.none,
+    VoiceCloningAuthorizationScope cloningAuthorizationScope =
+        VoiceCloningAuthorizationScope.perStory,
     List<MediaReference> referenceAudio = const [],
     String? displayName,
     DateTime? createdAt,
@@ -34,6 +37,7 @@ final class VoiceProfile extends AggregateRoot<VoiceProfileId> {
         _language = language,
         _lifecycleStatus = lifecycleStatus,
         _authorization = authorization,
+        _cloningAuthorizationScope = cloningAuthorizationScope,
         _referenceAudio = List<MediaReference>.of(referenceAudio),
         _displayName = _trimOrNull(displayName),
         _createdAt = createdAt ?? DateTime.now(),
@@ -53,6 +57,9 @@ final class VoiceProfile extends AggregateRoot<VoiceProfileId> {
       id: id,
       ownerHeroId: ownerHeroId,
       language: language,
+      // HS.12.10: new profiles default to perStory — never blank-authorize
+      // every Story for the Hero.
+      cloningAuthorizationScope: VoiceCloningAuthorizationScope.perStory,
       referenceAudio: referenceAudio,
       displayName: displayName,
       createdAt: at,
@@ -73,6 +80,7 @@ final class VoiceProfile extends AggregateRoot<VoiceProfileId> {
   LanguageCode _language;
   VoiceProfileLifecycleStatus _lifecycleStatus;
   VoiceProfileAuthorization _authorization;
+  VoiceCloningAuthorizationScope _cloningAuthorizationScope;
   final List<MediaReference> _referenceAudio;
   String? _displayName;
   final DateTime _createdAt;
@@ -81,6 +89,14 @@ final class VoiceProfile extends AggregateRoot<VoiceProfileId> {
   LanguageCode get language => _language;
   VoiceProfileLifecycleStatus get lifecycleStatus => _lifecycleStatus;
   VoiceProfileAuthorization get authorization => _authorization;
+
+  /// Where cloning authorization is governed for this profile (HS.12.10).
+  ///
+  /// Distinct from [VoiceProfileAuthorization.isCloningAuthorized].
+  /// Defaults to [VoiceCloningAuthorizationScope.perStory].
+  VoiceCloningAuthorizationScope get cloningAuthorizationScope =>
+      _cloningAuthorizationScope;
+
   List<MediaReference> get referenceAudio =>
       List<MediaReference>.unmodifiable(_referenceAudio);
   String? get displayName => _displayName;
@@ -148,6 +164,9 @@ final class VoiceProfile extends AggregateRoot<VoiceProfileId> {
   }
 
   /// Grant cloning authorization. Independent of enrollment authorization.
+  ///
+  /// Does not change [cloningAuthorizationScope]. Under [perStory] scope,
+  /// profile cloning authorization alone does not authorize any Story.
   void authorizeCloning({DateTime? at}) {
     _ensureMutable();
     final when = at ?? DateTime.now();
@@ -155,6 +174,38 @@ final class VoiceProfile extends AggregateRoot<VoiceProfileId> {
       return;
     }
     _authorization = _authorization.grantCloning(when);
+    _touch(when);
+  }
+
+  /// Revoke profile-level cloning authorization.
+  ///
+  /// Does not change [cloningAuthorizationScope], enrollment, story-use, or
+  /// publication authorization.
+  void revokeCloning({DateTime? at}) {
+    _ensureMutable();
+    if (!_authorization.isCloningAuthorized) {
+      return;
+    }
+    final when = at ?? DateTime.now();
+    _authorization = _authorization.revokeCloning();
+    _touch(when);
+  }
+
+  /// Configure where cloning authorization is governed (HS.12.10).
+  ///
+  /// Changing scope does **not** mutate or erase existing authorization
+  /// stamps on [authorization]. Switching back to [perStory] restores the
+  /// requirement for Story-level cloning authorization at evaluation time.
+  void setCloningAuthorizationScope(
+    VoiceCloningAuthorizationScope scope, {
+    DateTime? at,
+  }) {
+    _ensureMutable();
+    if (_cloningAuthorizationScope == scope) {
+      return;
+    }
+    final when = at ?? DateTime.now();
+    _cloningAuthorizationScope = scope;
     _touch(when);
   }
 

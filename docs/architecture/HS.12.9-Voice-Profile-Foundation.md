@@ -181,11 +181,13 @@ them).
 
 ## 10. Recommended Next Milestone
 
-**HS.12.10 (candidate)** — only with explicit approval:
+**HS.12.10** — Voice Cloning Authorization Scope → **complete**
+(see `HS.12.10-Voice-Cloning-Authorization-Scope.md`).
 
-- Decide consent field placement / product wording (open from HS.12.8)
-- Optional `voiceProfileId` on `StoryVoiceRendering` when cloning path is next
+**HS.12.11 (candidate)** — only with explicit approval:
+
 - Reference-audio storage purpose tags + retention policy decision
 - First cloning provider spike behind `VoiceProfilePort` (still no user UI)
+- Optional `voiceProfileId` on `StoryVoiceRendering` when cloning path is next
 
 Do **not** auto-start production cloning from this milestone.

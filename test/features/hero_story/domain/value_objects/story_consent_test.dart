@@ -11,6 +11,7 @@ void main() {
     expect(consent.isPublicationApproved, isFalse);
     expect(consent.isAiTransformationApproved, isFalse);
     expect(consent.isVoiceRenderingApproved, isFalse);
+    expect(consent.isVoiceCloningAuthorized, isFalse);
 
     consent = consent.grantProcessing(at);
     expect(consent.isProcessingApproved, isTrue);
@@ -29,6 +30,7 @@ void main() {
 
     consent = consent.grantVoiceRendering(at);
     expect(consent.isVoiceRenderingApproved, isTrue);
+    expect(consent.isVoiceCloningAuthorized, isFalse);
   });
 
   test('revoking one stage does not clear others', () {
@@ -38,6 +40,7 @@ void main() {
         .grantPublication(at)
         .grantAiTransformation(at)
         .grantVoiceRendering(at)
+        .grantVoiceCloning(at)
         .revokeProcessing()
         .revokePublication()
         .revokeAiTransformation();
@@ -47,6 +50,7 @@ void main() {
     expect(consent.isPublicationApproved, isFalse);
     expect(consent.isAiTransformationApproved, isFalse);
     expect(consent.isVoiceRenderingApproved, isTrue);
+    expect(consent.isVoiceCloningAuthorized, isTrue);
   });
 
   test('AI transformation consent does not imply voice rendering', () {
@@ -55,5 +59,26 @@ void main() {
         .grantProcessing(at);
     expect(consent.isAiTransformationApproved, isTrue);
     expect(consent.isVoiceRenderingApproved, isFalse);
+  });
+
+  test('voice rendering consent does not imply voice cloning', () {
+    final consent = StoryConsent.none.grantVoiceRendering(at);
+    expect(consent.isVoiceRenderingApproved, isTrue);
+    expect(consent.isVoiceCloningAuthorized, isFalse);
+    expect(consent.isVoiceCloningDenied, isFalse);
+    expect(consent.isVoiceCloningNotGranted, isTrue);
+  });
+
+  test('story voice cloning supports grant, deny, and revoke', () {
+    var consent = StoryConsent.none.grantVoiceCloning(at);
+    expect(consent.isVoiceCloningAuthorized, isTrue);
+    expect(consent.isVoiceCloningDenied, isFalse);
+
+    consent = consent.denyVoiceCloning(at);
+    expect(consent.isVoiceCloningDenied, isTrue);
+    expect(consent.isVoiceCloningAuthorized, isFalse);
+
+    consent = consent.revokeVoiceCloning();
+    expect(consent.isVoiceCloningNotGranted, isTrue);
   });
 }
