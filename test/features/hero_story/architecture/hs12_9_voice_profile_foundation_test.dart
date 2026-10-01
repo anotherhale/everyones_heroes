@@ -37,7 +37,8 @@ void main() {
     expect(auth.contains('cloningAuthorizedAt'), isTrue);
     expect(auth.contains('storyUseAuthorizedAt'), isTrue);
     expect(auth.contains('publicationAuthorizedAt'), isTrue);
-    expect(auth.contains('voiceApproved'), isFalse);
+    expect(auth.contains('final bool voiceApproved'), isFalse);
+    expect(auth.contains('this.voiceApproved'), isFalse);
     expect(auth.contains('voiceRenderingApprovedAt'), isTrue);
   });
 

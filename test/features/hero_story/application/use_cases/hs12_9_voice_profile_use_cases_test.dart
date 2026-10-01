@@ -123,11 +123,12 @@ void main() {
       ),
     );
     expect(auth, isA<Success>());
+    final authorized = (auth as Success).value;
     expect(
-      (auth as Success).value.lifecycleStatus,
+      authorized.lifecycleStatus,
       VoiceProfileLifecycleStatus.authorized,
     );
-    expect(auth.value.authorization.isCloningAuthorized, isFalse);
+    expect(authorized.authorization.isCloningAuthorized, isFalse);
 
     final enrolled = await EnrollVoiceProfileUseCase(
       voiceProfileRepository: voiceProfileRepository,
@@ -141,13 +142,14 @@ void main() {
     );
 
     expect(enrolled, isA<Success>());
+    final enrolledProfile = (enrolled as Success).value;
     expect(
-      (enrolled as Success).value.lifecycleStatus,
+      enrolledProfile.lifecycleStatus,
       VoiceProfileLifecycleStatus.enrolled,
     );
     expect(voiceProfilePort.enrollCallCount, 1);
     expect(voiceProfilePort.hasSyntheticEnrollment(voiceProfileId), isTrue);
-    expect(enrolled.value.authorization.isCloningAuthorized, isFalse);
+    expect(enrolledProfile.authorization.isCloningAuthorized, isFalse);
   });
 
   test('authorization gates remain independent through use cases', () async {
@@ -228,11 +230,12 @@ void main() {
     );
 
     expect(revoked, isA<Success>());
+    final revokedProfile = (revoked as Success).value;
     expect(
-      (revoked as Success).value.lifecycleStatus,
+      revokedProfile.lifecycleStatus,
       VoiceProfileLifecycleStatus.revoked,
     );
-    expect(revoked.value.allowsFutureVoiceUse, isFalse);
+    expect(revokedProfile.allowsFutureVoiceUse, isFalse);
     expect(voiceProfilePort.revokeCallCount, 1);
   });
 
