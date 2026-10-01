@@ -2814,6 +2814,53 @@ See:
 
 ---
 
+# HS-ADR-078 Voice Identity and Cloning Boundary
+
+Status: Accepted (architecture spike — not a production implementation)
+
+Date: 2026-09-30
+
+Phase: HS.12.8 — Voice Identity & Cloning Architecture Spike
+
+Decision:
+
+Establish a provider-neutral boundary between **VoiceProfile** (voice identity)
+and **StoryVoiceRendering** (derived story audio artifact) before any
+production cloning, enrollment, or consent UI is implemented.
+
+## Architectural rule
+
+> A VoiceProfile represents a provider-independent voice identity.  
+> A StoryVoiceRendering represents a derived audio artifact generated from a
+> Story using a voice. These concepts must never be collapsed.
+
+## Boundary
+
+- Future VoiceProfile is **Hero-scoped** (not Story-owned, not a marketplace).
+- Reference audio is `MediaReference` + storage-port bytes — never domain
+  bytes and never Story seeker/catalog API surface.
+- Consent/authorization must distinguish enrollment ≠ story synthesis use ≠
+  publication; existing `voiceRenderingApprovedAt` remains synthetic-only.
+- Enrollment uses a separate skeletal `VoiceProfilePort`; synthesis remains
+  on existing `VoiceRenderingPort`.
+- Provider-specific voice ids / SDKs / credentials stay in AI proxy /
+  infrastructure mappings keyed by `VoiceProfileId`.
+- Historical renderings retain snapshot provenance; revoke blocks future
+  synthesis; disposition of existing published audio is a policy decision.
+
+## Explicit non-decisions
+
+Final TTS provider, final cloning provider, commercial/legal policy, consent
+wording, retention period, VoiceProfile UX, streaming, and real-time voice
+conversion.
+
+See:
+
+- `docs/architecture/HS-ADR-078-Voice-Identity-and-Cloning-Boundary.md`
+- `docs/architecture/HS.12.8-Voice-Identity-and-Cloning-Architecture-Spike.md`
+
+---
+
 # D-ADR-001 Inspiring Hero Preference Downstream Semantics Are Not Yet Defined
 
 Status: Accepted — downstream semantics deferred / **Not Yet**
