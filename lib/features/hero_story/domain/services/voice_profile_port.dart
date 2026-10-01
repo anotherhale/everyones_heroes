@@ -3,13 +3,15 @@ import 'package:everyonesheroes/core/ids/voice_profile_id.dart';
 import 'package:everyonesheroes/core/shared_kernel/language_code.dart';
 import 'package:everyonesheroes/features/hero_story/domain/value_objects/media_reference.dart';
 
-/// Provider-neutral VoiceProfile enrollment / lifecycle boundary (HS.12.8).
+/// Provider-neutral VoiceProfile enrollment / lifecycle boundary
+/// (HS.12.8 / HS.12.9).
 ///
 /// Enrollment and revocation are **not** story narration. Story audio
 /// synthesis remains on [VoiceRenderingPort]. Provider-specific voice ids,
 /// SDKs, and credentials must never appear on this contract (HS-ADR-078).
 ///
-/// HS.12.8 ships this skeletal port only. No production cloning adapter,
+/// HS.12.9 wires this port to the VoiceProfile aggregate via application use
+/// cases and an in-memory adapter. No production cloning adapter, durable
 /// persistence, or consent UI is implemented in this milestone.
 abstract interface class VoiceProfilePort {
   /// Create or refresh a provider enrollment for a Hero-owned voice identity.

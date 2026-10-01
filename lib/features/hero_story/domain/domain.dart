@@ -4,6 +4,7 @@ export 'aggregates/hero.dart';
 export 'aggregates/story.dart';
 export 'aggregates/story_builder_session.dart';
 export 'aggregates/story_understanding.dart';
+export 'aggregates/voice_profile.dart';
 
 export 'entities/story_representation.dart';
 
@@ -46,10 +47,16 @@ export 'enums/story_visibility.dart';
 export 'enums/suitability_level.dart';
 export 'enums/understanding_review_decision.dart';
 export 'enums/understanding_status.dart';
+export 'enums/voice_profile_lifecycle_status.dart';
 export 'enums/voice_rendering_mode.dart';
 
 export 'events/hero_created.dart';
 export 'events/hero_profile_updated.dart';
+export 'events/voice_profile_created.dart';
+export 'events/voice_profile_deleted.dart';
+export 'events/voice_profile_enrolled.dart';
+export 'events/voice_profile_enrollment_authorized.dart';
+export 'events/voice_profile_revoked.dart';
 export 'events/story_builder_session_completed.dart';
 export 'events/story_builder_session_created.dart';
 export 'events/story_approved.dart';
@@ -73,6 +80,7 @@ export 'repositories/story_experience_plan_repository.dart';
 export 'repositories/story_repository.dart';
 export 'repositories/story_understanding_repository.dart';
 export 'repositories/story_voice_rendering_repository.dart';
+export 'repositories/voice_profile_repository.dart';
 
 export 'services/hero_discoverability_policy.dart';
 export 'services/hero_search_port.dart';
@@ -105,6 +113,7 @@ export 'services/captured_story_reading_port.dart';
 export 'services/story_experience_planner_port.dart';
 export 'services/story_translation_port.dart';
 export 'services/story_understanding_port.dart';
+export 'services/voice_profile_port.dart';
 export 'services/voice_rendering_port.dart';
 
 export 'value_objects/candidate_content_suitability.dart';
@@ -137,6 +146,7 @@ export 'value_objects/story_proposal_review.dart';
 export 'value_objects/story_proposal_section.dart';
 export 'value_objects/story_proposal_section_edit.dart';
 export 'value_objects/story_voice_rendering.dart';
+export 'value_objects/voice_profile_authorization.dart';
 export 'value_objects/understood_claim.dart';
 export 'value_objects/understood_key_story_elements.dart';
 export 'value_objects/understood_narrative_element.dart';

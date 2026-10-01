@@ -1,9 +1,9 @@
 # EH Voice Synthesis & Voice Cloning — Implementation Plan
 
-**Status:** M1 (provider-neutral synthetic narration contract) implemented — see HS-ADR-077; **HS.12.7 TTS provider spike complete** — see `HS.12.7-TTS-Provider-Benchmark.md`; **HS.12.8 Voice Identity & Cloning architecture spike complete** — see HS-ADR-078 / `HS.12.8-Voice-Identity-and-Cloning-Architecture-Spike.md` (no production cloning)  
-**Date:** 2026-09-30  
+**Status:** M1 (provider-neutral synthetic narration contract) implemented — see HS-ADR-077; **HS.12.7 TTS provider spike complete** — see `HS.12.7-TTS-Provider-Benchmark.md`; **HS.12.8 Voice Identity & Cloning architecture spike complete** — see HS-ADR-078 / `HS.12.8-Voice-Identity-and-Cloning-Architecture-Spike.md`; **HS.12.9 Voice Profile Foundation implemented** — see `HS.12.9-Voice-Profile-Foundation.md` (aggregate + auth gates + in-memory port; no production cloning)  
+**Date:** 2026-10-01  
 **Audience:** Andy / architecture review  
-**Related:** HS-ADR-076, HS-ADR-077, HS-ADR-078, HS.12.6, HS.12.7, HS.12.8, AI Experience Provider Laboratory Plan, HS.1 Foundation
+**Related:** HS-ADR-076, HS-ADR-077, HS-ADR-078, HS.12.6, HS.12.7, HS.12.8, HS.12.9, AI Experience Provider Laboratory Plan, HS.1 Foundation
 
 ---
 
@@ -787,7 +787,7 @@ Story + consent + plan + transcript
 ## 24. Open decisions requiring Andy’s approval
 
 1. **Artifact model for cloned/published narrations:** remain on `StoryVoiceRendering` vs selective promotion to approved `StoryRepresentation`.
-2. **Cloning consent field placement:** StoryConsent extension vs VoiceProfileAuthorization vs both — independence is locked by HS-ADR-078; schema placement remains open for HS.12.9.
+2. **Cloning consent field placement:** StoryConsent extension vs VoiceProfileAuthorization vs both — independence is locked by HS-ADR-078; **VoiceProfileAuthorization implemented in HS.12.9** (profile-level gates). Per-story use grant schema remains open.
 3. **First commercial hosted provider after OpenAI:** ElevenLabs now, or defer until local clone spike?
 4. **First local cloning model priority:** Qwen3-TTS Base vs CosyVoice 3 vs both — CustomVoice (HS.12.7) is not cloning.
 5. **Whether lab multi-TTS (MiniMax/Qwen cloud) and this plan share the same proxy router workstream.**
@@ -818,7 +818,7 @@ Story + consent + plan + transcript
 - ~~V2 local-model spike (Qwen3 / CosyVoice)~~ → **HS.12.7 complete** (Qwen3 CustomVoice measured; CosyVoice not verified; no provider lock)
 - ~~Voice identity / cloning architecture~~ → **HS.12.8 complete** (HS-ADR-078; skeletal `VoiceProfilePort`; no production cloning)
 - Multi-provider production hardening / provider lock (Andy approval)
-- **HS.12.9 Voice Profile Foundation** (aggregate + consent gates; still no production clone adapter by default)
+- ~~**HS.12.9 Voice Profile Foundation**~~ → **complete** (aggregate + lifecycle + four auth gates + in-memory port/repo + use cases; durable persistence and `voiceProfileId` on `StoryVoiceRendering` deferred; still no production clone adapter)
 - V5 production cloning adapter enablement (`voiceClone` mode) after consent/product decisions
 - M4 Qwen operational benchmark (separate from architecture)
 

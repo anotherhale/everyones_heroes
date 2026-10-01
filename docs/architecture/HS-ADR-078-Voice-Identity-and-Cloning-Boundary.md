@@ -1,11 +1,14 @@
 # HS-ADR-078 Voice Identity and Cloning Boundary
 
-**Status:** Accepted (architecture spike — not a production implementation)  
-**Date:** 2026-09-30  
-**Phase:** HS.12.8 — Voice Identity & Cloning Architecture Spike  
-**Related:** HS-ADR-076, HS-ADR-077, HS.12.6, HS.12.7,  
+**Status:** Accepted — architectural boundary locked by HS.12.8; **VoiceProfile
+domain foundation implemented in HS.12.9** (no production cloning)  
+**Date:** 2026-09-30 (addendum 2026-10-01)  
+**Phase:** HS.12.8 — Voice Identity & Cloning Architecture Spike;  
+HS.12.9 — Voice Profile Foundation  
+**Related:** HS-ADR-076, HS-ADR-077, HS.12.6, HS.12.7, HS.12.8, HS.12.9,  
 `Voice-Synthesis-Voice-Cloning-Implementation-Plan.md`,  
-`HS.12.8-Voice-Identity-and-Cloning-Architecture-Spike.md`
+`HS.12.8-Voice-Identity-and-Cloning-Architecture-Spike.md`,  
+`HS.12.9-Voice-Profile-Foundation.md`
 
 ---
 
@@ -52,15 +55,15 @@ cloning adapter, consent UI, or persistence implementation.
 
 ### Boundary summary
 
-| Concern | Ownership / placement | HS.12.8 status |
-|---------|----------------------|----------------|
-| Voice identity | Proposed `VoiceProfile` in Hero & Story | Designed — **not implemented as aggregate** |
-| Reference audio | `MediaReference` + media storage; referenced by profile | Designed — **not stored / enrolled** |
-| Consent / authorization | Profile-level gates + story-level use authorization | Conceptual model only |
-| Provider enrollment | Infrastructure mapping (proxy / sidecar) keyed by `VoiceProfileId` | Designed — **not implemented** |
-| Voice cloning / enrollment | Separate port from narration (`VoiceProfilePort`) | Skeletal contract proposed |
+| Concern | Ownership / placement | Status |
+|---------|----------------------|--------|
+| Voice identity | `VoiceProfile` aggregate in Hero & Story | **HS.12.9 implemented** |
+| Reference audio | `MediaReference` on profile; bytes via storage port | Refs on aggregate; upload/storage deferred |
+| Consent / authorization | `VoiceProfileAuthorization` (four independent gates) | **HS.12.9 implemented** (product/legal wording deferred) |
+| Provider enrollment | Infrastructure mapping keyed by `VoiceProfileId` | Designed — **not implemented** |
+| Voice cloning / enrollment | `VoiceProfilePort` + in-memory synthetic adapter | Port wired; **no production cloning** |
 | Story narration / synthesis | Existing `VoiceRenderingPort` | Preserved; cloning modes still rejected |
-| Generated audio artifact | Existing `StoryVoiceRendering` | Preserved; future optional `voiceProfileId` |
+| Generated audio artifact | Existing `StoryVoiceRendering` | Preserved; optional `voiceProfileId` **deferred** |
 
 ### 1. VoiceProfile is a Hero-scoped identity, not a Story identity
 
@@ -91,20 +94,21 @@ Rationale tied to current code:
 non-story experiences remains deferred until Identity binding is defined.
 Until then, design VoiceProfile against `HeroId`.
 
-### 2. Do not implement the full aggregate in HS.12.8
+### 2. Do not implement production cloning in the foundation milestones
 
-HS.12.8 **does not** ship a production VoiceProfile aggregate, repository,
-persistence, or UI.
+HS.12.8 established the boundary without a production aggregate.
 
-It establishes:
+HS.12.9 implements the VoiceProfile aggregate, lifecycle, authorization gates,
+repository interface, in-memory adapter, and application use cases.
 
-- conceptual fields and layer placement
-- skeletal provider-neutral enrollment port (`VoiceProfilePort`)
-- `VoiceProfileId` as the future domain identity type
-- architecture tests that lock the boundary
+It still does **not** ship:
 
-A later milestone (recommended: **HS.12.9 Voice Profile Foundation**) may
-implement the aggregate after consent/revocation product decisions.
+- production VoiceProfile durable persistence schema
+- production cloning / provider enrollment adapters
+- consent UI / legal wording
+- `voiceClone` enablement on `RenderStoryVoiceUseCase`
+
+See `HS.12.9-Voice-Profile-Foundation.md`.
 
 ### 3. StoryVoiceRendering remains the derived artifact
 
@@ -312,14 +316,15 @@ Qwen3, CosyVoice, or another provider.
 7. Whether non-Hero users may own VoiceProfiles
 8. Streaming / real-time voice conversion (out of scope)
 
-### Future implementation work (not HS.12.8)
+### Future implementation work (post HS.12.9)
 
-- HS.12.9 Voice Profile Foundation (id, lifecycle, consent gates, port wiring)
+- ~~HS.12.9 Voice Profile Foundation~~ → **complete**
 - Reference-audio enrollment + storage purpose tags
 - Proxy `/voice-profiles` routes + provider enrollment adapters
 - Enable `VoiceRenderingMode.voiceClone` only behind consent + profile
-- Optional `voiceProfileId` on `StoryVoiceRendering`
+- Optional `voiceProfileId` on `StoryVoiceRendering` (deferred in HS.12.9)
 - M4 Qwen benchmark remains a separate operational follow-up
+- Per-story voice-use grant schema (profile gates exist; story binding open)
 
 ---
 

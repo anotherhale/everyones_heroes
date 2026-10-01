@@ -5,6 +5,7 @@ enum AggregateType {
   story,
   storyUnderstanding,
   storyBuilderSession,
+  voiceProfile,
   journey,
   mission,
   quest,
