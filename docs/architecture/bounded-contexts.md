@@ -310,6 +310,14 @@ Owns:
 * MediaReference
 * HeroRepository / StoryRepository
 * StorySearchPort / HeroSearchPort / StoryCapturePort (replaceable contracts)
+* VoiceProfile (provider-independent voice identity; HS.12.9 foundation, no production cloning)
+
+Future direction, not a separate context and not implemented:
+
+* Story Performance (how a VoiceProfile delivers Story segments)
+* Audio production of generated narration
+
+See `Voice-Cloning-and-Story-Performance-Architecture.md`. Qwen and other TTS providers stay in infrastructure.
 
 Does not own:
 

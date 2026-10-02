@@ -8,7 +8,8 @@ HS.12.9 — Voice Profile Foundation
 **Related:** HS-ADR-076, HS-ADR-077, HS.12.6, HS.12.7, HS.12.8, HS.12.9,  
 `Voice-Synthesis-Voice-Cloning-Implementation-Plan.md`,  
 `HS.12.8-Voice-Identity-and-Cloning-Architecture-Spike.md`,  
-`HS.12.9-Voice-Profile-Foundation.md`
+`HS.12.9-Voice-Profile-Foundation.md`,  
+`Voice-Cloning-and-Story-Performance-Architecture.md`
 
 ---
 
@@ -275,6 +276,12 @@ From HS.12.7 findings:
   narration experiments — **not** Hero cloning.
 - Future Qwen cloning requires **Base** (or equivalent) models + reference
   audio, sidecar lifecycle, and local storage of reference/media handles.
+- A later local Base/ICL inspection (not part of HS.12.8) found that the
+  inspected `generate` path uses reference audio, reference transcript, and
+  sampling controls. It does **not** currently apply `instruct` or `speed`.
+  Reference transcripts should be durable enrollment metadata. See
+  `Voice-Cloning-and-Story-Performance-Architecture.md`. That finding does
+  not change this ADR's identity-versus-artifact boundary.
 - Hosted providers (OpenAI today for synthetic; future hosted clone APIs)
   fit the same ports: proxy maps `VoiceProfileId` → provider resource.
 

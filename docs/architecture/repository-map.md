@@ -495,3 +495,43 @@ Not a Story aggregate repository. Derived read model only.
 | PostgresStoryCandidateSource | Implements both against `discoverable_story_candidates` (migration `003`) |
 
 Ingest: `HeroStoryApi` → `ProjectDiscoverableStoryCandidateUseCase` (J.2 Slice 5).
+
+---
+
+# Voice and Story Performance (proposed direction)
+
+Status: **Not created.** Documentation only.
+
+Voice identity already lives in Hero & Story, not in a new bounded context (HS-ADR-078):
+
+```text
+lib/features/hero_story/
+    domain/             # VoiceProfile, VoiceProfileRepository, VoiceRenderingPort
+    application/
+    infrastructure/     # in-memory profile repository; proxy rendering adapter
+    presentation/
+```
+
+`VoiceProfileRepository` is implemented in memory. Durable voice persistence, reference-transcript storage, and performance persistence are not implemented.
+
+A future folder sketch sometimes used in design discussion:
+
+```text
+features/
+    voice/
+        domain/
+        application/
+        infrastructure/
+        presentation/
+
+features/
+    story/
+        domain/
+        application/
+        infrastructure/
+        presentation/
+```
+
+That sketch is packaging only. It is not a second bounded context and it is not a reason to move Story. Performance specifications and generated segment audio, when introduced, need an explicit persistence decision. Do not add a repository solely because "Story Performance" is a noun.
+
+See `Voice-Cloning-and-Story-Performance-Architecture.md`.

@@ -8,7 +8,8 @@
 **Related:** HS-ADR-076, HS-ADR-077,  
 `Voice-Synthesis-Voice-Cloning-Implementation-Plan.md`,  
 `HS.12.6-Voice-Rendering-Implementation-Report.md`,  
-`HS.12.7-TTS-Provider-Benchmark.md`
+`HS.12.7-TTS-Provider-Benchmark.md`,  
+`Voice-Cloning-and-Story-Performance-Architecture.md` (later Base/ICL experiment; performance direction; not this spike)
 
 ---
 
@@ -91,6 +92,10 @@ From `HS.12.7-TTS-Provider-Benchmark.md`:
   experiments (CPU measured; MPS recommended as M4 follow-up)
 - CustomVoice speakers ≠ Hero voice cloning
 - Future Qwen cloning requires **Base** (or equivalent) + reference audio
+- Later Base/ICL inspection (after this spike) also requires a durable
+  reference transcript and found that `instruct` and `speed` are **not**
+  applied on that path. See
+  `Voice-Cloning-and-Story-Performance-Architecture.md`.
 - CosyVoice was **not** successfully verified; no production adapter claimed
 - Final TTS / cloning provider selection remains deferred
 

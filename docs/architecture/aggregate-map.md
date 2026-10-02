@@ -625,6 +625,29 @@ Owner authoring (HP.1 / HP.2):
 * Does not create a separate MyHeroProfile aggregate.
 * Identity binding remains future work.
 
+## VoiceProfile
+
+Type:
+
+Aggregate Root (Hero & Story)
+
+Status:
+
+Implemented as a domain foundation (HS.12.9). Production cloning is not implemented. Durable repository is in-memory only.
+
+Responsibility:
+
+Provider-independent voice identity for a Hero.
+
+Does not own:
+
+* Story narrative
+* StoryVoiceRendering audio
+* Performance intent (planned vocabulary only; not an aggregate)
+* Provider voice ids or TTS parameters
+
+Story Performance is a future specification for how a VoiceProfile delivers Story segments. It is not an aggregate in this map. See `Voice-Cloning-and-Story-Performance-Architecture.md`.
+
 ---
 
 # Architectural North Star

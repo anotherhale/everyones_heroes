@@ -417,11 +417,14 @@ AI may:
 * Create hero stories
 * Produce narrative transitions
 * Adapt emotional tone
+* Propose performance direction for spoken experiences (pace, emotion, emphasis, pauses)
 * Generate immersive future experiences
 
 AI enhances the experience.
 
 It does not own the evidence.
+
+When AI acts as a creative director, it proposes how grounded understanding might be experienced. It does not become an authority on who the user is. Voice identity, voice performance, and audio production stay separate concerns. TTS providers stay behind ports. See `Voice-Cloning-and-Story-Performance-Architecture.md`.
 
 ---
 
@@ -444,6 +447,22 @@ Personalization Engine
 Adaptive Experiences
 
 Those experiences may include missions today, motivational audio tomorrow, personalized documentaries in the future, or entirely new forms of inspiration that have not yet been imagined.
+
+Personalized audio is one future experience-generation layer. It may include personalized Hero stories, motivational talks, voice coaching, music, lyrics, and audio journeys. The personalization question grows from “what should be said?” to “how should it be experienced?” Creative direction still operates on evidence-first understanding:
+
+```text
+Evidence
+    ↓
+Understanding
+    ↓
+Personalization
+    ↓
+Creative Direction
+    ↓
+Experience Generation
+```
+
+This audio vision is not implemented. The local Qwen3-TTS cloning work is an infrastructure experiment, not a domain dependency.
 
 The architecture is intentionally designed around understanding the individual rather than any single output.
 

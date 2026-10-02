@@ -3,7 +3,7 @@
 **Status:** M1 (provider-neutral synthetic narration contract) implemented — see HS-ADR-077; **HS.12.7 TTS provider spike complete** — see `HS.12.7-TTS-Provider-Benchmark.md`; **HS.12.8 Voice Identity & Cloning architecture spike complete** — see HS-ADR-078 / `HS.12.8-Voice-Identity-and-Cloning-Architecture-Spike.md`; **HS.12.9 Voice Profile Foundation implemented** — see `HS.12.9-Voice-Profile-Foundation.md` (aggregate + auth gates + in-memory port; no production cloning)  
 **Date:** 2026-10-01  
 **Audience:** Andy / architecture review  
-**Related:** HS-ADR-076, HS-ADR-077, HS-ADR-078, HS.12.6, HS.12.7, HS.12.8, HS.12.9, AI Experience Provider Laboratory Plan, HS.1 Foundation
+**Related:** HS-ADR-076, HS-ADR-077, HS-ADR-078, HS.12.6, HS.12.7, HS.12.8, HS.12.9, AI Experience Provider Laboratory Plan, HS.1 Foundation, `Voice-Cloning-and-Story-Performance-Architecture.md` (local Base/ICL experiment and Story Performance direction; not implemented)
 
 ---
 
@@ -20,7 +20,7 @@ RenderStoryVoiceUseCase
   → StoryVoiceRendering + StoryMediaStoragePort bytes
 ```
 
-That path is ordinary **synthetic narration** only. Modes `heroVoiceTransformation` and `voiceClone` exist on `VoiceRenderingMode` but are rejected by use case, adapter, and proxy. There is **no** `VoiceProfile`, no cloning consent gate, and no non-OpenAI TTS client.
+That path is ordinary **synthetic narration** only. Modes `heroVoiceTransformation` and `voiceClone` exist on `VoiceRenderingMode` but are rejected by use case, adapter, and proxy. HS.12.9 has since added a `VoiceProfile` aggregate and authorization gates with in-memory enrollment only. Production cloning, a cloning consent UI, and a non-OpenAI production TTS client are still not the product path. (HS.12.7 added an internal proxy provider switch; that is synthetic narration, not cloning.)
 
 **Recommendation:** Do **not** invent a parallel `StoryNarrationPort` / `VoiceSynthesisPort` / `POST /voice-clone` product surface. Extend the existing **`VoiceRenderingPort` + `POST /story-voice-renderings`** capability for narration, and introduce a **separate consent-based Voice Profile capability** (new port + proxy route) only when cloning is authorized.
 
@@ -544,7 +544,7 @@ Values below are from public docs / model cards as of plan date. Where uncertain
 | Streaming | Yes (HTTP stream / WebSocket APIs) | Yes (dual-track / low-latency designs in tech report) | Yes (streaming inference modes documented) |
 | Multilingual | Yes (model-dependent; 29–70+ languages claimed by product tier/model) | Yes (tech report: 10 languages training claim) | Yes (9 languages + many Chinese dialects claimed) |
 | Cross-lingual cloning | Product/feature dependent — **verify per API** | Supported in series claims — **verify per checkpoint** | Explicitly documented (omit ref_text for cross-lingual mode) |
-| Emotion/style control | Yes (model/settings dependent) | Yes (instruct / voice design variants) | Yes (instruction / fine-grained control tags) |
+| Emotion/style control | Yes (model/settings dependent) | CustomVoice / VoiceDesign: instruct or textual voice description. Inspected Base/ICL path does **not** apply `instruct` or `speed` — see `Voice-Cloning-and-Story-Performance-Architecture.md` | Yes (instruction / fine-grained control tags) |
 | Apple Silicon | N/A (cloud) | Feasible via community MLX/MPS; official path CUDA-first; **spike required** | Feasible via MPS PRs/forks; upstream friction possible; **spike required** |
 | NVIDIA GPU | N/A (cloud) | Yes (primary) | Yes (primary; TensorRT/vLLM CUDA-only features) |
 | CPU fallback | N/A | Possible but slow — **verify** | Documented as possible; slow |

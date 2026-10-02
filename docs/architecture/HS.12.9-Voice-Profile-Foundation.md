@@ -9,7 +9,8 @@ the aggregate foundation it deferred)
 HS.12.8 identity/cloning boundary  
 **Related:** HS-ADR-076, HS-ADR-077, HS-ADR-078,  
 `Voice-Synthesis-Voice-Cloning-Implementation-Plan.md`,  
-`HS.12.8-Voice-Identity-and-Cloning-Architecture-Spike.md`
+`HS.12.8-Voice-Identity-and-Cloning-Architecture-Spike.md`,  
+`Voice-Cloning-and-Story-Performance-Architecture.md`
 
 ---
 
