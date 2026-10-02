@@ -1184,3 +1184,5 @@ These use cases are architectural direction from `Voice-Cloning-and-Story-Perfor
 | Publish Story Audio | Planned | Hero & Story | Distribution only after the relevant publication authorization. Not implied by rendering. |
 
 Provider adapters, Qwen, and FFmpeg stay in infrastructure. These use cases must not call a TTS vendor directly.
+
+HS-ADR-079: persisted performance intent, when it exists, is delivery guidance on `StoryExperiencePlan`, not a new aggregate and not a `VoiceGenerationPort`. `Adjust Story Performance` would update that guidance. `Regenerate Story Segment` has no domain segment today; current rendering regenerates one transcript-level `StoryVoiceRendering`.

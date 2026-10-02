@@ -665,34 +665,36 @@ Current Status:
 
 The manner in which a voice delivers content.
 
-Includes delivery, emotion, pace, energy, emphasis, and pauses. Voice Performance is not Voice Identity and not Audio Production.
+Voice Performance is not Voice Identity and not Audio Production.
+
+HS-ADR-079: the first domain vocabulary, when implemented, is experience-level **delivery** (with a grounded rationale) on `StoryExperiencePlan`. Emotion, energy, pace, emphasis, and pause are not separate domain fields. Energy stays on music direction. Emphasis stays on key moments. Pauses stay in playback or audio production.
 
 Current Status:
-Planned vocabulary. Not an implemented domain type.
+Not an implemented domain type.
 
 ---
 
 # Performance Intent
 
-Provider-neutral instructions describing desired delivery.
+Provider-neutral instructions describing desired spoken delivery.
 
-Examples: hopeful, conversational, selective emphasis, natural pause. Performance Intent is not `temperature`, `top_p`, `speed`, or `instruct`.
+HS-ADR-079: this is the name of the future delivery guidance on `StoryExperiencePlan`. It is not a separate value object beside that guidance, and it is not `temperature`, `top_p`, `speed`, or `instruct`.
 
-Provider adapters translate intent into whatever controls a given TTS system actually supports.
+Provider adapters translate the delivery string into whatever a given TTS system actually supports.
 
 Current Status:
-Architectural direction. Not implemented.
+Architectural term. Not implemented. See `Story-Performance-Representation-Spike.md`.
 
 ---
 
 # Story Performance
 
-The application of performance intent to a Story's segments.
+The application of performance intent to a Story experience.
 
-A Story Performance describes how segments of a narrative are delivered by a Voice Identity. Segment audio is an intermediate production asset. The canonical Story remains the narrative.
+The canonical pre-render representation is experience-level delivery guidance on `StoryExperiencePlan` (HS-ADR-079). Story Performance is not an aggregate, not a field on `Story` or `VoiceProfile`, and not the generated audio. `StoryVoiceRendering` stores the audio artifact. The canonical Story remains the narrative.
 
 Current Status:
-Planned. The Story Performance Editor does not exist.
+Boundary decided. Not implemented. The Story Performance Editor does not exist.
 
 ---
 

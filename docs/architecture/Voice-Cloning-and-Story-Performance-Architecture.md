@@ -14,9 +14,10 @@
 - `docs/architecture/HS.12.7-TTS-Provider-Benchmark.md`
 - `docs/architecture/Voice-Synthesis-Voice-Cloning-Implementation-Plan.md`
 - `docs/architecture/AI-Experience-Provider-Laboratory-Plan.md`
-- `docs/architecture/architecture-decisions.md` (HS-ADR-076, HS-ADR-077, HS-ADR-078)
+- `docs/architecture/architecture-decisions.md` (HS-ADR-076, HS-ADR-077, HS-ADR-078, HS-ADR-079)
+- `docs/architecture/Story-Performance-Representation-Spike.md`
 
-**Decisions:** Directional decisions VC-1 through VC-5 in §18. They do not supersede HS-ADR-076, HS-ADR-077, or HS-ADR-078, and they are not implemented.  
+**Decisions:** Directional decisions VC-1 through VC-5 in §18. They do not supersede HS-ADR-076, HS-ADR-077, or HS-ADR-078, and they are not implemented. HS-ADR-079 (`Story-Performance-Representation-Spike.md`) decides the canonical pre-render representation: future experience-level delivery guidance on `StoryExperiencePlan`. `VoiceRenderingPort` stays the generation boundary. No domain type was added.  
 **Non-goals:** Production voice cloning, a Story Performance Editor, Qwen types in the EH domain, a new Voice bounded context, Dart performance classes, provider selection, and legal/consent wording.
 
 ---
@@ -392,7 +393,7 @@ Architectural advantage:
 
 > A story can eventually be edited at the sentence or paragraph performance level without regenerating the entire story.
 
-Individual sentence audio files are intermediate production assets. They are not the final experience, and they are not the canonical Story.
+Individual sentence audio files are intermediate production assets. They are not the final experience, and they are not the canonical Story. HS-ADR-079: this segment tree is an adapter/production shape. The domain representation of performance, when implemented, is experience-level delivery guidance on `StoryExperiencePlan`, not a `StorySegment` type.
 
 Conceptual shape, not an implemented aggregate:
 
@@ -581,7 +582,7 @@ repetition_penalty=1.5
 
 The editor, when built, is presentation. It calls application use cases. It does not call Qwen, FFmpeg, or a vendor SDK.
 
-Relationship to `StoryExperiencePlan`: that plan is already the derived creative-direction artifact for an owned story experience (HS-ADR-073). Story Performance is a more specific future direction for spoken delivery. It should not be stuffed into Story as canonical narrative, and it should not be invented as a second creative aggregate until an implementation ADR says the plan schema is insufficient. Until then, treat Story Performance as planned vocabulary and a future specification, not as a shipped type.
+Relationship to `StoryExperiencePlan`: HS-ADR-079 decides that spoken performance intent, when implemented, is experience-level delivery guidance on this plan, beside music direction. It is not a second specification object and not a sentence tree. The field is not implemented. The editor remains planned.
 
 ---
 
@@ -630,7 +631,7 @@ Qwen-specific parameters
 
 The same EH performance specification could be translated for another provider. Adapters are allowed to degrade explicitly when a provider cannot express a dimension. They are not allowed to leak that provider's parameter names upward.
 
-**Current code.** The implemented narration seam is `VoiceRenderingPort` → `ProxyVoiceRenderingAdapter` → `POST /story-voice-renderings` → proxy `TtsProvider`. `VoiceGenerationPort` in the diagram is the conceptual generation boundary. Do not add a parallel Flutter port in documentation-only work. See open question §20.
+**Current code.** The implemented narration seam is `VoiceRenderingPort` → `ProxyVoiceRenderingAdapter` → `POST /story-voice-renderings` → proxy `TtsProvider`. HS-ADR-079 resolves the diagram's `VoiceGenerationPort` as this port. Do not add a second voice-generation port. A future request may carry the plan's delivery string. Today `VoiceRenderingRequest` has no performance field.
 
 HS-ADR-077 already places provider selection in `services/ai_proxy`. That rule still holds for any future cloning or performance adapter.
 
@@ -860,7 +861,9 @@ These are directional. Status for each: **architectural direction — not implem
 
 **Reason:** This enables editing and regeneration without rebuilding the entire story.
 
-**Consequence:** Sentence (or later paragraph) audio is an intermediate asset. Final assembly is a separate production step. Intermediate assets remain available after the mix exists.
+**Consequence:** Sentence (or later paragraph) audio is an intermediate production asset. Final assembly is a separate production step. Intermediate assets remain available after the mix exists.
+
+**Refined by HS-ADR-079:** that segment split is an adapter technique. The domain does not gain `StorySegment`. The canonical performance intent is experience-level delivery guidance on `StoryExperiencePlan`, because current rendering sends one transcript string and the Story has no segment model.
 
 ### VC-4 — Performance intent is provider-neutral
 
@@ -928,8 +931,8 @@ These are undecided. This document does not answer them.
 - How long should reference audio be?
 - How should voice identities be stored beyond the current in-memory `VoiceProfileRepository`?
 - How should voice cloning work for Heroes other than the current user?
-- Which performance dimensions belong in the domain model?
-- How should performance intent map to providers with different capabilities?
+- Which performance dimensions belong in the domain model? **Resolved by HS-ADR-079:** delivery plus a grounded rationale, when implemented. Emotion, energy, pace, emphasis, and pause are not first domain fields.
+- How should performance intent map to providers with different capabilities? **Resolved as an adapter concern:** the domain stores delivery language; the adapter approximates or reports that the provider cannot express it. No mapping table is implemented.
 - Should performance directions be generated by AI automatically?
 - How much user editing should be supported?
 - How should music and narration be mixed?
@@ -937,7 +940,7 @@ These are undecided. This document does not answer them.
 - How should generated audio be cached?
 - How should regenerated segments invalidate previous final mixes?
 - What accessibility controls are required?
-- Should a future performance-aware request extend `VoiceRenderingPort` or add a sibling generation contract without creating a second vendor-facing product surface?
+- Should a future performance-aware request extend `VoiceRenderingPort` or add a sibling generation contract? **Resolved by HS-ADR-079:** extend `VoiceRenderingRequest` later with the plan's delivery string. Do not add `VoiceGenerationPort`.
 
 ---
 
@@ -976,7 +979,7 @@ These are undecided. This document does not answer them.
  Personalized Audio Experience
 ```
 
-`VoiceGenerationPort` in this diagram is the conceptual boundary. The implemented synthetic-narration port today is `VoiceRenderingPort`. Qwen in the product proxy today is the HS.12.7 CustomVoice synthetic adapter, not the Base/ICL cloning experiment.
+`VoiceGenerationPort` in this diagram is the conceptual name for `VoiceRenderingPort` (HS-ADR-079). Do not add a second port. Qwen in the product proxy today is the HS.12.7 CustomVoice synthetic adapter, not the Base/ICL cloning experiment. Performance intent, when implemented, is delivery guidance on `StoryExperiencePlan`, not a sentence tree in the domain.
 
 Understanding above the line remains evidence-first. Creative direction and audio generation do not write behavioral truth back into the user.
 

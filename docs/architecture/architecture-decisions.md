@@ -2869,6 +2869,42 @@ See:
 
 ---
 
+# HS-ADR-079 Story Performance Intent Is Plan-Level Delivery Guidance
+
+Status: Accepted architectural boundary — **not implemented**. No schema or port change in the spike that recorded it.
+
+Date: 2026-10-02
+
+Phase: Story Performance representation spike (documentation only)
+
+Decision:
+
+The canonical EH representation of how a Story should be performed, before any TTS provider renders it, is experience-level spoken **delivery guidance** on the derived `StoryExperiencePlan`.
+
+It is the same kind of value as `StoryExperienceMusicDirection`: provider-neutral presentation language, not audio and not a vendor parameter. It is not a new aggregate, not a `StoryPerformanceSpecification`, and not a field on `Story`, `StoryNarrative`, or `VoiceProfile`.
+
+## Rules
+
+- When implemented, the minimum value object has `delivery` and a grounded `rationale`, with the same kind of non-empty length limits as music direction.
+- Do not add emotion, energy, pace, emphasis, or pause as domain fields in that first type. Emotion overlaps delivery and the forbidden psychological schema. Energy already belongs to music direction. Emphasis is `StoryExperienceMoment`. Pause and sentence splits are player or adapter production (HS-ADR-075).
+- `VoiceRenderingPort` remains the only voice-generation boundary. Do not add `VoiceGenerationPort`. A future request may carry the plan's delivery string. Today the request has no performance field and renders the full transcript.
+- Generated audio remains `StoryVoiceRendering`. Bytes are not the performance specification.
+- `VoiceProfile` stays speaker identity. Delivery is not stored on it, so one profile can be used with different plans.
+- Do not add `StorySegment`. Builder sections and key moments are not a performance hierarchy. Sentence-level synthesis is an adapter technique (refines directional VC-3).
+- `forceRegenerate` of a plan replaces the derived plan (HS-ADR-073). Delivery guidance, once present, follows that rule unless a later product decision copies a Hero edit forward.
+
+## Rejected
+
+- A separate Story Performance aggregate or specification object
+- Storing performance on the canonical Story or on voice identity
+- Reusing `intention`, `emotionalArc`, or `musicDirection` as vocal delivery
+- A second vendor-facing voice port
+- Qwen, sampling parameters, or provider voice ids in the domain
+
+See: `docs/architecture/Story-Performance-Representation-Spike.md`
+
+---
+
 # D-ADR-001 Inspiring Hero Preference Downstream Semantics Are Not Yet Defined
 
 Status: Accepted — downstream semantics deferred / **Not Yet**
@@ -2934,7 +2970,7 @@ These decisions record lessons from the local Qwen3-TTS Base/ICL experiment and 
 |----|----------|
 | VC-1 | Voice providers are infrastructure. Domain and application code stay provider-neutral. |
 | VC-2 | Voice identity and performance are separate. A cloned voice (`VoiceProfile`) is not a performance style. |
-| VC-3 | Stories should eventually be representable as independently generated segments. |
+| VC-3 | Stories should eventually be representable as independently generated segments. **Refined by HS-ADR-079:** segment audio is an adapter/production technique. The domain does not gain `StorySegment`. Canonical performance intent is experience-level delivery guidance on `StoryExperiencePlan`. |
 | VC-4 | Performance intent is provider-neutral human language (pace, emotion, delivery), not raw TTS parameters. |
 | VC-5 | An enrolled reference voice persists its reference transcript. Do not re-run speech-to-text on every segment. |
 

@@ -646,7 +646,7 @@ Does not own:
 * Performance intent (planned vocabulary only; not an aggregate)
 * Provider voice ids or TTS parameters
 
-Story Performance is a future specification for how a VoiceProfile delivers Story segments. It is not an aggregate in this map. See `Voice-Cloning-and-Story-Performance-Architecture.md`.
+Story Performance is not an aggregate (HS-ADR-079). When implemented, spoken delivery guidance is an experience-level value on `StoryExperiencePlan`, not a field on `VoiceProfile` or `Story`. See `Story-Performance-Representation-Spike.md`.
 
 ---
 
