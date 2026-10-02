@@ -256,8 +256,8 @@ Do **not** infer weight licenses from source-repo licenses alone; HF cards were 
 ### Qwen3-TTS
 
 - Official path CUDA-first; CPU RTF ≈ 2.5–2.9 (too slow for snappy UX without accelerator)
-- Instruction control / speakers depend on CustomVoice vs Base vs VoiceDesign checkpoints
-- Future cloning uses **Base** models + reference audio — **not implemented** here (intentionally)
+- Instruction control / speakers depend on checkpoint family. CustomVoice supports voice + instruction semantics. VoiceDesign supports a textual voice description. The later local Base/ICL inspection (`Voice-Cloning-and-Story-Performance-Architecture.md`) found that Base/ICL cloning uses `ref_audio`, `ref_text`, and sampling controls, and does **not** currently apply `instruct` or `speed`. Do not treat `speed` or `instruct` as Base/ICL controls.
+- Future cloning uses **Base** models + reference audio and a durable reference transcript — **not implemented** in this benchmark (intentionally)
 - French sample silence ratio anomaly needs human QA
 
 ### CosyVoice

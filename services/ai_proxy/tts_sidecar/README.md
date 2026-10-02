@@ -1,6 +1,10 @@
 # EH local TTS sidecar (HS.12.7)
 #
 # Synthetic narration only. No cloning / VoiceProfile / streaming.
+# This sidecar is the CustomVoice (or fake) synthetic path.
+# It is not the separate Qwen3-TTS Base/ICL cloning experiment.
+# Base/ICL does not currently apply instruct or speed.
+# See docs/architecture/Voice-Cloning-and-Story-Performance-Architecture.md.
 #
 # Quick smoke (no ML weights):
 #   python3 server.py
