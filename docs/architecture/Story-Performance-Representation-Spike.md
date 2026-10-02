@@ -156,6 +156,9 @@ Candidates:
 | `VoiceProfile` | Speaker identity |
 | `CapturedStoryReading` / `StoryUnderstanding` | Grounded reading and catalog proposals |
 | Player timeline / silence | HS-ADR-075 presentation runtime |
+| `PresentationCreativeDirection` | Application lab value object (`narrationEmphasis`, `pacingGuidance`, `pauses`). It is derived from the plan for a lab run. `VoiceRenderingPort` does not read it. It is not the durable specification of how the Story should be performed. |
+
+`PresentationCreativeDirection` is useful evidence: narration emphasis and pacing are already presentation language, not TTS parameters. It is not the canonical store. Making the lab object canonical would put source of truth in a laboratory DTO and leave the plan, which already owns creative direction, without the spoken guidance.
 
 None of these is “how the voice should deliver this story.”
 
