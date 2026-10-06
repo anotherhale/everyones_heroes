@@ -2,6 +2,7 @@
 
 **Status:** Investigation / architecture recommendation  
 **Date:** 2026-10-06  
+**Revised:** 2026-10-06 (independent re-inspection of the same upstream HEAD; evidence excerpts deepened)  
 **Scope:** Source-level evaluation only. No EH code changes. No ACE-Step modifications. No training. No model-weight downloads beyond source inspection.
 
 **Primary question:**
@@ -13,6 +14,12 @@
 **Yes — with an adapter-first architecture (Option B), not by forcing EH stories into conventional song forms.**
 
 `[Verse]` / `[Chorus]` / `[Bridge]` are **textual conventions inside the lyrics string**, not DiT vocabulary tokens, not constrained-decoding fields, and not a required runtime schema. The audio model consumes free-form caption + lyrics + metadata (+ optional codes / reference audio / time-window masks). EH can therefore own narrative phases in EH/application space and compile them into ACE-Step’s flat generation contract — optionally keeping conventional tags only as a soft compiler target when useful.
+
+Three source facts make this unusually clear:
+
+1. Muse offline conversion does `lyrics_parts.append(f"[{section_type}]")` with **no allowlist** (`docs/en/Large_Scale_SFT_Training_Guide.md`).
+2. Constrained decoding FSM states cover bpm / caption / duration / genres / keyscale / language / timesignature — **never section names** (`acestep/constrained_logits_processor.py` `FSMState`).
+3. DiT lyric formatting wraps arbitrary lyrics: `# Languages\\n{language}\\n\\n# Lyric\\n{lyrics}` (`PromptMixin._format_lyrics`).
 
 This does **not** mean arbitrary narrative phase names will automatically produce reliable musical semantics without specialization. Effectiveness of novel tags is distribution-dependent; planner/prompt specialization and later LoRA/SFT may be needed for consistent EH arcs.
 
@@ -68,7 +75,8 @@ Do **not** introduce ACE-Step types into the EH domain. Future EH boundary shoul
 | Hardware | CUDA recommended; also MPS / ROCm / Intel XPU / CPU; Apple Silicon via MLX |
 | VRAM (docs) | ≥4GB DiT-only; ≥6GB LLM+DiT; XL DiT ≥12GB with offload / ≥20GB without |
 | Relevant model family | DiT: `acestep-v15-{base,sft,turbo}` and XL 4B variants; LM: `acestep-5Hz-lm-{0.6B,1.7B,4B}`; VAE; `Qwen3-Embedding-0.6B` |
-| Inspection method | Shallow clone to `/tmp/ACE-Step-1.5`; source + docs inspected; **weights not downloaded** |
+| Inspection method | Shallow clone to `/tmp/ace-step-eval/ACE-Step-1.5` (and prior `/tmp/ACE-Step-1.5`); source + docs inspected; **weights not downloaded** |
+| Upstream freshness | Re-checked 2026-10-06; `origin/main` still at `ca1e85fe…` (no newer commits since initial evaluation) |
 
 ### Supported hardware (source-backed)
 
@@ -213,7 +221,26 @@ sections[].section + sections[].text
 .lyrics.txt
 ```
 
-After conversion, **only the flattened lyrics string remains**. Section objects are not retained in the training sample dataclass.
+Exact conversion loop (no enum / allowlist on `section_type`):
+
+```python
+for section in record.get("sections", []):
+    section_type = section.get("section", "")
+    text = section.get("text", "").strip()
+    if text:
+        lyrics_parts.append(f"[{section_type}]")
+        lyrics_parts.append(text)
+    elif section_type == "Intro":
+        lyrics_parts.append("[Intro]")
+    # ... Outro / Interlude / Break only as empty-section special cases
+```
+
+After conversion, **only the flattened lyrics string remains**. Section objects are not retained in the training sample dataclass (`AudioSample` has no `sections` field).
+
+LoRA tutorial states structural tags are **optional**, not mandatory:
+
+> Including structural tags in lyrics (such as `[Verse]`, `[Chorus]`, etc.) helps the model learn song structure more effectively. Training without structural tags is also possible.  
+> — `docs/en/LoRA_Training_Tutorial.md`
 
 ### What the LLM vs audio model consume
 
@@ -262,11 +289,15 @@ Constants in `acestep/constants.py`:
 - `DEFAULT_LM_REWRITE_INSTRUCTION`
 - DiT `TASK_INSTRUCTIONS[...]`
 
-External planner system prompt (`build_planning_messages`) requests JSON keys:
+External planner system prompt (`build_planning_messages` in `acestep/text_tasks/external_ai_request_helpers.py`) requests JSON keys:
 
 `caption, lyrics, bpm, duration, key_scale, time_signature, vocal_language, instrumental`
 
-and explicitly asks for a **linear narrative production brief** covering arrangement progression and energy evolution. Guidance currently mentions conventional progression (“intro to verse to chorus or drop to outro”) — **prompt convention**, not model schema.
+and explicitly asks for a **linear narrative production brief** covering arrangement progression and energy evolution. Format-focus guidance currently hard-codes conventional progression:
+
+> “how the song progresses from intro to verse to chorus or drop to outro, and how the mix or energy evolves.”
+
+That sentence is **prompt convention**, not model schema — and it is the primary place ACE-Step *currently* pushes EH-incompatible song metaphysics. An EH adapter should either bypass this planner or replace `build_task_focus_guidance` / `build_planning_messages` with narrative-phase guidance.
 
 ### Structured output?
 
@@ -317,11 +348,13 @@ Not A — not required by the underlying DiT vocabulary or constrained metadata 
 
 Proof points:
 
-1. Constrained fields: bpm, caption, duration, genres?, keyscale, language, timesignature — **no section enum**.
-2. Lyrics formatting wraps arbitrary text.
-3. Training docs: structural tags help but are optional.
+1. Constrained fields (`FSMState`): bpm, caption, duration, genres?, keyscale, language, timesignature — **no section enum**.
+2. Lyrics formatting wraps arbitrary text (`PromptMixin._format_lyrics`).
+3. Training docs: structural tags help but are optional (`LoRA_Training_Tutorial.md`).
 4. Runtime `AudioSample` / `GenerationParams` have no `sections[]`.
-5. OpenRouter marker list is a heuristic for detecting lyrics, not an allowlist for generation.
+5. OpenRouter marker list (`_looks_like_lyrics`) is a **heuristic for detecting lyrics**, not an allowlist for generation — markers include `[verse]`, `[chorus]`, `[bridge]`, `[intro]`, `[outro]`, `[hook]`, `[pre-chorus]`, `[refrain]`, `[inst]`.
+6. Tutorial already documents **non-songform dynamic tags** as first-class soft controls: `[Build]`, `[Drop]`, `[Breakdown]`, `[Fade Out]`, `[Silence]`, plus combined forms like `[Chorus - anthemic]` and energy tags such as `[building energy]` (`docs/en/Tutorial.md`). That is direct evidence the conditioning channel is already treated as an open textual vocabulary, not a closed Verse/Chorus ontology.
+7. Muse flatten interpolates `[{section_type}]` with no validation — proving training ingestion does not require conventional names at the code level (distribution may still dominate behavior).
 
 ### Compiler-target question
 
@@ -342,9 +375,11 @@ Audio model
 Two viable compilation strategies:
 
 1. **Preserve native soft tags:** map EH phases → conventional `[Intro]/[Verse]/[Chorus]/[Bridge]/[Outro]` when musical usefulness is high.
-2. **EH semantic tags:** map phases → `[Opening]`, `[Challenge]`, … plus caption arc prose.
+2. **EH semantic tags:** map phases → `[Opening]`, `[Challenge]`, … plus caption arc prose — optionally with Tutorial-style descriptors, e.g. `[Breakthrough - triumphant - high energy]`, while keeping complex arrangement language in `caption`.
 
 Evidence favors trying (2) for product fidelity, with (1) as a fallback/control in POC A/B tests. Neither requires DiT architecture surgery.
+
+**Important:** EH already models narrative roles on Story Builder structures (`StoryBuilderNarrativeRole` / `DeterministicStoryStructureSection`). Those are **story-authoring** concepts, not music-engine types. The ACE-Step adapter may *consume compiled creative direction derived from* such roles, but ACE section tags must not be imported into EH domain types.
 
 ---
 
