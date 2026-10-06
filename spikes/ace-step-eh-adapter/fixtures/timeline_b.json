@@ -1,0 +1,62 @@
+{
+  "timeline_id": "timeline-b-suppressed-breakthrough",
+  "story_id": "story-poc-returning-home",
+  "label": "Timeline B — same phases, breakthrough energy suppressed / moved earlier",
+  "notes": "Control arm. Same story text and phase names; energy curve and timing differ so compiled music plan must change.",
+  "phases": [
+    {
+      "name": "Opening",
+      "start_seconds": 0,
+      "end_seconds": 25,
+      "emotional_state": "quiet arrival",
+      "energy": 0.22,
+      "musical_intent": "sparse piano and soft pads; space and breath; almost still",
+      "lyric_intent": null
+    },
+    {
+      "name": "Challenge",
+      "start_seconds": 25,
+      "end_seconds": 55,
+      "emotional_state": "uneasy homecoming",
+      "energy": 0.40,
+      "musical_intent": "low strings enter; unresolved harmony; held tension under calm surface",
+      "lyric_intent": null
+    },
+    {
+      "name": "Breakthrough",
+      "start_seconds": 55,
+      "end_seconds": 95,
+      "emotional_state": "premature opening that does not fully land",
+      "energy": 0.48,
+      "musical_intent": "brief lift that fails to bloom; restrained dynamics; no triumphant crest",
+      "lyric_intent": null
+    },
+    {
+      "name": "Struggle",
+      "start_seconds": 95,
+      "end_seconds": 160,
+      "emotional_state": "difficulty reconnecting after the false opening",
+      "energy": 0.68,
+      "musical_intent": "denser restless texture; heavier percussion; pressure without catharsis",
+      "lyric_intent": null
+    },
+    {
+      "name": "Turning Point",
+      "start_seconds": 160,
+      "end_seconds": 195,
+      "emotional_state": "small act of service cracks the isolation",
+      "energy": 0.58,
+      "musical_intent": "harmonic shift toward light; melody fragment appears; careful forward motion",
+      "lyric_intent": null
+    },
+    {
+      "name": "Resolution",
+      "start_seconds": 195,
+      "end_seconds": 240,
+      "emotional_state": "quiet unresolved settle — softer than Timeline A",
+      "energy": 0.28,
+      "musical_intent": "texture thins further; fragile piano; open cadence; ambiguity remains",
+      "lyric_intent": null
+    }
+  ]
+}
