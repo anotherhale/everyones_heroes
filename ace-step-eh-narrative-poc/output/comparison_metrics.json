@@ -1,0 +1,538 @@
+[
+  {
+    "dir_a": "output/strategy_caption_only/seed_42/timeline_a",
+    "dir_b": "output/strategy_caption_only/seed_42/timeline_b",
+    "audio_a": "output/strategy_caption_only/seed_42/timeline_a/audio.wav",
+    "audio_b": "output/strategy_caption_only/seed_42/timeline_b/audio.wav",
+    "analysis_a": {
+      "path": "output/strategy_caption_only/seed_42/timeline_a/audio.wav",
+      "sample_rate": 48000,
+      "duration_s": 48.0,
+      "overall_rms": 0.102031,
+      "bins": [
+        {
+          "index": 0,
+          "start_s": 0.0,
+          "end_s": 8.0,
+          "rms": 0.009477,
+          "zcr": 168.125
+        },
+        {
+          "index": 1,
+          "start_s": 8.0,
+          "end_s": 16.0,
+          "rms": 0.062122,
+          "zcr": 830.0
+        },
+        {
+          "index": 2,
+          "start_s": 16.0,
+          "end_s": 24.0,
+          "rms": 0.111248,
+          "zcr": 1162.625
+        },
+        {
+          "index": 3,
+          "start_s": 24.0,
+          "end_s": 32.0,
+          "rms": 0.138321,
+          "zcr": 1230.0
+        },
+        {
+          "index": 4,
+          "start_s": 32.0,
+          "end_s": 40.0,
+          "rms": 0.145789,
+          "zcr": 1301.5
+        },
+        {
+          "index": 5,
+          "start_s": 40.0,
+          "end_s": 48.0,
+          "rms": 0.075831,
+          "zcr": 1016.125
+        }
+      ],
+      "max_rms_bin": {
+        "index": 4,
+        "start_s": 32.0,
+        "end_s": 40.0,
+        "rms": 0.145789,
+        "zcr": 1301.5
+      },
+      "early_mean_rms": 0.035799,
+      "late_mean_rms": 0.11081,
+      "energy_rise": 0.07501
+    },
+    "analysis_b": {
+      "path": "output/strategy_caption_only/seed_42/timeline_b/audio.wav",
+      "sample_rate": 48000,
+      "duration_s": 48.0,
+      "overall_rms": 0.118567,
+      "bins": [
+        {
+          "index": 0,
+          "start_s": 0.0,
+          "end_s": 8.0,
+          "rms": 0.008149,
+          "zcr": 653.875
+        },
+        {
+          "index": 1,
+          "start_s": 8.0,
+          "end_s": 16.0,
+          "rms": 0.081731,
+          "zcr": 951.125
+        },
+        {
+          "index": 2,
+          "start_s": 16.0,
+          "end_s": 24.0,
+          "rms": 0.08007,
+          "zcr": 1543.125
+        },
+        {
+          "index": 3,
+          "start_s": 24.0,
+          "end_s": 32.0,
+          "rms": 0.207125,
+          "zcr": 1479.25
+        },
+        {
+          "index": 4,
+          "start_s": 32.0,
+          "end_s": 40.0,
+          "rms": 0.149316,
+          "zcr": 986.375
+        },
+        {
+          "index": 5,
+          "start_s": 40.0,
+          "end_s": 48.0,
+          "rms": 0.077423,
+          "zcr": 1325.625
+        }
+      ],
+      "max_rms_bin": {
+        "index": 3,
+        "start_s": 24.0,
+        "end_s": 32.0,
+        "rms": 0.207125,
+        "zcr": 1479.25
+      },
+      "early_mean_rms": 0.04494,
+      "late_mean_rms": 0.11337,
+      "energy_rise": 0.06843
+    },
+    "observed_deltas": {
+      "energy_rise_a": 0.07501,
+      "energy_rise_b": 0.06843,
+      "energy_rise_delta_b_minus_a": -0.00658,
+      "overall_rms_delta_b_minus_a": 0.016536,
+      "max_rms_position_a": 32.0,
+      "max_rms_position_b": 24.0
+    }
+  },
+  {
+    "dir_a": "output/strategy_natural_tags/seed_123/timeline_a",
+    "dir_b": "output/strategy_natural_tags/seed_123/timeline_b",
+    "audio_a": "output/strategy_natural_tags/seed_123/timeline_a/audio.wav",
+    "audio_b": "output/strategy_natural_tags/seed_123/timeline_b/audio.wav",
+    "analysis_a": {
+      "path": "output/strategy_natural_tags/seed_123/timeline_a/audio.wav",
+      "sample_rate": 48000,
+      "duration_s": 48.0,
+      "overall_rms": 0.102039,
+      "bins": [
+        {
+          "index": 0,
+          "start_s": 0.0,
+          "end_s": 8.0,
+          "rms": 0.056638,
+          "zcr": 555.0
+        },
+        {
+          "index": 1,
+          "start_s": 8.0,
+          "end_s": 16.0,
+          "rms": 0.089946,
+          "zcr": 737.125
+        },
+        {
+          "index": 2,
+          "start_s": 16.0,
+          "end_s": 24.0,
+          "rms": 0.061862,
+          "zcr": 531.0
+        },
+        {
+          "index": 3,
+          "start_s": 24.0,
+          "end_s": 32.0,
+          "rms": 0.137265,
+          "zcr": 1542.75
+        },
+        {
+          "index": 4,
+          "start_s": 32.0,
+          "end_s": 40.0,
+          "rms": 0.16625,
+          "zcr": 1888.125
+        },
+        {
+          "index": 5,
+          "start_s": 40.0,
+          "end_s": 48.0,
+          "rms": 0.029419,
+          "zcr": 94.875
+        }
+      ],
+      "max_rms_bin": {
+        "index": 4,
+        "start_s": 32.0,
+        "end_s": 40.0,
+        "rms": 0.16625,
+        "zcr": 1888.125
+      },
+      "early_mean_rms": 0.073292,
+      "late_mean_rms": 0.097835,
+      "energy_rise": 0.024543
+    },
+    "analysis_b": {
+      "path": "output/strategy_natural_tags/seed_123/timeline_b/audio.wav",
+      "sample_rate": 48000,
+      "duration_s": 48.0,
+      "overall_rms": 0.114464,
+      "bins": [
+        {
+          "index": 0,
+          "start_s": 0.0,
+          "end_s": 8.0,
+          "rms": 0.084378,
+          "zcr": 1308.125
+        },
+        {
+          "index": 1,
+          "start_s": 8.0,
+          "end_s": 16.0,
+          "rms": 0.115258,
+          "zcr": 2144.5
+        },
+        {
+          "index": 2,
+          "start_s": 16.0,
+          "end_s": 24.0,
+          "rms": 0.066666,
+          "zcr": 663.75
+        },
+        {
+          "index": 3,
+          "start_s": 24.0,
+          "end_s": 32.0,
+          "rms": 0.156768,
+          "zcr": 2386.25
+        },
+        {
+          "index": 4,
+          "start_s": 32.0,
+          "end_s": 40.0,
+          "rms": 0.169271,
+          "zcr": 1630.25
+        },
+        {
+          "index": 5,
+          "start_s": 40.0,
+          "end_s": 48.0,
+          "rms": 0.023113,
+          "zcr": 82.875
+        }
+      ],
+      "max_rms_bin": {
+        "index": 4,
+        "start_s": 32.0,
+        "end_s": 40.0,
+        "rms": 0.169271,
+        "zcr": 1630.25
+      },
+      "early_mean_rms": 0.099818,
+      "late_mean_rms": 0.096192,
+      "energy_rise": -0.003626
+    },
+    "observed_deltas": {
+      "energy_rise_a": 0.024543,
+      "energy_rise_b": -0.003626,
+      "energy_rise_delta_b_minus_a": -0.028169,
+      "overall_rms_delta_b_minus_a": 0.012425,
+      "max_rms_position_a": 32.0,
+      "max_rms_position_b": 32.0
+    }
+  },
+  {
+    "dir_a": "output/strategy_natural_tags/seed_42/timeline_a",
+    "dir_b": "output/strategy_natural_tags/seed_42/timeline_b",
+    "audio_a": "output/strategy_natural_tags/seed_42/timeline_a/audio.wav",
+    "audio_b": "output/strategy_natural_tags/seed_42/timeline_b/audio.wav",
+    "analysis_a": {
+      "path": "output/strategy_natural_tags/seed_42/timeline_a/audio.wav",
+      "sample_rate": 48000,
+      "duration_s": 48.0,
+      "overall_rms": 0.112925,
+      "bins": [
+        {
+          "index": 0,
+          "start_s": 0.0,
+          "end_s": 8.0,
+          "rms": 0.006313,
+          "zcr": 364.25
+        },
+        {
+          "index": 1,
+          "start_s": 8.0,
+          "end_s": 16.0,
+          "rms": 0.05507,
+          "zcr": 929.125
+        },
+        {
+          "index": 2,
+          "start_s": 16.0,
+          "end_s": 24.0,
+          "rms": 0.110155,
+          "zcr": 1573.75
+        },
+        {
+          "index": 3,
+          "start_s": 24.0,
+          "end_s": 32.0,
+          "rms": 0.175141,
+          "zcr": 529.25
+        },
+        {
+          "index": 4,
+          "start_s": 32.0,
+          "end_s": 40.0,
+          "rms": 0.168869,
+          "zcr": 739.25
+        },
+        {
+          "index": 5,
+          "start_s": 40.0,
+          "end_s": 48.0,
+          "rms": 0.045984,
+          "zcr": 1137.875
+        }
+      ],
+      "max_rms_bin": {
+        "index": 3,
+        "start_s": 24.0,
+        "end_s": 32.0,
+        "rms": 0.175141,
+        "zcr": 529.25
+      },
+      "early_mean_rms": 0.030692,
+      "late_mean_rms": 0.107426,
+      "energy_rise": 0.076735
+    },
+    "analysis_b": {
+      "path": "output/strategy_natural_tags/seed_42/timeline_b/audio.wav",
+      "sample_rate": 48000,
+      "duration_s": 48.0,
+      "overall_rms": 0.115689,
+      "bins": [
+        {
+          "index": 0,
+          "start_s": 0.0,
+          "end_s": 8.0,
+          "rms": 0.006235,
+          "zcr": 676.375
+        },
+        {
+          "index": 1,
+          "start_s": 8.0,
+          "end_s": 16.0,
+          "rms": 0.073006,
+          "zcr": 955.5
+        },
+        {
+          "index": 2,
+          "start_s": 16.0,
+          "end_s": 24.0,
+          "rms": 0.076706,
+          "zcr": 1558.875
+        },
+        {
+          "index": 3,
+          "start_s": 24.0,
+          "end_s": 32.0,
+          "rms": 0.181476,
+          "zcr": 703.75
+        },
+        {
+          "index": 4,
+          "start_s": 32.0,
+          "end_s": 40.0,
+          "rms": 0.179498,
+          "zcr": 688.25
+        },
+        {
+          "index": 5,
+          "start_s": 40.0,
+          "end_s": 48.0,
+          "rms": 0.062434,
+          "zcr": 1136.625
+        }
+      ],
+      "max_rms_bin": {
+        "index": 3,
+        "start_s": 24.0,
+        "end_s": 32.0,
+        "rms": 0.181476,
+        "zcr": 703.75
+      },
+      "early_mean_rms": 0.039621,
+      "late_mean_rms": 0.120966,
+      "energy_rise": 0.081345
+    },
+    "observed_deltas": {
+      "energy_rise_a": 0.076735,
+      "energy_rise_b": 0.081345,
+      "energy_rise_delta_b_minus_a": 0.00461,
+      "overall_rms_delta_b_minus_a": 0.002764,
+      "max_rms_position_a": 24.0,
+      "max_rms_position_b": 24.0
+    }
+  },
+  {
+    "dir_a": "output/strategy_natural_tags/seed_777/timeline_a",
+    "dir_b": "output/strategy_natural_tags/seed_777/timeline_b",
+    "audio_a": "output/strategy_natural_tags/seed_777/timeline_a/audio.wav",
+    "audio_b": "output/strategy_natural_tags/seed_777/timeline_b/audio.wav",
+    "analysis_a": {
+      "path": "output/strategy_natural_tags/seed_777/timeline_a/audio.wav",
+      "sample_rate": 48000,
+      "duration_s": 48.0,
+      "overall_rms": 0.090808,
+      "bins": [
+        {
+          "index": 0,
+          "start_s": 0.0,
+          "end_s": 8.0,
+          "rms": 0.060893,
+          "zcr": 1093.625
+        },
+        {
+          "index": 1,
+          "start_s": 8.0,
+          "end_s": 16.0,
+          "rms": 0.055762,
+          "zcr": 974.125
+        },
+        {
+          "index": 2,
+          "start_s": 16.0,
+          "end_s": 24.0,
+          "rms": 0.089792,
+          "zcr": 1708.375
+        },
+        {
+          "index": 3,
+          "start_s": 24.0,
+          "end_s": 32.0,
+          "rms": 0.122492,
+          "zcr": 1084.25
+        },
+        {
+          "index": 4,
+          "start_s": 32.0,
+          "end_s": 40.0,
+          "rms": 0.139819,
+          "zcr": 1452.375
+        },
+        {
+          "index": 5,
+          "start_s": 40.0,
+          "end_s": 48.0,
+          "rms": 0.006533,
+          "zcr": 443.125
+        }
+      ],
+      "max_rms_bin": {
+        "index": 4,
+        "start_s": 32.0,
+        "end_s": 40.0,
+        "rms": 0.139819,
+        "zcr": 1452.375
+      },
+      "early_mean_rms": 0.058328,
+      "late_mean_rms": 0.073176,
+      "energy_rise": 0.014849
+    },
+    "analysis_b": {
+      "path": "output/strategy_natural_tags/seed_777/timeline_b/audio.wav",
+      "sample_rate": 48000,
+      "duration_s": 48.0,
+      "overall_rms": 0.097884,
+      "bins": [
+        {
+          "index": 0,
+          "start_s": 0.0,
+          "end_s": 8.0,
+          "rms": 0.072526,
+          "zcr": 1191.75
+        },
+        {
+          "index": 1,
+          "start_s": 8.0,
+          "end_s": 16.0,
+          "rms": 0.095418,
+          "zcr": 1905.375
+        },
+        {
+          "index": 2,
+          "start_s": 16.0,
+          "end_s": 24.0,
+          "rms": 0.08575,
+          "zcr": 1339.125
+        },
+        {
+          "index": 3,
+          "start_s": 24.0,
+          "end_s": 32.0,
+          "rms": 0.128333,
+          "zcr": 666.25
+        },
+        {
+          "index": 4,
+          "start_s": 32.0,
+          "end_s": 40.0,
+          "rms": 0.138835,
+          "zcr": 1258.875
+        },
+        {
+          "index": 5,
+          "start_s": 40.0,
+          "end_s": 48.0,
+          "rms": 0.005053,
+          "zcr": 432.875
+        }
+      ],
+      "max_rms_bin": {
+        "index": 4,
+        "start_s": 32.0,
+        "end_s": 40.0,
+        "rms": 0.138835,
+        "zcr": 1258.875
+      },
+      "early_mean_rms": 0.083972,
+      "late_mean_rms": 0.071944,
+      "energy_rise": -0.012028
+    },
+    "observed_deltas": {
+      "energy_rise_a": 0.014849,
+      "energy_rise_b": -0.012028,
+      "energy_rise_delta_b_minus_a": -0.026877,
+      "overall_rms_delta_b_minus_a": 0.007076,
+      "max_rms_position_a": 32.0,
+      "max_rms_position_b": 32.0
+    }
+  }
+]
