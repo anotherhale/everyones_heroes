@@ -1,9 +1,9 @@
 # ACE-Step 1.5 — Everyone’s Heroes Narrative Music Evaluation
 
-**Status:** Investigation / architecture recommendation  
+**Status:** Architecture decision accepted (Option B) — adapter POC spike started  
 **Date:** 2026-10-06  
-**Revised:** 2026-10-06 (independent re-inspection of the same upstream HEAD; evidence excerpts deepened)  
-**Scope:** Source-level evaluation only. No EH code changes. No ACE-Step modifications. No training. No model-weight downloads beyond source inspection.
+**Revised:** 2026-10-06 (independent re-inspection deepened; Option B locked; out-of-repo adapter POC added)  
+**Scope:** Source-level evaluation + out-of-repo compile-path spike. No EH domain types. No ACE-Step DiT/VAE modifications. No training. No model-weight downloads.
 
 **Primary question:**
 
@@ -11,7 +11,7 @@
 
 **Verdict (short):**
 
-**Yes — with an adapter-first architecture (Option B), not by forcing EH stories into conventional song forms.**
+**Yes — ACE-Step 1.5 can become an EH-oriented narrative music engine without changing its DiT/VAE stack**, via an adapter-first Option B architecture — not by forcing EH stories into conventional song forms.
 
 `[Verse]` / `[Chorus]` / `[Bridge]` are **textual conventions inside the lyrics string**, not DiT vocabulary tokens, not constrained-decoding fields, and not a required runtime schema. The audio model consumes free-form caption + lyrics + metadata (+ optional codes / reference audio / time-window masks). EH can therefore own narrative phases in EH/application space and compile them into ACE-Step’s flat generation contract — optionally keeping conventional tags only as a soft compiler target when useful.
 
@@ -53,9 +53,17 @@ Key source findings:
 | Personalization via LoRA / reference audio / caption is real; motif/profile objects are not | Strong | EH musical identity is mostly adapter + LoRA later |
 | Apple Silicon MLX support exists | Strong (`models/mlx`, macOS launchers) | Local/dev path is plausible |
 
-**Recommended direction:** Option B — EH Narrative Music Model → ACE-Step Adapter → ACE-Step audio engine.
+**Recommended direction (accepted):** Option B:
+
+```text
+EH Story → Creative Director → Narrative Music Timeline
+    → ACE-Step Adapter (compile caption/lyrics/metas/duration/repaint windows)
+    → ACE-Step audio model (unchanged)
+```
 
 Do **not** introduce ACE-Step types into the EH domain. Future EH boundary should remain something like `MusicGenerationPort` / creative direction artifacts already discussed in `AI-Experience-Provider-Laboratory-Plan.md`.
+
+**Adapter POC (compile path):** `spikes/ace-step-eh-adapter/` — same story, two timelines, inspiration LM off; proves the compiled ACE plan changes because the narrative timeline changed. Audio listening validation still requires a GPU ACE-Step host (out of scope for this spike).
 
 ---
 
@@ -738,16 +746,28 @@ EH Narrative Music Model → ACE-Step adaptation layer → ACE-Step audio engine
 
 ## 18. Recommended next step
 
-1. **Do not integrate ACE-Step into EH yet.**
-2. Stand up an **out-of-repo / infra spike**: ACE-Step EH Adapter that compiles a hand-authored Narrative Music Timeline → `GenerationParams`.
-3. Run the **POC** in §14 with inspiration LM off; compare EH tags vs Verse/Chorus compiler backends.
-4. If soft single-pass arcs are insufficient, add **phase-targeted repaint** as the second spike (still no EH domain types).
-5. Only then consider wiring through a future `MusicGenerationPort` behind the AI Experience lab — keeping ACE-Step concepts out of the EH domain.
-6. Defer LoRA / planner SFT until POC metrics show clear failure modes that training would fix.
+### Done
+
+1. Architecture evaluation locked on **Option B** (this document; PR #109 / #110).
+2. **Out-of-repo adapter compile spike** landed at `spikes/ace-step-eh-adapter/`:
+   - Shared story seed + Timeline A (canonical arc) + Timeline B (suppressed/early breakthrough)
+   - Deterministic compile → ACE-Step `GenerationParams`-shaped JSON
+   - Inspiration LM / CoT rewrite flags forced **off**
+   - EH-tag and conventional-tag compiler backends
+   - Phase → `repainting_start/end` mapping helper
+   - Pytest invariants prove caption/lyrics/phase windows differ when only the timeline changes
+
+### Still next
+
+1. **Do not integrate ACE-Step into EH domain yet.**
+2. On a GPU host: run ACE-Step against the compiled `out/*.json` params (inspiration LM off, fixed seed/model) and complete the §14 listening / RMS checks.
+3. If soft single-pass arcs are insufficient, add **phase-targeted repaint** as the second spike (still no EH domain types).
+4. Only then consider wiring through a future `MusicGenerationPort` behind the AI Experience lab — keeping ACE-Step concepts out of the EH domain.
+5. Defer LoRA / planner SFT until audio POC metrics show clear failure modes that training would fix.
 
 ### Answer to the most important question
 
-**Yes — ACE-Step can become an EH-oriented narrative music engine while retaining its powerful underlying generation stack**, provided EH specializes the **planning/conditioning/adapter layer** and treats `[Verse]/[Chorus]` as optional compiler vocabulary rather than EH ontology. The underlying DiT/VAE need not change for the first architecture bet; evidence does not show they fundamentally require conventional song sections.
+**Yes — ACE-Step can become an EH-oriented narrative music engine while retaining its powerful underlying generation stack**, provided EH specializes the **planning/conditioning/adapter layer** and treats `[Verse]`/`[Chorus]` as optional compiler vocabulary rather than EH ontology. The underlying DiT/VAE need not change for the first architecture bet; evidence does not show they fundamentally require conventional song sections.
 
 ---
 
@@ -781,3 +801,12 @@ This evaluation is consistent with:
 - Hexagonal rule: EH expresses **what experience**, infrastructure decides **how to render**.
 
 It intentionally does **not** propose EH domain aggregates for ACE-Step concepts.
+
+## Appendix C — Adapter POC spike
+
+Out-of-repo compile-path spike (not EH domain):
+
+- Path: `spikes/ace-step-eh-adapter/`
+- Proves: same story + two timelines + inspiration LM off → different caption/lyrics/phase windows
+- Does not yet prove: audible narrative adherence (requires ACE-Step GPU runtime)
+

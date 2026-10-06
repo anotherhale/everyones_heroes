@@ -1,0 +1,62 @@
+{
+  "timeline_id": "timeline-a-canonical-arc",
+  "story_id": "story-poc-returning-home",
+  "label": "Timeline A — canonical EH arc (low → peak breakthrough → settle)",
+  "notes": "Primary POC arm. Energy peaks at Breakthrough.",
+  "phases": [
+    {
+      "name": "Opening",
+      "start_seconds": 0,
+      "end_seconds": 30,
+      "emotional_state": "quiet arrival",
+      "energy": 0.18,
+      "musical_intent": "sparse piano and soft pads; space and breath; almost still",
+      "lyric_intent": null
+    },
+    {
+      "name": "Challenge",
+      "start_seconds": 30,
+      "end_seconds": 70,
+      "emotional_state": "uneasy homecoming",
+      "energy": 0.35,
+      "musical_intent": "low strings enter; unresolved harmony; held tension under calm surface",
+      "lyric_intent": null
+    },
+    {
+      "name": "Struggle",
+      "start_seconds": 70,
+      "end_seconds": 130,
+      "emotional_state": "difficulty reconnecting",
+      "energy": 0.55,
+      "musical_intent": "denser texture; restless ostinato; percussion hints; rising pressure without release",
+      "lyric_intent": null
+    },
+    {
+      "name": "Turning Point",
+      "start_seconds": 130,
+      "end_seconds": 160,
+      "emotional_state": "small act of service cracks the isolation",
+      "energy": 0.62,
+      "musical_intent": "harmonic shift toward light; melody fragment appears; forward motion begins",
+      "lyric_intent": null
+    },
+    {
+      "name": "Breakthrough",
+      "start_seconds": 160,
+      "end_seconds": 210,
+      "emotional_state": "honest presence; emotional opening",
+      "energy": 0.88,
+      "musical_intent": "full warm ensemble; elevated dynamics; triumphant but human; peak of the arc",
+      "lyric_intent": null
+    },
+    {
+      "name": "Resolution",
+      "start_seconds": 210,
+      "end_seconds": 240,
+      "emotional_state": "quiet resolve to keep showing up",
+      "energy": 0.32,
+      "musical_intent": "texture thins; piano returns; warm settled cadence; leave space",
+      "lyric_intent": null
+    }
+  ]
+}
