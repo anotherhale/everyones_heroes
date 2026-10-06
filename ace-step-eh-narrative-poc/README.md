@@ -114,3 +114,16 @@ Do **not** promote these types into EH production:
 - ACE-Step adapter / dependency
 
 This POC produces evidence only.
+
+## Results (this run)
+
+- ACE-Step: `1.5.0` @ `ca1e85fe9430179831e6bc6be790c332190a3866`
+- Model: `acestep-v15-turbo` (DiT-only; Inspiration LM OFF)
+- Hardware: CPU-only
+- Generations: 3 matched natural_tags seeds (42/123/777) + caption_only seed 42
+- Reports:
+  - `output/comparison.md`
+  - `output/architecture-conclusion.md`
+  - `output/spectrograms/`
+- Verdict: timeline **materially affects** music (soft control). Production `MusicGenerationPort`: **NOT YET**.
+
