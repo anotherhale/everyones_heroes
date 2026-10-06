@@ -1,0 +1,17 @@
+{
+  "genre": "cinematic indie folk-pop",
+  "style": "narrative vocal song with clear emotional arc",
+  "instrumentation": ["piano", "strings", "light percussion"],
+  "vocal_character": "clear warm English vocal, sincere storytelling delivery",
+  "bpm": 92,
+  "keyscale": "C Major",
+  "timesignature": "4",
+  "language": "en",
+  "duration_seconds": 48,
+  "constraints": [
+    "same story lyrics for every generation",
+    "no genre change between timelines",
+    "no model change between timelines",
+    "inspiration LM disabled"
+  ]
+}
