@@ -114,6 +114,8 @@ def _build_caption(
     direction: MusicCreativeDirection,
     timeline: NarrativeMusicTimeline,
     strategy: SectionTagStrategy,
+    *,
+    target_duration: Optional[float] = None,
 ) -> str:
     parts: List[str] = [
         f"A {direction.genre} song. {direction.style}.",
@@ -124,10 +126,17 @@ def _build_caption(
     if timeline.description:
         parts.append(timeline.description.rstrip(".") + ".")
 
+    # Scale segment windows to the actual generation duration so caption
+    # timing matches GenerationParams.duration.
+    native_total = max(timeline.total_duration_seconds, 0.1)
+    scale = float(target_duration) / native_total if target_duration else 1.0
+
     parts.append("Musical narrative progression with approximate timing:")
     t = 0.0
     for i, seg in enumerate(timeline.segments):
-        start, end = _segment_window(timeline.segments, i, t)
+        scaled_dur = float(seg.duration_seconds) * scale
+        start = t
+        end = t + scaled_dur
         instruments = ", ".join(seg.instrumentation)
         parts.append(
             f"- {start:.0f}–{end:.0f}s [{seg.role}]: "
@@ -225,20 +234,22 @@ class AceStepNarrativeAdapter:
         seed: int,
         duration_override: Optional[float] = None,
     ) -> AceStepGenerationRequest:
-        strategy = self.section_tag_strategy
-        caption = _build_caption(direction, timeline, strategy)
-        if strategy == SectionTagStrategy.NATURAL_TAGS:
-            lyrics = _build_lyrics_with_tags(story, timeline)
-        else:
-            lyrics = _build_lyrics_plain(story, timeline)
-
         duration = float(
             duration_override
             if duration_override is not None
             else direction.duration_seconds
         )
         # Prefer shared creative-direction duration so A/B stay matched.
-        # Timeline segment durations inform caption windows only.
+        # Timeline segment durations inform caption windows (scaled).
+
+        strategy = self.section_tag_strategy
+        caption = _build_caption(
+            direction, timeline, strategy, target_duration=duration
+        )
+        if strategy == SectionTagStrategy.NATURAL_TAGS:
+            lyrics = _build_lyrics_with_tags(story, timeline)
+        else:
+            lyrics = _build_lyrics_plain(story, timeline)
 
         thinking = False if self.disable_inspiration_lm else True
         use_cot = False if self.disable_inspiration_lm else True

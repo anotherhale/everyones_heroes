@@ -54,9 +54,48 @@ def _git_commit(repo: Path) -> str:
         return "unknown"
 
 
+def _json_safe(obj: Any) -> Any:
+    """Convert nested structures to JSON-serializable forms."""
+    if obj is None or isinstance(obj, (str, int, float, bool)):
+        return obj
+    if isinstance(obj, Path):
+        return str(obj)
+    if isinstance(obj, dict):
+        return {str(k): _json_safe(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        return [_json_safe(v) for v in obj]
+    # torch.Tensor / numpy / assorted handler objects
+    try:
+        import torch
+
+        if isinstance(obj, torch.Tensor):
+            return {
+                "_type": "Tensor",
+                "shape": list(obj.shape),
+                "dtype": str(obj.dtype),
+                "device": str(obj.device),
+            }
+    except Exception:
+        pass
+    if hasattr(obj, "item") and callable(obj.item):
+        try:
+            return obj.item()
+        except Exception:
+            pass
+    if hasattr(obj, "tolist") and callable(obj.tolist):
+        try:
+            return obj.tolist()
+        except Exception:
+            pass
+    return repr(obj)
+
+
 def _write_json(path: Path, data: Any) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    path.write_text(
+        json.dumps(_json_safe(data), indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
 
 
 def _hardware_info() -> Dict[str, Any]:
@@ -121,94 +160,115 @@ def _ensure_acestep_on_path(acestep_root: Path) -> None:
         sys.path.insert(0, root)
 
 
+class AceStepRuntime:
+    """Keeps DiT loaded across matched A/B generations (Inspiration LM off)."""
+
+    def __init__(self, acestep_root: Path, dit_model: str = "acestep-v15-turbo") -> None:
+        self.acestep_root = acestep_root
+        self.dit_model = dit_model
+        self.dit_handler = None
+        self.device = "cpu"
+
+    def initialize(self) -> None:
+        _ensure_acestep_on_path(self.acestep_root)
+        os.environ.setdefault("ACESTEP_PROJECT_ROOT", str(self.acestep_root))
+        os.environ.setdefault(
+            "ACESTEP_CHECKPOINTS_DIR", str(self.acestep_root / "checkpoints")
+        )
+        os.environ["ACESTEP_INIT_LLM"] = "false"
+
+        from acestep.handler import AceStepHandler
+
+        try:
+            import torch
+
+            if torch.cuda.is_available():
+                self.device = "cuda"
+        except Exception:
+            pass
+
+        dit_handler = AceStepHandler()
+        init_kwargs: Dict[str, Any] = {
+            "project_root": str(self.acestep_root),
+            "config_path": self.dit_model,
+            "device": self.device,
+        }
+        try:
+            dit_handler.initialize_service(**init_kwargs, offload_to_cpu=True)
+        except TypeError:
+            dit_handler.initialize_service(**init_kwargs)
+        self.dit_handler = dit_handler
+
+    def generate(self, params: Dict[str, Any], *, save_dir: Path) -> Dict[str, Any]:
+        if self.dit_handler is None:
+            self.initialize()
+
+        from acestep.inference import GenerationConfig, GenerationParams, generate_music
+
+        save_dir.mkdir(parents=True, exist_ok=True)
+        gen_params = GenerationParams(**params)
+        gen_params.thinking = False
+        gen_params.use_cot_metas = False
+        gen_params.use_cot_caption = False
+        gen_params.use_cot_lyrics = False
+        gen_params.use_cot_language = False
+
+        seed = int(params.get("seed", -1))
+        config = GenerationConfig(
+            batch_size=1,
+            allow_lm_batch=False,
+            use_random_seed=False,
+            seeds=[seed] if seed >= 0 else None,
+            audio_format="wav",
+        )
+
+        result = generate_music(
+            self.dit_handler,
+            None,  # Inspiration LM OFF
+            gen_params,
+            config,
+            save_dir=str(save_dir),
+        )
+
+        payload: Dict[str, Any] = {
+            "success": bool(getattr(result, "success", False)),
+            "status_message": getattr(result, "status_message", None),
+            "error": getattr(result, "error", None),
+            "device": self.device,
+            "dit_model": self.dit_model,
+            "inspiration_lm": "OFF",
+            "audios": [],
+        }
+        audios = getattr(result, "audios", None) or []
+        for audio in audios:
+            if isinstance(audio, dict):
+                payload["audios"].append(audio)
+            else:
+                payload["audios"].append({"raw": repr(audio)})
+        extra = getattr(result, "extra_outputs", None)
+        if extra is not None:
+            try:
+                payload["extra_outputs"] = (
+                    dict(extra) if hasattr(extra, "items") else repr(extra)
+                )
+            except Exception:
+                payload["extra_outputs"] = repr(extra)
+        return payload
+
+
 def generate_with_acestep(
     params: Dict[str, Any],
     *,
     save_dir: Path,
     acestep_root: Path,
     dit_model: str = "acestep-v15-turbo",
+    runtime: Optional[AceStepRuntime] = None,
 ) -> Dict[str, Any]:
     """Invoke ACE-Step generate_music with Inspiration LM disabled."""
-    _ensure_acestep_on_path(acestep_root)
-    os.environ.setdefault("ACESTEP_PROJECT_ROOT", str(acestep_root))
-    os.environ.setdefault("ACESTEP_CHECKPOINTS_DIR", str(acestep_root / "checkpoints"))
-    os.environ["ACESTEP_INIT_LLM"] = "false"
-
-    from acestep.handler import AceStepHandler
-    from acestep.inference import GenerationConfig, GenerationParams, generate_music
-
-    save_dir.mkdir(parents=True, exist_ok=True)
-    device = "cpu"
-    try:
-        import torch
-
-        if torch.cuda.is_available():
-            device = "cuda"
-    except Exception:
-        pass
-
-    dit_handler = AceStepHandler()
-    init_kwargs: Dict[str, Any] = {
-        "project_root": str(acestep_root),
-        "config_path": dit_model,
-        "device": device,
-    }
-    # Prefer CPU offload helpers when available.
-    try:
-        dit_handler.initialize_service(**init_kwargs, offload_to_cpu=True)
-    except TypeError:
-        dit_handler.initialize_service(**init_kwargs)
-
-    # Intentionally do NOT initialize LLMHandler — Inspiration LM OFF.
-    llm_handler = None
-
-    gen_params = GenerationParams(**params)
-    # Hard-enforce LM off even if caller params were wrong.
-    gen_params.thinking = False
-    gen_params.use_cot_metas = False
-    gen_params.use_cot_caption = False
-    gen_params.use_cot_lyrics = False
-    gen_params.use_cot_language = False
-
-    seed = int(params.get("seed", -1))
-    config = GenerationConfig(
-        batch_size=1,
-        allow_lm_batch=False,
-        use_random_seed=False,
-        seeds=[seed] if seed >= 0 else None,
-        audio_format="wav",
-    )
-
-    result = generate_music(
-        dit_handler,
-        llm_handler,
-        gen_params,
-        config,
-        save_dir=str(save_dir),
-    )
-
-    payload: Dict[str, Any] = {
-        "success": bool(getattr(result, "success", False)),
-        "status_message": getattr(result, "status_message", None),
-        "error": getattr(result, "error", None),
-        "device": device,
-        "dit_model": dit_model,
-        "inspiration_lm": "OFF",
-        "audios": [],
-    }
-    audios = getattr(result, "audios", None) or []
-    for audio in audios:
-        if isinstance(audio, dict):
-            payload["audios"].append(audio)
-        else:
-            payload["audios"].append({"raw": repr(audio)})
-    extra = getattr(result, "extra_outputs", None)
-    if extra is not None:
-        try:
-            payload["extra_outputs"] = dict(extra) if hasattr(extra, "items") else repr(extra)
-        except Exception:
-            payload["extra_outputs"] = repr(extra)
-    return payload
+    rt = runtime or AceStepRuntime(acestep_root, dit_model=dit_model)
+    if rt.dit_handler is None:
+        rt.initialize()
+    return rt.generate(params, save_dir=save_dir)
 
 
 def run_one(
@@ -220,6 +280,7 @@ def run_one(
     acestep_root: Path,
     dry_run: bool,
     dit_model: str,
+    runtime: Optional[AceStepRuntime] = None,
 ) -> Dict[str, Any]:
     out_dir.mkdir(parents=True, exist_ok=True)
     input_payload = {
@@ -268,6 +329,7 @@ def run_one(
             save_dir=out_dir / "raw",
             acestep_root=acestep_root,
             dit_model=dit_model,
+            runtime=runtime,
         )
         meta["generation"] = gen
         meta["status"] = "ok" if gen.get("success") else "failed"
@@ -347,6 +409,11 @@ def main(argv: Optional[List[str]] = None) -> int:
         "results": [],
     }
 
+    runtime: Optional[AceStepRuntime] = None
+    if not args.dry_run:
+        runtime = AceStepRuntime(args.acestep_root, dit_model=args.dit_model)
+        runtime.initialize()
+
     for strategy in strategies:
         strategy_seeds = seeds
         if (
@@ -370,6 +437,7 @@ def main(argv: Optional[List[str]] = None) -> int:
                 acestep_root=args.acestep_root,
                 dry_run=args.dry_run,
                 dit_model=args.dit_model,
+                runtime=runtime,
             )
             meta_b = run_one(
                 timeline_key="timeline_b",
@@ -379,6 +447,7 @@ def main(argv: Optional[List[str]] = None) -> int:
                 acestep_root=args.acestep_root,
                 dry_run=args.dry_run,
                 dit_model=args.dit_model,
+                runtime=runtime,
             )
             # Convenience mirrors for the primary strategy/seed into classic paths.
             if strategy == SectionTagStrategy.NATURAL_TAGS and seed == seeds[0]:

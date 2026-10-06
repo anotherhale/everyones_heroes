@@ -1,0 +1,32 @@
+{
+  "timestamp": "2026-10-06T17:44:38.615893+00:00",
+  "acestep_root": "/home/ubuntu/ai-poc/ACE-Step-1.5",
+  "acestep_commit": "ca1e85fe9430179831e6bc6be790c332190a3866",
+  "acestep_version": "1.5.0",
+  "dit_model": "acestep-v15-turbo",
+  "inspiration_lm": "OFF",
+  "inspiration_lm_disable_method": "thinking=False, use_cot_*=False, llm_handler=None, ACESTEP_INIT_LLM=false",
+  "seed": 123,
+  "duration": 48.0,
+  "bpm": 92,
+  "keyscale": "C Major",
+  "language": "en",
+  "section_tag_strategy": "natural_tags",
+  "timeline_name": "intimate_reflective",
+  "hardware": {
+    "python": "3.12.3 (main, Mar 23 2026, 19:04:32) [GCC 13.3.0]",
+    "platform": "linux",
+    "cuda_available": false,
+    "device": "cpu",
+    "torch_error": "No module named 'torch'",
+    "mem_total": "16398384 kB"
+  },
+  "dry_run": true,
+  "source_files": {
+    "story": "/workspace/ace-step-eh-narrative-poc/inputs/story.txt",
+    "creative_direction": "/workspace/ace-step-eh-narrative-poc/inputs/creative_direction.json",
+    "timeline_a": "/workspace/ace-step-eh-narrative-poc/inputs/timeline_a.json",
+    "timeline_b": "/workspace/ace-step-eh-narrative-poc/inputs/timeline_b.json"
+  },
+  "status": "compiled_only"
+}
