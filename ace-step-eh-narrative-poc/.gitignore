@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+# Keep metadata/reports; ignore bulky generated audio binaries
+output/**/*.wav
+output/**/*.flac
+output/**/*.mp3
+output/**/*.opus
+output/**/*.aac
+output/**/raw/

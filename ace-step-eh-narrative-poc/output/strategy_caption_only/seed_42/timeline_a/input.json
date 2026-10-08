@@ -1,0 +1,110 @@
+{
+  "timeline_key": "timeline_a",
+  "timestamp": "2026-10-06T17:57:15.710908+00:00",
+  "request": {
+    "caption": "A cinematic indie folk-pop song. narrative vocal song with clear emotional arc.\nVocal character: clear warm English vocal, sincere storytelling delivery.\nCore instrumentation palette: piano, strings, light percussion.\nNarrative arc name: intimate_reflective.\nIntimate / Reflective narrative trajectory.\nMusical narrative progression with approximate timing:\n- 0–12s [opening]: vulnerability; mood uncertain; low energy, spacious; instrumentation piano, ambient_pad; vocal delivery intimate.\n- 12–24s [struggle]: introspection; mood reflective; low energy, spacious; instrumentation piano, soft_strings; vocal delivery restrained.\n- 24–36s [hope]: gentle_hope; mood hopeful; moderate energy; instrumentation piano, strings; vocal delivery warm.\n- 36–48s [resolution]: peace; mood resolved; moderate energy; instrumentation piano, light_strings; vocal delivery quiet.\nDo not rely on lyric section labels; follow this timed musical narrative through arrangement density, rhythm, and vocal intensity alone.",
+    "lyrics": "You don't have to have everything figured out today.\nYou just have to take the next step.\nEvery challenge you've faced has taught you something,\nand every setback has given you another chance to grow.\nThere will be moments when you doubt yourself.\nThere will be moments when the path ahead feels uncertain.\nBut courage isn't the absence of doubt.\nIt's choosing to move forward anyway.\nOne step becomes another.\nAnd eventually you look back and realize\nthat the person who was afraid to begin\nbecame the person who kept going.\nYou are not finished.\nYou're still becoming.\nTake the next step.\n",
+    "bpm": 92,
+    "keyscale": "C Major",
+    "timesignature": "4",
+    "vocal_language": "en",
+    "duration": 48.0,
+    "seed": 42,
+    "thinking": false,
+    "use_cot_metas": false,
+    "use_cot_caption": false,
+    "use_cot_lyrics": false,
+    "use_cot_language": false,
+    "instrumental": false,
+    "inference_steps": 8,
+    "guidance_scale": 7.0,
+    "task_type": "text2music",
+    "section_tag_strategy": "caption_only",
+    "timeline_name": "intimate_reflective",
+    "metadata": {
+      "inspiration_lm": "OFF",
+      "inspiration_lm_disable_method": "GenerationParams.thinking=False and use_cot_*=False; llm_handler left uninitialized / ACESTEP_INIT_LLM=false",
+      "provider_neutral_timeline": {
+        "name": "intimate_reflective",
+        "description": "Intimate / Reflective narrative trajectory",
+        "segments": [
+          {
+            "role": "opening",
+            "narrative_intent": "vulnerability",
+            "emotional_state": "uncertain",
+            "energy": 0.2,
+            "instrumentation": [
+              "piano",
+              "ambient_pad"
+            ],
+            "vocal_delivery": "intimate",
+            "duration_seconds": 12.0,
+            "performance_notes": null
+          },
+          {
+            "role": "struggle",
+            "narrative_intent": "introspection",
+            "emotional_state": "reflective",
+            "energy": 0.3,
+            "instrumentation": [
+              "piano",
+              "soft_strings"
+            ],
+            "vocal_delivery": "restrained",
+            "duration_seconds": 12.0,
+            "performance_notes": null
+          },
+          {
+            "role": "hope",
+            "narrative_intent": "gentle_hope",
+            "emotional_state": "hopeful",
+            "energy": 0.45,
+            "instrumentation": [
+              "piano",
+              "strings"
+            ],
+            "vocal_delivery": "warm",
+            "duration_seconds": 12.0,
+            "performance_notes": null
+          },
+          {
+            "role": "resolution",
+            "narrative_intent": "peace",
+            "emotional_state": "resolved",
+            "energy": 0.35,
+            "instrumentation": [
+              "piano",
+              "light_strings"
+            ],
+            "vocal_delivery": "quiet",
+            "duration_seconds": 12.0,
+            "performance_notes": null
+          }
+        ],
+        "total_duration_seconds": 48.0
+      },
+      "creative_direction": {
+        "genre": "cinematic indie folk-pop",
+        "style": "narrative vocal song with clear emotional arc",
+        "instrumentation": [
+          "piano",
+          "strings",
+          "light percussion"
+        ],
+        "vocal_character": "clear warm English vocal, sincere storytelling delivery",
+        "bpm": 92,
+        "keyscale": "C Major",
+        "timesignature": "4",
+        "language": "en",
+        "duration_seconds": 48.0,
+        "constraints": [
+          "same story lyrics for every generation",
+          "no genre change between timelines",
+          "no model change between timelines",
+          "inspiration LM disabled"
+        ]
+      },
+      "story_lyric_body": "You don't have to have everything figured out today.\nYou just have to take the next step.\nEvery challenge you've faced has taught you something,\nand every setback has given you another chance to grow.\nThere will be moments when you doubt yourself.\nThere will be moments when the path ahead feels uncertain.\nBut courage isn't the absence of doubt.\nIt's choosing to move forward anyway.\nOne step becomes another.\nAnd eventually you look back and realize\nthat the person who was afraid to begin\nbecame the person who kept going.\nYou are not finished.\nYou're still becoming.\nTake the next step."
+    }
+  }
+}

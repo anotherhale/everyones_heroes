@@ -1,0 +1,19 @@
+{
+  "task_type": "text2music",
+  "caption": "A cinematic indie folk-pop song. narrative vocal song with clear emotional arc.\nVocal character: clear warm English vocal, sincere storytelling delivery.\nCore instrumentation palette: piano, strings, light percussion.\nNarrative arc name: intimate_reflective.\nIntimate / Reflective narrative trajectory.\nMusical narrative progression with approximate timing:\n- 0–12s [opening]: vulnerability; mood uncertain; low energy, spacious; instrumentation piano, ambient_pad; vocal delivery intimate.\n- 12–24s [struggle]: introspection; mood reflective; low energy, spacious; instrumentation piano, soft_strings; vocal delivery restrained.\n- 24–36s [hope]: gentle_hope; mood hopeful; moderate energy; instrumentation piano, strings; vocal delivery warm.\n- 36–48s [resolution]: peace; mood resolved; moderate energy; instrumentation piano, light_strings; vocal delivery quiet.\nDo not rely on lyric section labels; follow this timed musical narrative through arrangement density, rhythm, and vocal intensity alone.",
+  "lyrics": "You don't have to have everything figured out today.\nYou just have to take the next step.\nEvery challenge you've faced has taught you something,\nand every setback has given you another chance to grow.\nThere will be moments when you doubt yourself.\nThere will be moments when the path ahead feels uncertain.\nBut courage isn't the absence of doubt.\nIt's choosing to move forward anyway.\nOne step becomes another.\nAnd eventually you look back and realize\nthat the person who was afraid to begin\nbecame the person who kept going.\nYou are not finished.\nYou're still becoming.\nTake the next step.\n",
+  "instrumental": false,
+  "bpm": 92,
+  "keyscale": "C Major",
+  "timesignature": "4",
+  "vocal_language": "en",
+  "duration": 48.0,
+  "seed": 42,
+  "thinking": false,
+  "use_cot_metas": false,
+  "use_cot_caption": false,
+  "use_cot_lyrics": false,
+  "use_cot_language": false,
+  "inference_steps": 8,
+  "guidance_scale": 7.0
+}
