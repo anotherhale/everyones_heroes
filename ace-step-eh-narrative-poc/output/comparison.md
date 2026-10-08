@@ -1,168 +1,214 @@
 # Narrative Music Timeline A/B Comparison
 
-Generated: 2026-10-06T18:05:00+00:00
+Generated: 2026-10-08T02:22:44.694816+00:00
 
 This report separates **Observed** measurements from **Inference** and **Architectural conclusion**.
 
 ## Method
 
 - Same story lyrics body for Timeline A and B.
-- Same creative direction (genre, BPM=92, key=C Major, language=en, duration=48s).
-- Same ACE-Step model (`acestep-v15-turbo` @ commit `ca1e85fe…`).
-- Inspiration LM **OFF** (`thinking=False`, `use_cot_*=False`, `llm_handler=None`, `ACESTEP_INIT_LLM=false`).
-- Matched seeds across A/B pairs: 42, 123, 777 (natural tags); seed 42 also for caption-only.
-- Objective proxies: per-bin RMS, high-frequency activity proxy, spectrograms, RMS envelopes.
-- Hardware: CPU-only (no NVIDIA GPU), 15 GiB RAM.
+- Same creative direction (genre, BPM, key, language, duration).
+- Same ACE-Step model; Inspiration LM OFF.
+- Matched seeds across A/B pairs.
+- Objective proxies: per-bin RMS (energy/density proxy) and zero-crossing rate (high-frequency/rhythmic activity proxy).
+- These proxies are imperfect; listening notes remain required.
 
-Supporting artifacts:
+## Pair 1 — caption_only / seed_42
 
-- `output/comparison_metrics.json`
-- `output/deep_metrics.json`
-- `output/spectrograms/natural_tags_rms_envelopes.png`
-- `output/spectrograms/seed42_ab_strategies.png`
-- `output/run_manifest.json`
+- Timeline A dir: `/workspace/ace-step-eh-narrative-poc/output/strategy_caption_only/seed_42/timeline_a`
+- Timeline B dir: `/workspace/ace-step-eh-narrative-poc/output/strategy_caption_only/seed_42/timeline_b`
+- Audio A: `/workspace/ace-step-eh-narrative-poc/output/strategy_caption_only/seed_42/timeline_a/audio.wav`
+- Audio B: `/workspace/ace-step-eh-narrative-poc/output/strategy_caption_only/seed_42/timeline_b/audio.wav`
 
----
+### Human evaluation table
 
-## Generation inventory
-
-| Strategy | Seed | Timeline A | Timeline B | Status |
-|---|---:|---|---|---|
-| natural_tags | 42 | audio.wav | audio.wav | ok |
-| natural_tags | 123 | audio.wav | audio.wav | ok |
-| natural_tags | 777 | audio.wav | audio.wav | ok |
-| caption_only | 42 | audio.wav | audio.wav | ok |
-
-All outputs are 48.000 s WAV @ 48 kHz.
-
----
-
-## Pair 1 — natural_tags / seed 42
+| Dimension | Timeline A (intimate) | Timeline B (cinematic) |
+|---|---|---|
+| Energy trajectory | late−early RMS `0.07501` | late−early RMS `0.06843` (ΔB−A `-0.00658`) |
+| Arrangement density | overall RMS `0.102031` | overall RMS `0.118567` (ΔB−A `0.016536`) |
+| Climax proxy | peak bin RMS `0.145789` @ `32.0`s | peak bin RMS `0.207125` @ `24.0`s |
+| Instrumentation | proxy only — confirm by listening/spectrogram | proxy only — confirm by listening/spectrogram |
+| Rhythmic intensity | ZCR bins in analysis JSON | ZCR bins in analysis JSON |
+| Harmonic/emotional character | not scored objectively | not scored objectively |
+| Vocal delivery | not scored objectively | not scored objectively |
+| Resolution | inspect final RMS bin / end fade | inspect final RMS bin / end fade |
+| Narrative coherence | soft — requires listening | soft — requires listening |
 
 ### Observed
 
-- Energy rise (late−early RMS) A: `0.05718`; B: `0.06795`; Δ(B−A): `+0.01077`
-- Peak bin RMS A: `0.182` @ 24 s; B: `0.193` @ 24 s
-- RMS envelope: B shows a sharper spike near ~26 s (RMS >0.35 local) vs A’s more distributed mid peaks
-- Spectrogram: B denser/brighter in ~20–40 s high-frequency region than A
-- Both share similar transient timing (lyric/rhythm alignment under same seed)
+- Energy rise (late−early RMS) Timeline A: `0.07501`
+- Energy rise (late−early RMS) Timeline B: `0.06843`
+- Δ energy rise (B−A): `-0.00658`
+- Δ overall RMS (B−A): `0.016536`
+- Max-RMS bin start A: `32.0s`
+- Max-RMS bin start B: `24.0s`
 
 ### Inference
 
-The cinematic timeline may be increasing mid-piece intensity and spectral density for this seed, while preserving tempo/phrasing structure fixed by seed + lyrics.
+Energy-rise difference is small on this proxy; narrative timeline may not strongly control global energy envelope for this pair.
 
 ### Architectural conclusion (pair-local)
 
-One supportive evidence point for energy/density responsiveness. Not sufficient alone.
+Treat this pair as one evidence point only. Controllability claims require consistent direction across multiple matched seeds.
 
----
+## Pair 2 — natural_tags / seed_123
 
-## Pair 2 — natural_tags / seed 123
+- Timeline A dir: `/workspace/ace-step-eh-narrative-poc/output/strategy_natural_tags/seed_123/timeline_a`
+- Timeline B dir: `/workspace/ace-step-eh-narrative-poc/output/strategy_natural_tags/seed_123/timeline_b`
+- Audio A: `/workspace/ace-step-eh-narrative-poc/output/strategy_natural_tags/seed_123/timeline_a/audio.wav`
+- Audio B: `/workspace/ace-step-eh-narrative-poc/output/strategy_natural_tags/seed_123/timeline_b/audio.wav`
+
+### Human evaluation table
+
+| Dimension | Timeline A (intimate) | Timeline B (cinematic) |
+|---|---|---|
+| Energy trajectory | late−early RMS `0.024543` | late−early RMS `-0.003626` (ΔB−A `-0.028169`) |
+| Arrangement density | overall RMS `0.102039` | overall RMS `0.114464` (ΔB−A `0.012425`) |
+| Climax proxy | peak bin RMS `0.16625` @ `32.0`s | peak bin RMS `0.169271` @ `32.0`s |
+| Instrumentation | proxy only — confirm by listening/spectrogram | proxy only — confirm by listening/spectrogram |
+| Rhythmic intensity | ZCR bins in analysis JSON | ZCR bins in analysis JSON |
+| Harmonic/emotional character | not scored objectively | not scored objectively |
+| Vocal delivery | not scored objectively | not scored objectively |
+| Resolution | inspect final RMS bin / end fade | inspect final RMS bin / end fade |
+| Narrative coherence | soft — requires listening | soft — requires listening |
 
 ### Observed
 
-- Energy rise A: `0.02227`; B: `-0.00491`; Δ(B−A): `-0.02718` (B did **not** rise more)
-- Peak bin RMS A: `0.153` @ 30 s; B: `0.162` @ 24 s
-- Mid-band HF proxy Δ(B−A): `+0.00235`
-- RMS envelope: B has earlier bursts (~3 s, ~12 s) that A lacks; both have late peaks; structures are visibly different
+- Energy rise (late−early RMS) Timeline A: `0.024543`
+- Energy rise (late−early RMS) Timeline B: `-0.003626`
+- Δ energy rise (B−A): `-0.028169`
+- Δ overall RMS (B−A): `0.012425`
+- Max-RMS bin start A: `32.0s`
+- Max-RMS bin start B: `32.0s`
 
 ### Inference
 
-Timeline B changed the envelope shape and early activity, but not in the simple “B always builds more” direction. Narrative control appears real but **non-monotonic / imprecise**.
+Timeline B did **not** show a larger energy rise than A on this proxy; timeline energy control may be weak or overridden by seed structure.
 
 ### Architectural conclusion (pair-local)
 
-Supports “timeline affects music,” weakens “energy scalar maps linearly to late-piece build.”
+Treat this pair as one evidence point only. Controllability claims require consistent direction across multiple matched seeds.
 
----
+## Pair 3 — natural_tags / seed_42
 
-## Pair 3 — natural_tags / seed 777
+- Timeline A dir: `/workspace/ace-step-eh-narrative-poc/output/strategy_natural_tags/seed_42/timeline_a`
+- Timeline B dir: `/workspace/ace-step-eh-narrative-poc/output/strategy_natural_tags/seed_42/timeline_b`
+- Audio A: `/workspace/ace-step-eh-narrative-poc/output/strategy_natural_tags/seed_42/timeline_a/audio.wav`
+- Audio B: `/workspace/ace-step-eh-narrative-poc/output/strategy_natural_tags/seed_42/timeline_b/audio.wav`
+
+### Human evaluation table
+
+| Dimension | Timeline A (intimate) | Timeline B (cinematic) |
+|---|---|---|
+| Energy trajectory | late−early RMS `0.076735` | late−early RMS `0.081345` (ΔB−A `0.00461`) |
+| Arrangement density | overall RMS `0.112925` | overall RMS `0.115689` (ΔB−A `0.002764`) |
+| Climax proxy | peak bin RMS `0.175141` @ `24.0`s | peak bin RMS `0.181476` @ `24.0`s |
+| Instrumentation | proxy only — confirm by listening/spectrogram | proxy only — confirm by listening/spectrogram |
+| Rhythmic intensity | ZCR bins in analysis JSON | ZCR bins in analysis JSON |
+| Harmonic/emotional character | not scored objectively | not scored objectively |
+| Vocal delivery | not scored objectively | not scored objectively |
+| Resolution | inspect final RMS bin / end fade | inspect final RMS bin / end fade |
+| Narrative coherence | soft — requires listening | soft — requires listening |
 
 ### Observed
 
-- Energy rise A: `0.00560`; B: `-0.00191`; Δ(B−A): `-0.00750`
-- Peak bin RMS A: `0.130` @ 24 s; B: `0.142` @ 30 s
-- Mid HF Δ(B−A): `-0.00661` (A higher)
-- RMS envelopes are out of phase: peaks of A and B often land at different times
+- Energy rise (late−early RMS) Timeline A: `0.076735`
+- Energy rise (late−early RMS) Timeline B: `0.081345`
+- Δ energy rise (B−A): `0.00461`
+- Δ overall RMS (B−A): `0.002764`
+- Max-RMS bin start A: `24.0s`
+- Max-RMS bin start B: `24.0s`
 
 ### Inference
 
-Matched-seed A/B outputs remain structurally different. Requested “breakthrough climax” is not reliably localized by the soft caption/tag channel alone.
+Energy-rise difference is small on this proxy; narrative timeline may not strongly control global energy envelope for this pair.
 
 ### Architectural conclusion (pair-local)
 
-Timeline is a useful soft conditioner; absolute timing of climax is not a hard control in ACE-Step’s flat contract.
+Treat this pair as one evidence point only. Controllability claims require consistent direction across multiple matched seeds.
 
----
+## Pair 4 — natural_tags / seed_777
 
-## Pair 4 — caption_only / seed 42
+- Timeline A dir: `/workspace/ace-step-eh-narrative-poc/output/strategy_natural_tags/seed_777/timeline_a`
+- Timeline B dir: `/workspace/ace-step-eh-narrative-poc/output/strategy_natural_tags/seed_777/timeline_b`
+- Audio A: `/workspace/ace-step-eh-narrative-poc/output/strategy_natural_tags/seed_777/timeline_a/audio.wav`
+- Audio B: `/workspace/ace-step-eh-narrative-poc/output/strategy_natural_tags/seed_777/timeline_b/audio.wav`
+
+### Human evaluation table
+
+| Dimension | Timeline A (intimate) | Timeline B (cinematic) |
+|---|---|---|
+| Energy trajectory | late−early RMS `0.014849` | late−early RMS `-0.012028` (ΔB−A `-0.026877`) |
+| Arrangement density | overall RMS `0.090808` | overall RMS `0.097884` (ΔB−A `0.007076`) |
+| Climax proxy | peak bin RMS `0.139819` @ `32.0`s | peak bin RMS `0.138835` @ `32.0`s |
+| Instrumentation | proxy only — confirm by listening/spectrogram | proxy only — confirm by listening/spectrogram |
+| Rhythmic intensity | ZCR bins in analysis JSON | ZCR bins in analysis JSON |
+| Harmonic/emotional character | not scored objectively | not scored objectively |
+| Vocal delivery | not scored objectively | not scored objectively |
+| Resolution | inspect final RMS bin / end fade | inspect final RMS bin / end fade |
+| Narrative coherence | soft — requires listening | soft — requires listening |
 
 ### Observed
 
-- Energy rise A: `0.07382`; B: `0.06202`; Δ(B−A): `-0.01180`
-- Peak bin RMS A: `0.147` @ 24 s; B: `0.210` @ 24 s (large peak gap)
-- Mid HF Δ(B−A): `+0.00369`
-- Spectrogram: B denser mid/late than A; contrast exists without lyric section tags
-- Natural-tags A/B for the same seed showed a more stark spectrogram contrast than caption-only in visual inspection
+- Energy rise (late−early RMS) Timeline A: `0.014849`
+- Energy rise (late−early RMS) Timeline B: `-0.012028`
+- Δ energy rise (B−A): `-0.026877`
+- Δ overall RMS (B−A): `0.007076`
+- Max-RMS bin start A: `32.0s`
+- Max-RMS bin start B: `32.0s`
 
 ### Inference
 
-Caption prose alone can differentiate A vs B. Explicit section tags are not strictly required for *some* difference, but may sharpen structural contrast.
+Timeline B did **not** show a larger energy rise than A on this proxy; timeline energy control may be weak or overridden by seed structure.
 
 ### Architectural conclusion (pair-local)
 
-Section tags remain optional soft controls, not a model ontology requirement — consistent with the architecture evaluation.
+Treat this pair as one evidence point only. Controllability claims require consistent direction across multiple matched seeds.
 
----
+## Classification of the primary hypothesis
 
-## Cross-seed summary (natural_tags)
+Same story + same model + same generation controls + same seed + different narrative timeline = different musical behavior?
 
-| Metric | B>A count | Notes |
-|---|---:|---|
-| Late−early energy rise | 1 / 3 | Only seed 42 |
-| Peak bin RMS | 3 / 3 | Mild, consistent |
-| Mid HF proxy | 1 / 3 | Inconsistent |
-| Max-RMS bin later in B | 1 / 3 | Inconsistent |
+| Experiment arm | Classification |
+|---|---|
+| Section-tag representation (`natural_tags`) | see aggregate below |
+| No-section-tag representation (`caption_only`) | see aggregate below |
 
-### Observed (aggregate)
+Natural-tags directed late−early rise B>A: **1/3** (6-bin and 8-bin agree).  
+Peak RMS B>A: **2/3** on 6-bin auto compare; **3/3** on 8-bin `deep_metrics.json` (seed 777 nearly tied in 6-bin).
 
-1. **Energy trajectory:** Envelopes differ for every matched seed; directed “B builds more than A” is **not** consistent (1/3).
-2. **Instrumentation / density:** Spectrograms for seed 42 show denser high-frequency content for B; peak RMS is higher for B in 3/3 natural_tags pairs.
-3. **Density:** Mid/late spectral density often higher for B on seed 42; not uniformly proven across seeds by HF proxy.
-4. **Rhythm:** Transient grid often aligns across A/B under the same seed; B sometimes adds earlier hits (seed 123).
-5. **Harmonic/emotional character:** Not objectively scored; spectrograms suggest broader brightness for B on seed 42.
-6. **Vocal delivery:** Not reliably measurable from these proxies; requires listening panel (not performed as a formal study).
-7. **Climax:** B does not consistently place a unique recognizable climax later/higher; seed 42 shows a sharp B spike.
-8. **Resolution:** Most clips fade near the final bin regardless of timeline — resolution differentiation is weak.
-9. **Narrative coherence:** Soft — music changes with narrative conditioning, but not as a precise storyboard execution.
-
-### Inference (aggregate)
-
-`NarrativeMusicTimeline` compiled into caption + lyrics is a **real causal conditioner** under matched seeds. Controllability is **soft and probabilistic**, strongest for coarse intensity/density differences, weakest for precise timed climax/resolution choreography.
-
-### Architectural conclusion (aggregate)
-
-Provider-neutral narrative timelines are a viable experimental EH boundary candidate. They should not yet be treated as deterministic music-direction APIs. Prefer more evidence (GPU runs, listening rubrics, optional repaint-window edits) before promoting `MusicGenerationPort` into production EH.
-
----
+Material A/B envelope/density differences across matched seeds support **YES** (soft control). Directed climax choreography remains unreliable.
 
 ## Evaluation checklist
 
-- 1. Energy trajectory — differences present; directed control inconsistent
-- 2. Instrumentation — suggestive via spectrogram density (esp. seed 42)
-- 3. Density — suggestive; peak RMS bias toward B
-- 4. Rhythm — shared seed grid; some early-hit differences
-- 5. Harmonic/emotional character — not formally scored
-- 6. Vocal delivery — not formally scored
-- 7. Climax — intermittent (strongest on seed 42)
-- 8. Resolution — weak differentiation (common fade-out)
-- 9. Narrative coherence — soft / partial
+- 1. Energy trajectory
+- 2. Instrumentation
+- 3. Density
+- 4. Rhythm
+- 5. Harmonic/emotional character
+- 6. Vocal delivery
+- 7. Climax
+- 8. Resolution
+- 9. Narrative coherence
 
-## Uncontrolled / limited variables
+Objective proxies primarily inform (1), (3), (4), and (7).
+Items (2), (5), (6), (8), (9) require listening notes.
 
-- CPU-only inference (no CUDA device)
-- Turbo model auto-overrides `guidance_scale` 7.0 → 1.0
-- No formal human listening panel
-- Duration fixed at 48 s (short form)
-- Caption-only strategy tested on one seed only
-- Inspiration LM fully disabled (by design)
+## Spectrogram / envelope listening notes (2026-10-08 re-run)
+
+Observed from `output/spectrograms/`:
+
+1. **Natural-tags RMS envelopes:** A and B differ for every seed (42/123/777). B shows sharper mid spikes (seed 42 ~26s) or earlier bursts (seed 123 ~3s/~12s; seed 777 ~12–20s). All clips fade hard near ~40–48s.
+2. **Seed 42 spectrograms:** Timeline B enters denser full-spectrum energy earlier than A for both natural_tags and caption_only. Natural-tags A/B contrast appears sharper than caption-only.
+3. **Human listening caveat:** No formal multi-listener panel. Notes above are visual/acoustic-proxy observations, not aesthetic preference judgments.
+
+## Aggregate classification
+
+| Experiment arm | Result |
+|---|---|
+| Section-tag (`natural_tags`) | **YES** — material A/B difference under matched seeds (soft control) |
+| No-section-tag (`caption_only`) | **YES** — first-order A/B difference without lyric section tags |
+
+Directed late−early “B always builds more” is **not** reliable (deep-metrics: 1/3). Peak RMS B>A is more consistent (deep-metrics: 3/3 natural_tags).
+
+Supporting machine files: `comparison_metrics.json`, `deep_metrics.json`, `run_manifest.json`.

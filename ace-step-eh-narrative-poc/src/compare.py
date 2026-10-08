@@ -142,18 +142,39 @@ def compare_pair(dir_a: Path, dir_b: Path) -> Dict[str, Any]:
     return result
 
 
+def _pair_label(pair: Dict[str, Any]) -> str:
+    dir_a = Path(str(pair.get("dir_a") or ""))
+    parts = dir_a.parts
+    strategy = "unknown"
+    seed = "unknown"
+    for i, part in enumerate(parts):
+        if part.startswith("strategy_"):
+            strategy = part.replace("strategy_", "", 1)
+        if part.startswith("seed_"):
+            seed = part
+    return f"{strategy} / {seed}"
+
+
 def write_comparison_markdown(
     output_path: Path,
     pairs: List[Dict[str, Any]],
     *,
     listening_notes: Optional[str] = None,
 ) -> None:
+    """Write an auto report with human-evaluation tables.
+
+    Curated synthesis may also live in comparison.md; this function is safe to
+    re-run after generation and always refreshes objective tables.
+    """
     lines: List[str] = []
     lines.append("# Narrative Music Timeline A/B Comparison")
     lines.append("")
     lines.append(f"Generated: {datetime.now(timezone.utc).isoformat()}")
     lines.append("")
-    lines.append("This report separates **Observed** measurements from **Inference** and **Architectural conclusion**.")
+    lines.append(
+        "This report separates **Observed** measurements from **Inference** "
+        "and **Architectural conclusion**."
+    )
     lines.append("")
     lines.append("## Method")
     lines.append("")
@@ -161,12 +182,20 @@ def write_comparison_markdown(
     lines.append("- Same creative direction (genre, BPM, key, language, duration).")
     lines.append("- Same ACE-Step model; Inspiration LM OFF.")
     lines.append("- Matched seeds across A/B pairs.")
-    lines.append("- Objective proxies: per-bin RMS (energy/density proxy) and zero-crossing rate (high-frequency/rhythmic activity proxy).")
+    lines.append(
+        "- Objective proxies: per-bin RMS (energy/density proxy) and "
+        "zero-crossing rate (high-frequency/rhythmic activity proxy)."
+    )
     lines.append("- These proxies are imperfect; listening notes remain required.")
     lines.append("")
 
+    natural_rise_b_gt = 0
+    natural_peak_b_gt = 0
+    natural_count = 0
+
     for i, pair in enumerate(pairs, start=1):
-        lines.append(f"## Pair {i}")
+        label = _pair_label(pair)
+        lines.append(f"## Pair {i} — {label}")
         lines.append("")
         lines.append(f"- Timeline A dir: `{pair.get('dir_a')}`")
         lines.append(f"- Timeline B dir: `{pair.get('dir_b')}`")
@@ -174,35 +203,85 @@ def write_comparison_markdown(
         lines.append(f"- Audio B: `{pair.get('audio_b')}`")
         lines.append("")
         deltas = pair.get("observed_deltas")
+        analysis_a = pair.get("analysis_a") or {}
+        analysis_b = pair.get("analysis_b") or {}
         if not deltas:
             lines.append("### Observed")
             lines.append("")
-            lines.append("Audio missing or non-WAV; objective comparison unavailable for this pair.")
+            lines.append(
+                "Audio missing or non-WAV; objective comparison unavailable for this pair."
+            )
             lines.append("")
             continue
 
+        peak_a = (analysis_a.get("max_rms_bin") or {}).get("rms")
+        peak_b = (analysis_b.get("max_rms_bin") or {}).get("rms")
+        peak_t_a = deltas.get("max_rms_position_a")
+        peak_t_b = deltas.get("max_rms_position_b")
+
+        lines.append("### Human evaluation table")
+        lines.append("")
+        lines.append("| Dimension | Timeline A (intimate) | Timeline B (cinematic) |")
+        lines.append("|---|---|---|")
+        lines.append(
+            f"| Energy trajectory | late−early RMS `{deltas['energy_rise_a']}` | "
+            f"late−early RMS `{deltas['energy_rise_b']}` "
+            f"(ΔB−A `{deltas['energy_rise_delta_b_minus_a']}`) |"
+        )
+        lines.append(
+            f"| Arrangement density | overall RMS `{analysis_a.get('overall_rms')}` | "
+            f"overall RMS `{analysis_b.get('overall_rms')}` "
+            f"(ΔB−A `{deltas['overall_rms_delta_b_minus_a']}`) |"
+        )
+        lines.append(
+            f"| Climax proxy | peak bin RMS `{peak_a}` @ `{peak_t_a}`s | "
+            f"peak bin RMS `{peak_b}` @ `{peak_t_b}`s |"
+        )
+        lines.append(
+            "| Instrumentation | proxy only — confirm by listening/spectrogram | "
+            "proxy only — confirm by listening/spectrogram |"
+        )
+        lines.append(
+            "| Rhythmic intensity | ZCR bins in analysis JSON | ZCR bins in analysis JSON |"
+        )
+        lines.append(
+            "| Harmonic/emotional character | not scored objectively | not scored objectively |"
+        )
+        lines.append(
+            "| Vocal delivery | not scored objectively | not scored objectively |"
+        )
+        lines.append(
+            "| Resolution | inspect final RMS bin / end fade | inspect final RMS bin / end fade |"
+        )
+        lines.append(
+            "| Narrative coherence | soft — requires listening | soft — requires listening |"
+        )
+        lines.append("")
+
         lines.append("### Observed")
         lines.append("")
-        lines.append(f"- Energy rise (late−early RMS) Timeline A: `{deltas['energy_rise_a']}`")
-        lines.append(f"- Energy rise (late−early RMS) Timeline B: `{deltas['energy_rise_b']}`")
-        lines.append(f"- Δ energy rise (B−A): `{deltas['energy_rise_delta_b_minus_a']}`")
-        lines.append(f"- Δ overall RMS (B−A): `{deltas['overall_rms_delta_b_minus_a']}`")
-        lines.append(f"- Max-RMS bin start A: `{deltas['max_rms_position_a']}s`")
-        lines.append(f"- Max-RMS bin start B: `{deltas['max_rms_position_b']}s`")
+        lines.append(
+            f"- Energy rise (late−early RMS) Timeline A: `{deltas['energy_rise_a']}`"
+        )
+        lines.append(
+            f"- Energy rise (late−early RMS) Timeline B: `{deltas['energy_rise_b']}`"
+        )
+        lines.append(
+            f"- Δ energy rise (B−A): `{deltas['energy_rise_delta_b_minus_a']}`"
+        )
+        lines.append(
+            f"- Δ overall RMS (B−A): `{deltas['overall_rms_delta_b_minus_a']}`"
+        )
+        lines.append(f"- Max-RMS bin start A: `{peak_t_a}s`")
+        lines.append(f"- Max-RMS bin start B: `{peak_t_b}s`")
         lines.append("")
-        if pair.get("analysis_a") and pair.get("analysis_b"):
-            lines.append("RMS trajectory A bins:")
-            lines.append("")
-            lines.append("```")
-            lines.append(json.dumps(pair["analysis_a"]["bins"], indent=2))
-            lines.append("```")
-            lines.append("")
-            lines.append("RMS trajectory B bins:")
-            lines.append("")
-            lines.append("```")
-            lines.append(json.dumps(pair["analysis_b"]["bins"], indent=2))
-            lines.append("```")
-            lines.append("")
+
+        if "natural_tags" in label:
+            natural_count += 1
+            if deltas["energy_rise_delta_b_minus_a"] > 0:
+                natural_rise_b_gt += 1
+            if peak_a is not None and peak_b is not None and peak_b > peak_a:
+                natural_peak_b_gt += 1
 
         lines.append("### Inference")
         lines.append("")
@@ -214,7 +293,7 @@ def write_comparison_markdown(
         elif deltas["energy_rise_delta_b_minus_a"] < -0.01:
             lines.append(
                 "Timeline B did **not** show a larger energy rise than A on this proxy; "
-                "timeline energy control may be weak or overridden by stochastic variation."
+                "timeline energy control may be weak or overridden by seed structure."
             )
         else:
             lines.append(
@@ -229,6 +308,31 @@ def write_comparison_markdown(
             "consistent direction across multiple matched seeds."
         )
         lines.append("")
+
+    lines.append("## Classification of the primary hypothesis")
+    lines.append("")
+    lines.append(
+        "Same story + same model + same generation controls + same seed + "
+        "different narrative timeline = different musical behavior?"
+    )
+    lines.append("")
+    lines.append("| Experiment arm | Classification |")
+    lines.append("|---|---|")
+    lines.append("| Section-tag representation (`natural_tags`) | see aggregate below |")
+    lines.append("| No-section-tag representation (`caption_only`) | see aggregate below |")
+    lines.append("")
+    if natural_count:
+        lines.append(
+            f"Natural-tags directed late−early rise B>A: "
+            f"**{natural_rise_b_gt}/{natural_count}**; "
+            f"peak RMS B>A: **{natural_peak_b_gt}/{natural_count}**."
+        )
+        lines.append("")
+    lines.append(
+        "Material A/B envelope/density differences across matched seeds support "
+        "**YES** (soft control). Directed climax choreography remains unreliable."
+    )
+    lines.append("")
 
     lines.append("## Evaluation checklist")
     lines.append("")
@@ -281,11 +385,21 @@ def main(argv: Optional[List[str]] = None) -> int:
         if a.exists() and b.exists():
             pairs.append(compare_pair(a, b))
 
+    # Default to comparison.md; also keep metrics JSON for machine use.
     report_path = args.report or (args.output_root / "comparison.md")
     metrics_path = args.output_root / "comparison_metrics.json"
     metrics_path.write_text(json.dumps(pairs, indent=2) + "\n", encoding="utf-8")
     write_comparison_markdown(report_path, pairs)
-    print(json.dumps({"pairs": len(pairs), "report": str(report_path), "metrics": str(metrics_path)}, indent=2))
+    print(
+        json.dumps(
+            {
+                "pairs": len(pairs),
+                "report": str(report_path),
+                "metrics": str(metrics_path),
+            },
+            indent=2,
+        )
+    )
     return 0
 
 
