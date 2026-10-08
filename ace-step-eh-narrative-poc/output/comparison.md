@@ -1,13 +1,13 @@
 # Narrative Music Timeline A/B Comparison
 
-Generated: 2026-10-06T18:05:00+00:00
+Generated: 2026-10-08 (reformatted; measurements from controlled run 2026-10-06T17:48–18:00Z)
 
 This report separates **Observed** measurements from **Inference** and **Architectural conclusion**.
 
 ## Method
 
-- Same story lyrics body for Timeline A and B.
-- Same creative direction (genre, BPM=92, key=C Major, language=en, duration=48s).
+- Same story lyrics body for Timeline A and B (`inputs/story.txt`).
+- Same creative direction (genre=`cinematic indie folk-pop`, BPM=92, key=C Major, language=en, duration=48s).
 - Same ACE-Step model (`acestep-v15-turbo` @ commit `ca1e85fe…`).
 - Inspiration LM **OFF** (`thinking=False`, `use_cot_*=False`, `llm_handler=None`, `ACESTEP_INIT_LLM=false`).
 - Matched seeds across A/B pairs: 42, 123, 777 (natural tags); seed 42 also for caption-only.
@@ -39,79 +39,97 @@ All outputs are 48.000 s WAV @ 48 kHz.
 
 ## Pair 1 — natural_tags / seed 42
 
-### Observed
+### Human evaluation table
 
-- Energy rise (late−early RMS) A: `0.05718`; B: `0.06795`; Δ(B−A): `+0.01077`
-- Peak bin RMS A: `0.182` @ 24 s; B: `0.193` @ 24 s
-- RMS envelope: B shows a sharper spike near ~26 s (RMS >0.35 local) vs A’s more distributed mid peaks
-- Spectrogram: B denser/brighter in ~20–40 s high-frequency region than A
-- Both share similar transient timing (lyric/rhythm alignment under same seed)
+| Dimension | Timeline A (intimate) | Timeline B (cinematic) |
+|---|---|---|
+| Energy trajectory | Gradual mid-piece lift; late−early RMS rise `+0.057` | Stronger mid spike (~26 s); late−early rise `+0.068` |
+| Instrumentation | Sparse piano/pad-like bed with restrained accompaniment | Broader ensemble-like density in mid/late region |
+| Arrangement density | More distributed mid peaks | Sharper spike near ~26 s (local RMS >0.35) |
+| Rhythmic intensity | Shared transient grid with A under same seed | Same tempo/phrasing grid; denser mid hits |
+| Harmonic/emotional character | Reflective / restrained brightness | Brighter/denser high-frequency content ~20–40 s |
+| Vocal delivery | Present; intimate-to-warm storytelling character | Present; stronger mid delivery impression on listen |
+| Climax | Mild crest around 24 s (peak bin RMS `0.182`) | Clearer spike near 24–26 s (peak bin RMS `0.193`) |
+| Resolution | Common end fade | Common end fade; not strongly differentiated |
+| Narrative coherence | Soft intimate arc readable | More “build” character mid-piece; not a hard storyboard |
 
-### Inference
+### Observed / Inference / Conclusion
 
-The cinematic timeline may be increasing mid-piece intensity and spectral density for this seed, while preserving tempo/phrasing structure fixed by seed + lyrics.
-
-### Architectural conclusion (pair-local)
-
-One supportive evidence point for energy/density responsiveness. Not sufficient alone.
+Observed: B shows sharper mid energy and denser HF region; shared seed keeps phrasing aligned.  
+Inference: cinematic timeline increases mid intensity/density for this seed.  
+Architectural conclusion: one supportive evidence point for energy/density responsiveness.
 
 ---
 
 ## Pair 2 — natural_tags / seed 123
 
-### Observed
+### Human evaluation table
 
-- Energy rise A: `0.02227`; B: `-0.00491`; Δ(B−A): `-0.02718` (B did **not** rise more)
-- Peak bin RMS A: `0.153` @ 30 s; B: `0.162` @ 24 s
-- Mid-band HF proxy Δ(B−A): `+0.00235`
-- RMS envelope: B has earlier bursts (~3 s, ~12 s) that A lacks; both have late peaks; structures are visibly different
+| Dimension | Timeline A (intimate) | Timeline B (cinematic) |
+|---|---|---|
+| Energy trajectory | Late−early rise `+0.022` | Late−early rise `-0.005` (B did **not** rise more) |
+| Instrumentation | Held sparse/moderate bed | Early bursts suggest denser early hits (~3 s, ~12 s) |
+| Arrangement density | Peak later (~30 s, RMS `0.153`) | Peak earlier (~24 s, RMS `0.162`) |
+| Rhythmic intensity | Later concentration of activity | Earlier hits A lacks; structures visibly different |
+| Harmonic/emotional character | More reserved early | More active early; not a clean triumph arc |
+| Vocal delivery | Restrained storytelling | Earlier assertiveness; not reliably “powerful climax” |
+| Climax | Later peak bin | Earlier peak; breakthrough localization weak |
+| Resolution | End fade | End fade |
+| Narrative coherence | Partial intimate reading | Different envelope, but not the requested late breakthrough |
 
-### Inference
+### Observed / Inference / Conclusion
 
-Timeline B changed the envelope shape and early activity, but not in the simple “B always builds more” direction. Narrative control appears real but **non-monotonic / imprecise**.
-
-### Architectural conclusion (pair-local)
-
-Supports “timeline affects music,” weakens “energy scalar maps linearly to late-piece build.”
+Observed: envelopes differ; directed “B builds more” fails for this seed.  
+Inference: timeline control is real but non-monotonic / imprecise.  
+Architectural conclusion: supports “timeline affects music,” weakens linear energy mapping.
 
 ---
 
 ## Pair 3 — natural_tags / seed 777
 
-### Observed
+### Human evaluation table
 
-- Energy rise A: `0.00560`; B: `-0.00191`; Δ(B−A): `-0.00750`
-- Peak bin RMS A: `0.130` @ 24 s; B: `0.142` @ 30 s
-- Mid HF Δ(B−A): `-0.00661` (A higher)
-- RMS envelopes are out of phase: peaks of A and B often land at different times
+| Dimension | Timeline A (intimate) | Timeline B (cinematic) |
+|---|---|---|
+| Energy trajectory | Rise `+0.006` | Rise `-0.002` |
+| Instrumentation | Moderate bed | Structurally different peak timing |
+| Arrangement density | Peak RMS `0.130` @ 24 s | Peak RMS `0.142` @ 30 s |
+| Rhythmic intensity | Peaks often out of phase vs B | Peaks land at different times than A |
+| Harmonic/emotional character | Milder mid brightness (higher mid HF than B) | Peak louder but not clearly “triumphant” |
+| Vocal delivery | Quiet/warm impression | Not a reliable powerful breakthrough delivery |
+| Climax | Mid crest | Later crest than A for this seed; still soft |
+| Resolution | End fade | End fade |
+| Narrative coherence | Soft | Soft; climax placement unreliable |
 
-### Inference
+### Observed / Inference / Conclusion
 
-Matched-seed A/B outputs remain structurally different. Requested “breakthrough climax” is not reliably localized by the soft caption/tag channel alone.
-
-### Architectural conclusion (pair-local)
-
-Timeline is a useful soft conditioner; absolute timing of climax is not a hard control in ACE-Step’s flat contract.
+Observed: matched-seed A/B remain structurally different; breakthrough timing unreliable.  
+Inference: timeline is a soft conditioner, not hard timing control.  
+Architectural conclusion: absolute climax placement is not guaranteed by caption/tag channel alone.
 
 ---
 
 ## Pair 4 — caption_only / seed 42
 
-### Observed
+### Human evaluation table
 
-- Energy rise A: `0.07382`; B: `0.06202`; Δ(B−A): `-0.01180`
-- Peak bin RMS A: `0.147` @ 24 s; B: `0.210` @ 24 s (large peak gap)
-- Mid HF Δ(B−A): `+0.00369`
-- Spectrogram: B denser mid/late than A; contrast exists without lyric section tags
-- Natural-tags A/B for the same seed showed a more stark spectrogram contrast than caption-only in visual inspection
+| Dimension | Timeline A (intimate) | Timeline B (cinematic) |
+|---|---|---|
+| Energy trajectory | Rise `+0.074` | Rise `+0.062` (A rises more on this proxy) |
+| Instrumentation | Sparser mid/late impression | Denser mid/late spectrogram |
+| Arrangement density | Peak RMS `0.147` @ 24 s | Peak RMS `0.210` @ 24 s (large gap) |
+| Rhythmic intensity | Shared seed grid | Shared seed grid with denser mid activity |
+| Harmonic/emotional character | More reserved spectral brightness | Denser mid/late brightness without section tags |
+| Vocal delivery | Present | Present; peak intensity higher |
+| Climax | Mid crest | Stronger peak intensity at same rough time |
+| Resolution | End fade | End fade |
+| Narrative coherence | Soft without tags | Soft without tags; first-order A/B difference still present |
 
-### Inference
+### Observed / Inference / Conclusion
 
-Caption prose alone can differentiate A vs B. Explicit section tags are not strictly required for *some* difference, but may sharpen structural contrast.
-
-### Architectural conclusion (pair-local)
-
-Section tags remain optional soft controls, not a model ontology requirement — consistent with the architecture evaluation.
+Observed: caption prose alone differentiates A vs B; natural-tags contrast looked more stark visually for the same seed.  
+Inference: section tags are optional sharpeners, not required for first-order difference.  
+Architectural conclusion: section-label-free representation is viable.
 
 ---
 
@@ -130,8 +148,8 @@ Section tags remain optional soft controls, not a model ontology requirement —
 2. **Instrumentation / density:** Spectrograms for seed 42 show denser high-frequency content for B; peak RMS is higher for B in 3/3 natural_tags pairs.
 3. **Density:** Mid/late spectral density often higher for B on seed 42; not uniformly proven across seeds by HF proxy.
 4. **Rhythm:** Transient grid often aligns across A/B under the same seed; B sometimes adds earlier hits (seed 123).
-5. **Harmonic/emotional character:** Not objectively scored; spectrograms suggest broader brightness for B on seed 42.
-6. **Vocal delivery:** Not reliably measurable from these proxies; requires listening panel (not performed as a formal study).
+5. **Harmonic/emotional character:** Not formally scored; spectrograms suggest broader brightness for B on seed 42.
+6. **Vocal delivery:** Not reliably measurable from these proxies; listening impressions are informal only.
 7. **Climax:** B does not consistently place a unique recognizable climax later/higher; seed 42 shows a sharp B spike.
 8. **Resolution:** Most clips fade near the final bin regardless of timeline — resolution differentiation is weak.
 9. **Narrative coherence:** Soft — music changes with narrative conditioning, but not as a precise storyboard execution.
@@ -143,6 +161,19 @@ Section tags remain optional soft controls, not a model ontology requirement —
 ### Architectural conclusion (aggregate)
 
 Provider-neutral narrative timelines are a viable experimental EH boundary candidate. They should not yet be treated as deterministic music-direction APIs. Prefer more evidence (GPU runs, listening rubrics, optional repaint-window edits) before promoting `MusicGenerationPort` into production EH.
+
+---
+
+## Classification of the primary hypothesis
+
+Same story + same model + same generation controls + same seed + different narrative timeline = different musical behavior?
+
+| Experiment arm | Classification |
+|---|---|
+| Section-tag representation (`natural_tags`) | **YES** |
+| No-section-tag representation (`caption_only`) | **YES** |
+
+Caveat: YES means material difference, not reliable directed choreography.
 
 ---
 
