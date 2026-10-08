@@ -61,6 +61,12 @@ def main(argv: Optional[list[str]] = None) -> int:
     )
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--repaint-strength", type=float, default=0.5)
+    parser.add_argument(
+        "--duration",
+        type=float,
+        default=None,
+        help="Optional shorter duration for CPU-memory-limited repaint proofs",
+    )
     args = parser.parse_args(argv)
 
     out_root: Path = args.output_root
@@ -77,8 +83,13 @@ def main(argv: Optional[list[str]] = None) -> int:
         disable_inspiration_lm=True,
     )
 
-    req_a = adapter.compile(story, direction, timeline_a, seed=args.seed)
-    req_b = adapter.compile(story, direction, timeline_b, seed=args.seed)
+    duration_override = args.duration
+    req_a = adapter.compile(
+        story, direction, timeline_a, seed=args.seed, duration_override=duration_override
+    )
+    req_b = adapter.compile(
+        story, direction, timeline_b, seed=args.seed, duration_override=duration_override
+    )
     windows_b = expected_phase_windows(timeline_b.to_dict(), req_b.duration)
     breakthrough = _find_window(windows_b, "breakthrough")
 
@@ -99,7 +110,9 @@ def main(argv: Optional[list[str]] = None) -> int:
 
     if args.base_audio and args.base_audio.exists():
         dest = base_dir / "audio.wav"
-        shutil.copy2(args.base_audio, dest)
+        src = args.base_audio.resolve()
+        if src != dest.resolve():
+            shutil.copy2(src, dest)
         base_audio = dest
         base_meta = {"status": "copied_base", "audio_path": str(dest)}
     elif args.dry_run:

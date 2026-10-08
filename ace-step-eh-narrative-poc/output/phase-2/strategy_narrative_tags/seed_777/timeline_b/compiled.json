@@ -1,0 +1,19 @@
+{
+  "task_type": "text2music",
+  "caption": "A cinematic indie folk-pop song. narrative vocal song with clear emotional arc.\nVocal character: clear warm English vocal, sincere storytelling delivery.\nCore instrumentation palette: piano, strings, light percussion.\nNarrative arc name: phase2_transformation_arc.\nPhase 2 transformation arc: structural build with breakthrough and climax at intended locations.\nMusical narrative progression with approximate timing:\n- 0–6s [opening]: arrival; mood quiet; low energy, spacious; instrumentation piano, ambient_pad; vocal delivery intimate.\n- 6–12s [vulnerability]: vulnerability; mood uncertain; low energy, spacious; instrumentation piano, soft_strings; vocal delivery fragile.\n- 12–20s [challenge]: struggle; mood tense; moderate energy; instrumentation piano, strings, low_percussion; vocal delivery restrained.\n- 20–28s [build]: determination; mood determined; rising energy, denser arrangement; instrumentation piano, strings, drums; vocal delivery rising.\n- 28–36s [breakthrough]: breakthrough; mood triumphant; high energy, climactic intensity; instrumentation full_band, strings, drums; vocal delivery powerful.\n- 36–42s [climax]: climax; mood exultant; high energy, climactic intensity; instrumentation full_band, choir_pad, drums; vocal delivery powerful.\n- 42–48s [resolution]: forward_motion; mood peaceful; moderate energy; instrumentation piano, strings; vocal delivery warm.\nFollow the narrative section labels present in the lyrics; each tagged section should match the timed musical intent above.",
+  "lyrics": "[Opening - quiet - low energy, spacious]\nYou don't have to have everything figured out today.\nYou just have to take the next step.\n\n[Vulnerability - uncertain - low energy, spacious]\nEvery challenge you've faced has taught you something,\nand every setback has given you another chance to grow.\n\n[Challenge - tense - moderate energy]\nThere will be moments when you doubt yourself.\nThere will be moments when the path ahead feels uncertain.\n\n[Build - determined - rising energy, denser arrangement]\nBut courage isn't the absence of doubt.\nIt's choosing to move forward anyway.\n\n[Breakthrough - triumphant - high energy, climactic intensity]\nOne step becomes another.\nAnd eventually you look back and realize\n\n[Climax - exultant - high energy, climactic intensity]\nthat the person who was afraid to begin\nbecame the person who kept going.\n\n[Resolution - peaceful - moderate energy]\nYou are not finished.\nYou're still becoming.\nTake the next step.\n",
+  "instrumental": false,
+  "bpm": 92,
+  "keyscale": "C Major",
+  "timesignature": "4",
+  "vocal_language": "en",
+  "duration": 48.0,
+  "seed": 777,
+  "thinking": false,
+  "use_cot_metas": false,
+  "use_cot_caption": false,
+  "use_cot_lyrics": false,
+  "use_cot_language": false,
+  "inference_steps": 8,
+  "guidance_scale": 7.0
+}

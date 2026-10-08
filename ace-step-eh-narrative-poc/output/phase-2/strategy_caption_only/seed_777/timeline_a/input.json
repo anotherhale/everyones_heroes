@@ -1,0 +1,124 @@
+{
+  "timeline_key": "timeline_a",
+  "timestamp": "2026-10-08T18:02:03.888584+00:00",
+  "request": {
+    "caption": "A cinematic indie folk-pop song. narrative vocal song with clear emotional arc.\nVocal character: clear warm English vocal, sincere storytelling delivery.\nCore instrumentation palette: piano, strings, light percussion.\nNarrative arc name: phase2_intimate_arc.\nPhase 2 intimate arc: restrained structural progression without large climax.\nMusical narrative progression with approximate timing:\n- 0–8s [opening]: arrival; mood quiet; low energy, spacious; instrumentation piano, ambient_pad; vocal delivery intimate.\n- 8–18s [vulnerability]: vulnerability; mood uncertain; low energy, spacious; instrumentation piano, soft_strings; vocal delivery fragile.\n- 18–30s [reflection]: introspection; mood reflective; low energy, spacious; instrumentation piano, soft_strings, light_pad; vocal delivery restrained.\n- 30–40s [gentle_hope]: gentle_hope; mood hopeful; moderate energy; instrumentation piano, strings; vocal delivery warm.\n- 40–48s [quiet_resolution]: peace; mood resolved; low energy, spacious; instrumentation piano, light_strings; vocal delivery quiet.\nDo not rely on lyric section labels; follow this timed musical narrative through arrangement density, rhythm, and vocal intensity alone.",
+    "lyrics": "You don't have to have everything figured out today.\nYou just have to take the next step.\nEvery challenge you've faced has taught you something,\nand every setback has given you another chance to grow.\nThere will be moments when you doubt yourself.\nThere will be moments when the path ahead feels uncertain.\nBut courage isn't the absence of doubt.\nIt's choosing to move forward anyway.\nOne step becomes another.\nAnd eventually you look back and realize\nthat the person who was afraid to begin\nbecame the person who kept going.\nYou are not finished.\nYou're still becoming.\nTake the next step.\n",
+    "bpm": 92,
+    "keyscale": "C Major",
+    "timesignature": "4",
+    "vocal_language": "en",
+    "duration": 48.0,
+    "seed": 777,
+    "thinking": false,
+    "use_cot_metas": false,
+    "use_cot_caption": false,
+    "use_cot_lyrics": false,
+    "use_cot_language": false,
+    "instrumental": false,
+    "inference_steps": 8,
+    "guidance_scale": 7.0,
+    "task_type": "text2music",
+    "section_tag_strategy": "caption_only",
+    "timeline_name": "phase2_intimate_arc",
+    "metadata": {
+      "inspiration_lm": "OFF",
+      "inspiration_lm_disable_method": "GenerationParams.thinking=False and use_cot_*=False; llm_handler left uninitialized / ACESTEP_INIT_LLM=false",
+      "provider_neutral_timeline": {
+        "name": "phase2_intimate_arc",
+        "description": "Phase 2 intimate arc: restrained structural progression without large climax.",
+        "segments": [
+          {
+            "role": "opening",
+            "narrative_intent": "arrival",
+            "emotional_state": "quiet",
+            "energy": 0.18,
+            "instrumentation": [
+              "piano",
+              "ambient_pad"
+            ],
+            "vocal_delivery": "intimate",
+            "duration_seconds": 8.0,
+            "performance_notes": "Sparse entrance; leave space."
+          },
+          {
+            "role": "vulnerability",
+            "narrative_intent": "vulnerability",
+            "emotional_state": "uncertain",
+            "energy": 0.25,
+            "instrumentation": [
+              "piano",
+              "soft_strings"
+            ],
+            "vocal_delivery": "fragile",
+            "duration_seconds": 10.0,
+            "performance_notes": "Thin texture; soft vocal closeness."
+          },
+          {
+            "role": "reflection",
+            "narrative_intent": "introspection",
+            "emotional_state": "reflective",
+            "energy": 0.32,
+            "instrumentation": [
+              "piano",
+              "soft_strings",
+              "light_pad"
+            ],
+            "vocal_delivery": "restrained",
+            "duration_seconds": 12.0,
+            "performance_notes": "Gentle harmonic motion; minimal percussion."
+          },
+          {
+            "role": "gentle_hope",
+            "narrative_intent": "gentle_hope",
+            "emotional_state": "hopeful",
+            "energy": 0.42,
+            "instrumentation": [
+              "piano",
+              "strings"
+            ],
+            "vocal_delivery": "warm",
+            "duration_seconds": 10.0,
+            "performance_notes": "Slight lift only; no cinematic crest."
+          },
+          {
+            "role": "quiet_resolution",
+            "narrative_intent": "peace",
+            "emotional_state": "resolved",
+            "energy": 0.3,
+            "instrumentation": [
+              "piano",
+              "light_strings"
+            ],
+            "vocal_delivery": "quiet",
+            "duration_seconds": 8.0,
+            "performance_notes": "Settle and thin; peaceful ending."
+          }
+        ],
+        "total_duration_seconds": 48.0
+      },
+      "creative_direction": {
+        "genre": "cinematic indie folk-pop",
+        "style": "narrative vocal song with clear emotional arc",
+        "instrumentation": [
+          "piano",
+          "strings",
+          "light percussion"
+        ],
+        "vocal_character": "clear warm English vocal, sincere storytelling delivery",
+        "bpm": 92,
+        "keyscale": "C Major",
+        "timesignature": "4",
+        "language": "en",
+        "duration_seconds": 48.0,
+        "constraints": [
+          "same story lyrics for every generation",
+          "no genre change between timelines",
+          "no model change between timelines",
+          "inspiration LM disabled"
+        ]
+      },
+      "story_lyric_body": "You don't have to have everything figured out today.\nYou just have to take the next step.\nEvery challenge you've faced has taught you something,\nand every setback has given you another chance to grow.\nThere will be moments when you doubt yourself.\nThere will be moments when the path ahead feels uncertain.\nBut courage isn't the absence of doubt.\nIt's choosing to move forward anyway.\nOne step becomes another.\nAnd eventually you look back and realize\nthat the person who was afraid to begin\nbecame the person who kept going.\nYou are not finished.\nYou're still becoming.\nTake the next step."
+    }
+  }
+}

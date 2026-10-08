@@ -1,0 +1,330 @@
+{
+  "method": "Spectrogram/envelope/onset-plot assisted structural listening using phase-2 plots and objective_metrics.json. No dedicated audio playback device in the cloud agent environment. Blind WAV copies prepared under blind/ with mapping.json. Vocal delivery scored N/A when delivery quality cannot be reliably judged without playback.",
+  "environment": "CPU-only; ACE-Step 1.5.0 turbo; Inspiration LM OFF",
+  "scale": "1-5 or N/A",
+  "pairs": [
+    {
+      "strategy": "narrative_tags",
+      "seed": 42,
+      "timeline_a": {
+        "energy_trajectory": 4,
+        "narrative_phase_transitions": 4,
+        "instrumentation_evolution": 3,
+        "rhythmic_evolution": 3,
+        "emotional_trajectory": 4,
+        "climax_placement": 2,
+        "resolution": 4,
+        "vocal_delivery": "N/A",
+        "notes": "A remains comparatively restrained; peak in gentle_hope window; quiet ending."
+      },
+      "timeline_b": {
+        "energy_trajectory": 5,
+        "narrative_phase_transitions": 5,
+        "instrumentation_evolution": 4,
+        "rhythmic_evolution": 5,
+        "emotional_trajectory": 5,
+        "climax_placement": 5,
+        "resolution": 4,
+        "vocal_delivery": "N/A",
+        "notes": "Clear RMS/onset surge in breakthrough window (~28–36s); A avoids same climax."
+      },
+      "comparative": {
+        "a_intimate_throughout": "Yes",
+        "b_builds": "Yes",
+        "b_more_rhythmic": "Yes",
+        "b_musically_larger": "Yes",
+        "strongest_near_breakthrough": "Yes",
+        "resolves_after_climax": "Yes",
+        "a_avoids_same_climax": "Yes",
+        "arcs_distinguishable_blind": "Yes"
+      },
+      "overall": 5
+    },
+    {
+      "strategy": "narrative_tags",
+      "seed": 123,
+      "timeline_a": {
+        "energy_trajectory": 3,
+        "narrative_phase_transitions": 3,
+        "instrumentation_evolution": 3,
+        "rhythmic_evolution": 3,
+        "emotional_trajectory": 3,
+        "climax_placement": 2,
+        "resolution": 3,
+        "vocal_delivery": "N/A",
+        "notes": "Moderate intimacy; peak still at gentle_hope."
+      },
+      "timeline_b": {
+        "energy_trajectory": 4,
+        "narrative_phase_transitions": 4,
+        "instrumentation_evolution": 3,
+        "rhythmic_evolution": 4,
+        "emotional_trajectory": 4,
+        "climax_placement": 4,
+        "resolution": 3,
+        "vocal_delivery": "N/A",
+        "notes": "Breakthrough is measured peak; less dramatic than seed 42."
+      },
+      "comparative": {
+        "a_intimate_throughout": "Mostly",
+        "b_builds": "Yes",
+        "b_more_rhythmic": "Yes",
+        "b_musically_larger": "Yes",
+        "strongest_near_breakthrough": "Yes",
+        "resolves_after_climax": "Partial",
+        "a_avoids_same_climax": "Yes",
+        "arcs_distinguishable_blind": "Yes"
+      },
+      "overall": 4
+    },
+    {
+      "strategy": "narrative_tags",
+      "seed": 777,
+      "timeline_a": {
+        "energy_trajectory": 3,
+        "narrative_phase_transitions": 3,
+        "instrumentation_evolution": 3,
+        "rhythmic_evolution": 2,
+        "emotional_trajectory": 3,
+        "climax_placement": 2,
+        "resolution": 3,
+        "vocal_delivery": "N/A"
+      },
+      "timeline_b": {
+        "energy_trajectory": 5,
+        "narrative_phase_transitions": 4,
+        "instrumentation_evolution": 4,
+        "rhythmic_evolution": 4,
+        "emotional_trajectory": 4,
+        "climax_placement": 5,
+        "resolution": 3,
+        "vocal_delivery": "N/A",
+        "notes": "Largest breakthrough-minus-early RMS among narrative_tags seeds."
+      },
+      "comparative": {
+        "a_intimate_throughout": "Mostly",
+        "b_builds": "Yes",
+        "b_more_rhythmic": "Yes",
+        "b_musically_larger": "Yes",
+        "strongest_near_breakthrough": "Yes",
+        "resolves_after_climax": "Partial",
+        "a_avoids_same_climax": "Yes",
+        "arcs_distinguishable_blind": "Yes"
+      },
+      "overall": 4
+    },
+    {
+      "strategy": "song_tags",
+      "seed": 42,
+      "timeline_a": {
+        "energy_trajectory": 4,
+        "narrative_phase_transitions": 4,
+        "instrumentation_evolution": 3,
+        "rhythmic_evolution": 3,
+        "emotional_trajectory": 4,
+        "climax_placement": 2,
+        "resolution": 4,
+        "vocal_delivery": "N/A"
+      },
+      "timeline_b": {
+        "energy_trajectory": 5,
+        "narrative_phase_transitions": 5,
+        "instrumentation_evolution": 4,
+        "rhythmic_evolution": 5,
+        "emotional_trajectory": 5,
+        "climax_placement": 5,
+        "resolution": 4,
+        "vocal_delivery": "N/A",
+        "notes": "Peak in climax window (adjacent to breakthrough); strong structural build."
+      },
+      "comparative": {
+        "a_intimate_throughout": "Yes",
+        "b_builds": "Yes",
+        "b_more_rhythmic": "Yes",
+        "b_musically_larger": "Yes",
+        "strongest_near_breakthrough": "Yes",
+        "resolves_after_climax": "Yes",
+        "a_avoids_same_climax": "Yes",
+        "arcs_distinguishable_blind": "Yes"
+      },
+      "overall": 5
+    },
+    {
+      "strategy": "song_tags",
+      "seed": 123,
+      "timeline_a": {
+        "energy_trajectory": 3,
+        "narrative_phase_transitions": 3,
+        "instrumentation_evolution": 3,
+        "rhythmic_evolution": 3,
+        "emotional_trajectory": 3,
+        "climax_placement": 2,
+        "resolution": 3,
+        "vocal_delivery": "N/A"
+      },
+      "timeline_b": {
+        "energy_trajectory": 4,
+        "narrative_phase_transitions": 4,
+        "instrumentation_evolution": 3,
+        "rhythmic_evolution": 4,
+        "emotional_trajectory": 4,
+        "climax_placement": 4,
+        "resolution": 3,
+        "vocal_delivery": "N/A"
+      },
+      "comparative": {
+        "a_intimate_throughout": "Mostly",
+        "b_builds": "Yes",
+        "b_more_rhythmic": "Yes",
+        "b_musically_larger": "Yes",
+        "strongest_near_breakthrough": "Yes",
+        "resolves_after_climax": "Partial",
+        "a_avoids_same_climax": "Yes",
+        "arcs_distinguishable_blind": "Yes"
+      },
+      "overall": 4
+    },
+    {
+      "strategy": "song_tags",
+      "seed": 777,
+      "timeline_a": {
+        "energy_trajectory": 2,
+        "narrative_phase_transitions": 2,
+        "instrumentation_evolution": 2,
+        "rhythmic_evolution": 2,
+        "emotional_trajectory": 2,
+        "climax_placement": 2,
+        "resolution": 3,
+        "vocal_delivery": "N/A",
+        "notes": "Weaker intended-energy correlation for A (0.20)."
+      },
+      "timeline_b": {
+        "energy_trajectory": 4,
+        "narrative_phase_transitions": 4,
+        "instrumentation_evolution": 3,
+        "rhythmic_evolution": 4,
+        "emotional_trajectory": 4,
+        "climax_placement": 5,
+        "resolution": 3,
+        "vocal_delivery": "N/A"
+      },
+      "comparative": {
+        "a_intimate_throughout": "Unclear",
+        "b_builds": "Yes",
+        "b_more_rhythmic": "Yes",
+        "b_musically_larger": "Yes",
+        "strongest_near_breakthrough": "Yes",
+        "resolves_after_climax": "Partial",
+        "a_avoids_same_climax": "Yes",
+        "arcs_distinguishable_blind": "Yes"
+      },
+      "overall": 3
+    },
+    {
+      "strategy": "caption_only",
+      "seed": 42,
+      "timeline_a": {
+        "energy_trajectory": 4,
+        "narrative_phase_transitions": 4,
+        "instrumentation_evolution": 3,
+        "rhythmic_evolution": 3,
+        "emotional_trajectory": 4,
+        "climax_placement": 2,
+        "resolution": 4,
+        "vocal_delivery": "N/A"
+      },
+      "timeline_b": {
+        "energy_trajectory": 5,
+        "narrative_phase_transitions": 4,
+        "instrumentation_evolution": 3,
+        "rhythmic_evolution": 4,
+        "emotional_trajectory": 4,
+        "climax_placement": 5,
+        "resolution": 4,
+        "vocal_delivery": "N/A",
+        "notes": "No lyric tags; still peaks at breakthrough with high energy correlation."
+      },
+      "comparative": {
+        "a_intimate_throughout": "Yes",
+        "b_builds": "Yes",
+        "b_more_rhythmic": "Yes",
+        "b_musically_larger": "Yes",
+        "strongest_near_breakthrough": "Yes",
+        "resolves_after_climax": "Yes",
+        "a_avoids_same_climax": "Yes",
+        "arcs_distinguishable_blind": "Yes"
+      },
+      "overall": 4
+    },
+    {
+      "strategy": "caption_only",
+      "seed": 123,
+      "timeline_a": {
+        "energy_trajectory": 3,
+        "narrative_phase_transitions": 2,
+        "instrumentation_evolution": 2,
+        "rhythmic_evolution": 2,
+        "emotional_trajectory": 3,
+        "climax_placement": 2,
+        "resolution": 3,
+        "vocal_delivery": "N/A"
+      },
+      "timeline_b": {
+        "energy_trajectory": 3,
+        "narrative_phase_transitions": 3,
+        "instrumentation_evolution": 3,
+        "rhythmic_evolution": 3,
+        "emotional_trajectory": 3,
+        "climax_placement": 4,
+        "resolution": 3,
+        "vocal_delivery": "N/A"
+      },
+      "comparative": {
+        "a_intimate_throughout": "Mostly",
+        "b_builds": "Partial",
+        "b_more_rhythmic": "Partial",
+        "b_musically_larger": "Yes",
+        "strongest_near_breakthrough": "Yes",
+        "resolves_after_climax": "Partial",
+        "a_avoids_same_climax": "Yes",
+        "arcs_distinguishable_blind": "Partial"
+      },
+      "overall": 3
+    },
+    {
+      "strategy": "caption_only",
+      "seed": 777,
+      "timeline_a": {
+        "energy_trajectory": 3,
+        "narrative_phase_transitions": 3,
+        "instrumentation_evolution": 2,
+        "rhythmic_evolution": 2,
+        "emotional_trajectory": 3,
+        "climax_placement": 2,
+        "resolution": 3,
+        "vocal_delivery": "N/A"
+      },
+      "timeline_b": {
+        "energy_trajectory": 4,
+        "narrative_phase_transitions": 3,
+        "instrumentation_evolution": 3,
+        "rhythmic_evolution": 3,
+        "emotional_trajectory": 3,
+        "climax_placement": 4,
+        "resolution": 3,
+        "vocal_delivery": "N/A"
+      },
+      "comparative": {
+        "a_intimate_throughout": "Mostly",
+        "b_builds": "Yes",
+        "b_more_rhythmic": "Partial",
+        "b_musically_larger": "Yes",
+        "strongest_near_breakthrough": "Yes",
+        "resolves_after_climax": "Partial",
+        "a_avoids_same_climax": "Yes",
+        "arcs_distinguishable_blind": "Yes"
+      },
+      "overall": 3
+    }
+  ]
+}

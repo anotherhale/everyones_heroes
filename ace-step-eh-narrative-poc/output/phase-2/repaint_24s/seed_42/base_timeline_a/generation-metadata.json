@@ -1,0 +1,216 @@
+{
+  "status": "ok",
+  "generation": {
+    "success": true,
+    "status_message": "Generation completed successfully!",
+    "error": null,
+    "device": "cpu",
+    "dit_model": "acestep-v15-turbo",
+    "inspiration_lm": "OFF",
+    "audios": [
+      {
+        "path": "output/phase-2/repaint_24s/seed_42/base_timeline_a/raw/22d164eb-dd06-75b4-de34-00f9dad67386.wav",
+        "tensor": {
+          "_type": "Tensor",
+          "shape": [
+            2,
+            1152000
+          ],
+          "dtype": "torch.float32",
+          "device": "cpu"
+        },
+        "key": "22d164eb-dd06-75b4-de34-00f9dad67386",
+        "sample_rate": 48000,
+        "params": {
+          "task_type": "text2music",
+          "instruction": "Fill the audio semantic mask based on the given conditions:",
+          "reference_audio": null,
+          "src_audio": null,
+          "audio_codes": "",
+          "caption": "A cinematic indie folk-pop song. narrative vocal song with clear emotional arc.\nVocal character: clear warm English vocal, sincere storytelling delivery.\nCore instrumentation palette: piano, strings, light percussion.\nNarrative arc name: phase2_intimate_arc.\nPhase 2 intimate arc: restrained structural progression without large climax.\nMusical narrative progression with approximate timing:\n- 0–4s [opening]: arrival; mood quiet; low energy, spacious; instrumentation piano, ambient_pad; vocal delivery intimate.\n- 4–9s [vulnerability]: vulnerability; mood uncertain; low energy, spacious; instrumentation piano, soft_strings; vocal delivery fragile.\n- 9–15s [reflection]: introspection; mood reflective; low energy, spacious; instrumentation piano, soft_strings, light_pad; vocal delivery restrained.\n- 15–20s [gentle_hope]: gentle_hope; mood hopeful; moderate energy; instrumentation piano, strings; vocal delivery warm.\n- 20–24s [quiet_resolution]: peace; mood resolved; low energy, spacious; instrumentation piano, light_strings; vocal delivery quiet.\nFollow the narrative section labels present in the lyrics; each tagged section should match the timed musical intent above.",
+          "global_caption": "",
+          "lyrics": "[Opening - quiet - low energy, spacious]\nYou don't have to have everything figured out today.\nYou just have to take the next step.\n\n[Vulnerability - uncertain - low energy, spacious]\nEvery challenge you've faced has taught you something,\nand every setback has given you another chance to grow.\nThere will be moments when you doubt yourself.\n\n[Reflection - reflective - low energy, spacious]\nThere will be moments when the path ahead feels uncertain.\nBut courage isn't the absence of doubt.\nIt's choosing to move forward anyway.\nOne step becomes another.\n\n[Gentle Hope - hopeful - moderate energy]\nAnd eventually you look back and realize\nthat the person who was afraid to begin\nbecame the person who kept going.\n\n[Quiet Resolution - resolved - low energy, spacious]\nYou are not finished.\nYou're still becoming.\nTake the next step.\n",
+          "instrumental": false,
+          "vocal_language": "en",
+          "bpm": 92,
+          "keyscale": "C Major",
+          "timesignature": "4",
+          "duration": 24.0,
+          "enable_normalization": true,
+          "normalization_db": -1.0,
+          "fade_in_duration": 0.0,
+          "fade_out_duration": 0.0,
+          "latent_shift": 0.0,
+          "latent_rescale": 1.0,
+          "inference_steps": 8,
+          "seed": 42,
+          "guidance_scale": 7.0,
+          "use_adg": false,
+          "cfg_interval_start": 0.0,
+          "cfg_interval_end": 1.0,
+          "shift": 1.0,
+          "infer_method": "ode",
+          "sampler_mode": "euler",
+          "velocity_norm_threshold": 0.0,
+          "velocity_ema_factor": 0.0,
+          "dcw_enabled": null,
+          "dcw_mode": "double",
+          "dcw_scaler": 0.05,
+          "dcw_high_scaler": 0.02,
+          "dcw_wavelet": "haar",
+          "timesteps": null,
+          "repainting_start": 0.0,
+          "repainting_end": -1,
+          "chunk_mask_mode": "auto",
+          "repaint_latent_crossfade_frames": 10,
+          "repaint_wav_crossfade_sec": 0.0,
+          "repaint_mode": "balanced",
+          "repaint_strength": 0.5,
+          "retake_seed": null,
+          "retake_variance": 0.0,
+          "flow_edit_morph": false,
+          "flow_edit_source_caption": "",
+          "flow_edit_source_lyrics": "",
+          "flow_edit_n_min": 0.0,
+          "flow_edit_n_max": 1.0,
+          "flow_edit_n_avg": 1,
+          "audio_cover_strength": 1.0,
+          "cover_noise_strength": 0.0,
+          "thinking": false,
+          "lm_temperature": 0.85,
+          "lm_cfg_scale": 2.0,
+          "lm_top_k": 0,
+          "lm_top_p": 0.9,
+          "lm_negative_prompt": "NO USER INPUT",
+          "use_cot_metas": false,
+          "use_cot_caption": false,
+          "use_cot_lyrics": false,
+          "use_cot_language": false,
+          "use_constrained_decoding": true,
+          "cot_bpm": null,
+          "cot_keyscale": "",
+          "cot_timesignature": "",
+          "cot_duration": null,
+          "cot_vocal_language": "unknown",
+          "cot_caption": "",
+          "cot_lyrics": "",
+          "lora_loaded": false,
+          "use_lora": false,
+          "lora_scale": 1.0,
+          "lora_weights_hash": "",
+          "audio_format": "wav"
+        }
+      }
+    ],
+    "extra_outputs": {
+      "pred_latents": {
+        "_type": "Tensor",
+        "shape": [
+          1,
+          600,
+          64
+        ],
+        "dtype": "torch.float32",
+        "device": "cpu"
+      },
+      "target_latents": {
+        "_type": "Tensor",
+        "shape": [
+          1,
+          600,
+          64
+        ],
+        "dtype": "torch.float32",
+        "device": "cpu"
+      },
+      "src_latents": {
+        "_type": "Tensor",
+        "shape": [
+          1,
+          600,
+          64
+        ],
+        "dtype": "torch.float32",
+        "device": "cpu"
+      },
+      "chunk_masks": {
+        "_type": "Tensor",
+        "shape": [
+          1,
+          600,
+          64
+        ],
+        "dtype": "torch.bool",
+        "device": "cpu"
+      },
+      "latent_masks": {
+        "_type": "Tensor",
+        "shape": [
+          1,
+          600
+        ],
+        "dtype": "torch.int64",
+        "device": "cpu"
+      },
+      "spans": [
+        [
+          "full",
+          0,
+          600
+        ]
+      ],
+      "time_costs": {
+        "dit_encoder_time_cost": 1.523216962814331,
+        "dit_diffusion_time_cost": 15.159429550170898,
+        "dit_diffusion_per_step_time_cost": 1.8949286937713623,
+        "dit_total_time_cost": 44.22320914268494,
+        "dit_offload_time_cost": 0.02322077751159668,
+        "dit_vae_decode_time_cost": 27.540562629699707,
+        "pipeline_total_time": 44.22320914268494
+      },
+      "seed_value": "42",
+      "retake_seed_value": "",
+      "retake_variance": 0.0,
+      "encoder_hidden_states": {
+        "_type": "Tensor",
+        "shape": [
+          1,
+          443,
+          2048
+        ],
+        "dtype": "torch.float32",
+        "device": "cpu"
+      },
+      "encoder_attention_mask": {
+        "_type": "Tensor",
+        "shape": [
+          1,
+          443
+        ],
+        "dtype": "torch.bool",
+        "device": "cpu"
+      },
+      "context_latents": {
+        "_type": "Tensor",
+        "shape": [
+          1,
+          600,
+          128
+        ],
+        "dtype": "torch.float32",
+        "device": "cpu"
+      },
+      "lyric_token_idss": {
+        "_type": "Tensor",
+        "shape": [
+          1,
+          186
+        ],
+        "dtype": "torch.int64",
+        "device": "cpu"
+      },
+      "lm_metadata": null
+    }
+  },
+  "audio_path": "output/phase-2/repaint_24s/seed_42/base_timeline_a/audio.wav"
+}
