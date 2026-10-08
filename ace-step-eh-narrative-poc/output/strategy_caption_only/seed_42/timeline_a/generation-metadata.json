@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-10-06T17:57:15.711257+00:00",
+  "timestamp": "2026-10-08T02:14:33.430392+00:00",
   "acestep_root": "/home/ubuntu/ai-poc/ACE-Step-1.5",
   "acestep_commit": "ca1e85fe9430179831e6bc6be790c332190a3866",
   "acestep_version": "1.5.0",
@@ -188,13 +188,13 @@
         ]
       ],
       "time_costs": {
-        "dit_encoder_time_cost": 1.6808676719665527,
-        "dit_diffusion_time_cost": 29.57418465614319,
-        "dit_diffusion_per_step_time_cost": 3.6967730820178986,
-        "dit_total_time_cost": 83.81676626205444,
-        "dit_offload_time_cost": 0.020572185516357422,
-        "dit_vae_decode_time_cost": 52.5617139339447,
-        "pipeline_total_time": 83.81676626205444
+        "dit_encoder_time_cost": 2.157534122467041,
+        "dit_diffusion_time_cost": 38.28430199623108,
+        "dit_diffusion_per_step_time_cost": 4.785537749528885,
+        "dit_total_time_cost": 99.59080767631531,
+        "dit_offload_time_cost": 0.03090834617614746,
+        "dit_vae_decode_time_cost": 59.14897155761719,
+        "pipeline_total_time": 99.59080767631531
       },
       "seed_value": "42",
       "retake_seed_value": "",

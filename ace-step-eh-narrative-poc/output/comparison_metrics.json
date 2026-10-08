@@ -1,11 +1,11 @@
 [
   {
-    "dir_a": "output/strategy_caption_only/seed_42/timeline_a",
-    "dir_b": "output/strategy_caption_only/seed_42/timeline_b",
-    "audio_a": "output/strategy_caption_only/seed_42/timeline_a/audio.wav",
-    "audio_b": "output/strategy_caption_only/seed_42/timeline_b/audio.wav",
+    "dir_a": "/workspace/ace-step-eh-narrative-poc/output/strategy_caption_only/seed_42/timeline_a",
+    "dir_b": "/workspace/ace-step-eh-narrative-poc/output/strategy_caption_only/seed_42/timeline_b",
+    "audio_a": "/workspace/ace-step-eh-narrative-poc/output/strategy_caption_only/seed_42/timeline_a/audio.wav",
+    "audio_b": "/workspace/ace-step-eh-narrative-poc/output/strategy_caption_only/seed_42/timeline_b/audio.wav",
     "analysis_a": {
-      "path": "output/strategy_caption_only/seed_42/timeline_a/audio.wav",
+      "path": "/workspace/ace-step-eh-narrative-poc/output/strategy_caption_only/seed_42/timeline_a/audio.wav",
       "sample_rate": 48000,
       "duration_s": 48.0,
       "overall_rms": 0.102031,
@@ -65,7 +65,7 @@
       "energy_rise": 0.07501
     },
     "analysis_b": {
-      "path": "output/strategy_caption_only/seed_42/timeline_b/audio.wav",
+      "path": "/workspace/ace-step-eh-narrative-poc/output/strategy_caption_only/seed_42/timeline_b/audio.wav",
       "sample_rate": 48000,
       "duration_s": 48.0,
       "overall_rms": 0.118567,
@@ -134,12 +134,12 @@
     }
   },
   {
-    "dir_a": "output/strategy_natural_tags/seed_123/timeline_a",
-    "dir_b": "output/strategy_natural_tags/seed_123/timeline_b",
-    "audio_a": "output/strategy_natural_tags/seed_123/timeline_a/audio.wav",
-    "audio_b": "output/strategy_natural_tags/seed_123/timeline_b/audio.wav",
+    "dir_a": "/workspace/ace-step-eh-narrative-poc/output/strategy_natural_tags/seed_123/timeline_a",
+    "dir_b": "/workspace/ace-step-eh-narrative-poc/output/strategy_natural_tags/seed_123/timeline_b",
+    "audio_a": "/workspace/ace-step-eh-narrative-poc/output/strategy_natural_tags/seed_123/timeline_a/audio.wav",
+    "audio_b": "/workspace/ace-step-eh-narrative-poc/output/strategy_natural_tags/seed_123/timeline_b/audio.wav",
     "analysis_a": {
-      "path": "output/strategy_natural_tags/seed_123/timeline_a/audio.wav",
+      "path": "/workspace/ace-step-eh-narrative-poc/output/strategy_natural_tags/seed_123/timeline_a/audio.wav",
       "sample_rate": 48000,
       "duration_s": 48.0,
       "overall_rms": 0.102039,
@@ -199,7 +199,7 @@
       "energy_rise": 0.024543
     },
     "analysis_b": {
-      "path": "output/strategy_natural_tags/seed_123/timeline_b/audio.wav",
+      "path": "/workspace/ace-step-eh-narrative-poc/output/strategy_natural_tags/seed_123/timeline_b/audio.wav",
       "sample_rate": 48000,
       "duration_s": 48.0,
       "overall_rms": 0.114464,
@@ -268,12 +268,12 @@
     }
   },
   {
-    "dir_a": "output/strategy_natural_tags/seed_42/timeline_a",
-    "dir_b": "output/strategy_natural_tags/seed_42/timeline_b",
-    "audio_a": "output/strategy_natural_tags/seed_42/timeline_a/audio.wav",
-    "audio_b": "output/strategy_natural_tags/seed_42/timeline_b/audio.wav",
+    "dir_a": "/workspace/ace-step-eh-narrative-poc/output/strategy_natural_tags/seed_42/timeline_a",
+    "dir_b": "/workspace/ace-step-eh-narrative-poc/output/strategy_natural_tags/seed_42/timeline_b",
+    "audio_a": "/workspace/ace-step-eh-narrative-poc/output/strategy_natural_tags/seed_42/timeline_a/audio.wav",
+    "audio_b": "/workspace/ace-step-eh-narrative-poc/output/strategy_natural_tags/seed_42/timeline_b/audio.wav",
     "analysis_a": {
-      "path": "output/strategy_natural_tags/seed_42/timeline_a/audio.wav",
+      "path": "/workspace/ace-step-eh-narrative-poc/output/strategy_natural_tags/seed_42/timeline_a/audio.wav",
       "sample_rate": 48000,
       "duration_s": 48.0,
       "overall_rms": 0.112925,
@@ -333,7 +333,7 @@
       "energy_rise": 0.076735
     },
     "analysis_b": {
-      "path": "output/strategy_natural_tags/seed_42/timeline_b/audio.wav",
+      "path": "/workspace/ace-step-eh-narrative-poc/output/strategy_natural_tags/seed_42/timeline_b/audio.wav",
       "sample_rate": 48000,
       "duration_s": 48.0,
       "overall_rms": 0.115689,
@@ -402,12 +402,12 @@
     }
   },
   {
-    "dir_a": "output/strategy_natural_tags/seed_777/timeline_a",
-    "dir_b": "output/strategy_natural_tags/seed_777/timeline_b",
-    "audio_a": "output/strategy_natural_tags/seed_777/timeline_a/audio.wav",
-    "audio_b": "output/strategy_natural_tags/seed_777/timeline_b/audio.wav",
+    "dir_a": "/workspace/ace-step-eh-narrative-poc/output/strategy_natural_tags/seed_777/timeline_a",
+    "dir_b": "/workspace/ace-step-eh-narrative-poc/output/strategy_natural_tags/seed_777/timeline_b",
+    "audio_a": "/workspace/ace-step-eh-narrative-poc/output/strategy_natural_tags/seed_777/timeline_a/audio.wav",
+    "audio_b": "/workspace/ace-step-eh-narrative-poc/output/strategy_natural_tags/seed_777/timeline_b/audio.wav",
     "analysis_a": {
-      "path": "output/strategy_natural_tags/seed_777/timeline_a/audio.wav",
+      "path": "/workspace/ace-step-eh-narrative-poc/output/strategy_natural_tags/seed_777/timeline_a/audio.wav",
       "sample_rate": 48000,
       "duration_s": 48.0,
       "overall_rms": 0.090808,
@@ -467,7 +467,7 @@
       "energy_rise": 0.014849
     },
     "analysis_b": {
-      "path": "output/strategy_natural_tags/seed_777/timeline_b/audio.wav",
+      "path": "/workspace/ace-step-eh-narrative-poc/output/strategy_natural_tags/seed_777/timeline_b/audio.wav",
       "sample_rate": 48000,
       "duration_s": 48.0,
       "overall_rms": 0.097884,

@@ -1,6 +1,6 @@
 # Architecture Conclusion — ACE-Step EH Narrative Music Adapter POC
 
-**Date:** 2026-10-08 (re-validated; original run 2026-10-06)  
+**Date:** 2026-10-08 (re-run validated; original run 2026-10-06)  
 **Status:** Evidence from controlled standalone POC  
 **Scope:** Experimental only. No EH production domain changes.
 
@@ -20,6 +20,16 @@ It separates **Observed**, **Inferred**, and **Architectural conclusion**.
 | Duration / BPM / key / language | 48 s / 92 / C Major / en |
 | Seeds | 42, 123, 777 (natural tags); 42 (caption-only) |
 | Independent variable | `NarrativeMusicTimeline` (A intimate vs B cinematic) |
+| Re-run | 2026-10-08 reproduced matched-seed A/B WAVs; deep RMS metrics matched prior run within rounding |
+
+### Input hashes (SHA-256)
+
+| File | Hash |
+|---|---|
+| `inputs/story.txt` | `09e106297ddc7e0bd5f2d5ddaa51d2db667f651e3113661969c66eab69e849c4` |
+| `inputs/creative_direction.json` | `8c24d17b320228015a42a9d75dce3fa8280f4ab8aace5f17790f997ed79bebab` |
+| `inputs/timeline_a.json` | `beddf8827332792d782adeb1cb5279c451d0bde2fc417af680386a1eeec799e0` |
+| `inputs/timeline_b.json` | `2fddb649c33c9a78a39e3c015d54d7f65e8006d10a571dabbf374c3a23aace97` |
 
 ---
 
@@ -46,9 +56,10 @@ Architectural conclusion:
 
 Observed:
 - Matched-seed A/B pairs produce different RMS envelopes for all three natural-tags seeds.
-- Peak bin RMS is higher for Timeline B in 3/3 natural-tags pairs.
-- Seed 42 spectrograms show denser mid/late high-frequency content for B.
+- Peak bin RMS is higher for Timeline B in **3/3** natural-tags pairs under 8-bin deep metrics (`deep_metrics.json`); 6-bin auto compare reports **2/3** (seed 777 nearly tied).
+- Seed 42 spectrograms show denser / earlier full-spectrum energy for B.
 - Directed “B always builds more late-vs-early” is **not** consistent (1/3).
+- 2026-10-08 re-run with the same seeds reproduced the prior deep-metric pattern.
 
 Inferred:
 - Timeline conditioning is causally real under matched seeds, but not a deterministic storyboard.
