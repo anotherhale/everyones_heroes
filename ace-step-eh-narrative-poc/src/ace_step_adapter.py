@@ -19,22 +19,65 @@ from narrative_music import (
 
 
 class SectionTagStrategy(str, Enum):
-    """Two compilation strategies for the section-tag hypothesis."""
+    """Adapter compilation strategies for the section-tag hypothesis.
+
+    These are provider-specific rendering choices. They are NOT EH domain
+    concepts. EH remains NarrativeMusicTimeline / NarrativeMusicSegment only.
+    """
 
     NATURAL_TAGS = "natural_tags"
+    """Alias retained from Phase 1 — narrative open tags."""
+
+    NARRATIVE_TAGS = "narrative_tags"
+    """Explicit narrative phase tags: [Opening], [Build], [Breakthrough], …"""
+
+    SONG_TAGS = "song_tags"
+    """Compile narrative phases into conventional song labels as an adapter
+    technique only: [Verse], [Pre-Chorus], [Chorus], [Bridge], [Outro].
+    EH must not adopt these as domain ontology.
+    """
+
     CAPTION_ONLY = "caption_only"
+    """No lyric section tags; arc encoded in caption prose only."""
 
 
-# Map narrative roles → open-ended section tags (not Verse/Chorus ontology).
-ROLE_TO_TAG = {
+# Map narrative roles → open-ended narrative section tags (not EH ontology).
+ROLE_TO_NARRATIVE_TAG = {
     "opening": "Opening",
+    "vulnerability": "Vulnerability",
+    "reflection": "Reflection",
+    "gentle_hope": "Gentle Hope",
+    "quiet_resolution": "Quiet Resolution",
     "struggle": "Struggle",
     "hope": "Turning Point",
     "challenge": "Challenge",
     "determination": "Determination",
+    "build": "Build",
     "breakthrough": "Breakthrough",
+    "climax": "Climax",
     "resolution": "Resolution",
 }
+
+# Adapter-only soft mapping onto common song-form labels for Experiment B.
+# This tests ACE-Step dataset conventions — not EH product language.
+ROLE_TO_SONG_TAG = {
+    "opening": "Intro",
+    "vulnerability": "Verse",
+    "reflection": "Verse",
+    "gentle_hope": "Pre-Chorus",
+    "quiet_resolution": "Outro",
+    "struggle": "Verse",
+    "hope": "Pre-Chorus",
+    "challenge": "Verse",
+    "determination": "Pre-Chorus",
+    "build": "Pre-Chorus",
+    "breakthrough": "Chorus",
+    "climax": "Chorus",
+    "resolution": "Outro",
+}
+
+# Backward-compatible alias used by older Phase 1 helpers/tests.
+ROLE_TO_TAG = ROLE_TO_NARRATIVE_TAG
 
 
 @dataclass(frozen=True)
@@ -88,8 +131,25 @@ class AceStepGenerationRequest:
         }
 
 
-def _tag_for_role(role: str) -> str:
-    return ROLE_TO_TAG.get(role.lower(), role.replace("_", " ").title())
+def _normalize_role(role: str) -> str:
+    return role.strip().lower().replace(" ", "_").replace("-", "_")
+
+
+def _tag_for_role(role: str, strategy: SectionTagStrategy) -> str:
+    key = _normalize_role(role)
+    if strategy in (SectionTagStrategy.SONG_TAGS,):
+        label = ROLE_TO_SONG_TAG.get(key, role.replace("_", " ").title())
+        return label
+    # NATURAL_TAGS and NARRATIVE_TAGS share narrative open vocabulary.
+    return ROLE_TO_NARRATIVE_TAG.get(key, role.replace("_", " ").title())
+
+
+def _uses_lyric_tags(strategy: SectionTagStrategy) -> bool:
+    return strategy in (
+        SectionTagStrategy.NATURAL_TAGS,
+        SectionTagStrategy.NARRATIVE_TAGS,
+        SectionTagStrategy.SONG_TAGS,
+    )
 
 
 def _energy_phrase(energy: float) -> str:
@@ -151,6 +211,13 @@ def _build_caption(
             "Do not rely on lyric section labels; follow this timed musical narrative "
             "through arrangement density, rhythm, and vocal intensity alone."
         )
+    elif strategy == SectionTagStrategy.SONG_TAGS:
+        parts.append(
+            "Follow the conventional song-section labels present in the lyrics "
+            "(Intro/Verse/Pre-Chorus/Chorus/Bridge/Outro) as soft structure cues; "
+            "map musical development to those sections while preserving the timed "
+            "emotional arc above."
+        )
     else:
         parts.append(
             "Follow the narrative section labels present in the lyrics; each tagged "
@@ -165,13 +232,15 @@ def _build_caption(
 
 
 def _build_lyrics_with_tags(
-    story: StoryText, timeline: NarrativeMusicTimeline
+    story: StoryText,
+    timeline: NarrativeMusicTimeline,
+    strategy: SectionTagStrategy,
 ) -> str:
     chunks = allocate_story_lines(story, timeline.segments)
     blocks: List[str] = []
     for seg, lines in zip(timeline.segments, chunks):
-        tag = _tag_for_role(seg.role)
-        # Tutorial-style open tags with soft descriptors.
+        tag = _tag_for_role(seg.role, strategy)
+        # Soft descriptors help both narrative and song-tag backends.
         descriptor = f"{seg.emotional_state} - {_energy_phrase(seg.energy)}"
         blocks.append(f"[{tag} - {descriptor}]\n" + "\n".join(lines))
     return "\n\n".join(blocks).strip() + "\n"
@@ -246,8 +315,8 @@ class AceStepNarrativeAdapter:
         caption = _build_caption(
             direction, timeline, strategy, target_duration=duration
         )
-        if strategy == SectionTagStrategy.NATURAL_TAGS:
-            lyrics = _build_lyrics_with_tags(story, timeline)
+        if _uses_lyric_tags(strategy):
+            lyrics = _build_lyrics_with_tags(story, timeline, strategy)
         else:
             lyrics = _build_lyrics_plain(story, timeline)
 

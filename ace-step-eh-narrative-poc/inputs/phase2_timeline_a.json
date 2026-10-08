@@ -1,0 +1,56 @@
+{
+  "name": "phase2_intimate_arc",
+  "description": "Phase 2 intimate arc: restrained structural progression without large climax.",
+  "segments": [
+    {
+      "role": "opening",
+      "narrative_intent": "arrival",
+      "emotional_state": "quiet",
+      "energy": 0.18,
+      "instrumentation": ["piano", "ambient_pad"],
+      "vocal_delivery": "intimate",
+      "duration_seconds": 8,
+      "performance_notes": "Sparse entrance; leave space."
+    },
+    {
+      "role": "vulnerability",
+      "narrative_intent": "vulnerability",
+      "emotional_state": "uncertain",
+      "energy": 0.25,
+      "instrumentation": ["piano", "soft_strings"],
+      "vocal_delivery": "fragile",
+      "duration_seconds": 10,
+      "performance_notes": "Thin texture; soft vocal closeness."
+    },
+    {
+      "role": "reflection",
+      "narrative_intent": "introspection",
+      "emotional_state": "reflective",
+      "energy": 0.32,
+      "instrumentation": ["piano", "soft_strings", "light_pad"],
+      "vocal_delivery": "restrained",
+      "duration_seconds": 12,
+      "performance_notes": "Gentle harmonic motion; minimal percussion."
+    },
+    {
+      "role": "gentle_hope",
+      "narrative_intent": "gentle_hope",
+      "emotional_state": "hopeful",
+      "energy": 0.42,
+      "instrumentation": ["piano", "strings"],
+      "vocal_delivery": "warm",
+      "duration_seconds": 10,
+      "performance_notes": "Slight lift only; no cinematic crest."
+    },
+    {
+      "role": "quiet_resolution",
+      "narrative_intent": "peace",
+      "emotional_state": "resolved",
+      "energy": 0.30,
+      "instrumentation": ["piano", "light_strings"],
+      "vocal_delivery": "quiet",
+      "duration_seconds": 8,
+      "performance_notes": "Settle and thin; peaceful ending."
+    }
+  ]
+}

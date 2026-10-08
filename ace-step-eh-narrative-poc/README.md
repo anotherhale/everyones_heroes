@@ -208,10 +208,33 @@ Details: `output/comparison.md`, `output/architecture-conclusion.md`.
 ## 15. Next step
 
 1. Keep this POC isolated from EH production.
-2. Re-run on GPU with a formal listening rubric.
-3. Optional third compiler backend: conventional `[Verse]`/`[Chorus]` as control only.
-4. Explore phase-targeted repaint windows for harder timing control.
-5. Only then draft an EH `MusicGenerationPort` ADR.
+2. Complete Phase 2 structural-control experiments (below).
+3. Only after reliable phase timing evidence: draft an EH `MusicGenerationPort` ADR.
+
+## Phase 2 — structural control
+
+Phase 1 baseline is frozen under `output/phase-1/`.
+
+Phase 2 asks whether the narrative timeline can control **where** musical changes occur.
+
+```bash
+./scripts/run_phase2.sh
+# then (optional / separate):
+"$ACESTEP_ROOT/.venv/bin/python" src/phase2_repaint.py --seed 42
+"$ACESTEP_ROOT/.venv/bin/python" src/phase2_analyze.py
+```
+
+Adapter strategies (provider-specific; not EH ontology):
+
+| Strategy | Lyrics structure |
+|---|---|
+| `narrative_tags` | `[Opening]`, `[Build]`, `[Breakthrough]`, … |
+| `song_tags` | `[Intro]`, `[Verse]`, `[Pre-Chorus]`, `[Chorus]`, `[Outro]` |
+| `caption_only` | no lyric section tags |
+
+Outputs: `output/phase-2/` (results, plots, listening rubric, architecture conclusion).
+
+GPU validation in the cloud agent environment: **UNAVAILABLE** (CPU-only).
 
 ## Non-goals (honored)
 

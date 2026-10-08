@@ -1,0 +1,1172 @@
+[
+  {
+    "strategy": "caption_only",
+    "seed": "seed_123",
+    "analysis_a": {
+      "duration_s": 48.0,
+      "peak_amplitude": 0.743668,
+      "overall_rms": 0.089756,
+      "low_energy_fraction": 0.2147
+    },
+    "analysis_b": {
+      "duration_s": 48.0,
+      "peak_amplitude": 0.879196,
+      "overall_rms": 0.101652,
+      "low_energy_fraction": 0.1571
+    },
+    "spectral_mean_high_a": 0.0123,
+    "spectral_mean_high_b": 0.0338,
+    "centroid_a": 298.49,
+    "centroid_b": 423.19,
+    "phase_alignment_a": {
+      "windows": [
+        {
+          "role": "opening",
+          "start_s": 0.0,
+          "end_s": 8.0,
+          "intended_energy": 0.18,
+          "measured_mean_rms": 0.057858,
+          "measured_mean_onset_density": 0.17
+        },
+        {
+          "role": "vulnerability",
+          "start_s": 8.0,
+          "end_s": 18.0,
+          "intended_energy": 0.25,
+          "measured_mean_rms": 0.079082,
+          "measured_mean_onset_density": 0.115
+        },
+        {
+          "role": "reflection",
+          "start_s": 18.0,
+          "end_s": 30.0,
+          "intended_energy": 0.32,
+          "measured_mean_rms": 0.079422,
+          "measured_mean_onset_density": 0.165
+        },
+        {
+          "role": "gentle_hope",
+          "start_s": 30.0,
+          "end_s": 40.0,
+          "intended_energy": 0.42,
+          "measured_mean_rms": 0.095822,
+          "measured_mean_onset_density": 0.271
+        },
+        {
+          "role": "quiet_resolution",
+          "start_s": 40.0,
+          "end_s": 48.0,
+          "intended_energy": 0.3,
+          "measured_mean_rms": 0.006144,
+          "measured_mean_onset_density": 0.0
+        }
+      ],
+      "energy_correlation": 0.3312
+    },
+    "phase_alignment_b": {
+      "windows": [
+        {
+          "role": "opening",
+          "start_s": 0.0,
+          "end_s": 6.0,
+          "intended_energy": 0.18,
+          "measured_mean_rms": 0.054585,
+          "measured_mean_onset_density": 0.055
+        },
+        {
+          "role": "vulnerability",
+          "start_s": 6.0,
+          "end_s": 12.0,
+          "intended_energy": 0.28,
+          "measured_mean_rms": 0.07525,
+          "measured_mean_onset_density": 0.021667
+        },
+        {
+          "role": "challenge",
+          "start_s": 12.0,
+          "end_s": 20.0,
+          "intended_energy": 0.48,
+          "measured_mean_rms": 0.105507,
+          "measured_mean_onset_density": 0.17625
+        },
+        {
+          "role": "build",
+          "start_s": 20.0,
+          "end_s": 28.0,
+          "intended_energy": 0.68,
+          "measured_mean_rms": 0.098574,
+          "measured_mean_onset_density": 0.22125
+        },
+        {
+          "role": "breakthrough",
+          "start_s": 28.0,
+          "end_s": 36.0,
+          "intended_energy": 0.88,
+          "measured_mean_rms": 0.109551,
+          "measured_mean_onset_density": 0.2275
+        },
+        {
+          "role": "climax",
+          "start_s": 36.0,
+          "end_s": 42.0,
+          "intended_energy": 0.95,
+          "measured_mean_rms": 0.10198,
+          "measured_mean_onset_density": 0.258333
+        },
+        {
+          "role": "resolution",
+          "start_s": 42.0,
+          "end_s": 48.0,
+          "intended_energy": 0.45,
+          "measured_mean_rms": 0.010598,
+          "measured_mean_onset_density": 0.031667
+        }
+      ],
+      "energy_correlation": 0.5825
+    },
+    "timeline_b_breakthrough_rms": 0.109551,
+    "timeline_b_early_rms": 0.064918,
+    "timeline_b_breakthrough_minus_early": 0.044633,
+    "overall_rms_delta_b_minus_a": 0.011896
+  },
+  {
+    "strategy": "caption_only",
+    "seed": "seed_42",
+    "analysis_a": {
+      "duration_s": 48.0,
+      "peak_amplitude": 0.870605,
+      "overall_rms": 0.082508,
+      "low_energy_fraction": 0.199
+    },
+    "analysis_b": {
+      "duration_s": 48.0,
+      "peak_amplitude": 0.857971,
+      "overall_rms": 0.109141,
+      "low_energy_fraction": 0.3089
+    },
+    "spectral_mean_high_a": 0.0306,
+    "spectral_mean_high_b": 0.0302,
+    "centroid_a": 442.31,
+    "centroid_b": 427.84,
+    "phase_alignment_a": {
+      "windows": [
+        {
+          "role": "opening",
+          "start_s": 0.0,
+          "end_s": 8.0,
+          "intended_energy": 0.18,
+          "measured_mean_rms": 0.010987,
+          "measured_mean_onset_density": 0.00125
+        },
+        {
+          "role": "vulnerability",
+          "start_s": 8.0,
+          "end_s": 18.0,
+          "intended_energy": 0.25,
+          "measured_mean_rms": 0.034287,
+          "measured_mean_onset_density": 0.013
+        },
+        {
+          "role": "reflection",
+          "start_s": 18.0,
+          "end_s": 30.0,
+          "intended_energy": 0.32,
+          "measured_mean_rms": 0.10094,
+          "measured_mean_onset_density": 0.268333
+        },
+        {
+          "role": "gentle_hope",
+          "start_s": 30.0,
+          "end_s": 40.0,
+          "intended_energy": 0.42,
+          "measured_mean_rms": 0.106732,
+          "measured_mean_onset_density": 0.308
+        },
+        {
+          "role": "quiet_resolution",
+          "start_s": 40.0,
+          "end_s": 48.0,
+          "intended_energy": 0.3,
+          "measured_mean_rms": 0.034668,
+          "measured_mean_onset_density": 0.095
+        }
+      ],
+      "energy_correlation": 0.8773
+    },
+    "phase_alignment_b": {
+      "windows": [
+        {
+          "role": "opening",
+          "start_s": 0.0,
+          "end_s": 6.0,
+          "intended_energy": 0.18,
+          "measured_mean_rms": 0.002343,
+          "measured_mean_onset_density": 0.0
+        },
+        {
+          "role": "vulnerability",
+          "start_s": 6.0,
+          "end_s": 12.0,
+          "intended_energy": 0.28,
+          "measured_mean_rms": 0.021583,
+          "measured_mean_onset_density": 0.033333
+        },
+        {
+          "role": "challenge",
+          "start_s": 12.0,
+          "end_s": 20.0,
+          "intended_energy": 0.48,
+          "measured_mean_rms": 0.076086,
+          "measured_mean_onset_density": 0.11
+        },
+        {
+          "role": "build",
+          "start_s": 20.0,
+          "end_s": 28.0,
+          "intended_energy": 0.68,
+          "measured_mean_rms": 0.117663,
+          "measured_mean_onset_density": 0.2125
+        },
+        {
+          "role": "breakthrough",
+          "start_s": 28.0,
+          "end_s": 36.0,
+          "intended_energy": 0.88,
+          "measured_mean_rms": 0.164251,
+          "measured_mean_onset_density": 0.37
+        },
+        {
+          "role": "climax",
+          "start_s": 36.0,
+          "end_s": 42.0,
+          "intended_energy": 0.95,
+          "measured_mean_rms": 0.128885,
+          "measured_mean_onset_density": 0.206667
+        },
+        {
+          "role": "resolution",
+          "start_s": 42.0,
+          "end_s": 48.0,
+          "intended_energy": 0.45,
+          "measured_mean_rms": 0.019037,
+          "measured_mean_onset_density": 0.036667
+        }
+      ],
+      "energy_correlation": 0.9349
+    },
+    "timeline_b_breakthrough_rms": 0.164251,
+    "timeline_b_early_rms": 0.011963,
+    "timeline_b_breakthrough_minus_early": 0.152288,
+    "overall_rms_delta_b_minus_a": 0.026633
+  },
+  {
+    "strategy": "caption_only",
+    "seed": "seed_777",
+    "analysis_a": {
+      "duration_s": 48.0,
+      "peak_amplitude": 0.754532,
+      "overall_rms": 0.087045,
+      "low_energy_fraction": 0.1466
+    },
+    "analysis_b": {
+      "duration_s": 48.0,
+      "peak_amplitude": 0.883774,
+      "overall_rms": 0.109889,
+      "low_energy_fraction": 0.288
+    },
+    "spectral_mean_high_a": 0.0217,
+    "spectral_mean_high_b": 0.0313,
+    "centroid_a": 364.53,
+    "centroid_b": 407.64,
+    "phase_alignment_a": {
+      "windows": [
+        {
+          "role": "opening",
+          "start_s": 0.0,
+          "end_s": 8.0,
+          "intended_energy": 0.18,
+          "measured_mean_rms": 0.05122,
+          "measured_mean_onset_density": 0.12
+        },
+        {
+          "role": "vulnerability",
+          "start_s": 8.0,
+          "end_s": 18.0,
+          "intended_energy": 0.25,
+          "measured_mean_rms": 0.08258,
+          "measured_mean_onset_density": 0.278
+        },
+        {
+          "role": "reflection",
+          "start_s": 18.0,
+          "end_s": 30.0,
+          "intended_energy": 0.32,
+          "measured_mean_rms": 0.083596,
+          "measured_mean_onset_density": 0.128333
+        },
+        {
+          "role": "gentle_hope",
+          "start_s": 30.0,
+          "end_s": 40.0,
+          "intended_energy": 0.42,
+          "measured_mean_rms": 0.096808,
+          "measured_mean_onset_density": 0.191
+        },
+        {
+          "role": "quiet_resolution",
+          "start_s": 40.0,
+          "end_s": 48.0,
+          "intended_energy": 0.3,
+          "measured_mean_rms": 0.012407,
+          "measured_mean_onset_density": 0.00125
+        }
+      ],
+      "energy_correlation": 0.412
+    },
+    "phase_alignment_b": {
+      "windows": [
+        {
+          "role": "opening",
+          "start_s": 0.0,
+          "end_s": 6.0,
+          "intended_energy": 0.18,
+          "measured_mean_rms": 0.073267,
+          "measured_mean_onset_density": 0.08
+        },
+        {
+          "role": "vulnerability",
+          "start_s": 6.0,
+          "end_s": 12.0,
+          "intended_energy": 0.28,
+          "measured_mean_rms": 0.056636,
+          "measured_mean_onset_density": 0.093333
+        },
+        {
+          "role": "challenge",
+          "start_s": 12.0,
+          "end_s": 20.0,
+          "intended_energy": 0.48,
+          "measured_mean_rms": 0.089843,
+          "measured_mean_onset_density": 0.19
+        },
+        {
+          "role": "build",
+          "start_s": 20.0,
+          "end_s": 28.0,
+          "intended_energy": 0.68,
+          "measured_mean_rms": 0.10899,
+          "measured_mean_onset_density": 0.205
+        },
+        {
+          "role": "breakthrough",
+          "start_s": 28.0,
+          "end_s": 36.0,
+          "intended_energy": 0.88,
+          "measured_mean_rms": 0.141292,
+          "measured_mean_onset_density": 0.2125
+        },
+        {
+          "role": "climax",
+          "start_s": 36.0,
+          "end_s": 42.0,
+          "intended_energy": 0.95,
+          "measured_mean_rms": 0.10354,
+          "measured_mean_onset_density": 0.216667
+        },
+        {
+          "role": "resolution",
+          "start_s": 42.0,
+          "end_s": 48.0,
+          "intended_energy": 0.45,
+          "measured_mean_rms": 0.000858,
+          "measured_mean_onset_density": 0.0
+        }
+      ],
+      "energy_correlation": 0.6286
+    },
+    "timeline_b_breakthrough_rms": 0.141292,
+    "timeline_b_early_rms": 0.064951,
+    "timeline_b_breakthrough_minus_early": 0.076341,
+    "overall_rms_delta_b_minus_a": 0.022844
+  },
+  {
+    "strategy": "narrative_tags",
+    "seed": "seed_123",
+    "analysis_a": {
+      "duration_s": 48.0,
+      "peak_amplitude": 0.814255,
+      "overall_rms": 0.098138,
+      "low_energy_fraction": 0.2199
+    },
+    "analysis_b": {
+      "duration_s": 48.0,
+      "peak_amplitude": 0.882004,
+      "overall_rms": 0.116338,
+      "low_energy_fraction": 0.2094
+    },
+    "spectral_mean_high_a": 0.0218,
+    "spectral_mean_high_b": 0.032,
+    "centroid_a": 333.65,
+    "centroid_b": 408.47,
+    "phase_alignment_a": {
+      "windows": [
+        {
+          "role": "opening",
+          "start_s": 0.0,
+          "end_s": 8.0,
+          "intended_energy": 0.18,
+          "measured_mean_rms": 0.047042,
+          "measured_mean_onset_density": 0.0425
+        },
+        {
+          "role": "vulnerability",
+          "start_s": 8.0,
+          "end_s": 18.0,
+          "intended_energy": 0.25,
+          "measured_mean_rms": 0.068994,
+          "measured_mean_onset_density": 0.193
+        },
+        {
+          "role": "reflection",
+          "start_s": 18.0,
+          "end_s": 30.0,
+          "intended_energy": 0.32,
+          "measured_mean_rms": 0.094224,
+          "measured_mean_onset_density": 0.188333
+        },
+        {
+          "role": "gentle_hope",
+          "start_s": 30.0,
+          "end_s": 40.0,
+          "intended_energy": 0.42,
+          "measured_mean_rms": 0.130652,
+          "measured_mean_onset_density": 0.266
+        },
+        {
+          "role": "quiet_resolution",
+          "start_s": 40.0,
+          "end_s": 48.0,
+          "intended_energy": 0.3,
+          "measured_mean_rms": 0.012611,
+          "measured_mean_onset_density": 0.00125
+        }
+      ],
+      "energy_correlation": 0.6633
+    },
+    "phase_alignment_b": {
+      "windows": [
+        {
+          "role": "opening",
+          "start_s": 0.0,
+          "end_s": 6.0,
+          "intended_energy": 0.18,
+          "measured_mean_rms": 0.076805,
+          "measured_mean_onset_density": 0.165
+        },
+        {
+          "role": "vulnerability",
+          "start_s": 6.0,
+          "end_s": 12.0,
+          "intended_energy": 0.28,
+          "measured_mean_rms": 0.059196,
+          "measured_mean_onset_density": 0.136667
+        },
+        {
+          "role": "challenge",
+          "start_s": 12.0,
+          "end_s": 20.0,
+          "intended_energy": 0.48,
+          "measured_mean_rms": 0.06599,
+          "measured_mean_onset_density": 0.0125
+        },
+        {
+          "role": "build",
+          "start_s": 20.0,
+          "end_s": 28.0,
+          "intended_energy": 0.68,
+          "measured_mean_rms": 0.114976,
+          "measured_mean_onset_density": 0.16
+        },
+        {
+          "role": "breakthrough",
+          "start_s": 28.0,
+          "end_s": 36.0,
+          "intended_energy": 0.88,
+          "measured_mean_rms": 0.157004,
+          "measured_mean_onset_density": 0.23375
+        },
+        {
+          "role": "climax",
+          "start_s": 36.0,
+          "end_s": 42.0,
+          "intended_energy": 0.95,
+          "measured_mean_rms": 0.139445,
+          "measured_mean_onset_density": 0.356667
+        },
+        {
+          "role": "resolution",
+          "start_s": 42.0,
+          "end_s": 48.0,
+          "intended_energy": 0.45,
+          "measured_mean_rms": 0.000781,
+          "measured_mean_onset_density": 0.0
+        }
+      ],
+      "energy_correlation": 0.7375
+    },
+    "timeline_b_breakthrough_rms": 0.157004,
+    "timeline_b_early_rms": 0.068,
+    "timeline_b_breakthrough_minus_early": 0.089004,
+    "overall_rms_delta_b_minus_a": 0.0182
+  },
+  {
+    "strategy": "narrative_tags",
+    "seed": "seed_42",
+    "analysis_a": {
+      "duration_s": 48.0,
+      "peak_amplitude": 0.873703,
+      "overall_rms": 0.082191,
+      "low_energy_fraction": 0.2147
+    },
+    "analysis_b": {
+      "duration_s": 48.0,
+      "peak_amplitude": 0.753799,
+      "overall_rms": 0.115341,
+      "low_energy_fraction": 0.3194
+    },
+    "spectral_mean_high_a": 0.0263,
+    "spectral_mean_high_b": 0.0239,
+    "centroid_a": 396.94,
+    "centroid_b": 382.38,
+    "phase_alignment_a": {
+      "windows": [
+        {
+          "role": "opening",
+          "start_s": 0.0,
+          "end_s": 8.0,
+          "intended_energy": 0.18,
+          "measured_mean_rms": 0.007699,
+          "measured_mean_onset_density": 0.00125
+        },
+        {
+          "role": "vulnerability",
+          "start_s": 8.0,
+          "end_s": 18.0,
+          "intended_energy": 0.25,
+          "measured_mean_rms": 0.046941,
+          "measured_mean_onset_density": 0.082
+        },
+        {
+          "role": "reflection",
+          "start_s": 18.0,
+          "end_s": 30.0,
+          "intended_energy": 0.32,
+          "measured_mean_rms": 0.088508,
+          "measured_mean_onset_density": 0.268333
+        },
+        {
+          "role": "gentle_hope",
+          "start_s": 30.0,
+          "end_s": 40.0,
+          "intended_energy": 0.42,
+          "measured_mean_rms": 0.09611,
+          "measured_mean_onset_density": 0.222
+        },
+        {
+          "role": "quiet_resolution",
+          "start_s": 40.0,
+          "end_s": 48.0,
+          "intended_energy": 0.3,
+          "measured_mean_rms": 0.046501,
+          "measured_mean_onset_density": 0.11625
+        }
+      ],
+      "energy_correlation": 0.9207
+    },
+    "phase_alignment_b": {
+      "windows": [
+        {
+          "role": "opening",
+          "start_s": 0.0,
+          "end_s": 6.0,
+          "intended_energy": 0.18,
+          "measured_mean_rms": 0.002132,
+          "measured_mean_onset_density": 0.0
+        },
+        {
+          "role": "vulnerability",
+          "start_s": 6.0,
+          "end_s": 12.0,
+          "intended_energy": 0.28,
+          "measured_mean_rms": 0.014818,
+          "measured_mean_onset_density": 0.013333
+        },
+        {
+          "role": "challenge",
+          "start_s": 12.0,
+          "end_s": 20.0,
+          "intended_energy": 0.48,
+          "measured_mean_rms": 0.068539,
+          "measured_mean_onset_density": 0.1075
+        },
+        {
+          "role": "build",
+          "start_s": 20.0,
+          "end_s": 28.0,
+          "intended_energy": 0.68,
+          "measured_mean_rms": 0.126581,
+          "measured_mean_onset_density": 0.23875
+        },
+        {
+          "role": "breakthrough",
+          "start_s": 28.0,
+          "end_s": 36.0,
+          "intended_energy": 0.88,
+          "measured_mean_rms": 0.151172,
+          "measured_mean_onset_density": 0.365
+        },
+        {
+          "role": "climax",
+          "start_s": 36.0,
+          "end_s": 42.0,
+          "intended_energy": 0.95,
+          "measured_mean_rms": 0.145244,
+          "measured_mean_onset_density": 0.175
+        },
+        {
+          "role": "resolution",
+          "start_s": 42.0,
+          "end_s": 48.0,
+          "intended_energy": 0.45,
+          "measured_mean_rms": 0.029858,
+          "measured_mean_onset_density": 0.063333
+        }
+      ],
+      "energy_correlation": 0.9686
+    },
+    "timeline_b_breakthrough_rms": 0.151172,
+    "timeline_b_early_rms": 0.008475,
+    "timeline_b_breakthrough_minus_early": 0.142697,
+    "overall_rms_delta_b_minus_a": 0.03315
+  },
+  {
+    "strategy": "narrative_tags",
+    "seed": "seed_777",
+    "analysis_a": {
+      "duration_s": 48.0,
+      "peak_amplitude": 0.763306,
+      "overall_rms": 0.085561,
+      "low_energy_fraction": 0.2094
+    },
+    "analysis_b": {
+      "duration_s": 48.0,
+      "peak_amplitude": 0.849365,
+      "overall_rms": 0.137358,
+      "low_energy_fraction": 0.199
+    },
+    "spectral_mean_high_a": 0.0116,
+    "spectral_mean_high_b": 0.0236,
+    "centroid_a": 303.48,
+    "centroid_b": 371.07,
+    "phase_alignment_a": {
+      "windows": [
+        {
+          "role": "opening",
+          "start_s": 0.0,
+          "end_s": 8.0,
+          "intended_energy": 0.18,
+          "measured_mean_rms": 0.042854,
+          "measured_mean_onset_density": 0.1025
+        },
+        {
+          "role": "vulnerability",
+          "start_s": 8.0,
+          "end_s": 18.0,
+          "intended_energy": 0.25,
+          "measured_mean_rms": 0.071426,
+          "measured_mean_onset_density": 0.156
+        },
+        {
+          "role": "reflection",
+          "start_s": 18.0,
+          "end_s": 30.0,
+          "intended_energy": 0.32,
+          "measured_mean_rms": 0.077916,
+          "measured_mean_onset_density": 0.164167
+        },
+        {
+          "role": "gentle_hope",
+          "start_s": 30.0,
+          "end_s": 40.0,
+          "intended_energy": 0.42,
+          "measured_mean_rms": 0.108157,
+          "measured_mean_onset_density": 0.284
+        },
+        {
+          "role": "quiet_resolution",
+          "start_s": 40.0,
+          "end_s": 48.0,
+          "intended_energy": 0.3,
+          "measured_mean_rms": 0.009031,
+          "measured_mean_onset_density": 0.00125
+        }
+      ],
+      "energy_correlation": 0.5757
+    },
+    "phase_alignment_b": {
+      "windows": [
+        {
+          "role": "opening",
+          "start_s": 0.0,
+          "end_s": 6.0,
+          "intended_energy": 0.18,
+          "measured_mean_rms": 0.089171,
+          "measured_mean_onset_density": 0.053333
+        },
+        {
+          "role": "vulnerability",
+          "start_s": 6.0,
+          "end_s": 12.0,
+          "intended_energy": 0.28,
+          "measured_mean_rms": 0.079631,
+          "measured_mean_onset_density": 0.076667
+        },
+        {
+          "role": "challenge",
+          "start_s": 12.0,
+          "end_s": 20.0,
+          "intended_energy": 0.48,
+          "measured_mean_rms": 0.079381,
+          "measured_mean_onset_density": 0.05625
+        },
+        {
+          "role": "build",
+          "start_s": 20.0,
+          "end_s": 28.0,
+          "intended_energy": 0.68,
+          "measured_mean_rms": 0.080914,
+          "measured_mean_onset_density": 0.12625
+        },
+        {
+          "role": "breakthrough",
+          "start_s": 28.0,
+          "end_s": 36.0,
+          "intended_energy": 0.88,
+          "measured_mean_rms": 0.241007,
+          "measured_mean_onset_density": 0.47625
+        },
+        {
+          "role": "climax",
+          "start_s": 36.0,
+          "end_s": 42.0,
+          "intended_energy": 0.95,
+          "measured_mean_rms": 0.1334,
+          "measured_mean_onset_density": 0.191667
+        },
+        {
+          "role": "resolution",
+          "start_s": 42.0,
+          "end_s": 48.0,
+          "intended_energy": 0.45,
+          "measured_mean_rms": 0.001119,
+          "measured_mean_onset_density": 0.0
+        }
+      ],
+      "energy_correlation": 0.6113
+    },
+    "timeline_b_breakthrough_rms": 0.241007,
+    "timeline_b_early_rms": 0.084401,
+    "timeline_b_breakthrough_minus_early": 0.156606,
+    "overall_rms_delta_b_minus_a": 0.051797
+  },
+  {
+    "strategy": "song_tags",
+    "seed": "seed_123",
+    "analysis_a": {
+      "duration_s": 48.0,
+      "peak_amplitude": 0.821075,
+      "overall_rms": 0.110852,
+      "low_energy_fraction": 0.2042
+    },
+    "analysis_b": {
+      "duration_s": 48.0,
+      "peak_amplitude": 0.836365,
+      "overall_rms": 0.122749,
+      "low_energy_fraction": 0.178
+    },
+    "spectral_mean_high_a": 0.0274,
+    "spectral_mean_high_b": 0.0241,
+    "centroid_a": 388.44,
+    "centroid_b": 367.34,
+    "phase_alignment_a": {
+      "windows": [
+        {
+          "role": "opening",
+          "start_s": 0.0,
+          "end_s": 8.0,
+          "intended_energy": 0.18,
+          "measured_mean_rms": 0.080528,
+          "measured_mean_onset_density": 0.24
+        },
+        {
+          "role": "vulnerability",
+          "start_s": 8.0,
+          "end_s": 18.0,
+          "intended_energy": 0.25,
+          "measured_mean_rms": 0.086752,
+          "measured_mean_onset_density": 0.112
+        },
+        {
+          "role": "reflection",
+          "start_s": 18.0,
+          "end_s": 30.0,
+          "intended_energy": 0.32,
+          "measured_mean_rms": 0.090836,
+          "measured_mean_onset_density": 0.139167
+        },
+        {
+          "role": "gentle_hope",
+          "start_s": 30.0,
+          "end_s": 40.0,
+          "intended_energy": 0.42,
+          "measured_mean_rms": 0.129736,
+          "measured_mean_onset_density": 0.249
+        },
+        {
+          "role": "quiet_resolution",
+          "start_s": 40.0,
+          "end_s": 48.0,
+          "intended_energy": 0.3,
+          "measured_mean_rms": 0.013255,
+          "measured_mean_onset_density": 0.0
+        }
+      ],
+      "energy_correlation": 0.3873
+    },
+    "phase_alignment_b": {
+      "windows": [
+        {
+          "role": "opening",
+          "start_s": 0.0,
+          "end_s": 6.0,
+          "intended_energy": 0.18,
+          "measured_mean_rms": 0.087554,
+          "measured_mean_onset_density": 0.14
+        },
+        {
+          "role": "vulnerability",
+          "start_s": 6.0,
+          "end_s": 12.0,
+          "intended_energy": 0.28,
+          "measured_mean_rms": 0.070899,
+          "measured_mean_onset_density": 0.135
+        },
+        {
+          "role": "challenge",
+          "start_s": 12.0,
+          "end_s": 20.0,
+          "intended_energy": 0.48,
+          "measured_mean_rms": 0.074359,
+          "measured_mean_onset_density": 0.04
+        },
+        {
+          "role": "build",
+          "start_s": 20.0,
+          "end_s": 28.0,
+          "intended_energy": 0.68,
+          "measured_mean_rms": 0.1151,
+          "measured_mean_onset_density": 0.1375
+        },
+        {
+          "role": "breakthrough",
+          "start_s": 28.0,
+          "end_s": 36.0,
+          "intended_energy": 0.88,
+          "measured_mean_rms": 0.173317,
+          "measured_mean_onset_density": 0.2875
+        },
+        {
+          "role": "climax",
+          "start_s": 36.0,
+          "end_s": 42.0,
+          "intended_energy": 0.95,
+          "measured_mean_rms": 0.144815,
+          "measured_mean_onset_density": 0.305
+        },
+        {
+          "role": "resolution",
+          "start_s": 42.0,
+          "end_s": 48.0,
+          "intended_energy": 0.45,
+          "measured_mean_rms": 0.002039,
+          "measured_mean_onset_density": 0.0
+        }
+      ],
+      "energy_correlation": 0.6995
+    },
+    "timeline_b_breakthrough_rms": 0.173317,
+    "timeline_b_early_rms": 0.079227,
+    "timeline_b_breakthrough_minus_early": 0.09409,
+    "overall_rms_delta_b_minus_a": 0.011897
+  },
+  {
+    "strategy": "song_tags",
+    "seed": "seed_42",
+    "analysis_a": {
+      "duration_s": 48.0,
+      "peak_amplitude": 0.869873,
+      "overall_rms": 0.090561,
+      "low_energy_fraction": 0.2042
+    },
+    "analysis_b": {
+      "duration_s": 48.0,
+      "peak_amplitude": 0.651367,
+      "overall_rms": 0.102769,
+      "low_energy_fraction": 0.2199
+    },
+    "spectral_mean_high_a": 0.0287,
+    "spectral_mean_high_b": 0.0365,
+    "centroid_a": 405.37,
+    "centroid_b": 456.52,
+    "phase_alignment_a": {
+      "windows": [
+        {
+          "role": "opening",
+          "start_s": 0.0,
+          "end_s": 8.0,
+          "intended_energy": 0.18,
+          "measured_mean_rms": 0.006892,
+          "measured_mean_onset_density": 0.00125
+        },
+        {
+          "role": "vulnerability",
+          "start_s": 8.0,
+          "end_s": 18.0,
+          "intended_energy": 0.25,
+          "measured_mean_rms": 0.050115,
+          "measured_mean_onset_density": 0.078
+        },
+        {
+          "role": "reflection",
+          "start_s": 18.0,
+          "end_s": 30.0,
+          "intended_energy": 0.32,
+          "measured_mean_rms": 0.092619,
+          "measured_mean_onset_density": 0.2225
+        },
+        {
+          "role": "gentle_hope",
+          "start_s": 30.0,
+          "end_s": 40.0,
+          "intended_energy": 0.42,
+          "measured_mean_rms": 0.122971,
+          "measured_mean_onset_density": 0.288
+        },
+        {
+          "role": "quiet_resolution",
+          "start_s": 40.0,
+          "end_s": 48.0,
+          "intended_energy": 0.3,
+          "measured_mean_rms": 0.047786,
+          "measured_mean_onset_density": 0.1075
+        }
+      ],
+      "energy_correlation": 0.9563
+    },
+    "phase_alignment_b": {
+      "windows": [
+        {
+          "role": "opening",
+          "start_s": 0.0,
+          "end_s": 6.0,
+          "intended_energy": 0.18,
+          "measured_mean_rms": 0.011686,
+          "measured_mean_onset_density": 0.006667
+        },
+        {
+          "role": "vulnerability",
+          "start_s": 6.0,
+          "end_s": 12.0,
+          "intended_energy": 0.28,
+          "measured_mean_rms": 0.044057,
+          "measured_mean_onset_density": 0.055
+        },
+        {
+          "role": "challenge",
+          "start_s": 12.0,
+          "end_s": 20.0,
+          "intended_energy": 0.48,
+          "measured_mean_rms": 0.057855,
+          "measured_mean_onset_density": 0.0725
+        },
+        {
+          "role": "build",
+          "start_s": 20.0,
+          "end_s": 28.0,
+          "intended_energy": 0.68,
+          "measured_mean_rms": 0.100008,
+          "measured_mean_onset_density": 0.19
+        },
+        {
+          "role": "breakthrough",
+          "start_s": 28.0,
+          "end_s": 36.0,
+          "intended_energy": 0.88,
+          "measured_mean_rms": 0.134072,
+          "measured_mean_onset_density": 0.33625
+        },
+        {
+          "role": "climax",
+          "start_s": 36.0,
+          "end_s": 42.0,
+          "intended_energy": 0.95,
+          "measured_mean_rms": 0.146221,
+          "measured_mean_onset_density": 0.275
+        },
+        {
+          "role": "resolution",
+          "start_s": 42.0,
+          "end_s": 48.0,
+          "intended_energy": 0.45,
+          "measured_mean_rms": 0.030414,
+          "measured_mean_onset_density": 0.065
+        }
+      ],
+      "energy_correlation": 0.9685
+    },
+    "timeline_b_breakthrough_rms": 0.134072,
+    "timeline_b_early_rms": 0.027872,
+    "timeline_b_breakthrough_minus_early": 0.106201,
+    "overall_rms_delta_b_minus_a": 0.012208
+  },
+  {
+    "strategy": "song_tags",
+    "seed": "seed_777",
+    "analysis_a": {
+      "duration_s": 48.0,
+      "peak_amplitude": 0.837662,
+      "overall_rms": 0.100268,
+      "low_energy_fraction": 0.2094
+    },
+    "analysis_b": {
+      "duration_s": 48.0,
+      "peak_amplitude": 0.854477,
+      "overall_rms": 0.12408,
+      "low_energy_fraction": 0.1623
+    },
+    "spectral_mean_high_a": 0.0169,
+    "spectral_mean_high_b": 0.028,
+    "centroid_a": 328.11,
+    "centroid_b": 384.76,
+    "phase_alignment_a": {
+      "windows": [
+        {
+          "role": "opening",
+          "start_s": 0.0,
+          "end_s": 8.0,
+          "intended_energy": 0.18,
+          "measured_mean_rms": 0.092937,
+          "measured_mean_onset_density": 0.2025
+        },
+        {
+          "role": "vulnerability",
+          "start_s": 8.0,
+          "end_s": 18.0,
+          "intended_energy": 0.25,
+          "measured_mean_rms": 0.085683,
+          "measured_mean_onset_density": 0.132
+        },
+        {
+          "role": "reflection",
+          "start_s": 18.0,
+          "end_s": 30.0,
+          "intended_energy": 0.32,
+          "measured_mean_rms": 0.089139,
+          "measured_mean_onset_density": 0.165833
+        },
+        {
+          "role": "gentle_hope",
+          "start_s": 30.0,
+          "end_s": 40.0,
+          "intended_energy": 0.42,
+          "measured_mean_rms": 0.117292,
+          "measured_mean_onset_density": 0.226
+        },
+        {
+          "role": "quiet_resolution",
+          "start_s": 40.0,
+          "end_s": 48.0,
+          "intended_energy": 0.3,
+          "measured_mean_rms": 0.010491,
+          "measured_mean_onset_density": 0.00125
+        }
+      ],
+      "energy_correlation": 0.1952
+    },
+    "phase_alignment_b": {
+      "windows": [
+        {
+          "role": "opening",
+          "start_s": 0.0,
+          "end_s": 6.0,
+          "intended_energy": 0.18,
+          "measured_mean_rms": 0.105558,
+          "measured_mean_onset_density": 0.146667
+        },
+        {
+          "role": "vulnerability",
+          "start_s": 6.0,
+          "end_s": 12.0,
+          "intended_energy": 0.28,
+          "measured_mean_rms": 0.068946,
+          "measured_mean_onset_density": 0.083333
+        },
+        {
+          "role": "challenge",
+          "start_s": 12.0,
+          "end_s": 20.0,
+          "intended_energy": 0.48,
+          "measured_mean_rms": 0.060625,
+          "measured_mean_onset_density": 0.01375
+        },
+        {
+          "role": "build",
+          "start_s": 20.0,
+          "end_s": 28.0,
+          "intended_energy": 0.68,
+          "measured_mean_rms": 0.101087,
+          "measured_mean_onset_density": 0.16875
+        },
+        {
+          "role": "breakthrough",
+          "start_s": 28.0,
+          "end_s": 36.0,
+          "intended_energy": 0.88,
+          "measured_mean_rms": 0.200864,
+          "measured_mean_onset_density": 0.3825
+        },
+        {
+          "role": "climax",
+          "start_s": 36.0,
+          "end_s": 42.0,
+          "intended_energy": 0.95,
+          "measured_mean_rms": 0.133429,
+          "measured_mean_onset_density": 0.216667
+        },
+        {
+          "role": "resolution",
+          "start_s": 42.0,
+          "end_s": 48.0,
+          "intended_energy": 0.45,
+          "measured_mean_rms": 0.000993,
+          "measured_mean_onset_density": 0.0
+        }
+      ],
+      "energy_correlation": 0.6024
+    },
+    "timeline_b_breakthrough_rms": 0.200864,
+    "timeline_b_early_rms": 0.087252,
+    "timeline_b_breakthrough_minus_early": 0.113612,
+    "overall_rms_delta_b_minus_a": 0.023812
+  }
+]

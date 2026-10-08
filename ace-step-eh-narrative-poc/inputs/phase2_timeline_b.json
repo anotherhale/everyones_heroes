@@ -1,0 +1,76 @@
+{
+  "name": "phase2_transformation_arc",
+  "description": "Phase 2 transformation arc: structural build with breakthrough and climax at intended locations.",
+  "segments": [
+    {
+      "role": "opening",
+      "narrative_intent": "arrival",
+      "emotional_state": "quiet",
+      "energy": 0.18,
+      "instrumentation": ["piano", "ambient_pad"],
+      "vocal_delivery": "intimate",
+      "duration_seconds": 6,
+      "performance_notes": "Same sparse opening as Timeline A for matched start."
+    },
+    {
+      "role": "vulnerability",
+      "narrative_intent": "vulnerability",
+      "emotional_state": "uncertain",
+      "energy": 0.28,
+      "instrumentation": ["piano", "soft_strings"],
+      "vocal_delivery": "fragile",
+      "duration_seconds": 6,
+      "performance_notes": "Brief vulnerability before challenge."
+    },
+    {
+      "role": "challenge",
+      "narrative_intent": "struggle",
+      "emotional_state": "tense",
+      "energy": 0.48,
+      "instrumentation": ["piano", "strings", "low_percussion"],
+      "vocal_delivery": "restrained",
+      "duration_seconds": 8,
+      "performance_notes": "Tension and unresolved harmony enter."
+    },
+    {
+      "role": "build",
+      "narrative_intent": "determination",
+      "emotional_state": "determined",
+      "energy": 0.68,
+      "instrumentation": ["piano", "strings", "drums"],
+      "vocal_delivery": "rising",
+      "duration_seconds": 8,
+      "performance_notes": "Rising density and rhythmic drive toward breakthrough."
+    },
+    {
+      "role": "breakthrough",
+      "narrative_intent": "breakthrough",
+      "emotional_state": "triumphant",
+      "energy": 0.88,
+      "instrumentation": ["full_band", "strings", "drums"],
+      "vocal_delivery": "powerful",
+      "duration_seconds": 8,
+      "performance_notes": "Intended breakthrough window; clear lift."
+    },
+    {
+      "role": "climax",
+      "narrative_intent": "climax",
+      "emotional_state": "exultant",
+      "energy": 0.95,
+      "instrumentation": ["full_band", "choir_pad", "drums"],
+      "vocal_delivery": "powerful",
+      "duration_seconds": 6,
+      "performance_notes": "Peak intensity immediately after breakthrough."
+    },
+    {
+      "role": "resolution",
+      "narrative_intent": "forward_motion",
+      "emotional_state": "peaceful",
+      "energy": 0.45,
+      "instrumentation": ["piano", "strings"],
+      "vocal_delivery": "warm",
+      "duration_seconds": 6,
+      "performance_notes": "Meaningful settle after climax; not abrupt cut."
+    }
+  ]
+}

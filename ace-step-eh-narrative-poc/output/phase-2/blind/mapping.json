@@ -1,0 +1,50 @@
+{
+  "sample-01.wav": {
+    "strategy": "song_tags",
+    "seed": 42,
+    "timeline": "timeline_a",
+    "source": "/workspace/ace-step-eh-narrative-poc/output/phase-2/strategy_song_tags/seed_42/timeline_a/audio.wav"
+  },
+  "sample-02.wav": {
+    "strategy": "narrative_tags",
+    "seed": 123,
+    "timeline": "timeline_a",
+    "source": "/workspace/ace-step-eh-narrative-poc/output/phase-2/strategy_narrative_tags/seed_123/timeline_a/audio.wav"
+  },
+  "sample-03.wav": {
+    "strategy": "caption_only",
+    "seed": 42,
+    "timeline": "timeline_b",
+    "source": "/workspace/ace-step-eh-narrative-poc/output/phase-2/strategy_caption_only/seed_42/timeline_b/audio.wav"
+  },
+  "sample-04.wav": {
+    "strategy": "narrative_tags",
+    "seed": 123,
+    "timeline": "timeline_b",
+    "source": "/workspace/ace-step-eh-narrative-poc/output/phase-2/strategy_narrative_tags/seed_123/timeline_b/audio.wav"
+  },
+  "sample-05.wav": {
+    "strategy": "narrative_tags",
+    "seed": 42,
+    "timeline": "timeline_b",
+    "source": "/workspace/ace-step-eh-narrative-poc/output/phase-2/strategy_narrative_tags/seed_42/timeline_b/audio.wav"
+  },
+  "sample-06.wav": {
+    "strategy": "song_tags",
+    "seed": 42,
+    "timeline": "timeline_b",
+    "source": "/workspace/ace-step-eh-narrative-poc/output/phase-2/strategy_song_tags/seed_42/timeline_b/audio.wav"
+  },
+  "sample-07.wav": {
+    "strategy": "narrative_tags",
+    "seed": 42,
+    "timeline": "timeline_a",
+    "source": "/workspace/ace-step-eh-narrative-poc/output/phase-2/strategy_narrative_tags/seed_42/timeline_a/audio.wav"
+  },
+  "sample-08.wav": {
+    "strategy": "caption_only",
+    "seed": 42,
+    "timeline": "timeline_a",
+    "source": "/workspace/ace-step-eh-narrative-poc/output/phase-2/strategy_caption_only/seed_42/timeline_a/audio.wav"
+  }
+}
