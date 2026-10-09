@@ -2,6 +2,7 @@ import 'package:everyonesheroes/core/ids/hero_id.dart';
 import 'package:everyonesheroes/core/ids/voice_profile_id.dart';
 import 'package:everyonesheroes/core/shared_kernel/language_code.dart';
 import 'package:everyonesheroes/features/hero_story/domain/aggregates/voice_profile.dart';
+import 'package:everyonesheroes/features/hero_story/domain/enums/voice_cloning_authorization_scope.dart';
 import 'package:everyonesheroes/features/hero_story/domain/enums/voice_profile_lifecycle_status.dart';
 import 'package:everyonesheroes/features/hero_story/domain/events/voice_profile_created.dart';
 import 'package:everyonesheroes/features/hero_story/domain/events/voice_profile_deleted.dart';
@@ -51,6 +52,10 @@ void main() {
       final profile = createDraft();
       expect(profile.lifecycleStatus, VoiceProfileLifecycleStatus.draft);
       expect(profile.authorization, VoiceProfileAuthorization.none);
+      expect(
+        profile.cloningAuthorizationScope,
+        VoiceCloningAuthorizationScope.perStory,
+      );
       expect(profile.isEnrollable, isFalse);
       expect(profile.providerEnrollmentExists, isFalse);
       expect(profile.pullDomainEvents().single, isA<VoiceProfileCreated>());
