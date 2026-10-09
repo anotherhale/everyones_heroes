@@ -1,0 +1,3 @@
+# POC-local Python deps (adapter unit tests + experiment orchestration).
+# ACE-Step itself is installed separately from the upstream clone.
+pytest>=8.0.0

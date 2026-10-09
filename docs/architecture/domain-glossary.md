@@ -376,7 +376,9 @@ Personalization that uses AI to creatively generate experiences while remaining 
 
 AI does not determine behavioral truth.
 
-AI transforms deterministic understanding into emotionally engaging experiences such as stories, coaching, music, narration, and personalized motivational talks.
+AI transforms deterministic understanding into emotionally engaging experiences such as stories, coaching, music, narration, voice performance, and personalized motivational talks.
+
+Creative direction may eventually propose how an experience is heard (pace, emotion, voice, music). That proposal is not behavioral truth. See `Voice-Cloning-and-Story-Performance-Architecture.md`.
 
 ---
 
@@ -410,6 +412,7 @@ Examples include:
 * Personalized music
 * Dynamic lyrics
 * Coaching conversations
+* Personalized audio journeys
 * Future immersive experiences
 
 The platform is intentionally designed so new Adaptive Experience types can be introduced without changing the core domain model.
@@ -631,6 +634,87 @@ Examples:
 * BehavioralEvidenceDetected
 
 Events are used to communicate across bounded contexts.
+
+---
+
+# Voice Identity
+
+The identity of the speaker represented by a voice-generation system.
+
+In the current EH model this concept is the `VoiceProfile` aggregate (HS-ADR-078, HS.12.9): a Hero-scoped, provider-independent identity. It is not a Qwen speaker label, an OpenAI voice name, or a generated audio file.
+
+A Voice Identity may later be used for many performances. Creating or changing a performance does not create a new identity.
+
+Current Status:
+`VoiceProfile` foundation implemented. Production voice cloning is not implemented.
+
+---
+
+# Voice Reference
+
+Audio and associated metadata used to reproduce a Voice Identity.
+
+Includes the reference recording and, as architectural direction, a reviewed reference transcript stored with the enrollment. Reference bytes stay behind a media storage port. They are not embedded in the aggregate and they are not Story canonical media.
+
+Current Status:
+`VoiceProfile` may hold `MediaReference` entries. Durable reference-transcript metadata and production enrollment are not implemented. The local Qwen Base/ICL enrollment flow is a prototype outside this repository.
+
+---
+
+# Voice Performance
+
+The manner in which a voice delivers content.
+
+Includes delivery, emotion, pace, energy, emphasis, and pauses. Voice Performance is not Voice Identity and not Audio Production.
+
+Current Status:
+Planned vocabulary. Not an implemented domain type.
+
+---
+
+# Performance Intent
+
+Provider-neutral instructions describing desired delivery.
+
+Examples: hopeful, conversational, selective emphasis, natural pause. Performance Intent is not `temperature`, `top_p`, `speed`, or `instruct`.
+
+Provider adapters translate intent into whatever controls a given TTS system actually supports.
+
+Current Status:
+Architectural direction. Not implemented.
+
+---
+
+# Story Performance
+
+The application of performance intent to a Story's segments.
+
+A Story Performance describes how segments of a narrative are delivered by a Voice Identity. Segment audio is an intermediate production asset. The canonical Story remains the narrative.
+
+Current Status:
+Planned. The Story Performance Editor does not exist.
+
+---
+
+# Voice Generation
+
+The process of transforming textual story content and a Voice Identity into audio.
+
+Today, synthetic narration uses `VoiceRenderingPort` and does not require a VoiceProfile. Future profile-backed or performance-aware generation stays behind a provider-neutral port. Domain and application code do not call a TTS vendor.
+
+Current Status:
+Synthetic narration implemented (HS.12.6 / HS.12.7). Cloning and performance-aware generation are not implemented.
+
+---
+
+# Audio Production
+
+The assembly and processing of generated voice segments, silence, music, and other audio elements into a final audio experience.
+
+Audio Production is not voice identity and not the wording of the Story. Intermediate segment assets remain distinct from the final mix.
+
+Current Status:
+Local sentence-assembly experiment is prototype / under validation. Not an EH product pipeline.
 
 ---
 

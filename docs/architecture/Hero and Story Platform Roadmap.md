@@ -1260,3 +1260,36 @@ The goal is not to build a giant content platform.
 The goal is to build a trustworthy foundation through which:
 
 **people can share what they have lived, other people can discover what may matter to them, and Everyone's Heroes can eventually turn those human experiences into meaningful personalized experiences.**
+
+---
+
+# 27. Future personalized audio (direction only)
+
+**Status: not implemented. Not a roadmap phase that has started.**
+
+A later experience-generation layer may compose:
+
+```text
+Personalized Hero Stories
+Personalized Motivational Talks
+Personalized Voice Coaching
+Personalized Music
+Personalized Lyrics
+Personalized Audio Journeys
+```
+
+Personalization would then answer both “what should be said?” and “how should it be experienced?” Creative direction proposes story, voice performance, pacing, and music from grounded understanding. It does not write behavioral truth.
+
+```text
+Evidence
+    ↓
+Understanding
+    ↓
+Personalization
+    ↓
+Creative Direction
+    ↓
+Experience Generation
+```
+
+Voice cloning experiments (including local Qwen3-TTS Base/ICL) are infrastructure investigations. They are not domain concepts and they are not a completed platform capability. See `Voice-Cloning-and-Story-Performance-Architecture.md`.

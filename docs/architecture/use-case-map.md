@@ -1163,3 +1163,24 @@ Guidance should remain explainable and traceable to observable evidence.
 | DiscoverableStoryCandidateSync | Implemented | Hero & Story (Flutter) | Soft-fail sync after publish/archive |
 | PublishStoryUseCase (+ sync) | Implemented | Hero & Story (Flutter) | Story authority; optional projection sync |
 | ArchiveStoryUseCase (+ sync) | Implemented | Hero & Story (Flutter) | Story authority; optional projection sync |
+
+---
+
+# Voice and Story Performance (future)
+
+Status: **Planned.** Not implemented.
+
+These use cases are architectural direction from `Voice-Cloning-and-Story-Performance-Architecture.md`. Do not treat them as existing application types. Production voice cloning is not implemented. HS.12.9 VoiceProfile use cases (create, authorize, in-memory enroll, revoke, delete) are a separate identity foundation and do not clone audio.
+
+| Use Case | Status | Context | Notes |
+| -------- | ------ | ------- | ----- |
+| Enroll Voice | Planned | Hero & Story | Persist Voice Identity (`VoiceProfile`) plus reference audio and reviewed reference transcript. Not the current in-memory synthetic enroll. |
+| Manage Voice | Planned | Hero & Story | List, update display metadata, revoke, delete. Consent gates stay independent. |
+| Generate Story Performance | Planned | Hero & Story | Apply performance intent to Story segments through a provider-neutral port. |
+| Preview Story Performance | Planned | Hero & Story | Owner preview of segment or assembled audio. Playback uses persisted bytes. |
+| Regenerate Story Segment | Planned | Hero & Story | Rebuild one segment without regenerating the whole story. |
+| Adjust Story Performance | Planned | Hero & Story | Edit pace, energy, emotion, emphasis, pause, or delivery at segment or paragraph level. |
+| Assemble Story Audio | Planned | Hero & Story | Production step: segment audio + silence + optional music → final mix. Intermediate segments remain. |
+| Publish Story Audio | Planned | Hero & Story | Distribution only after the relevant publication authorization. Not implied by rendering. |
+
+Provider adapters, Qwen, and FFmpeg stay in infrastructure. These use cases must not call a TTS vendor directly.

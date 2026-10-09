@@ -414,3 +414,5 @@ Local sidecar (Python): `services/ai_proxy/tts_sidecar/`
 Reproducible benchmark: `dart run tool/tts_benchmark/run_benchmark.dart`
 
 See: `docs/architecture/HS.12.7-TTS-Provider-Benchmark.md`
+
+The `qwen3` provider in this proxy is the HS.12.7 CustomVoice synthetic path. It is not the separate local Qwen3-TTS Base/ICL cloning experiment. That experiment, and the Story Performance direction, are documented in `docs/architecture/Voice-Cloning-and-Story-Performance-Architecture.md`. Base/ICL cloning does not currently apply `instruct` or `speed`.

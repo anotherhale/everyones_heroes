@@ -478,6 +478,29 @@ This distinction is foundational.
 
 It allows the same Story to exist across multiple formats and languages without creating duplicate conceptual Stories.
 
+### Future capability — Story Performance and audio experience
+
+**Status: architectural direction. Not part of HS.1. Not implemented.**
+
+A Story can eventually be experienced as more than text. That does not make the Story into an audio file. Narrative stays canonical. Performance and the resulting audio are derived.
+
+```text
+Story
+ ├── Narrative
+ ├── Themes
+ ├── Understanding
+ ├── Performance          # future
+ │     ├── Voice
+ │     ├── Delivery
+ │     ├── Pace
+ │     └── Emotion
+ └── Audio Experience     # future, derived
+```
+
+Voice identity is the existing `VoiceProfile` concept (HS-ADR-078), not a Qwen speaker. How that voice delivers the narrative is Story Performance. Mixing, music, and silence are audio production. Those concerns stay separate from the HS.1 Story aggregate.
+
+See `docs/architecture/Voice-Cloning-and-Story-Performance-Architecture.md`.
+
 ────────
 
 14. Story Representation
@@ -2532,6 +2555,39 @@ The Hero ecosystem therefore becomes more than a content library.
 It becomes a human experience network.
 
 One person’s lived experience can become another person’s meaningful next step.
+
+### Future personalized audio experiences
+
+**Status: future vision. Not implemented. Not an HS.1 deliverable.**
+
+Personalization can eventually determine not only what should be said, but how it should be experienced. The audio layer is one experience-generation surface. It stays downstream of evidence and understanding.
+
+```text
+Evidence
+    ↓
+Understanding
+    ↓
+Personalization
+    ↓
+Creative Direction
+    ↓
+Experience Generation
+```
+
+Possible audio experiences:
+
+```text
+Personalized Hero Stories
+Personalized Motivational Talks
+Personalized Voice Coaching
+Personalized Music
+Personalized Lyrics
+Personalized Audio Journeys
+```
+
+Those experiences may combine narration, voice identity, story, music, lyrics, pacing, emotional arc, sound design, and a call to action. Creative direction proposes the experience. It does not replace Behavioral Evidence or decide who the person is.
+
+Provider-specific TTS, including the local Qwen3-TTS cloning experiment, stays infrastructure. See `docs/architecture/Voice-Cloning-and-Story-Performance-Architecture.md`.
 
 ────────
 

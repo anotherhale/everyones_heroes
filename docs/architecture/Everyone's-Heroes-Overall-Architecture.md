@@ -1098,4 +1098,30 @@ When implementation changes architecture, update ADRs/maps in the same authorize
 
 ---
 
+## 28. Later architectural direction — creative experience generation
+
+**Added:** 2026-10-02. This section does not change the PF.1 current-state assessment above. Nothing in this section is implemented product behavior.
+
+Intended future pipeline, once understanding is grounded:
+
+```text
+Evidence
+    ↓
+Understanding
+    ↓
+Personalization
+    ↓
+Creative Direction
+    ↓
+Experience Generation
+```
+
+Personalization is not only content selection. It can eventually shape how an experience is delivered, including spoken performance and a composed audio experience. AI in that role is a creative layer. Behavioral evidence and behavior patterns remain the record of understanding.
+
+Voice identity (`VoiceProfile`), voice performance, and audio production are separate concerns. Qwen and other TTS systems stay in infrastructure. The Story Performance Editor is planned, not present.
+
+See `docs/architecture/Voice-Cloning-and-Story-Performance-Architecture.md`.
+
+---
+
 *End of PF.1 Overall Architecture document.*

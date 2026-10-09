@@ -2873,6 +2873,7 @@ See:
 - `docs/architecture/HS.12.8-Voice-Identity-and-Cloning-Architecture-Spike.md`
 - `docs/architecture/HS.12.9-Voice-Profile-Foundation.md`
 - `docs/architecture/HS.12.10-Voice-Cloning-Authorization-Scope.md`
+- `docs/architecture/Voice-Cloning-and-Story-Performance-Architecture.md` (directional; Base/ICL `instruct`/`speed` do not apply)
 
 ---
 
@@ -2924,3 +2925,25 @@ Do not treat “Inspires Me” as Behavioral Evidence or a Behavior Pattern inpu
 
 See: `docs/architecture/D.13-Inspires-Me-Product-Decision.md`  
 Related: `docs/architecture/D.11-Explicit-Hero-Inspiration-Relationship.md`
+
+---
+
+# Directional — Voice Performance (not an accepted HS-ADR)
+
+Status: Architectural direction — **not implemented**. Does not supersede HS-ADR-076, HS-ADR-077, or HS-ADR-078.
+
+Date: 2026-10-02
+
+Source: `docs/architecture/Voice-Cloning-and-Story-Performance-Architecture.md` §18.
+
+These decisions record lessons from the local Qwen3-TTS Base/ICL experiment and the Story Performance direction. They are not product behavior and they do not add domain types.
+
+| Id | Decision |
+|----|----------|
+| VC-1 | Voice providers are infrastructure. Domain and application code stay provider-neutral. |
+| VC-2 | Voice identity and performance are separate. A cloned voice (`VoiceProfile`) is not a performance style. |
+| VC-3 | Stories should eventually be representable as independently generated segments. |
+| VC-4 | Performance intent is provider-neutral human language (pace, emotion, delivery), not raw TTS parameters. |
+| VC-5 | An enrolled reference voice persists its reference transcript. Do not re-run speech-to-text on every segment. |
+
+Qwen Base/ICL note recorded with these decisions: the inspected local `Model.generate()` path uses `ref_audio`, `ref_text`, and sampling controls. It does **not** currently apply `instruct` or `speed`. Qwen remains an infrastructure experiment, not an EH domain dependency.
