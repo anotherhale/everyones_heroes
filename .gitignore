@@ -49,6 +49,9 @@ secrets/
 **/openai_api_key*
 **/eh_ai_proxy_auth_token*
 
+# Local host stats for Mac mini vs Linux PED test selection
+.local/test-host-stats/
+
 
 # Symbolication related
 app.*.symbols
